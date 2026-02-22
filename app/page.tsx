@@ -8,6 +8,15 @@ export default function LandingPage() {
   const [heatmap, setHeatmap] = useState<string[]>([]);
 
   useEffect(() => {
+    // Si caemos en /?code=... (por error de config de Supabase), redirigimos al callback
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get("code");
+      if (code) {
+        window.location.href = `/auth/callback?code=${code}`;
+      }
+    }
+
     const cells = [];
     for (let i = 0; i < 182; i++) {
       const r = Math.random();

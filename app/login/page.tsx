@@ -80,7 +80,7 @@ function LoginContent() {
             <div className="section-label mb-2 mx-auto w-fit">// auth gateway</div>
             <h1 className="ou-q !text-3xl tracking-tight">Bienvenido, builder.</h1>
             <p className="ou-sub !text-base">
-              Entrá para gestionar tu bento y mostrar lo nuevo.
+              Entrá para gestionar tu huevsite y mostrar lo nuevo.
             </p>
           </div>
 

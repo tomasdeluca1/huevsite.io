@@ -93,7 +93,7 @@ export default function SetupPage() {
         row_span: 1,
         data: {
           project: "Mi primer proyecto",
-          description: "Configurando mi bento en huevsite.io para mostrar lo que buildeo.",
+          description: "Configurando mi huevsite en huevsite.io para mostrar lo que buildeo.",
           stack: ["React", "Next.js", "Supabase"],
           link: "https://huevsite.io"
         },

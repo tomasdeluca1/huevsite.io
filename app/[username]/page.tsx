@@ -82,7 +82,7 @@ export default async function ProfilePage({ params }: Props) {
         {/* Footer message */}
         <footer className="mt-40 text-center relative z-10">
           <div className="section-label !text-[var(--text-muted)] opacity-50">
-            // builder logic • {profile.displayName} &apos;s bento
+            // builder logic • {profile.displayName} &apos;s huevsite
           </div>
           <div className="logo mt-4 scale-75 opacity-20 filter grayscale">huev<span>site</span>.io</div>
         </footer>

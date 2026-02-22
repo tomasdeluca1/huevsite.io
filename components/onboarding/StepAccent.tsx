@@ -28,7 +28,7 @@ export function StepAccent({ state, onChange, onNext }: StepAccentProps) {
         <h1 className="ou-q !text-4xl">
           Elegí tu <span style={{ color: accent }}>color de guerra</span>
         </h1>
-        <p className="ou-sub !text-base">Define la identidad visual de tu bento. Podés cambiarlo mil veces después.</p>
+        <p className="ou-sub !text-base">Define la identidad visual de tu huevsite. Podés cambiarlo mil veces después.</p>
       </div>
 
       {/* Live preview card */}

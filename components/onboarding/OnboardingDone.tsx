@@ -52,7 +52,7 @@ export function OnboardingDone({ state }: OnboardingDoneProps) {
             ¡Salió andando, <span style={{ color: accent }}>{state.githubData?.name?.split(" ")[0] ?? "chabón"}</span>!
           </h1>
           <p className="ou-sub !text-base mt-2">
-            Tu bento ya está live en la internet. Compartí tu laburo, que se note el esfuerzo.
+            Tu huevsite ya está live en la internet. Compartí tu laburo, que se note el esfuerzo.
           </p>
         </div>
 

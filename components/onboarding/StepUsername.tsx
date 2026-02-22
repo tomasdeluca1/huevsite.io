@@ -61,7 +61,7 @@ export function StepUsername({ state, onChange, onFinish, creating = false, erro
       <div className="mb-10">
         <div className="section-label mb-2" style={{ color: accent }}>// paso 05 — el final</div>
         <h1 className="ou-q !text-4xl">Elegí tu username</h1>
-        <p className="ou-sub !text-base">Tu bento vivirá en esta URL por los siglos de los siglos.</p>
+        <p className="ou-sub !text-base">Tu huevsite vivirá en esta URL por los siglos de los siglos.</p>
       </div>
 
       <div className="space-y-4 mb-10">
@@ -125,7 +125,7 @@ export function StepUsername({ state, onChange, onFinish, creating = false, erro
         }}
       >
         {creating && <Loader2 className="animate-spin" size={20} />}
-        {creating ? "Creando tu perfil..." : canFinish ? "¡Publicar mi bento! →" : "Elegí un nombre disponible"}
+        {creating ? "Creando tu perfil..." : canFinish ? "¡Publicar mi huevsite! →" : "Elegí un nombre disponible"}
       </button>
 
       <div className="mt-8 text-center text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-[0.2em] opacity-40">

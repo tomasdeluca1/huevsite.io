@@ -463,7 +463,7 @@ export default function DashboardPage() {
           <div className="w-16 h-16 rounded-full bg-[var(--surface2)] flex items-center justify-center mb-6 border border-[var(--border-bright)] animate-pulse mx-auto">
             <Sparkles size={32} className="text-[var(--accent)] animate-spin" />
           </div>
-          <p className="text-[var(--text-dim)] font-mono text-sm">Cargando tu bento...</p>
+          <p className="text-[var(--text-dim)] font-mono text-sm">Cargando tu huevsite...</p>
         </div>
       </div>
     );
@@ -530,8 +530,8 @@ export default function DashboardPage() {
         
         <header className="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-6 mb-12 max-w-7xl mx-auto">
           <div>
-            <div className="section-label mb-2">// editor de bento</div>
-            <h2 className="text-4xl font-extrabold tracking-tighter">Armá tu bento.</h2>
+            <div className="section-label mb-2">// editor de huevsite</div>
+            <h2 className="text-4xl font-extrabold tracking-tighter">Armá tu huevsite.</h2>
             <p className="section-sub !text-sm mt-2">
               Arrastrá para reordenar. Click en el rayito <Sparkles size={14} className="inline text-[var(--accent)]" /> para editar.
             </p>
@@ -583,7 +583,7 @@ export default function DashboardPage() {
                        <Plus size={32} className="text-[var(--text-dim)]" />
                     </div>
                     <p className="text-[var(--text-dim)] font-mono text-sm max-w-xs leading-relaxed">
-                       Este bento está más vacío que heladera de estudiante. 🇦🇷 <br/>
+                       Este portfolio está más vacío que heladera de estudiante. 🇦🇷 <br/>
                        <span className="text-[var(--accent)]">Empezá agregando tu primer bloque.</span>
                     </p>
                   </div>

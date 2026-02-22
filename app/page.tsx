@@ -287,7 +287,7 @@ export default function LandingPage() {
                 <div className="step-num">3</div>
                 <div className="step-content">
                   <div className="step-title">Elegís tu layout</div>
-                  <div className="step-desc">Te sugerimos un bento armado según tu perfil. Drag & drop para reordenar.</div>
+                  <div className="step-desc">Te sugerimos un huevsite armado según tu perfil. Drag & drop para reordenar.</div>
                 </div>
               </div>
               <div className="step">

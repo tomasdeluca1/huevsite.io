@@ -75,9 +75,13 @@ export const MOCK_PROFILE: ProfileData = {
       col_span: 1,
       row_span: 1,
       visible: true,
-      platform: "twitter",
-      link: "https://x.com/tomasdeluca",
-      label: "X / Twitter"
+      links: [
+        {
+          platform: "twitter",
+          url: "https://x.com/huevsite",
+          label: "X / Twitter"
+        }
+      ]
     },
     {
       id: "stack-1",

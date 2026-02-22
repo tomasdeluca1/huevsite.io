@@ -12,7 +12,7 @@ export const MOCK_PROFILE: ProfileData = {
       col_span: 2,
       row_span: 2,
       visible: true,
-      name: "Tomás De Luca",
+      name: "Tomás Deluca",
       avatarUrl: "https://github.com/tomasdeluca.png",
       tagline: "Building stuff for builders at huevsite.io.",
       roles: ["developer", "founder"],

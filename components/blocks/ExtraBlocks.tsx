@@ -47,17 +47,33 @@ export function CommunityBlock({ data, accentColor }: { data: CommunityBlockData
 export function WritingBlock({ data, accentColor }: { data: WritingBlockData; accentColor: string }) {
   const posts = data.posts || [];
 
+  const getValidUrl = (url?: string) => {
+    if (!url || url === "#") return "#";
+    return url.startsWith("http") ? url : `https://${url}`;
+  };
+
   return (
     <motion.div className="bento-block block-writing h-full">
       <div className="block-label">Writing</div>
-      <div className="writing-posts">
+      <div className="writing-posts relative z-20">
         {posts.length > 0 ? (
-          posts.map((post, i) => (
-            <a key={i} href={post.link || "#"} className="writing-post" style={{ borderLeftColor: accentColor }} target={post.link ? "_blank" : undefined} rel={post.link ? "noopener noreferrer" : undefined}>
-              <div className="wp-title">{post.title || "Sin título"}</div>
-              <div className="wp-meta">{post.date || "Sin fecha"} · click para leer</div>
-            </a>
-          ))
+          posts.map((post, i) => {
+            const validUrl = getValidUrl(post.link);
+            const isClickable = validUrl !== "#";
+            return (
+              <a
+                key={i}
+                href={validUrl}
+                className="writing-post block cursor-pointer transition-colors"
+                style={{ borderLeftColor: accentColor }}
+                target={isClickable ? "_blank" : undefined}
+                rel={isClickable ? "noopener noreferrer" : undefined}
+              >
+                <div className="wp-title">{post.title || "Sin título"}</div>
+                <div className="wp-meta">{post.date || "Sin fecha"} · click para leer</div>
+              </a>
+            );
+          })
         ) : (
           <div className="text-[var(--text-dim)] text-xs">No hay artículos agregados</div>
         )}

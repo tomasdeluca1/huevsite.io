@@ -1,0 +1,84 @@
+"use client";
+
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { GripVertical, Trash2, Sparkles } from "lucide-react";
+import { BlockData } from "@/lib/profile-types";
+import { ReactNode } from "react";
+
+interface Props {
+  id: string;
+  block: BlockData;
+  children: ReactNode;
+  onRemove: (id: string) => void;
+  onEdit: (block: BlockData) => void;
+}
+
+export function SortableBlock({ id, block, children, onRemove, onEdit }: Props) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : "auto",
+    opacity: isDragging ? 0.4 : 1,
+  };
+
+  const getColSpanClass = (span: number) => {
+    return span === 2 ? "md:col-span-2" : span === 3 ? "md:col-span-3" : span === 4 ? "md:col-span-4" : "md:col-span-1";
+  };
+
+  const getRowSpanClass = (span: number) => {
+    return span === 2 ? "md:row-span-2" : span === 3 ? "md:row-span-3" : "md:row-span-1";
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`${getColSpanClass(block.col_span)} ${getRowSpanClass(block.row_span)} relative group rounded-[var(--radius-lg)]`}
+    >
+      {/* OVERLAY CONTROLS */}
+      <div className="absolute top-3 right-3 flex gap-2 z-[60] opacity-0 group-hover:opacity-100 transition-all transform translate-y-1 group-hover:translate-y-0">
+        <button
+          onClick={() => onEdit(block)}
+          className="p-2 rounded-lg bg-[var(--surface2)] border border-[var(--border-bright)] hover:border-[var(--accent)] transition-all text-[var(--accent)] backdrop-blur-md shadow-lg"
+          title="Editar contenido"
+        >
+          <Sparkles size={16} />
+        </button>
+        <button
+          onClick={() => onRemove(id)}
+          className="p-2 rounded-lg bg-red-500/10 border border-red-500/30 hover:bg-red-500 hover:text-white transition-all text-red-500 backdrop-blur-md shadow-lg"
+          title="Eliminar bloque"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
+
+      {/* DRAG HANDLE */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute top-3 left-3 p-2 cursor-grab active:cursor-grabbing z-[60] opacity-0 group-hover:opacity-100 transition-all transform -translate-y-1 group-hover:translate-y-0 text-[var(--text-muted)] hover:text-white bg-[var(--surface)]/50 rounded-lg backdrop-blur-md"
+      >
+        <GripVertical size={18} />
+      </div>
+
+      {/* HIGHLIGHT BORDER ON HOVER */}
+      <div className="absolute inset-0 border-2 border-[var(--accent)] opacity-0 group-hover:opacity-20 rounded-[var(--radius-lg)] pointer-events-none transition-opacity duration-300" />
+
+      {/* CONTENT */}
+      <div className="h-full pointer-events-none select-none">
+        {children}
+      </div>
+    </div>
+  );
+}

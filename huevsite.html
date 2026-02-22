@@ -1,0 +1,1781 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>huevsite.io — Mostrá lo que buildás</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080808;
+    --surface: #111111;
+    --surface2: #1a1a1a;
+    --border: #222222;
+    --border-bright: #333333;
+    --accent: #C8FF00;
+    --accent-dim: rgba(200, 255, 0, 0.12);
+    --accent-mid: rgba(200, 255, 0, 0.3);
+    --text: #f0f0f0;
+    --text-muted: #666;
+    --text-dim: #999;
+    --red: #FF3B3B;
+    --blue: #4D9FFF;
+    --purple: #A855F7;
+    --orange: #FF7A00;
+    --radius-sm: 8px;
+    --radius: 14px;
+    --radius-lg: 20px;
+    --radius-xl: 28px;
+    --font-display: 'Bricolage Grotesque', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --space: 8px;
+    --glow: 0 0 30px rgba(200, 255, 0, 0.15);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-display);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ===== LANDING PAGE ===== */
+  .landing {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* NAV */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 40px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(8,8,8,0.85);
+    backdrop-filter: blur(20px);
+  }
+
+  .logo {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .logo span { color: var(--accent); }
+
+  nav .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .btn {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 14px;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border-bright);
+  }
+  .btn-ghost:hover { color: var(--text); border-color: #555; }
+
+  .btn-accent {
+    background: var(--accent);
+    color: #000;
+    letter-spacing: -0.2px;
+  }
+  .btn-accent:hover {
+    background: #d4ff1a;
+    transform: translateY(-1px);
+    box-shadow: var(--glow);
+  }
+
+  /* HERO */
+  .hero {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 80px 40px 60px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(200,255,0,0.07) 0%, transparent 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -60%);
+    pointer-events: none;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border-bright);
+    border-radius: 100px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    color: var(--text-dim);
+    margin-bottom: 28px;
+    animation: fadeDown 0.6s ease;
+  }
+
+  .badge .dot {
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hero h1 {
+    font-size: clamp(52px, 8vw, 96px);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -3px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.6s ease 0.1s both;
+  }
+
+  .hero h1 .accent { color: var(--accent); }
+  .hero h1 .strike {
+    position: relative;
+    color: var(--text-muted);
+  }
+  .hero h1 .strike::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    top: 50%;
+    height: 3px;
+    background: var(--accent);
+    transform: translateY(-50%) rotate(-2deg);
+  }
+
+  .hero p {
+    font-size: 18px;
+    color: var(--text-dim);
+    max-width: 480px;
+    line-height: 1.6;
+    margin-bottom: 36px;
+    animation: fadeUp 0.6s ease 0.2s both;
+  }
+
+  .hero-ctas {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 60px;
+    animation: fadeUp 0.6s ease 0.3s both;
+  }
+
+  .hero-ctas .btn-accent {
+    font-size: 16px;
+    padding: 14px 28px;
+  }
+
+  .hero-username-preview {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .social-proof {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    animation: fadeUp 0.6s ease 0.4s both;
+  }
+
+  .avatars {
+    display: flex;
+  }
+
+  .avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 2px solid var(--bg);
+    margin-left: -8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    background: var(--surface2);
+  }
+  .avatar:first-child { margin-left: 0; }
+  .a1 { background: linear-gradient(135deg, #667eea, #764ba2); }
+  .a2 { background: linear-gradient(135deg, #f093fb, #f5576c); }
+  .a3 { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+  .a4 { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+  .a5 { background: linear-gradient(135deg, #fa709a, #fee140); }
+
+  .social-proof-text {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .social-proof-text strong { color: var(--text); }
+
+  /* ===== PROFILE DEMO ===== */
+  .demo-section {
+    padding: 40px 40px 80px;
+    max-width: 1100px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .demo-label {
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+  }
+
+  .demo-browser {
+    background: var(--surface);
+    border: 1px solid var(--border-bright);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.03), 0 40px 80px rgba(0,0,0,0.6);
+  }
+
+  .browser-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(0,0,0,0.3);
+  }
+
+  .browser-dots {
+    display: flex; gap: 6px;
+  }
+  .browser-dots span {
+    width: 11px; height: 11px;
+    border-radius: 50%;
+  }
+  .bd1 { background: #FF5F57; }
+  .bd2 { background: #FFBD2E; }
+  .bd3 { background: #28C840; }
+
+  .browser-url {
+    flex: 1;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 5px 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    max-width: 320px;
+    margin: 0 auto;
+  }
+
+  .browser-url span { color: var(--accent); }
+
+  /* ===== BENTO GRID ===== */
+  .profile-page {
+    padding: 28px;
+    background: var(--bg);
+  }
+
+  .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: minmax(120px, auto);
+    gap: 12px;
+  }
+
+  /* Block base */
+  .block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    cursor: default;
+  }
+
+  .block:hover {
+    border-color: var(--border-bright);
+  }
+
+  /* Spans */
+  .col-2 { grid-column: span 2; }
+  .col-3 { grid-column: span 3; }
+  .col-4 { grid-column: span 4; }
+  .row-2 { grid-row: span 2; }
+  .row-3 { grid-row: span 3; }
+
+  /* ===== HERO BLOCK ===== */
+  .block-hero {
+    grid-column: span 2;
+    grid-row: span 2;
+    background: linear-gradient(145deg, #131313 0%, #0d0d0d 100%);
+    border-color: #2a2a2a;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 28px;
+  }
+
+  .block-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 80% 20%, rgba(200,255,0,0.05), transparent 60%);
+  }
+
+  .hero-avatar {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #C8FF00, #00FF88);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+    font-weight: 800;
+    color: #000;
+    margin-bottom: 16px;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .hero-status {
+    position: absolute;
+    bottom: 2px; right: 2px;
+    width: 16px; height: 16px;
+    background: #00C853;
+    border-radius: 50%;
+    border: 2px solid var(--surface);
+  }
+
+  .hero-name {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .hero-role {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    margin-bottom: 12px;
+  }
+
+  .hero-tagline {
+    font-size: 15px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    margin-bottom: 20px;
+    flex: 1;
+  }
+
+  .hero-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    padding: 4px 10px;
+    border-radius: 100px;
+    background: var(--surface2);
+    border: 1px solid var(--border-bright);
+    color: var(--text-dim);
+  }
+
+  .tag.accent {
+    background: var(--accent-dim);
+    border-color: rgba(200,255,0,0.3);
+    color: var(--accent);
+  }
+
+  /* ===== CURRENTLY BUILDING ===== */
+  .block-building {
+    grid-column: span 2;
+    background: linear-gradient(135deg, #0f1a00, #0d0d0d);
+    border-color: rgba(200,255,0,0.2);
+    position: relative;
+  }
+
+  .block-building::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.6;
+  }
+
+  .block-label {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .block-label .blinker {
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+  }
+
+  .building-name {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+    color: var(--accent);
+  }
+
+  .building-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    margin-bottom: 14px;
+  }
+
+  .building-stack {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .stack-pill {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.05);
+    color: var(--text-dim);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  /* ===== GITHUB BLOCK ===== */
+  .block-github {
+    grid-column: span 2;
+    grid-row: span 1;
+  }
+
+  .github-stats {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 14px;
+  }
+
+  .gh-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .gh-stat .num {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    color: var(--text);
+  }
+
+  .gh-stat .lbl {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .heatmap {
+    display: grid;
+    grid-template-columns: repeat(26, 1fr);
+    gap: 3px;
+    margin-top: 10px;
+  }
+
+  .hm-cell {
+    aspect-ratio: 1;
+    border-radius: 2px;
+    background: var(--surface2);
+  }
+
+  .hm-1 { background: rgba(200,255,0,0.15); }
+  .hm-2 { background: rgba(200,255,0,0.35); }
+  .hm-3 { background: rgba(200,255,0,0.6); }
+  .hm-4 { background: rgba(200,255,0,0.9); }
+
+  /* ===== METRICS BLOCK ===== */
+  .block-metric {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  .metric-num {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .metric-lbl {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .metric-trend {
+    font-size: 11px;
+    color: #00C853;
+    font-family: var(--font-mono);
+    margin-top: 4px;
+  }
+
+  /* ===== PROJECT BLOCK ===== */
+  .block-project {
+    grid-column: span 2;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .project-preview {
+    height: 140px;
+    background: linear-gradient(135deg, #1a0033, #000814, #001a1a);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .project-preview::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+      radial-gradient(circle at 30% 50%, rgba(100,0,200,0.3), transparent 50%),
+      radial-gradient(circle at 70% 50%, rgba(0,200,200,0.2), transparent 50%);
+  }
+
+  .project-preview-code {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+    padding: 16px;
+    position: relative;
+    z-index: 1;
+    line-height: 1.8;
+  }
+
+  .project-preview-code .kw { color: #C8FF00; }
+  .project-preview-code .fn { color: #4D9FFF; }
+  .project-preview-code .str { color: #FF7A00; }
+
+  .project-info {
+    padding: 16px;
+  }
+
+  .project-name {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+
+  .project-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+
+  .project-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .project-metrics {
+    display: flex;
+    gap: 12px;
+  }
+
+  .pm {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .link-btn {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--accent);
+    text-decoration: none;
+    padding: 4px 10px;
+    border: 1px solid rgba(200,255,0,0.3);
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+
+  /* ===== STACK BLOCK ===== */
+  .block-stack {
+    grid-column: span 1;
+  }
+
+  .stack-icons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .stack-icon {
+    aspect-ratio: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .stack-icon:hover {
+    border-color: var(--border-bright);
+    background: #222;
+  }
+
+  /* ===== SOCIAL BLOCK ===== */
+  .block-social {
+    grid-column: span 1;
+  }
+
+  .social-links {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .social-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+  }
+
+  .social-link:hover {
+    border-color: var(--border-bright);
+  }
+
+  .social-link .icon {
+    font-size: 14px;
+    width: 22px;
+    text-align: center;
+  }
+
+  .social-link .handle {
+    font-size: 12px;
+    font-family: var(--font-mono);
+    color: var(--text-dim);
+  }
+
+  /* ===== COMMUNITY BLOCK ===== */
+  .block-community {
+    grid-column: span 2;
+  }
+
+  .community-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .comm-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid;
+  }
+
+  .cb-eth {
+    background: rgba(98,126,234,0.1);
+    border-color: rgba(98,126,234,0.3);
+    color: #8fa3ff;
+  }
+
+  .cb-ba {
+    background: rgba(255,122,0,0.1);
+    border-color: rgba(255,122,0,0.3);
+    color: #ff9940;
+  }
+
+  .cb-hk {
+    background: rgba(0,200,83,0.1);
+    border-color: rgba(0,200,83,0.3);
+    color: #00C853;
+  }
+
+  .cb-dc {
+    background: rgba(77,159,255,0.1);
+    border-color: rgba(77,159,255,0.3);
+    color: #4D9FFF;
+  }
+
+  .cb-ph {
+    background: rgba(168,85,247,0.1);
+    border-color: rgba(168,85,247,0.3);
+    color: #A855F7;
+  }
+
+  /* ===== QUOTE / WRITING BLOCK ===== */
+  .block-writing {
+    grid-column: span 2;
+    background: linear-gradient(145deg, #0d0d1a, #080810);
+    border-color: rgba(77,159,255,0.15);
+  }
+
+  .writing-posts {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .writing-post {
+    padding: 10px;
+    background: rgba(255,255,255,0.02);
+    border-radius: var(--radius-sm);
+    border-left: 2px solid var(--blue);
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .writing-post:hover { background: rgba(255,255,255,0.04); }
+
+  .wp-title {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 2px;
+    color: var(--text);
+  }
+
+  .wp-meta {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+  }
+
+  /* ===== SECTIONS BELOW ===== */
+  .page-section {
+    padding: 80px 40px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-size: clamp(32px, 4vw, 52px);
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  .section-sub {
+    font-size: 16px;
+    color: var(--text-dim);
+    max-width: 480px;
+    line-height: 1.6;
+  }
+
+  /* ===== ONBOARDING FLOW ===== */
+  .onboarding-section {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .onboarding-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 80px 40px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+  }
+
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .step {
+    display: flex;
+    gap: 20px;
+    position: relative;
+    padding-bottom: 32px;
+  }
+
+  .step:last-child { padding-bottom: 0; }
+
+  .step::before {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: 44px;
+    bottom: 0;
+    width: 1px;
+    background: var(--border-bright);
+  }
+
+  .step:last-child::before { display: none; }
+
+  .step-num {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border-bright);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+    transition: all 0.3s;
+  }
+
+  .step.active .step-num {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+    box-shadow: var(--glow);
+  }
+
+  .step-content {}
+  .step-title {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+    padding-top: 8px;
+  }
+
+  .step-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* Onboarding mock UI */
+  .onboard-ui {
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    border-radius: var(--radius-xl);
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .onboard-ui::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 0%, rgba(200,255,0,0.04), transparent 60%);
+  }
+
+  .ou-q {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+
+  .ou-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+  }
+
+  .ou-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .ou-option {
+    padding: 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border-bright);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+
+  .ou-option:hover, .ou-option.selected {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  .ou-option .em { font-size: 28px; margin-bottom: 6px; }
+  .ou-option .nm { font-size: 13px; font-weight: 600; }
+  .ou-option .dc { font-size: 11px; color: var(--text-muted); }
+
+  .ou-option.selected .dc { color: rgba(200,255,0,0.6); }
+
+  .ou-next {
+    width: 100%;
+    padding: 14px;
+    border-radius: var(--radius);
+    background: var(--accent);
+    color: #000;
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    letter-spacing: -0.2px;
+  }
+
+  .ou-skip {
+    width: 100%;
+    text-align: center;
+    margin-top: 10px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+
+  /* ===== DESIGN TOKENS SECTION ===== */
+  .tokens-section {
+    padding: 80px 40px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .tokens-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 40px;
+  }
+
+  .token-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+  }
+
+  .token-card h3 {
+    font-size: 13px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+  }
+
+  .color-swatches {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .swatch {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .swatch-color {
+    width: 36px; height: 36px;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+  }
+
+  .swatch-info {
+    flex: 1;
+  }
+
+  .swatch-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .swatch-val {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+  }
+
+  .type-sample {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .ts-item {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
+  }
+
+  .ts-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+  .ts-label {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  /* ===== MICROCOPY SECTION ===== */
+  .microcopy-section {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .microcopy-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 80px 40px;
+  }
+
+  .microcopy-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-top: 40px;
+  }
+
+  .mc-card {
+    background: var(--bg);
+    border: 1px solid var(--border-bright);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    position: relative;
+  }
+
+  .mc-context {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .mc-text {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .mc-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .mc-accent { color: var(--accent); }
+
+  /* ===== FOOTER ===== */
+  footer {
+    padding: 40px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .footer-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .footer-tagline {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 20px;
+  }
+
+  .footer-links a {
+    font-size: 12px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+
+  .footer-links a:hover { color: var(--text); }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    nav { padding: 16px 20px; }
+    .hero { padding: 60px 20px 40px; }
+    .hero h1 { font-size: 44px; letter-spacing: -2px; }
+    .bento-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .col-3 { grid-column: span 2; }
+    .col-4 { grid-column: span 2; }
+    .block-hero { grid-column: span 2; }
+    .block-github { grid-column: span 2; }
+    .onboarding-inner { grid-template-columns: 1fr; }
+    .tokens-grid { grid-template-columns: 1fr; }
+    .microcopy-grid { grid-template-columns: 1fr; }
+    .page-section { padding: 60px 20px; }
+    .demo-section { padding: 20px 20px 60px; }
+    footer { flex-direction: column; gap: 20px; align-items: flex-start; }
+  }
+
+  /* Interactions */
+  .ou-option { cursor: pointer; user-select: none; }
+  .block:hover .block-building::before { opacity: 1; }
+
+  /* Animation for demo */
+  @keyframes shimmer {
+    from { background-position: -200% 0; }
+    to { background-position: 200% 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== LANDING ===== -->
+<div class="landing">
+
+  <nav>
+    <div class="logo">huev<span>site</span>.io</div>
+    <div class="nav-right">
+      <a href="#" class="btn btn-ghost">Ver ejemplos</a>
+      <a href="#" class="btn btn-accent">Crear mi huevsite →</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="badge">
+      <span class="dot"></span>
+      Para builders de Argentina y LATAM
+    </div>
+
+    <h1>
+      El <span class="accent">portfolio</span><br>
+      que no da<br>
+      <span class="strike">vergüenza</span> ajena.
+    </h1>
+
+    <p>Mostrá quién sos y qué buildás. Sin diseñar desde cero, sin LinkedIn genérico. Con personalidad propia.</p>
+
+    <div class="hero-ctas">
+      <a href="#" class="btn btn-accent">Empezar gratis</a>
+      <span class="hero-username-preview">huevsite.io/<strong style="color:var(--accent)">tuusuario</strong></span>
+    </div>
+
+    <div class="social-proof">
+      <div class="avatars">
+        <div class="avatar a1">F</div>
+        <div class="avatar a2">M</div>
+        <div class="avatar a3">S</div>
+        <div class="avatar a4">L</div>
+        <div class="avatar a5">P</div>
+      </div>
+      <span class="social-proof-text">+2.400 builders ya armaron su huevsite</span>
+    </div>
+  </section>
+
+  <!-- DEMO -->
+  <div class="demo-section">
+    <p class="demo-label">// perfil de ejemplo</p>
+    <div class="demo-browser">
+      <div class="browser-bar">
+        <div class="browser-dots">
+          <span class="bd1"></span>
+          <span class="bd2"></span>
+          <span class="bd3"></span>
+        </div>
+        <div class="browser-url">huevsite.io/<span>gonza</span></div>
+      </div>
+
+      <div class="profile-page">
+        <div class="bento-grid">
+
+          <!-- HERO BLOCK -->
+          <div class="block block-hero">
+            <div>
+              <div class="hero-avatar">
+                G
+                <div class="hero-status"></div>
+              </div>
+              <div class="hero-name">Gonzalo Ferrer</div>
+              <div class="hero-role">// Full-stack Dev & Indie Hacker</div>
+            </div>
+            <div>
+              <p class="hero-tagline">Buildeo productos desde BA. Ex-MercadoLibre, hoy freelance & founder. Si tiene usuario activos, me interesa.</p>
+              <div class="hero-tags">
+                <span class="tag accent">disponible para proyectos</span>
+                <span class="tag">Buenos Aires 🇦🇷</span>
+                <span class="tag">web3</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- CURRENTLY BUILDING -->
+          <div class="block block-building col-2">
+            <div class="block-label">
+              <span class="blinker"></span>
+              Currently building
+            </div>
+            <div class="building-name">FlowKit</div>
+            <div class="building-desc">SDK de componentes para onboarding en apps SaaS. El tipo de lib que yo necesitaba y no existía.</div>
+            <div class="building-stack">
+              <span class="stack-pill">React</span>
+              <span class="stack-pill">TypeScript</span>
+              <span class="stack-pill">Tailwind</span>
+              <span class="stack-pill">Storybook</span>
+            </div>
+          </div>
+
+          <!-- METRIC 1 -->
+          <div class="block block-metric">
+            <div class="block-label">GitHub Stars</div>
+            <div class="metric-num" style="color: var(--accent)">3.2k</div>
+            <div class="metric-lbl">⭐ repositorios</div>
+            <div class="metric-trend">↑ +180 este mes</div>
+          </div>
+
+          <!-- METRIC 2 -->
+          <div class="block block-metric">
+            <div class="block-label">Usuarios activos</div>
+            <div class="metric-num" style="color: var(--blue)">847</div>
+            <div class="metric-lbl">🔵 FlowKit</div>
+            <div class="metric-trend" style="color: var(--blue)">↑ +12% weekly</div>
+          </div>
+
+          <!-- METRIC 3 -->
+          <div class="block block-metric">
+            <div class="block-label">MRR</div>
+            <div class="metric-num" style="color: var(--purple)">$1.4k</div>
+            <div class="metric-lbl">💜 USD / mes</div>
+            <div class="metric-trend" style="color: var(--purple)">↑ +$200 vs mes pasado</div>
+          </div>
+
+          <!-- PROJECT SHOWCASE -->
+          <div class="block block-project col-2">
+            <div class="project-preview">
+              <div class="project-preview-code">
+                <div><span class="kw">import</span> { FlowKit } <span class="kw">from</span> <span class="str">'flowkit-react'</span></div>
+                <div>&nbsp;</div>
+                <div><span class="kw">const</span> <span class="fn">App</span> = () <span class="kw">=></span> (</div>
+                <div>&nbsp; &lt;<span class="fn">FlowKit</span> <span class="kw">steps</span>={steps} /&gt;</div>
+                <div>)</div>
+              </div>
+            </div>
+            <div class="project-info">
+              <div class="project-name">FlowKit — onboarding SDK</div>
+              <div class="project-desc">Componentes listos para onboarding en SaaS. Tours guiados, tooltips, progress bars. Drop-in, zero-config.</div>
+              <div class="project-footer">
+                <div class="project-metrics">
+                  <span class="pm">⭐ 3.2k</span>
+                  <span class="pm">🍴 248</span>
+                  <span class="pm">🟢 v2.4.0</span>
+                </div>
+                <a class="link-btn" href="#">ver demo →</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- GITHUB HEATMAP -->
+          <div class="block block-github col-2">
+            <div class="block-label">GitHub activity</div>
+            <div class="github-stats">
+              <div class="gh-stat">
+                <span class="num">342</span>
+                <span class="lbl">commits / año</span>
+              </div>
+              <div class="gh-stat">
+                <span class="num" style="color:var(--accent)">28</span>
+                <span class="lbl">repos públicos</span>
+              </div>
+              <div class="gh-stat">
+                <span class="num" style="color:var(--blue)">14</span>
+                <span class="lbl">PRs merged</span>
+              </div>
+            </div>
+            <div class="heatmap" id="heatmap"></div>
+          </div>
+
+          <!-- TECH STACK -->
+          <div class="block block-stack">
+            <div class="block-label">Stack</div>
+            <div class="stack-icons">
+              <div class="stack-icon" title="TypeScript">TS</div>
+              <div class="stack-icon" title="React">⚛</div>
+              <div class="stack-icon" title="Node.js">⬡</div>
+              <div class="stack-icon" title="PostgreSQL">🐘</div>
+              <div class="stack-icon" title="Docker">🐳</div>
+              <div class="stack-icon" title="Solidity">◆</div>
+            </div>
+          </div>
+
+          <!-- SOCIAL -->
+          <div class="block block-social">
+            <div class="block-label">Links</div>
+            <div class="social-links">
+              <a class="social-link" href="#">
+                <span class="icon">𝕏</span>
+                <span class="handle">@gonzaferrer</span>
+              </a>
+              <a class="social-link" href="#">
+                <span class="icon">⬡</span>
+                <span class="handle">Farcaster</span>
+              </a>
+              <a class="social-link" href="#">
+                <span class="icon">💬</span>
+                <span class="handle">Discord</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- COMMUNITIES -->
+          <div class="block block-community col-2">
+            <div class="block-label">Comunidades</div>
+            <div class="community-badges">
+              <span class="comm-badge cb-eth">⟠ Ethereum Argentina</span>
+              <span class="comm-badge cb-ba">🏙 Palermo Valley</span>
+              <span class="comm-badge cb-hk">⚡ Indie Hackers LATAM</span>
+              <span class="comm-badge cb-dc">💬 Devconnect BA 2025</span>
+              <span class="comm-badge cb-ph">🦄 Product Hunt AR</span>
+            </div>
+          </div>
+
+          <!-- WRITING -->
+          <div class="block block-writing col-2">
+            <div class="block-label">Writing</div>
+            <div class="writing-posts">
+              <div class="writing-post">
+                <div class="wp-title">Cómo moneticé una lib de código en 4 meses</div>
+                <div class="wp-meta">dev.to · 8 min · 2.1k lecturas</div>
+              </div>
+              <div class="writing-post">
+                <div class="wp-title">Por qué Solidity me abrió la cabeza como developer</div>
+                <div class="wp-meta">Mirror.xyz · 6 min · 890 lecturas</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end landing -->
+
+<!-- ===== ONBOARDING SECTION ===== -->
+<div class="onboarding-section">
+  <div class="onboarding-inner">
+    <div>
+      <div class="section-label">// onboarding</div>
+      <h2 class="section-title">Listo en 3 minutos.<br><span style="color:var(--accent)">En serio.</span></h2>
+      <p class="section-sub" style="margin-bottom:36px">Sin plantillas vacías. Sin lienzo en blanco. El sistema arma tu perfil solo, vos solo lo afinás.</p>
+
+      <div class="steps">
+        <div class="step active">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">¿Qué sos?</div>
+            <div class="step-desc">Elegís tu perfil (dev, diseñador, founder, todo lo anterior). Sin formularios aburridos.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">Conectás GitHub (opcional)</div>
+            <div class="step-desc">Importamos tus proyectos, lenguajes y actividad automáticamente. Cero copia-pega.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">Elegís tu layout</div>
+            <div class="step-desc">Te sugerimos un bento armado según tu perfil. Drag & drop para reordenar.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <div class="step-title">Publicás con tu username</div>
+            <div class="step-desc">huevsite.io/tuusuario. Compartís el link. Profit.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="onboard-ui">
+      <div class="ou-q">¿Qué sos, básicamente?</div>
+      <div class="ou-sub">Podés elegir más de uno, che.</div>
+      <div class="ou-options">
+        <div class="ou-option selected" onclick="this.classList.toggle('selected')">
+          <div class="em">⌨️</div>
+          <div class="nm">Developer</div>
+          <div class="dc">Código, repos, commits</div>
+        </div>
+        <div class="ou-option" onclick="this.classList.toggle('selected')">
+          <div class="em">🎨</div>
+          <div class="nm">Designer</div>
+          <div class="dc">Figma, UI, sistemas</div>
+        </div>
+        <div class="ou-option selected" onclick="this.classList.toggle('selected')">
+          <div class="em">🚀</div>
+          <div class="nm">Founder</div>
+          <div class="dc">Startups, MRR, tracción</div>
+        </div>
+        <div class="ou-option" onclick="this.classList.toggle('selected')">
+          <div class="em">🛠</div>
+          <div class="nm">Indie Hacker</div>
+          <div class="dc">Side projects, solodev</div>
+        </div>
+      </div>
+      <button class="ou-next">Seguir →</button>
+      <div class="ou-skip">también podés conectar GitHub directamente</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DESIGN TOKENS ===== -->
+<div class="tokens-section">
+  <div class="section-label">// sistema de diseño</div>
+  <h2 class="section-title">Tokens de diseño</h2>
+  <p class="section-sub">Una identidad que no pide disculpas por existir.</p>
+
+  <div class="tokens-grid">
+    <!-- COLORS -->
+    <div class="token-card">
+      <h3>Paleta de colores</h3>
+      <div class="color-swatches">
+        <div class="swatch">
+          <div class="swatch-color" style="background:#C8FF00; border: 1px solid #555"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Acid Green — Accent</div>
+            <div class="swatch-val">#C8FF00</div>
+          </div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background:#080808"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Void — Background</div>
+            <div class="swatch-val">#080808</div>
+          </div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background:#111111"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Surface</div>
+            <div class="swatch-val">#111111</div>
+          </div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background:#4D9FFF"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Electric Blue</div>
+            <div class="swatch-val">#4D9FFF</div>
+          </div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background:#A855F7"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Crypto Purple</div>
+            <div class="swatch-val">#A855F7</div>
+          </div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background:#FF7A00"></div>
+          <div class="swatch-info">
+            <div class="swatch-name">Productividad Orange</div>
+            <div class="swatch-val">#FF7A00</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TYPOGRAPHY -->
+    <div class="token-card">
+      <h3>Tipografía</h3>
+      <div class="type-sample">
+        <div class="ts-item">
+          <div class="ts-label">Display — Bricolage Grotesque</div>
+          <div style="font-size: 28px; font-weight: 800; letter-spacing: -1px; line-height: 1">Buildeo, luego existo.</div>
+        </div>
+        <div class="ts-item">
+          <div class="ts-label">Body — Bricolage Grotesque 400</div>
+          <div style="font-size: 14px; line-height: 1.6; color: var(--text-dim)">Una identidad visual sin vergüenza, con personalidad argentina.</div>
+        </div>
+        <div class="ts-item">
+          <div class="ts-label">Mono — JetBrains Mono</div>
+          <div style="font-family: var(--font-mono); font-size: 13px; color: var(--accent)">// huevsite.io/tunombre</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SPACING & RADIUS -->
+    <div class="token-card">
+      <h3>Radios & Espaciado</h3>
+      <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:20px">
+        <div style="display:flex; align-items:center; gap:12px">
+          <div style="width:40px;height:40px;background:var(--accent-dim);border:1px solid var(--accent);border-radius:8px;flex-shrink:0"></div>
+          <div>
+            <div style="font-size:13px;font-weight:600">sm — 8px</div>
+            <div style="font-size:11px;font-family:var(--font-mono);color:var(--text-muted)">pills, inputs, stacks</div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px">
+          <div style="width:40px;height:40px;background:var(--accent-dim);border:1px solid var(--accent);border-radius:14px;flex-shrink:0"></div>
+          <div>
+            <div style="font-size:13px;font-weight:600">md — 14px</div>
+            <div style="font-size:11px;font-family:var(--font-mono);color:var(--text-muted)">bloques, cards</div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px">
+          <div style="width:40px;height:40px;background:var(--accent-dim);border:1px solid var(--accent);border-radius:28px;flex-shrink:0"></div>
+          <div>
+            <div style="font-size:13px;font-weight:600">xl — 28px</div>
+            <div style="font-size:11px;font-family:var(--font-mono);color:var(--text-muted)">containers, modales</div>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:11px;font-family:var(--font-mono);color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Grid — 8pt base</div>
+      <div style="display:flex;gap:4px">
+        <div style="height:4px;background:var(--accent);border-radius:2px;flex:1;opacity:0.2"></div>
+        <div style="height:4px;background:var(--accent);border-radius:2px;flex:2;opacity:0.4"></div>
+        <div style="height:4px;background:var(--accent);border-radius:2px;flex:3;opacity:0.6"></div>
+        <div style="height:4px;background:var(--accent);border-radius:2px;flex:4;opacity:0.8"></div>
+        <div style="height:4px;background:var(--accent);border-radius:2px;flex:6"></div>
+      </div>
+      <div style="display:flex;gap:4px;margin-top:4px;font-size:10px;font-family:var(--font-mono);color:var(--text-muted)">
+        <div style="flex:1">8</div>
+        <div style="flex:2">16</div>
+        <div style="flex:3">24</div>
+        <div style="flex:4">32</div>
+        <div style="flex:6">48</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MICROCOPY ===== -->
+<div class="microcopy-section">
+  <div class="microcopy-inner">
+    <div class="section-label">// microcopy</div>
+    <h2 class="section-title">Tono de voz</h2>
+    <p class="section-sub">Español rioplatense. Sin vueltas. Con humor inteligente.</p>
+
+    <div class="microcopy-grid">
+      <div class="mc-card">
+        <div class="mc-context">Empty state — Proyectos</div>
+        <div class="mc-text">Este bloque está más vacío que el INDEC.</div>
+        <div class="mc-sub">Agregá tu primer proyecto y dejá de scrollear Twitter. <span class="mc-accent">+ Agregar proyecto</span></div>
+      </div>
+
+      <div class="mc-card">
+        <div class="mc-context">Empty state — GitHub</div>
+        <div class="mc-text">¿Estás buildando o pensando en buildear?</div>
+        <div class="mc-sub">Conectá tu GitHub y mostrá que el code es real. <span class="mc-accent">Conectar →</span></div>
+      </div>
+
+      <div class="mc-card">
+        <div class="mc-context">Onboarding — Step 2</div>
+        <div class="mc-text">¿Qué onda tu stack?</div>
+        <div class="mc-sub">Elegí las tecnologías con las que trabajás. Te las ordenamos bien, no en un párrafo de LinkedIn.</div>
+      </div>
+
+      <div class="mc-card">
+        <div class="mc-context">Onboarding — Bienvenida</div>
+        <div class="mc-text">Buenas. Armémonos el perfil que merecés.</div>
+        <div class="mc-sub">Tres minutos, sin dolor. Prometemos que no te pedimos tu empresa actual ni tu "summary profesional".</div>
+      </div>
+
+      <div class="mc-card">
+        <div class="mc-context">CTA — Perfil público</div>
+        <div class="mc-text">Mostrá lo que buildás.</div>
+        <div class="mc-sub">Tu obra. Tu URL. Sin necesidad de un diseñador caro ni un CV de Word de 2017.</div>
+      </div>
+
+      <div class="mc-card">
+        <div class="mc-context">Error — GitHub desconectado</div>
+        <div class="mc-text">El GitHub no conectó. Nos pasa a todos.</div>
+        <div class="mc-sub">Revisá que hayas dado acceso a repos públicos. O cargá tus proyectos manualmente, sin drama. <span class="mc-accent">Reintentar</span></div>
+      </div>
+
+      <div class="mc-card">
+        <div class="mc-context">Placeholder — Tagline</div>
+        <div class="mc-text">"Buildeo X para Y. Basado en Z."</div>
+        <div class="mc-sub">Una línea. Sin buzzwords. Sin "apasionado por la innovación". Eso, no.</div>
+      </div>
+
+      <div class="mc-card">
+        <div class="mc-context">Share — Después de publicar</div>
+        <div class="mc-text">¡Salió! huevsite.io/<span class="mc-accent">vos</span></div>
+        <div class="mc-sub">Compartilo. Metele un tweet. Mandáselo a Palermo Valley. Ya sos parte del ecosistema.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FINAL CTA ===== -->
+<div style="text-align:center; padding: 100px 40px; position:relative; overflow:hidden;">
+  <div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 50%, rgba(200,255,0,0.06), transparent 60%);pointer-events:none"></div>
+  <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:16px">// para builders de verdad</div>
+  <h2 style="font-size:clamp(40px,6vw,72px);font-weight:800;letter-spacing:-3px;line-height:0.95;margin-bottom:20px">
+    Tu obra.<br><span style="color:var(--accent)">Tu URL.</span>
+  </h2>
+  <p style="font-size:16px;color:var(--text-dim);max-width:400px;margin:0 auto 36px;line-height:1.6">
+    Gratis. Sin tarjeta de crédito. Sin "upgrade to Pro" a los 10 segundos.
+  </p>
+  <a href="#" class="btn btn-accent" style="font-size:17px;padding:16px 36px;display:inline-block">
+    Crear mi huevsite →
+  </a>
+  <div style="margin-top:16px;font-family:var(--font-mono);font-size:12px;color:var(--text-muted)">
+    Bento.me cerró. Nosotros no.
+  </div>
+</div>
+
+<footer>
+  <div class="footer-left">
+    <div class="logo">huev<span style="color:var(--accent)">site</span>.io</div>
+    <div class="footer-tagline">Mostrá lo que buildás.</div>
+  </div>
+  <div class="footer-links">
+    <a href="#">Sobre el proyecto</a>
+    <a href="#">Twitter/X</a>
+    <a href="#">Discord</a>
+    <a href="#">GitHub</a>
+  </div>
+</footer>
+
+<script>
+  // Generate random heatmap
+  const heatmap = document.getElementById('heatmap');
+  if (heatmap) {
+    const cells = [];
+    for (let i = 0; i < 182; i++) {
+      const r = Math.random();
+      let cls = 'hm-cell';
+      if (r > 0.85) cls += ' hm-4';
+      else if (r > 0.65) cls += ' hm-3';
+      else if (r > 0.45) cls += ' hm-2';
+      else if (r > 0.3) cls += ' hm-1';
+      cells.push(`<div class="${cls}"></div>`);
+    }
+    heatmap.innerHTML = cells.join('');
+  }
+
+  // Onboarding option toggle
+  document.querySelectorAll('.ou-option').forEach(opt => {
+    opt.addEventListener('click', () => opt.classList.toggle('selected'));
+  });
+</script>
+</body>
+</html>

@@ -27,7 +27,7 @@ export async function GET(
 
     const tagline = heroBlock?.content?.tagline || 'Builder en huevsite.io';
     const roles = (heroBlock?.content?.roles as string[]) || [];
-    const accentColor = profile.accent_color || '#FFFD01';
+    const accentColor = profile.accent_color || '#C8FF00';
 
     return new ImageResponse(
       (
@@ -37,131 +37,158 @@ export async function GET(
             width: '100%',
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'flex-start',
-            justifyContent: 'center',
-            backgroundColor: '#000000',
-            backgroundImage: 'radial-gradient(circle at 25% 25%, #111111 0%, #000000 100%)',
+            backgroundColor: '#050505',
+            backgroundImage: 'radial-gradient(circle at 50% 120%, rgba(200,255,0,0.15) 0%, #050505 60%)',
             padding: '80px',
             position: 'relative',
+            justifyContent: 'space-between',
+            fontFamily: 'sans-serif',
           }}
         >
-          {/* Accent Glow */}
+          {/* Subtle Grid effect overlay */}
           <div
             style={{
               position: 'absolute',
-              top: '-10%',
-              left: '-10%',
-              width: '60%',
-              height: '60%',
-              borderRadius: '100%',
-              backgroundColor: accentColor,
-              opacity: 0.1,
-              filter: 'blur(100px)',
+              inset: 0,
+              backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
+              backgroundSize: '40px 40px',
+              zIndex: 0,
             }}
           />
 
-          {/* Logo */}
+          {/* Top Logo Section */}
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '12px',
-              marginBottom: '40px',
+              gap: '16px',
+              zIndex: 10,
             }}
           >
             <div
               style={{
-                width: '40px',
-                height: '40px',
+                fontSize: '32px',
+                fontWeight: '800',
+                color: 'white',
+                letterSpacing: '-1px',
+                display: 'flex'
+              }}
+            >
+              huev<span style={{ color: accentColor }}>site</span>.io
+            </div>
+            <div
+              style={{
+                padding: '4px 12px',
+                borderRadius: '100px',
+                border: '1px solid #333',
+                backgroundColor: '#111',
+                color: '#888',
+                fontSize: '14px',
+                fontWeight: '600',
+                textTransform: 'uppercase',
+                letterSpacing: '2px',
+                display: 'flex'
+              }}
+            >
+              // builder logic
+            </div>
+          </div>
+
+          {/* Main Content Area */}
+          <div style={{ display: 'flex', flexDirection: 'column', zIndex: 10 }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '24px',
+              marginBottom: '40px'
+            }}>
+              <div style={{
+                width: '110px',
+                height: '110px',
                 borderRadius: '50%',
-                backgroundColor: accentColor,
+                background: `linear-gradient(135deg, ${accentColor}, #00FF88)`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '24px',
-                fontWeight: 'bold',
-                color: 'black',
-              }}
-            >
-              H
-            </div>
-            <span style={{ fontSize: '28px', fontWeight: 'bold', color: 'white', letterSpacing: '-0.05em' }}>
-              huevsite.io
-            </span>
-          </div>
-
-          {/* Content */}
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span
-              style={{
-                fontSize: '85px',
-                fontWeight: '900',
-                color: 'white',
-                lineHeight: 1.1,
-                letterSpacing: '-0.04em',
-                marginBottom: '16px',
-              }}
-            >
-              {profile.display_name || username}
-            </span>
-
-            {/* Badges / Roles */}
-            {roles.length > 0 && (
-              <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
-                {roles.map((role: string) => (
-                  <div
-                    key={role}
-                    style={{
-                      padding: '6px 16px',
-                      borderRadius: '40px',
-                      border: `1.5px solid ${accentColor}44`,
-                      backgroundColor: `${accentColor}15`,
-                      color: accentColor,
-                      fontSize: '18px',
-                      fontWeight: '800',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.08em',
-                    }}
-                  >
-                    {role}
-                  </div>
-                ))}
+                fontSize: '48px',
+                fontWeight: '800',
+                color: '#000',
+                boxShadow: `0 0 40px ${accentColor}40`
+              }}>
+                {(profile.display_name || username).substring(0, 1).toUpperCase()}
               </div>
-            )}
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span
+                  style={{
+                    fontSize: '92px',
+                    fontWeight: '900',
+                    color: 'white',
+                    lineHeight: 1,
+                    letterSpacing: '-3px',
+                    marginBottom: '8px',
+                  }}
+                >
+                  {profile.display_name || username}
+                </span>
+                {/* Badges / Roles */}
+                {roles.length > 0 && (
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+                    {roles.map((role: string) => (
+                      <div
+                        key={role}
+                        style={{
+                          padding: '8px 20px',
+                          borderRadius: '12px',
+                          border: `1px solid ${accentColor}50`,
+                          backgroundColor: `${accentColor}10`,
+                          color: '#FFF',
+                          fontSize: '20px',
+                          fontWeight: '700',
+                          letterSpacing: '-0.5px'
+                        }}
+                      >
+                        {role}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
 
             <span
               style={{
-                fontSize: '32px',
-                color: '#888888',
-                maxWidth: '850px',
+                fontSize: '36px',
+                color: '#A0A0A0',
+                maxWidth: '900px',
                 lineHeight: 1.4,
+                fontWeight: '500',
+                letterSpacing: '-0.5px'
               }}
             >
               {tagline}
             </span>
           </div>
 
-          {/* URL Footer */}
-          <div
-            style={{
-              position: 'absolute',
-              bottom: '80px',
-              left: '80px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '10px 20px',
-              borderRadius: '40px',
-              border: '1px solid #333333',
-              backgroundColor: '#111111',
-            }}
-          >
-            <span style={{ fontSize: '18px', color: '#888888', fontWeight: '500' }}>
-              huevsite.io/
-            </span>
-            <span style={{ fontSize: '18px', color: 'white', fontWeight: '800' }}>
-              {username}
-            </span>
+          {/* Bottom URL section */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', zIndex: 10 }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: '16px 32px',
+                borderRadius: '100px',
+                border: `1px solid ${accentColor}40`,
+                backgroundColor: 'rgba(0,0,0,0.6)',
+                boxShadow: `0 8px 32px rgba(0,0,0,0.4)`,
+              }}
+            >
+              <span style={{ fontSize: '24px', color: '#888', fontWeight: '500', fontFamily: 'monospace' }}>
+                huevsite.io/
+              </span>
+              <span style={{ fontSize: '24px', color: accentColor, fontWeight: '800', fontFamily: 'monospace' }}>
+                {username}
+              </span>
+            </div>
           </div>
         </div>
       ),

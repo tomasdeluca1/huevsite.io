@@ -2,13 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 
-// We use the service role key to bypass RLS and update profiles from the webhook
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseServiceKey) {
+      console.error("Falta SUPABASE_SERVICE_ROLE_KEY");
+      return NextResponse.json({ error: "Supabase service key not configured" }, { status: 500 });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
     const secret = process.env.LEMON_SQUEEZY_WEBHOOK_SECRET;
     
     if (!secret) {

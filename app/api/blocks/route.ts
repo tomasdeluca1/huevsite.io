@@ -29,6 +29,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Limit logic
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('subscription_tier')
+      .eq('id', user.id)
+      .single()
+
+    const { count: blockCount } = await supabase
+      .from('blocks')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+
+    if (profileData?.subscription_tier !== 'pro' && blockCount && blockCount >= 6) {
+      return NextResponse.json(
+        { error: 'Límite de bloques alcanzado para plan gratuito' },
+        { status: 403 }
+      )
+    }
+
     // Obtener el último order para asignar uno nuevo
     const { data: lastBlock } = await supabase
       .from('blocks')

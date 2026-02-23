@@ -5,14 +5,18 @@ import { createPortal } from "react-dom";
 import { Plus, X, Layout as LayoutIcon, MessageSquare, Rocket, Github, Star, Layers, Users, BookOpen, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BlockType } from "@/lib/profile-types";
+import { UpgradeModal } from "@/components/dashboard/UpgradeModal";
 
 interface BlockSelectorProps {
   onAdd: (type: BlockType) => void;
   accentColor: string;
+  currentBlockCount: number;
+  subscriptionTier?: "free" | "pro";
 }
 
-export function BlockSelector({ onAdd, accentColor }: BlockSelectorProps) {
+export function BlockSelector({ onAdd, accentColor, currentBlockCount, subscriptionTier = "free" }: BlockSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
   const categories = [
     {
@@ -89,10 +93,15 @@ export function BlockSelector({ onAdd, accentColor }: BlockSelectorProps) {
                           {cat.blocks.map((block) => (
                             <button
                               key={block.type}
-                              onClick={() => {
-                                onAdd(block.type as BlockType);
-                                setIsOpen(false);
-                              }}
+                                onClick={() => {
+                                  if (subscriptionTier !== "pro" && currentBlockCount >= 6) {
+                                    setIsUpgradeModalOpen(true);
+                                    setIsOpen(false);
+                                    return;
+                                  }
+                                  onAdd(block.type as BlockType);
+                                  setIsOpen(false);
+                                }}
                               className="flex items-start gap-4 p-4 rounded-3xl hover:bg-[var(--surface2)] border border-transparent hover:border-[var(--border-bright)] transition-all group text-left"
                             >
                               <div className="p-3 rounded-2xl bg-[var(--surface2)] text-[var(--text-dim)] group-hover:text-black group-hover:bg-[var(--accent)] transition-all flex-shrink-0" style={{'--accent': accentColor} as any}>
@@ -119,6 +128,12 @@ export function BlockSelector({ onAdd, accentColor }: BlockSelectorProps) {
         </AnimatePresence>,
         document.body
       )}
+
+      <UpgradeModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        accentColor={accentColor}
+      />
     </div>
   );
 }

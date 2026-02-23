@@ -99,7 +99,9 @@ export const MOCK_PROFILE: ProfileData = {
       col_span: 1,
       row_span: 1,
       visible: true,
-      name: "Ethereum Argentina",
+      communities: [
+        { name: "Ethereum Argentina" }
+      ],
     },
     {
       id: "writing-1",

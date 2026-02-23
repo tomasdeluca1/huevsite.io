@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, JetBrains_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const bricolage = Bricolage_Grotesque({ 
@@ -32,6 +33,11 @@ export default function RootLayout({
       <body className="antialiased selection:bg-[var(--accent)] selection:text-black font-sans">
         {children}
       </body>
+      <Script 
+        defer 
+        src="https://cloud.umami.is/script.js" 
+        data-website-id="d3a90850-920a-4f6f-82ba-3f993ef66818" 
+      />
     </html>
   );
 }

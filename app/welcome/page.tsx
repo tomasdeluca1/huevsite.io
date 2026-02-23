@@ -175,7 +175,7 @@ export default function SetupPage() {
               disabled={!available || loading}
               className="ou-next !py-4 flex items-center justify-center gap-2 disabled:opacity-50 !text-black shadow-lg"
             >
-              {loading ? <Loader2 className="animate-spin" size={20} /> : "Empezar a buildar →"}
+              {loading ? <Loader2 className="animate-spin" size={20} /> : "Empezar a buildear →"}
             </button>
           </form>
 

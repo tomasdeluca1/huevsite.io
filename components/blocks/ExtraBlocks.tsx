@@ -30,15 +30,33 @@ export function StackBlock({ data, accentColor }: { data: StackBlockData; accent
 }
 
 export function CommunityBlock({ data, accentColor }: { data: CommunityBlockData; accentColor: string }) {
-  const name = data.name || "Comunidad";
+  const communities = data.communities || [];
 
   return (
-    <motion.div className="bento-block block-community h-full">
-      <div className="block-label">Comunidades</div>
-      <div className="community-badges">
-        <span className="comm-badge" style={{ backgroundColor: `${accentColor}15`, borderColor: `${accentColor}30`, color: accentColor }}>
-          {name}
-        </span>
+    <motion.div className="bento-block block-community h-full group">
+      <div className="block-label mb-4 uppercase tracking-[0.2em]">COMUNIDADES</div>
+      <div className="flex flex-wrap gap-2.5">
+        {communities.length > 0 ? (
+          communities.map((comm, i) => {
+            const commColor = comm.color || accentColor;
+            return (
+              <span 
+                key={i}
+                className="px-4 py-2 rounded-[0.9rem] text-xs font-semibold tracking-wide border transition-all"
+                style={{ 
+                  backgroundColor: `${commColor}08`, 
+                  borderColor: `${commColor}40`, 
+                  color: commColor,
+                  boxShadow: `inset 0 0 10px ${commColor}05`
+                }}
+              >
+                {comm.name}
+              </span>
+            );
+          })
+        ) : (
+          <div className="text-[var(--text-dim)] text-xs">No hay comunidades agregadas</div>
+        )}
       </div>
     </motion.div>
   );

@@ -1,5 +1,9 @@
 import { AccentColor, Role } from "./onboarding-types";
 
+export type SubscriptionTier = "free" | "pro";
+
+export const MAX_FREE_BLOCKS = 6;
+
 export type BlockType =
   | "hero"
   | "building"
@@ -80,10 +84,15 @@ export interface SocialBlockData extends BaseBlock {
   links: SocialLink[];
 }
 
+export interface Community {
+  name: string;
+  color?: string;
+  badgeUrl?: string; // keeping for backward compatibility
+}
+
 export interface CommunityBlockData extends BaseBlock {
   type: "community";
-  name: string;
-  badgeUrl?: string;
+  communities: Community[];
 }
 
 export interface WritingBlockData extends BaseBlock {
@@ -106,5 +115,6 @@ export interface ProfileData {
   username: string;
   displayName: string;
   accentColor: string;
+  subscriptionTier?: SubscriptionTier;
   blocks: BlockData[];
 }

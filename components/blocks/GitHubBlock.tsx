@@ -47,29 +47,29 @@ export function GitHubBlock({ data, accentColor }: Props) {
       </a>
 
       <div>
-        <div className="block-label mb-4">GitHub · @{username}</div>
-        <div className="flex gap-4 mb-4">
+        <div className="block-label mb-4 uppercase tracking-[0.2em]">GITHUB</div>
+        <div className="flex gap-6 mb-4">
           <div className="flex flex-col">
-            <span className="text-xl font-bold tracking-tight">{stats.stars}</span>
-            <span className="text-[9px] uppercase tracking-widest text-[var(--text-muted)]">stars</span>
+            <span className="text-2xl font-bold tracking-tight mb-1">{stats.stars}</span>
+            <span className="text-[9px] uppercase tracking-widest text-[var(--text-muted)]">STARS</span>
           </div>
           <div className="flex flex-col">
-            <span className="text-xl font-bold tracking-tight" style={{ color: accentColor }}>{stats.repos}</span>
-            <span className="text-[9px] uppercase tracking-widest text-[var(--text-muted)]">repos</span>
+            <span className="text-2xl font-bold tracking-tight mb-1" style={{ color: accentColor }}>{stats.repos}</span>
+            <span className="text-[9px] uppercase tracking-widest text-[var(--text-muted)]">REPOS LOCALES</span>
           </div>
           <div className="flex flex-col">
-            <span className="text-xl font-bold tracking-tight">{stats.followers}</span>
-            <span className="text-[9px] uppercase tracking-widest text-[var(--text-muted)]">followers</span>
+            <span className="text-2xl font-bold tracking-tight mb-1" style={{ color: '#4A90E2' }}>{stats.followers}</span>
+            <span className="text-[9px] uppercase tracking-widest text-[var(--text-muted)]">FOLLOWERS</span>
           </div>
         </div>
       </div>
       
-      <div className="grid grid-cols-[repeat(13,1fr)] gap-[2px] mt-auto">
+      <div className="grid grid-cols-[repeat(13,1fr)] gap-[3px] mt-auto">
         {heatmap.map((cls, i) => (
           <div
             key={i}
-            className={`w-full aspect-square rounded-[2px] ${cls}`}
-            style={cls ? { backgroundColor: cls === 'hm-4' ? accentColor : undefined, opacity: cls === 'hm-3' ? 0.6 : cls === 'hm-2' ? 0.35 : cls === 'hm-1' ? 0.15 : 1 } : { backgroundColor: 'var(--surface)' }}
+            className={`w-full aspect-square rounded-[3px] ${cls}`}
+            style={cls ? { backgroundColor: cls === 'hm-4' ? accentColor : undefined, opacity: cls === 'hm-3' ? 0.6 : cls === 'hm-2' ? 0.35 : cls === 'hm-1' ? 0.15 : 1 } : { backgroundColor: 'rgba(255,255,255,0.05)' }}
           />
         ))}
       </div>

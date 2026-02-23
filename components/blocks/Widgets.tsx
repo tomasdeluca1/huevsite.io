@@ -35,6 +35,10 @@ export function SocialBlock({ data, accentColor }: SocialProps) {
     github: "⬡",
     discord: "💬",
     farcaster: "f",
+    instagram: "ig",
+    tiktok: "tk",
+    youtube: "▶",
+    pinterest: "P",
   };
 
   const links = data.links || [];

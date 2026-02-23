@@ -66,11 +66,11 @@ export default function DashboardPage() {
 
         const data = await response.json();
 
-        // Transform API response to ProfileData format
         const transformedProfile: ProfileData = {
           username: data.profile.username,
           displayName: data.profile.name || data.profile.username,
           accentColor: data.profile.accent_color,
+          subscriptionTier: data.profile.subscription_tier || "free",
           blocks: data.blocks.map((block: any) => {
             const { id, type, order, col_span, row_span, visible, ...cleanData } = block.data || {};
             return {
@@ -244,7 +244,9 @@ export default function DashboardPage() {
       case "community":
         initialData = {
           ...initialData,
-          name: "Nombre de la comunidad",
+          communities: [
+            { name: "Ethereum Argentina", color: profile?.accentColor || "#5b6df7" }
+          ],
         };
         break;
       case "writing":
@@ -480,7 +482,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-[var(--bg)] font-display overflow-x-hidden">
       {/* SIDEBAR */}
-      <aside className="relative md:sticky w-full md:w-[320px] shrink-0 border-b md:border-b-0 md:border-r border-[var(--border)] bg-[var(--surface)] p-6 md:p-8 flex flex-col gap-8 top-0 h-auto md:h-screen overflow-y-auto z-10">
+      <aside className="relative md:fixed md:inset-y-0 md:left-0 w-full md:w-[320px] shrink-0 border-b md:border-b-0 md:border-r border-[var(--border)] bg-[var(--surface)] p-6 md:p-8 flex flex-col gap-8 top-0 h-auto md:h-screen overflow-y-auto z-10">
         <div>
           <Link href="/" className="logo mb-10 block">huev<span>site</span>.io</Link>
 
@@ -500,6 +502,8 @@ export default function DashboardPage() {
             <BlockSelector 
               onAdd={addBlock} 
               accentColor={profile.accentColor} 
+              currentBlockCount={profile.blocks.length}
+              subscriptionTier={profile.subscriptionTier}
             />
           </div>
         </div>
@@ -525,7 +529,7 @@ export default function DashboardPage() {
       </aside>
 
       {/* CANVAS */}
-      <main className="flex-1 p-4 lg:p-8 overflow-y-auto relative z-0">
+      <main className="flex-1 p-4 lg:p-8 overflow-y-auto relative z-0 md:ml-[320px]">
         <div className="absolute top-0 right-0 w-full lg:w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(200,255,0,0.03)_0%,transparent_70%)] pointer-events-none" />
         
         <header className="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-6 mb-12 max-w-7xl mx-auto">

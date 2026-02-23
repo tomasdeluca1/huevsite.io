@@ -230,6 +230,10 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave }: Props) {
                   <option value="linkedin">LinkedIn</option>
                   <option value="farcaster">Farcaster</option>
                   <option value="discord">Discord</option>
+                  <option value="instagram">Instagram</option>
+                  <option value="tiktok">TikTok</option>
+                  <option value="youtube">YouTube</option>
+                  <option value="pinterest">Pinterest</option>
                   <option value="website">Website</option>
                 </select>
                 <input
@@ -266,15 +270,57 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave }: Props) {
       case "community":
         return (
           <div className="space-y-6">
-            <div className="space-y-2">
-              <div className="section-label !text-[9px] px-1">// nombre</div>
-              <input
-                value={formData.name || ""}
-                onChange={(e) => handleChange("name", e.target.value)}
-                className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-bold"
-                placeholder="Palermo Valley, Ethereum Argentina..."
-              />
-            </div>
+            <div className="section-label !text-[9px] px-1">// comunidades</div>
+            {(formData.communities || []).map((comm: any, index: number) => (
+              <div key={index} className="space-y-3 p-4 bg-[var(--surface2)] rounded-xl border border-[var(--border)]">
+                <div className="flex justify-between items-center mb-2">
+                  <div className="section-label !text-[9px]">// comunidad {index + 1}</div>
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      const newComms = [...formData.communities];
+                      newComms.splice(index, 1);
+                      handleChange("communities", newComms);
+                    }}
+                    className="text-red-500 hover:text-red-400 text-xs font-mono"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+                <input
+                  value={comm.name || ""}
+                  onChange={(e) => {
+                    const newComms = [...formData.communities];
+                    newComms[index] = { ...newComms[index], name: e.target.value };
+                    handleChange("communities", newComms);
+                  }}
+                  className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-bold"
+                  placeholder="Ethereum Argentina, Palermo Valley..."
+                />
+                <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 rounded-full border border-[var(--border-bright)] overflow-hidden shrink-0 relative">
+                     <input
+                        type="color"
+                        value={comm.color || formData.accentColor || "#C8FF00"}
+                        onChange={(e) => {
+                          const newComms = [...formData.communities];
+                          newComms[index] = { ...newComms[index], color: e.target.value };
+                          handleChange("communities", newComms);
+                        }}
+                        className="absolute -inset-2 w-14 h-14 cursor-pointer"
+                      />
+                   </div>
+                   <div className="text-[9px] text-[var(--text-muted)] uppercase tracking-[0.1em] font-mono">Color del badge</div>
+                </div>
+              </div>
+            ))}
+             <button
+              type="button"
+              onClick={() => handleChange("communities", [...(formData.communities || []), { name: "", color: formData.accentColor || "#C8FF00" }])}
+              className="w-full p-3 rounded-xl border border-dashed border-[var(--border-bright)] text-[var(--text-muted)] hover:text-white hover:border-[var(--accent)] transition-all text-sm"
+            >
+              + Agregar otra comunidad
+            </button>
           </div>
         );
       case "writing":

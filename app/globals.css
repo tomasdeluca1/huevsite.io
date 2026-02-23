@@ -602,8 +602,14 @@ footer { padding: 40px; border-top: 1px solid var(--border); display: flex; alig
   .col-span-2,
   .col-span-3,
   .col-span-4,
+  .col-2,
+  .col-3,
+  .col-4,
+  .row-2,
+  .row-3,
   .block-hero {
     grid-column: span 1 !important;
+    grid-row: auto !important;
   }
 
   /* Dashboard layout mobile */

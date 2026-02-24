@@ -30,7 +30,7 @@ import { StackBlock, CommunityBlock, WritingBlock } from "@/components/blocks/Ex
 import { SortableBlock } from "@/components/dashboard/SortableBlock";
 import { BlockSelector } from "@/components/dashboard/BlockSelector";
 import { BlockEditorModal } from "@/components/dashboard/BlockEditorModal";
-import { ColorSelector } from "@/components/dashboard/ColorSelector";
+import { ColorPicker } from "@/components/dashboard/ColorPicker";
 import Link from "next/link";
 
 import { createClient } from "@/lib/supabase/client";
@@ -71,6 +71,9 @@ export default function DashboardPage() {
           displayName: data.profile.name || data.profile.username,
           accentColor: data.profile.accent_color,
           subscriptionTier: data.profile.subscription_tier || "free",
+          recentColors: data.profile.recent_colors || [],
+          extraBlocksFromShare: data.profile.extra_blocks_from_share || 0,
+          twitterShareUnlocked: data.profile.twitter_share_unlocked || false,
           blocks: data.blocks.map((block: any) => {
             const { id, type, order, col_span, row_span, visible, ...cleanData } = block.data || {};
             return {
@@ -217,6 +220,7 @@ export default function DashboardPage() {
           imageUrl: "",
           link: "",
           metrics: "",
+          stack: [],
         };
         break;
       case "stack":
@@ -236,8 +240,8 @@ export default function DashboardPage() {
         initialData = {
           ...initialData,
           links: [
-            { platform: "twitter", url: "", label: "X / Twitter" },
-            { platform: "github", url: "", label: "Mi GitHub" }
+            { platform: "twitter", handle: "", url: "", label: "" },
+            { platform: "github", handle: "", url: "", label: "" }
           ]
         };
         break;
@@ -404,6 +408,35 @@ export default function DashboardPage() {
     }
   };
 
+  const handleColorChange = async (color: string, confirmed: boolean) => {
+    // Siempre aplicar preview en vivo (cambia el CSS var)
+    setProfile(prev => prev ? { ...prev, accentColor: color } : null);
+
+    if (confirmed) {
+      // Actualizar historial de recientes
+      setProfile(prev => {
+        if (!prev) return null;
+        const updated = [color, ...prev.recentColors.filter(c => c.toLowerCase() !== color.toLowerCase())].slice(0, 6);
+        return { ...prev, accentColor: color, recentColors: updated };
+      });
+
+      // Persistir en backend
+      try {
+        const updatedRecents = [color, ...(profile?.recentColors || []).filter(c => c.toLowerCase() !== color.toLowerCase())].slice(0, 6);
+        await fetch('/api/profile', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            accent_color: color,
+            recent_colors: updatedRecents,
+          }),
+        });
+      } catch (e) {
+        console.error('Error saving color:', e);
+      }
+    }
+  };
+
   const handleSave = async () => {
     if (!profile) return;
 
@@ -415,6 +448,7 @@ export default function DashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           accent_color: profile.accentColor,
+          recent_colors: profile.recentColors,
         }),
       });
 
@@ -492,18 +526,29 @@ export default function DashboardPage() {
               <div className="text-sm font-bold truncate text-[var(--accent)] font-mono">huevsite.io/{profile.username}</div>
             </div>
 
-            <ColorSelector
+            <ColorPicker
               value={profile.accentColor}
-              onChange={(color) => setProfile(prev => prev ? { ...prev, accentColor: color } : null)}
+              recentColors={profile.recentColors}
+              onChange={handleColorChange}
             />
 
             <div className="h-px bg-[var(--border)]" />
 
-            <BlockSelector 
-              onAdd={addBlock} 
-              accentColor={profile.accentColor} 
+            <BlockSelector
+              onAdd={addBlock}
+              accentColor={profile.accentColor}
               currentBlockCount={profile.blocks.length}
               subscriptionTier={profile.subscriptionTier}
+              username={profile.username}
+              twitterShareUnlocked={profile.twitterShareUnlocked}
+              extraBlocksFromShare={profile.extraBlocksFromShare}
+              onShareUnlocked={() => {
+                setProfile(prev => prev ? {
+                  ...prev,
+                  twitterShareUnlocked: true,
+                  extraBlocksFromShare: (prev.extraBlocksFromShare || 0) + 3,
+                } : null);
+              }}
             />
           </div>
         </div>

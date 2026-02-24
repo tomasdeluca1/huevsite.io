@@ -4,6 +4,9 @@ export const MOCK_PROFILE: ProfileData = {
   username: "toms",
   displayName: "Tomás",
   accentColor: "#C8FF00",
+  recentColors: [],
+  extraBlocksFromShare: 0,
+  twitterShareUnlocked: false,
   blocks: [
     {
       id: "hero-1",
@@ -57,6 +60,7 @@ export const MOCK_PROFILE: ProfileData = {
       imageUrl: "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&w=800&q=80",
       metrics: "500k USD GMV",
       link: "https://argcampers.com",
+      stack: [],
     },
     {
       id: "metric-1",

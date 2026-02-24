@@ -49,9 +49,13 @@ export const profileService = {
     if (blocksError) return null;
 
     return {
+      id: profile.id,
       username: profile.username,
       displayName: profile.name || profile.username,
       accentColor: profile.accent_color as any,
+      recentColors: profile.recent_colors || [],
+      extraBlocksFromShare: profile.extra_blocks_from_share || 0,
+      twitterShareUnlocked: profile.twitter_share_unlocked || false,
       blocks: (blocks || []).map(b => {
         const { id, type, order, col_span, row_span, visible, ...cleanData } = b.data || {};
         return {

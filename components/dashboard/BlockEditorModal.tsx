@@ -6,6 +6,7 @@ import { BlockData } from "@/lib/profile-types";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { ImageUpload } from "@/components/dashboard/ImageUpload";
+import { SOCIAL_PLATFORMS, SocialPlatformKey, buildSocialUrl, getUrlPreview } from "@/lib/social-platforms";
 
 interface Props {
   block: BlockData;
@@ -33,7 +34,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave }: Props) {
 
   const handleSave = () => {
     const dataToSave = { ...formData };
-    
+
     // Parsear strings a arrays para los stacks
     if (block.type === 'building' && typeof dataToSave.stack === 'string') {
       dataToSave.stack = dataToSave.stack.split(',').map((s: string) => s.trim()).filter((s: string) => s);
@@ -41,7 +42,17 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave }: Props) {
     if (block.type === 'stack' && typeof dataToSave.items === 'string') {
       dataToSave.items = dataToSave.items.split(',').map((s: string) => s.trim()).filter((s: string) => s);
     }
-    
+    if (block.type === 'project' && typeof dataToSave.stack === 'string') {
+      dataToSave.stack = dataToSave.stack.split(',').map((s: string) => s.trim()).filter((s: string) => s);
+    }
+    // Asegurar que las URLs sociales estén construidas desde el handle
+    if (block.type === 'social' && Array.isArray(dataToSave.links)) {
+      dataToSave.links = dataToSave.links.map((l: any) => ({
+        ...l,
+        url: l.url || buildSocialUrl(l.platform, l.handle || ""),
+      }));
+    }
+
     onSave(dataToSave);
     onClose();
   };
@@ -125,7 +136,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave }: Props) {
                 className="w-full p-4 h-24 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all resize-none leading-relaxed"
               />
             </div>
-            {block.type === "building" && (
+            {(block.type === "building" || block.type === "project") && (
               <div className="space-y-2">
                 <div className="section-label !text-[9px] px-1">// tech stack (separadas por coma)</div>
                 <input
@@ -199,71 +210,71 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave }: Props) {
       case "social":
         return (
           <div className="space-y-6">
-            <div className="section-label !text-[9px] px-1">// links sociales</div>
-            {(formData.links || []).map((linkObj: any, index: number) => (
-              <div key={index} className="space-y-3 p-4 bg-[var(--surface2)] rounded-xl border border-[var(--border)]">
-                <div className="flex justify-between items-center mb-2">
-                  <div className="section-label !text-[9px]">// link {index + 1}</div>
-                  <button 
-                    type="button"
-                    onClick={() => {
+            <div className="section-label !text-[9px] px-1">// links sociales — ingresá solo el handle</div>
+            {(formData.links || []).map((linkObj: any, index: number) => {
+              const platform = linkObj.platform || "twitter";
+              const platformConfig = SOCIAL_PLATFORMS[platform as SocialPlatformKey];
+              const handle = linkObj.handle || "";
+              const preview = handle ? getUrlPreview(platform, handle) : "";
+
+              return (
+                <div key={index} className="space-y-3 p-4 bg-[var(--surface2)] rounded-xl border border-[var(--border)]">
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="section-label !text-[9px]">// red {index + 1}</div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newLinks = [...formData.links];
+                        newLinks.splice(index, 1);
+                        handleChange("links", newLinks);
+                      }}
+                      className="text-red-500 hover:text-red-400 text-xs font-mono"
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                  <select
+                    value={platform}
+                    onChange={(e) => {
                       const newLinks = [...formData.links];
-                      newLinks.splice(index, 1);
+                      newLinks[index] = { ...newLinks[index], platform: e.target.value, handle: "", url: "" };
                       handleChange("links", newLinks);
                     }}
-                    className="text-red-500 hover:text-red-400 text-xs font-mono"
+                    className="w-full p-3 rounded-lg bg-[var(--bg)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all text-sm"
                   >
-                    Eliminar
-                  </button>
+                    {Object.entries(SOCIAL_PLATFORMS).map(([key, cfg]) => (
+                      <option key={key} value={key}>{cfg.label}</option>
+                    ))}
+                  </select>
+                  <input
+                    value={handle}
+                    onChange={(e) => {
+                      const newHandle = e.target.value;
+                      const newLinks = [...formData.links];
+                      newLinks[index] = {
+                        ...newLinks[index],
+                        handle: newHandle,
+                        url: buildSocialUrl(platform, newHandle),
+                      };
+                      handleChange("links", newLinks);
+                    }}
+                    className="w-full p-3 rounded-lg bg-[var(--bg)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-mono text-sm"
+                    placeholder={platformConfig?.placeholder ?? "handle"}
+                  />
+                  {preview && (
+                    <p className="text-xs text-[var(--text-muted)] font-mono px-1">
+                      → {preview}
+                    </p>
+                  )}
                 </div>
-                <select
-                  value={linkObj.platform || "twitter"}
-                  onChange={(e) => {
-                    const newLinks = [...formData.links];
-                    newLinks[index] = { ...newLinks[index], platform: e.target.value };
-                    handleChange("links", newLinks);
-                  }}
-                  className="w-full p-3 rounded-lg bg-[var(--bg)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all text-sm"
-                >
-                  <option value="twitter">Twitter / X</option>
-                  <option value="github">GitHub</option>
-                  <option value="linkedin">LinkedIn</option>
-                  <option value="farcaster">Farcaster</option>
-                  <option value="discord">Discord</option>
-                  <option value="instagram">Instagram</option>
-                  <option value="tiktok">TikTok</option>
-                  <option value="youtube">YouTube</option>
-                  <option value="pinterest">Pinterest</option>
-                  <option value="website">Website</option>
-                </select>
-                <input
-                  value={linkObj.url || ""}
-                  onChange={(e) => {
-                    const newLinks = [...formData.links];
-                    newLinks[index] = { ...newLinks[index], url: e.target.value };
-                    handleChange("links", newLinks);
-                  }}
-                  className="w-full p-3 rounded-lg bg-[var(--bg)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-mono text-xs"
-                  placeholder="https://..."
-                />
-                <input
-                  value={linkObj.label || ""}
-                  onChange={(e) => {
-                    const newLinks = [...formData.links];
-                    newLinks[index] = { ...newLinks[index], label: e.target.value };
-                    handleChange("links", newLinks);
-                  }}
-                  className="w-full p-3 rounded-lg bg-[var(--bg)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all text-xs"
-                  placeholder="Ej: Seguime en X"
-                />
-              </div>
-            ))}
+              );
+            })}
             <button
               type="button"
-              onClick={() => handleChange("links", [...(formData.links || []), { platform: "twitter", url: "", label: "" }])}
+              onClick={() => handleChange("links", [...(formData.links || []), { platform: "twitter", handle: "", url: "", label: "" }])}
               className="w-full p-3 rounded-xl border border-dashed border-[var(--border-bright)] text-[var(--text-muted)] hover:text-white hover:border-[var(--accent)] transition-all text-sm"
             >
-              + Agregar otro link
+              + Agregar otra red
             </button>
           </div>
         );

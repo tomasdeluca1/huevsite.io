@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     // Limit logic
     const { data: profileData } = await supabase
       .from('profiles')
-      .select('subscription_tier')
+      .select('subscription_tier, extra_blocks_from_share')
       .eq('id', user.id)
       .single()
 
@@ -41,7 +41,10 @@ export async function POST(request: NextRequest) {
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id)
 
-    if (profileData?.subscription_tier !== 'pro' && blockCount && blockCount >= 6) {
+    const MAX_BASE_FREE = 5
+    const effectiveLimit = MAX_BASE_FREE + (profileData?.extra_blocks_from_share || 0)
+
+    if (profileData?.subscription_tier !== 'pro' && blockCount !== null && blockCount >= effectiveLimit) {
       return NextResponse.json(
         { error: 'Límite de bloques alcanzado para plan gratuito' },
         { status: 403 }

@@ -14,6 +14,7 @@ export function ProjectBlock({ data, accentColor }: Props) {
   const link = data.link || "#";
   const metrics = data.metrics || "";
   const imageUrl = data.imageUrl;
+  const stack = data.stack || [];
 
   return (
     <motion.div
@@ -43,6 +44,13 @@ export function ProjectBlock({ data, accentColor }: Props) {
       <div className="project-info">
         <div className="project-name">{title}</div>
         <div className="project-desc">{description}</div>
+        {stack.length > 0 && (
+          <div className="building-stack mt-2">
+            {stack.map((tech, i) => (
+              <span key={`${tech}-${i}`} className="stack-pill">{tech}</span>
+            ))}
+          </div>
+        )}
         <div className="project-footer">
           {metrics && (
             <div className="project-metrics">

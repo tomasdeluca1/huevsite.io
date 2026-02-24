@@ -4,55 +4,107 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Plus, X, Layout as LayoutIcon, MessageSquare, Rocket, Github, Star, Layers, Users, BookOpen, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BlockType } from "@/lib/profile-types";
+import { BlockType, MAX_FREE_BLOCKS } from "@/lib/profile-types";
 import { UpgradeModal } from "@/components/dashboard/UpgradeModal";
+import { ShareModal } from "@/components/dashboard/ShareModal";
 
 interface BlockSelectorProps {
   onAdd: (type: BlockType) => void;
   accentColor: string;
   currentBlockCount: number;
   subscriptionTier?: "free" | "pro";
+  username?: string;
+  twitterShareUnlocked?: boolean;
+  extraBlocksFromShare?: number;
+  onShareUnlocked?: () => void;
 }
 
-export function BlockSelector({ onAdd, accentColor, currentBlockCount, subscriptionTier = "free" }: BlockSelectorProps) {
+export function BlockSelector({
+  onAdd,
+  accentColor,
+  currentBlockCount,
+  subscriptionTier = "free",
+  username = "",
+  twitterShareUnlocked = false,
+  extraBlocksFromShare = 0,
+  onShareUnlocked,
+}: BlockSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
-
-  const categories = [
-    {
-      name: "Social & Stats",
-      blocks: [
-        { type: 'github', icon: <Github size={18} />, label: 'GitHub Stats', desc: 'Heatmap y repos destacados' },
-        { type: 'social', icon: <MessageSquare size={18} />, label: 'Redes Sociales', desc: 'Twitter, Farcaster, etc.' },
-        { type: 'community', icon: <Users size={18} />, label: 'Comunidad', desc: 'Badges de comunidades' },
-      ]
-    },
-    {
-      name: "Proyectos",
-      blocks: [
-        { type: 'project', icon: <LayoutIcon size={18} />, label: 'Proyecto', desc: 'Imagen, link y métricas' },
-        { type: 'building', icon: <Rocket size={18} />, label: 'Building', desc: '¿Qué estás buildando ahora?' },
-        { type: 'stack', icon: <Layers size={18} />, label: 'Tech Stack', desc: 'Tus herramientas favoritas' },
-      ]
-    },
-    {
-      name: "Contenido",
-      blocks: [
-        { type: 'writing', icon: <BookOpen size={18} />, label: 'Escritura', desc: 'Tus últimos posts o blog' },
-        { type: 'metric', icon: <Star size={18} />, label: 'Métrica', desc: 'Números que importan (MRR, etc.)' },
-        { type: 'hero', icon: <Sparkles size={18} />, label: 'Bio / Hero', desc: 'Tu carta de presentación' },
-      ]
-    }
-  ];
-
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  const effectiveLimit = subscriptionTier === "pro"
+    ? Infinity
+    : MAX_FREE_BLOCKS + extraBlocksFromShare;
+
+  const atLimit = subscriptionTier !== "pro" && currentBlockCount >= effectiveLimit;
+
+  const categories = [
+    {
+      name: "Social & Stats",
+      blocks: [
+        { type: "github", icon: <Github size={18} />, label: "GitHub Stats", desc: "Heatmap y repos destacados" },
+        { type: "social", icon: <MessageSquare size={18} />, label: "Redes Sociales", desc: "Twitter, Farcaster, etc." },
+        { type: "community", icon: <Users size={18} />, label: "Comunidad", desc: "Badges de comunidades" },
+      ],
+    },
+    {
+      name: "Proyectos",
+      blocks: [
+        { type: "project", icon: <LayoutIcon size={18} />, label: "Proyecto", desc: "Imagen, link y métricas" },
+        { type: "building", icon: <Rocket size={18} />, label: "Building", desc: "¿Qué estás buildando ahora?" },
+        { type: "stack", icon: <Layers size={18} />, label: "Tech Stack", desc: "Tus herramientas favoritas" },
+      ],
+    },
+    {
+      name: "Contenido",
+      blocks: [
+        { type: "writing", icon: <BookOpen size={18} />, label: "Escritura", desc: "Tus últimos posts o blog" },
+        { type: "metric", icon: <Star size={18} />, label: "Métrica", desc: "Números que importan (MRR, etc.)" },
+        { type: "hero", icon: <Sparkles size={18} />, label: "Bio / Hero", desc: "Tu carta de presentación" },
+      ],
+    },
+  ];
+
+  const handleBlockClick = (type: BlockType) => {
+    if (atLimit) {
+      // Si ya usó el share, ir directo a upgrade; si no, ofrecer share primero
+      if (twitterShareUnlocked) {
+        setIsUpgradeModalOpen(true);
+      } else {
+        setIsShareModalOpen(true);
+      }
+      setIsOpen(false);
+      return;
+    }
+    onAdd(type);
+    setIsOpen(false);
+  };
+
   return (
     <div className="relative">
+      <div className="flex items-center justify-between mb-2">
+        <div className="text-[9px] font-mono text-[var(--text-muted)] uppercase tracking-[0.1em]">
+          {subscriptionTier === "pro"
+            ? "Bloques ilimitados"
+            : `${currentBlockCount} / ${effectiveLimit} bloques`}
+        </div>
+        {subscriptionTier !== "pro" && (
+          <div className="text-[9px] font-mono text-[var(--text-muted)]">
+            {atLimit ? (
+              <span className="text-yellow-400">límite alcanzado</span>
+            ) : (
+              <span>{effectiveLimit - currentBlockCount} restantes</span>
+            )}
+          </div>
+        )}
+      </div>
+
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="btn btn-accent w-full !rounded-2xl flex items-center justify-center gap-2 py-4"
@@ -93,18 +145,13 @@ export function BlockSelector({ onAdd, accentColor, currentBlockCount, subscript
                           {cat.blocks.map((block) => (
                             <button
                               key={block.type}
-                                onClick={() => {
-                                  if (subscriptionTier !== "pro" && currentBlockCount >= 6) {
-                                    setIsUpgradeModalOpen(true);
-                                    setIsOpen(false);
-                                    return;
-                                  }
-                                  onAdd(block.type as BlockType);
-                                  setIsOpen(false);
-                                }}
+                              onClick={() => handleBlockClick(block.type as BlockType)}
                               className="flex items-start gap-4 p-4 rounded-3xl hover:bg-[var(--surface2)] border border-transparent hover:border-[var(--border-bright)] transition-all group text-left"
                             >
-                              <div className="p-3 rounded-2xl bg-[var(--surface2)] text-[var(--text-dim)] group-hover:text-black group-hover:bg-[var(--accent)] transition-all flex-shrink-0" style={{'--accent': accentColor} as any}>
+                              <div
+                                className="p-3 rounded-2xl bg-[var(--surface2)] text-[var(--text-dim)] group-hover:text-black group-hover:bg-[var(--accent)] transition-all flex-shrink-0"
+                                style={{ "--accent": accentColor } as React.CSSProperties}
+                              >
                                 {block.icon}
                               </div>
                               <div>
@@ -118,9 +165,11 @@ export function BlockSelector({ onAdd, accentColor, currentBlockCount, subscript
                     ))}
                   </div>
                 </div>
-                
+
                 <div className="p-4 bg-black/20 text-center border-t border-[var(--border)]">
-                  <p className="text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-[0.1em]">Próximamente: bloques de comunidad custom 🇦🇷</p>
+                  <p className="text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-[0.1em]">
+                    Próximamente: bloques de comunidad custom 🇦🇷
+                  </p>
                 </div>
               </motion.div>
             </div>
@@ -133,6 +182,17 @@ export function BlockSelector({ onAdd, accentColor, currentBlockCount, subscript
         isOpen={isUpgradeModalOpen}
         onClose={() => setIsUpgradeModalOpen(false)}
         accentColor={accentColor}
+      />
+
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        accentColor={accentColor}
+        username={username}
+        onUnlocked={() => {
+          setIsShareModalOpen(false);
+          onShareUnlocked?.();
+        }}
       />
     </div>
   );

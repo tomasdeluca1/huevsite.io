@@ -50,7 +50,7 @@ export default function SetupPage() {
       return;
     }
 
-    const githubHandle = user.user_metadata.user_name || user.user_metadata.preferred_username || "";
+    const githubHandle = user.user_metadata.user_name || user.user_metadata.preferred_username || null;
 
     const { error } = await supabase.from("profiles").upsert({
       id: user.id,
@@ -65,7 +65,7 @@ export default function SetupPage() {
       setError(`Error DB: ${error.message} (Code: ${error.code})`);
       setLoading(false);
       return;
-    } 
+    }
 
     // Crear un bento grid por defecto interesante para el usuario
     const initialBlocks: any[] = [

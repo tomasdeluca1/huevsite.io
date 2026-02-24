@@ -2,7 +2,7 @@ import { AccentColor, Role } from "./onboarding-types";
 
 export type SubscriptionTier = "free" | "pro";
 
-export const MAX_FREE_BLOCKS = 6;
+export const MAX_FREE_BLOCKS = 5;
 
 export type BlockType =
   | "hero"
@@ -59,6 +59,7 @@ export interface ProjectBlockData extends BaseBlock {
   imageUrl?: string;
   metrics?: string;
   link: string;
+  stack: string[];
 }
 
 export interface StackBlockData extends BaseBlock {
@@ -112,9 +113,13 @@ export type BlockData =
   | WritingBlockData;
 
 export interface ProfileData {
+  id?: string;
   username: string;
   displayName: string;
   accentColor: string;
   subscriptionTier?: SubscriptionTier;
+  recentColors: string[];
+  extraBlocksFromShare: number;
+  twitterShareUnlocked: boolean;
   blocks: BlockData[];
 }

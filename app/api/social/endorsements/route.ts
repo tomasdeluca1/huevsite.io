@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
         id,
         skill,
         comment,
+        visible,
         created_at,
         from:profiles!endorsements_from_id_fkey (
           id,
@@ -87,7 +88,20 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase
       .from("endorsements")
       .insert({ from_id: user.id, to_id: toId, skill, comment: comment || null })
-      .select()
+      .select(`
+        id,
+        skill,
+        comment,
+        visible,
+        created_at,
+        from:profiles!endorsements_from_id_fkey (
+          id,
+          username,
+          name,
+          image,
+          accent_color
+        )
+      `)
       .single();
 
     if (error) {
@@ -100,6 +114,68 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, endorsement: data });
   } catch (error) {
     console.error("Create endorsement error:", error);
+    return NextResponse.json({ error: "Algo salió mal." }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+
+    const { id, skill, comment, visible } = await request.json();
+
+    const { data, error } = await supabase
+      .from("endorsements")
+      .update({ 
+        ...(skill && { skill }), 
+        ...(comment !== undefined && { comment: comment || null }),
+        ...(visible !== undefined && { visible })
+      })
+      .eq("id", id)
+      .select(`
+        id,
+        skill,
+        comment,
+        visible,
+        created_at,
+        from:profiles!endorsements_from_id_fkey (
+          id,
+          username,
+          name,
+          image,
+          accent_color
+        )
+      `)
+      .single();
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: true, endorsement: data });
+  } catch (error) {
+    return NextResponse.json({ error: "Algo salió mal." }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) return NextResponse.json({ error: "id requerido" }, { status: 400 });
+
+    const { error } = await supabase
+      .from("endorsements")
+      .delete()
+      .eq("id", id);
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: true });
+  } catch (error) {
     return NextResponse.json({ error: "Algo salió mal." }, { status: 500 });
   }
 }

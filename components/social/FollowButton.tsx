@@ -7,15 +7,17 @@ interface Props {
   profileId: string;
   initialIsFollowing: boolean;
   accentColor: string;
+  onToggle?: (isFollowing: boolean) => void;
 }
 
-export function FollowButton({ profileId, initialIsFollowing, accentColor }: Props) {
+export function FollowButton({ profileId, initialIsFollowing, accentColor, onToggle }: Props) {
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
   const [loading, setLoading] = useState(false);
 
   const toggle = async () => {
     setLoading(true);
     try {
+      const willFollow = !isFollowing;
       const method = isFollowing ? "DELETE" : "POST";
       const res = await fetch("/api/social/follow", {
         method,
@@ -24,7 +26,8 @@ export function FollowButton({ profileId, initialIsFollowing, accentColor }: Pro
       });
 
       if (res.ok) {
-        setIsFollowing(!isFollowing);
+        setIsFollowing(willFollow);
+        onToggle?.(willFollow);
       } else if (res.status === 401) {
         window.location.href = "/login";
       } else {

@@ -20,48 +20,8 @@ interface ShowcaseData {
   finalists: Array<{ userId: string; count: number; user: ShowcaseUser }>;
 }
 
-function NominateButton({ userId, accentColor }: { userId: string; accentColor: string }) {
-  const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
-  const [msg, setMsg] = useState("");
+import { NominateButton } from "@/components/social/NominateButton";
 
-  const nominate = async () => {
-    setStatus("loading");
-    try {
-      const res = await fetch("/api/social/showcase/nominate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setStatus("done");
-        setMsg("¡Nominación enviada! 🇦🇷");
-      } else {
-        setStatus("error");
-        setMsg(data.error ?? "Error al nominar.");
-      }
-    } catch {
-      setStatus("error");
-      setMsg("Error de conexión.");
-    }
-  };
-
-  if (status === "done") {
-    return <span className="text-xs font-mono px-3 py-1.5 rounded-xl bg-green-500/10 text-green-400">{msg}</span>;
-  }
-
-  return (
-    <button
-      onClick={nominate}
-      disabled={status === "loading"}
-      className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold text-black transition-all"
-      style={{ backgroundColor: accentColor, opacity: status === "loading" ? 0.7 : 1 }}
-    >
-      {status === "loading" ? <Loader2 size={14} className="animate-spin" /> : <Star size={14} />}
-      {status === "error" ? msg : "Nominar"}
-    </button>
-  );
-}
 
 export default function ShowcasePage() {
   const [data, setData] = useState<ShowcaseData | null>(null);

@@ -52,8 +52,9 @@ export const profileService = {
       id: profile.id,
       username: profile.username,
       displayName: profile.name || profile.username,
+      tagline: profile.tagline || "",
       accentColor: profile.accent_color as any,
-      recentColors: profile.recent_colors || [],
+      subscriptionTier: profile.pro_since ? 'pro' : 'free',
       extraBlocksFromShare: profile.extra_blocks_from_share || 0,
       twitterShareUnlocked: profile.twitter_share_unlocked || false,
       blocks: (blocks || []).map(b => {

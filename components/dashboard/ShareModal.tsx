@@ -18,6 +18,7 @@ type Step = "prompt" | "tweeted" | "verifying" | "unlocked";
 export function ShareModal({ isOpen, onClose, accentColor, username, onUnlocked }: Props) {
   const [step, setStep] = useState<Step>("prompt");
   const [isCapturing, setIsCapturing] = useState(false);
+  const [tweetUrlInput, setTweetUrlInput] = useState("");
 
   const tweetText = encodeURIComponent(
     `Armé mi huevsite en huevsite.io — el portfolio para builders 🇦🇷\n\n👉 huevsite.io/${username}`
@@ -37,9 +38,18 @@ export function ShareModal({ isOpen, onClose, accentColor, username, onUnlocked 
   };
 
   const handleConfirmTweet = async () => {
+    if (!tweetUrlInput.includes("twitter.com/") && !tweetUrlInput.includes("x.com/")) {
+      alert("Uh, parece que ese link no es de Twitter/X. Fijate de copiar el link de tu tweet.");
+      return;
+    }
+
     setStep("verifying");
     try {
-      const res = await fetch("/api/social/share-unlock", { method: "POST" });
+      const res = await fetch("/api/social/share-unlock", { 
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tweetUrl: tweetUrlInput })
+      });
       if (res.ok) {
         setStep("unlocked");
         onUnlocked();
@@ -88,6 +98,8 @@ export function ShareModal({ isOpen, onClose, accentColor, username, onUnlocked 
                 accentColor={accentColor}
                 username={username}
                 isCapturing={isCapturing}
+                tweetUrlInput={tweetUrlInput}
+                setTweetUrlInput={setTweetUrlInput}
                 onTweet={handleTweet}
                 onConfirm={handleConfirmTweet}
                 onUpgrade={() => { onClose(); window.location.href = "/api/checkout"; }}
@@ -106,6 +118,8 @@ function PromptView({
   accentColor,
   username,
   isCapturing,
+  tweetUrlInput,
+  setTweetUrlInput,
   onTweet,
   onConfirm,
   onUpgrade,
@@ -114,6 +128,8 @@ function PromptView({
   accentColor: string;
   username: string;
   isCapturing: boolean;
+  tweetUrlInput: string;
+  setTweetUrlInput: (v: string) => void;
   onTweet: () => void;
   onConfirm: () => void;
   onUpgrade: () => void;
@@ -175,19 +191,28 @@ function PromptView({
 
       {(step === "tweeted" || step === "verifying") && (
         <>
-          <p className="text-[var(--text-dim)] text-sm max-w-[280px] mx-auto leading-relaxed mb-8">
-            ¿Ya lo tuiteaste? Confirmá y te desbloqueamos los 3 bloques extra.
+          <p className="text-[var(--text-dim)] text-sm max-w-[280px] mx-auto leading-relaxed mb-6">
+            ¿Ya lo tuiteaste? Pegá el link de tu tweet acá abajo y te desbloqueamos los bloques.
           </p>
+
+          <input
+            type="text"
+            placeholder="https://x.com/tomasmazzi/status/123..."
+            value={tweetUrlInput}
+            onChange={e => setTweetUrlInput(e.target.value)}
+            className="w-full bg-[var(--surface2)] border border-[var(--border)] rounded-2xl p-4 mb-6 text-sm outline-none focus:border-[var(--accent)] transition-colors placeholder:text-[var(--text-muted)]"
+          />
+
           <button
             onClick={onConfirm}
-            disabled={step === "verifying"}
-            className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-sm transition-all text-black"
-            style={{ backgroundColor: accentColor, opacity: step === "verifying" ? 0.7 : 1 }}
+            disabled={step === "verifying" || !tweetUrlInput}
+            className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-sm transition-all text-black disabled:opacity-50"
+            style={{ backgroundColor: accentColor }}
           >
             {step === "verifying" ? (
               <><Loader2 size={16} className="animate-spin" /> Verificando...</>
             ) : (
-              <>Ya lo tuiteé, dame los bloques ✅</>
+              <>Verificar tweet y desbloquear ✅</>
             )}
           </button>
           <button

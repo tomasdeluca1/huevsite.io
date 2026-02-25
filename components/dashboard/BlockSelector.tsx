@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Plus, X, Layout as LayoutIcon, MessageSquare, Rocket, Github, Star, Layers, Users, BookOpen, Sparkles } from "lucide-react";
+import { Plus, X, Layout as LayoutIcon, MessageSquare, Rocket, Github, Star, Layers, Users, BookOpen, Sparkles, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BlockType, MAX_FREE_BLOCKS } from "@/lib/profile-types";
 import { UpgradeModal } from "@/components/dashboard/UpgradeModal";
@@ -67,6 +67,7 @@ export function BlockSelector({
         { type: "writing", icon: <BookOpen size={18} />, label: "Escritura", desc: "Tus últimos posts o blog" },
         { type: "metric", icon: <Star size={18} />, label: "Métrica", desc: "Números que importan (MRR, etc.)" },
         { type: "hero", icon: <Sparkles size={18} />, label: "Bio / Hero", desc: "Tu carta de presentación" },
+        { type: "cv", icon: <FileText size={18} />, label: "CV / Resume", desc: "Subí tu CV en PDF" },
       ],
     },
   ];

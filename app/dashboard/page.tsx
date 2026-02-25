@@ -16,21 +16,22 @@ import {
   sortableKeyboardCoordinates, 
   rectSortingStrategy 
 } from "@dnd-kit/sortable";
-import { Save, Eye, Layout as LayoutIcon, Settings, LogOut, Plus, Sparkles } from "lucide-react";
+import { Save, Eye, Layout as LayoutIcon, Settings, LogOut, Plus, Sparkles, MessageSquare } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { MOCK_PROFILE } from "@/lib/mock-profile";
-import { BlockData, BlockType, ProfileData } from "@/lib/profile-types";
+import { BlockData, BlockType, ProfileData, PRESET_COLORS } from "@/lib/profile-types";
 import { HeroBlock } from "@/components/blocks/HeroBlock";
 import { BuildingBlock } from "@/components/blocks/BuildingBlock";
 import { GitHubBlock } from "@/components/blocks/GitHubBlock";
 import { ProjectBlock } from "@/components/blocks/ProjectBlock";
-import { MetricBlock, SocialBlock } from "@/components/blocks/Widgets";
+import { MetricBlock, SocialBlock, CVBlock } from "@/components/blocks/Widgets";
 import { StackBlock, CommunityBlock, WritingBlock } from "@/components/blocks/ExtraBlocks";
 import { SortableBlock } from "@/components/dashboard/SortableBlock";
 import { BlockSelector } from "@/components/dashboard/BlockSelector";
 import { BlockEditorModal } from "@/components/dashboard/BlockEditorModal";
 import { ColorPicker } from "@/components/dashboard/ColorPicker";
+import { FeedbackModal } from "@/components/dashboard/FeedbackModal";
 import Link from "next/link";
 
 import { createClient } from "@/lib/supabase/client";
@@ -41,6 +42,7 @@ export default function DashboardPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [editingBlock, setEditingBlock] = useState<BlockData | null>(null);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const supabase = createClient();
   
@@ -70,10 +72,10 @@ export default function DashboardPage() {
           username: data.profile.username,
           displayName: data.profile.name || data.profile.username,
           accentColor: data.profile.accent_color,
-          subscriptionTier: data.profile.subscription_tier || "free",
-          recentColors: data.profile.recent_colors || [],
+          subscriptionTier: data.profile.pro_since ? 'pro' : 'free',
           extraBlocksFromShare: data.profile.extra_blocks_from_share || 0,
           twitterShareUnlocked: data.profile.twitter_share_unlocked || false,
+          tagline: data.profile.tagline || "",
           blocks: data.blocks.map((block: any) => {
             const { id, type, order, col_span, row_span, visible, ...cleanData } = block.data || {};
             return {
@@ -261,6 +263,14 @@ export default function DashboardPage() {
           ],
         };
         break;
+      case "cv":
+        initialData = {
+          ...initialData,
+          title: "Descargar CV",
+          description: "Mi resumé actualizado",
+          fileUrl: "",
+        };
+        break;
     }
 
     // Agregar el bloque localmente primero
@@ -400,6 +410,7 @@ export default function DashboardPage() {
       case "stack": return <StackBlock {...props} />;
       case "community": return <CommunityBlock {...props} />;
       case "writing": return <WritingBlock {...props} />;
+      case "cv": return <CVBlock {...props} />;
       default: return (
         <div className="bento-block h-full flex items-center justify-center p-8 border-dashed border-[var(--border-bright)]">
           <p className="text-xs text-[var(--text-dim)] font-mono text-center">Bloque fantasma 🇦🇷</p>
@@ -409,32 +420,34 @@ export default function DashboardPage() {
   };
 
   const handleColorChange = async (color: string, confirmed: boolean) => {
-    // Siempre aplicar preview en vivo (cambia el CSS var)
+    // Siempre aplicar preview en vivo (cambia el CSS var localmente en estado)
     setProfile(prev => prev ? { ...prev, accentColor: color } : null);
 
     if (confirmed) {
-      // Actualizar historial de recientes
       setProfile(prev => {
         if (!prev) return null;
-        const updated = [color, ...prev.recentColors.filter(c => c.toLowerCase() !== color.toLowerCase())].slice(0, 6);
-        return { ...prev, accentColor: color, recentColors: updated };
+        return { ...prev, accentColor: color };
       });
 
       // Persistir en backend
       try {
-        const updatedRecents = [color, ...(profile?.recentColors || []).filter(c => c.toLowerCase() !== color.toLowerCase())].slice(0, 6);
         await fetch('/api/profile', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             accent_color: color,
-            recent_colors: updatedRecents,
           }),
         });
       } catch (e) {
         console.error('Error saving color:', e);
       }
     }
+  };
+
+  const handleProfileDetailChange = (field: 'username' | 'name' | 'tagline', value: string) => {
+    setProfile(prev => prev ? { ...prev, [field === 'name' ? 'displayName' : field]: value } : null);
+    
+    // Auto-save logic handles persistence
   };
 
   const handleSave = async () => {
@@ -448,7 +461,9 @@ export default function DashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           accent_color: profile.accentColor,
-          recent_colors: profile.recentColors,
+          username: profile.username,
+          name: profile.displayName,
+          tagline: profile.tagline,
         }),
       });
 
@@ -521,14 +536,38 @@ export default function DashboardPage() {
           <Link href="/" className="logo mb-10 block">huev<span>site</span>.io</Link>
 
           <div className="space-y-6">
-            <div className="mc-card !bg-[var(--surface2)] px-4 py-3 border-[var(--border-bright)]">
-              <div className="mc-context">Tu URL pública</div>
-              <div className="text-sm font-bold truncate text-[var(--accent)] font-mono">huevsite.io/{profile.username}</div>
+            <div className="space-y-2 mb-8 bg-[var(--surface2)]/50 p-4 rounded-2xl border border-[var(--border)] relative group transition-colors hover:border-[var(--border-bright)] shadow-sm">
+              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-mono text-[var(--text-muted)] tracking-widest uppercase pointer-events-none">
+                Editar
+              </div>
+              <input
+                type="text"
+                value={profile.displayName}
+                onChange={(e) => handleProfileDetailChange('name', e.target.value)}
+                className="bg-transparent border-none outline-none text-2xl font-extrabold truncate text-white w-full p-0 placeholder-[var(--text-muted)] focus:text-[var(--accent)] transition-colors"
+                placeholder="Tu Nombre"
+              />
+              <input
+                type="text"
+                value={profile.tagline || ""}
+                onChange={(e) => handleProfileDetailChange('tagline', e.target.value)}
+                className="bg-transparent border-none outline-none text-sm text-[var(--text-dim)] w-full p-0 placeholder-[var(--text-muted)] block"
+                placeholder="Un tagline cortito..."
+              />
+              <div className="flex items-center gap-1 pt-3 mt-1 border-t border-[var(--border)]/50">
+                <span className="text-[11px] text-[var(--text-muted)] font-mono">huevsite.io/</span>
+                <input
+                  type="text"
+                  value={profile.username}
+                  onChange={(e) => handleProfileDetailChange('username', e.target.value)}
+                  className="bg-transparent border-none outline-none text-[11px] font-bold truncate text-[var(--accent)] font-mono flex-1 p-0 focus:underline tracking-wide"
+                  placeholder="username"
+                />
+              </div>
             </div>
 
             <ColorPicker
               value={profile.accentColor}
-              recentColors={profile.recentColors}
               onChange={handleColorChange}
             />
 
@@ -562,6 +601,10 @@ export default function DashboardPage() {
           <button onClick={() => alert('Próximamente 🇦🇷')} className="flex items-center gap-3 w-full p-3 rounded-xl bg-transparent text-sm font-medium text-[var(--text-dim)] hover:text-white hover:bg-[var(--surface2)] transition-all shrink-0">
             <LayoutIcon size={18} className="shrink-0" /> 
             <span className="truncate">Gestionar Layout</span>
+          </button>
+          <button onClick={() => setIsFeedbackOpen(true)} className="flex items-center gap-3 w-full p-3 rounded-xl bg-transparent text-sm font-medium text-[var(--accent)] hover:bg-[var(--accent-dim)] transition-all shrink-0">
+            <MessageSquare size={18} className="shrink-0" /> 
+            <span className="truncate">Enviar Feedback 🇦🇷</span>
           </button>
         </div>
 
@@ -666,6 +709,11 @@ export default function DashboardPage() {
           />
         )}
       </AnimatePresence>
+
+      <FeedbackModal 
+        isOpen={isFeedbackOpen} 
+        onClose={() => setIsFeedbackOpen(false)} 
+      />
     </div>
   );
 }

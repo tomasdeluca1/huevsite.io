@@ -25,13 +25,23 @@ interface ShowcaseData {
   finalists: Finalist[];
 }
 
+interface Feedback {
+  id: string;
+  user_email: string;
+  content: string;
+  category: string;
+  created_at: string;
+}
+
 export default function AdminPage() {
   const [secret, setSecret] = useState("");
   const [authed, setAuthed] = useState(false);
   const [data, setData] = useState<ShowcaseData | null>(null);
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingFeedbacks, setLoadingFeedbacks] = useState(false);
   const [settingWinner, setSettingWinner] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<{ type: "ok" | "err"; msg: string } | null>(null);
+  const [feedbackMsg, setFeedbackMsg] = useState<{ type: "ok" | "err"; msg: string } | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -44,9 +54,20 @@ export default function AdminPage() {
     }
   };
 
+  const fetchFeedbacks = async () => {
+    setLoadingFeedbacks(true);
+    try {
+      const res = await fetch("/api/feedback");
+      const json = await res.json();
+      if (Array.isArray(json)) setFeedbacks(json);
+    } finally {
+      setLoadingFeedbacks(false);
+    }
+  };
+
   const setWinner = async (userId: string, week: string) => {
     setSettingWinner(userId);
-    setFeedback(null);
+    setFeedbackMsg(null);
     try {
       const res = await fetch("/api/admin/showcase-winner", {
         method: "POST",
@@ -58,10 +79,10 @@ export default function AdminPage() {
       });
       const json = await res.json();
       if (res.ok) {
-        setFeedback({ type: "ok", msg: "Winner establecido correctamente 🏆" });
+        setFeedbackMsg({ type: "ok", msg: "Winner establecido correctamente 🏆" });
         await fetchData();
       } else {
-        setFeedback({ type: "err", msg: json.error ?? "Error al establecer winner." });
+        setFeedbackMsg({ type: "err", msg: json.error ?? "Error al establecer winner." });
       }
     } finally {
       setSettingWinner(null);
@@ -70,7 +91,8 @@ export default function AdminPage() {
 
   const handleAuth = async () => {
     setAuthed(true);
-    await fetchData();
+    fetchData();
+    fetchFeedbacks();
   };
 
   if (!authed) {
@@ -111,18 +133,18 @@ export default function AdminPage() {
         <Link href="/" className="logo text-base">huev<span>site</span>.io</Link>
       </header>
 
-      {feedback && (
+      {feedbackMsg && (
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           className={`flex items-center gap-3 p-4 rounded-2xl mb-8 ${
-            feedback.type === "ok"
+            feedbackMsg.type === "ok"
               ? "bg-green-500/10 border border-green-500/30 text-green-400"
               : "bg-red-500/10 border border-red-500/30 text-red-400"
           }`}
         >
-          {feedback.type === "ok" ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
-          <span className="text-sm font-medium">{feedback.msg}</span>
+          {feedbackMsg.type === "ok" ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+          <span className="text-sm font-medium">{feedbackMsg.msg}</span>
         </motion.div>
       )}
 
@@ -205,6 +227,47 @@ export default function AdminPage() {
                       )}
                     </button>
                   </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Feedback Section */}
+          <div className="pt-10 border-t border-[var(--border)]">
+            <div className="flex items-center justify-between mb-6">
+              <div className="section-label !mb-0">// feedback de usuarios</div>
+              <button 
+                onClick={fetchFeedbacks}
+                className="text-xs font-mono text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
+                disabled={loadingFeedbacks}
+              >
+                {loadingFeedbacks ? "Cargando..." : "Actualizar"}
+              </button>
+            </div>
+
+            {feedbacks.length === 0 ? (
+              <div className="p-8 text-center bg-[var(--surface)] border border-dashed border-[var(--border)] rounded-3xl">
+                <p className="text-sm text-[var(--text-muted)] font-mono">No hay feedback por ahora. 🧉</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {feedbacks.map((fb) => (
+                  <div key={fb.id} className="p-5 bg-[var(--surface)] border border-[var(--border)] rounded-2xl space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-mono font-bold text-white/50">{fb.user_email}</span>
+                      <span className={`text-[9px] font-mono px-2 py-0.5 rounded-full uppercase tracking-tighter ${
+                        fb.category === 'bug' ? 'bg-red-500/20 text-red-400' : 
+                        fb.category === 'idea' ? 'bg-blue-500/20 text-blue-400' : 
+                        'bg-white/10 text-white/50'
+                      }`}>
+                        {fb.category}
+                      </span>
+                    </div>
+                    <p className="text-sm leading-relaxed text-white/90 whitespace-pre-wrap">{fb.content}</p>
+                    <div className="text-[10px] text-[var(--text-muted)] font-mono">
+                      {new Date(fb.created_at).toLocaleString()}
+                    </div>
+                  </div>
                 ))}
               </div>
             )}

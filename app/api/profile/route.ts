@@ -75,6 +75,7 @@ export async function PATCH(request: NextRequest) {
     // Campos actualizables
     const allowedFields = [
       'name',
+      'username',
       'tagline',
       'accent_color',
       'layout',
@@ -82,7 +83,6 @@ export async function PATCH(request: NextRequest) {
       'location',
       'available',
       'image',
-      'recent_colors',
     ]
 
     const updateData: any = {}

@@ -6,6 +6,7 @@ import { BlockData } from "@/lib/profile-types";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { ImageUpload } from "@/components/dashboard/ImageUpload";
+import { FileUpload } from "@/components/dashboard/FileUpload";
 import { SOCIAL_PLATFORMS, SocialPlatformKey, buildSocialUrl, getUrlPreview } from "@/lib/social-platforms";
 
 interface Props {
@@ -444,6 +445,35 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave }: Props) {
               <p className="text-xs text-blue-400 leading-relaxed">
                 💡 Tip: Hacé clic para mantener tus estadísticas actualizadas. No se pueden editar manualmente.
               </p>
+            </div>
+          </div>
+        );
+      case "cv":
+        return (
+          <div className="space-y-6">
+            <FileUpload
+              label="Archivo de CV"
+              value={formData.fileUrl}
+              onChange={(url) => handleChange("fileUrl", url)}
+              folder="cvs"
+            />
+            <div className="space-y-2">
+              <div className="section-label !text-[9px] px-1">// título del botón</div>
+              <input
+                value={formData.title || ""}
+                onChange={(e) => handleChange("title", e.target.value)}
+                className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-bold"
+                placeholder="Descargar CV"
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="section-label !text-[9px] px-1">// descripción (opcional)</div>
+              <textarea
+                value={formData.description || ""}
+                onChange={(e) => handleChange("description", e.target.value)}
+                className="w-full p-4 h-20 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all resize-none leading-relaxed"
+                placeholder="Frontend Engineer resumé"
+              />
             </div>
           </div>
         );

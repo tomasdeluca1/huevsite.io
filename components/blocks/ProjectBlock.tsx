@@ -24,20 +24,40 @@ export function ProjectBlock({ data, accentColor }: Props) {
       className="bento-block block-project h-full"
     >
       <div className="project-preview">
-        {imageUrl ? (
-          <img
-            src={imageUrl}
-            className="w-full h-full object-cover opacity-80"
-            alt={title}
-          />
+        {link !== "#" ? (
+          <a href={link} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+            {imageUrl ? (
+              <img
+                src={imageUrl}
+                className="w-full h-full object-cover opacity-80 transition-opacity hover:opacity-100"
+                alt={title}
+              />
+            ) : (
+              <div className="project-preview-code group-hover:bg-black/40 transition-colors">
+                <div><span className="kw" style={{ color: accentColor }}>import</span> {'{ Project }'} <span className="kw" style={{ color: accentColor }}>from</span> <span className="str">&apos;huevsite&apos;</span></div>
+                <div>&nbsp;</div>
+                <div><span className="kw" style={{ color: accentColor }}>const</span> <span className="fn" style={{ color: '#4D9FFF' }}>{title.replace(/\s+/g, '')}</span> = () <span className="kw" style={{ color: accentColor }}>=&gt;</span> (</div>
+                <div>&nbsp; &lt;<span className="fn" style={{ color: '#4D9FFF' }}>Showcase</span> /&gt;</div>
+                <div>)</div>
+              </div>
+            )}
+          </a>
         ) : (
-          <div className="project-preview-code">
-            <div><span className="kw" style={{ color: accentColor }}>import</span> {'{ Project }'} <span className="kw" style={{ color: accentColor }}>from</span> <span className="str">&apos;huevsite&apos;</span></div>
-            <div>&nbsp;</div>
-            <div><span className="kw" style={{ color: accentColor }}>const</span> <span className="fn" style={{ color: '#4D9FFF' }}>{title.replace(/\s+/g, '')}</span> = () <span className="kw" style={{ color: accentColor }}>=&gt;</span> (</div>
-            <div>&nbsp; &lt;<span className="fn" style={{ color: '#4D9FFF' }}>Showcase</span> /&gt;</div>
-            <div>)</div>
-          </div>
+          imageUrl ? (
+            <img
+              src={imageUrl}
+              className="w-full h-full object-cover opacity-80"
+              alt={title}
+            />
+          ) : (
+            <div className="project-preview-code">
+              <div><span className="kw" style={{ color: accentColor }}>import</span> {'{ Project }'} <span className="kw" style={{ color: accentColor }}>from</span> <span className="str">&apos;huevsite&apos;</span></div>
+              <div>&nbsp;</div>
+              <div><span className="kw" style={{ color: accentColor }}>const</span> <span className="fn" style={{ color: '#4D9FFF' }}>{title.replace(/\s+/g, '')}</span> = () <span className="kw" style={{ color: accentColor }}>=&gt;</span> (</div>
+              <div>&nbsp; &lt;<span className="fn" style={{ color: '#4D9FFF' }}>Showcase</span> /&gt;</div>
+              <div>)</div>
+            </div>
+          )
         )}
       </div>
 
@@ -60,7 +80,25 @@ export function ProjectBlock({ data, accentColor }: Props) {
             </div>
           )}
           {link !== "#" && (
-            <a className="link-btn" href={link} target="_blank" rel="noopener noreferrer" style={{ color: accentColor, borderColor: `${accentColor}40` }}>
+            <a 
+              className="link-btn" 
+              href={link} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              style={{ 
+                color: accentColor, 
+                borderColor: `${accentColor}40`,
+                '--hover-bg': accentColor 
+              } as any}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = accentColor;
+                e.currentTarget.style.color = '#000';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = accentColor;
+              }}
+            >
               ver demo →
             </a>
           )}

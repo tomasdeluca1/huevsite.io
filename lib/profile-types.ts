@@ -4,6 +4,23 @@ export type SubscriptionTier = "free" | "pro";
 
 export const MAX_FREE_BLOCKS = 5;
 
+export type TaglineStatus =
+  | "disponible para proyectos"
+  | "trabajando a full"
+  | "buscando laburo"
+  | "modo zen";
+
+export const PRESET_COLORS = [
+  "#C8FF00", // Acid Green
+  "#4D9FFF", // Electric Blue
+  "#A855F7", // Crypto Purple
+  "#FF7A00", // Productividad Orange
+  "#FF3B3B", // Crimson
+  "#00FF88", // Matrix Green
+  "#FFD600", // Gold
+  "#FFFFFF", // Clean White
+];
+
 export type BlockType =
   | "hero"
   | "building"
@@ -13,7 +30,8 @@ export type BlockType =
   | "metric"
   | "social"
   | "community"
-  | "writing";
+  | "writing"
+  | "cv";
 
 export interface BaseBlock {
   id: string;
@@ -101,6 +119,13 @@ export interface WritingBlockData extends BaseBlock {
   posts: Array<{ title: string; date: string; link: string }>;
 }
 
+export interface CVBlockData extends BaseBlock {
+  type: "cv";
+  title: string;
+  description: string;
+  fileUrl: string;
+}
+
 export type BlockData =
   | HeroBlockData
   | BuildingBlockData
@@ -110,16 +135,17 @@ export type BlockData =
   | MetricBlockData
   | SocialBlockData
   | CommunityBlockData
-  | WritingBlockData;
+  | WritingBlockData
+  | CVBlockData;
 
 export interface ProfileData {
   id?: string;
   username: string;
   displayName: string;
+  tagline?: string;
   accentColor: string;
-  subscriptionTier?: SubscriptionTier;
-  recentColors: string[];
-  extraBlocksFromShare: number;
+  subscriptionTier: "free" | "pro";
   twitterShareUnlocked: boolean;
+  extraBlocksFromShare: number;
   blocks: BlockData[];
 }

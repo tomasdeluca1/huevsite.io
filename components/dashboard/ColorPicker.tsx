@@ -3,25 +3,14 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Check, Pipette, Clock } from "lucide-react";
-
-const PRESET_COLORS = [
-  "#C8FF00", // Acid Green
-  "#4D9FFF", // Electric Blue
-  "#A855F7", // Crypto Purple
-  "#FF7A00", // Productividad Orange
-  "#FF3B3B", // Crimson
-  "#00FF88", // Matrix Green
-  "#FFD600", // Gold
-  "#FFFFFF", // Clean White
-];
+import { PRESET_COLORS } from "@/lib/profile-types";
 
 interface Props {
   value: string;
-  recentColors?: string[];
   onChange: (color: string, confirmed: boolean) => void;
 }
 
-export function ColorPicker({ value, recentColors = [], onChange }: Props) {
+export function ColorPicker({ value, onChange }: Props) {
   const [previewColor, setPreviewColor] = useState<string | null>(null);
   const colorInputRef = useRef<HTMLInputElement>(null);
 
@@ -34,11 +23,6 @@ export function ColorPicker({ value, recentColors = [], onChange }: Props) {
     onChange(color, true);
   };
 
-  const handleRecent = (color: string) => {
-    // Click en reciente: confirmar directamente (el usuario ya usó ese color)
-    setPreviewColor(null);
-    onChange(color, true);
-  };
 
   const handleCustomMove = (color: string) => {
     // Mover el picker nativo: solo preview, no persiste
@@ -59,10 +43,6 @@ export function ColorPicker({ value, recentColors = [], onChange }: Props) {
       setPreviewColor(null);
     }
   };
-
-  const uniqueRecents = recentColors.filter(
-    (c) => !PRESET_COLORS.some((p) => p.toLowerCase() === c.toLowerCase())
-  ).slice(0, 6);
 
   return (
     <div className="space-y-4">
@@ -105,33 +85,6 @@ export function ColorPicker({ value, recentColors = [], onChange }: Props) {
           />
         </div>
       </div>
-
-      {/* Recent colors */}
-      {uniqueRecents.length > 0 && (
-        <div className="space-y-2">
-          <div className="flex items-center gap-1.5 px-1">
-            <Clock size={9} className="text-[var(--text-muted)]" />
-            <span className="text-[9px] uppercase tracking-[0.1em] font-mono text-[var(--text-muted)]">recientes</span>
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            {uniqueRecents.map((color) => (
-              <button
-                key={color}
-                onClick={() => handleRecent(color)}
-                title={color}
-                className="relative w-8 h-8 rounded-lg border border-white/10 hover:scale-110 active:scale-95 transition-all shadow-md overflow-hidden"
-                style={{ backgroundColor: color }}
-              >
-                {displayed.toLowerCase() === color.toLowerCase() && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                    <Check size={12} className="text-white" strokeWidth={3} />
-                  </div>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Preview bar + confirm */}
       {isPreviewing && (

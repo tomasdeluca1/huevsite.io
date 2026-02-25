@@ -4,8 +4,8 @@ import { ProfileGrid } from "@/components/profile/ProfileGrid";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { isEnabled } from "@/lib/feature-flags";
-import { FollowButton } from "@/components/social/FollowButton";
 import { EndorsementsSection } from "@/components/social/EndorsementsSection";
+import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { createClient } from "@/lib/supabase/server";
 
 interface Props {
@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!profile) return { title: "Usuario no encontrado | huevsite.io" };
 
-  const ogImageUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://huevsite.io'}/api/og/${params.username}`;
+  const ogImageUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://huevsite.io'}/api/og?username=${params.username}`;
 
   const heroBlock = profile.blocks.find(b => b.type === 'hero');
   const tagline = (heroBlock as any)?.tagline || 'Builder en huevsite.io';
@@ -57,9 +57,29 @@ export default async function ProfilePage({ params }: Props) {
   let currentUserId: string | null = null;
   let isFollowing = false;
 
+  let followersCount = 0;
+  let followingCount = 0;
+  let nominationsCount = 0;
+
   if (isEnabled("socialNetwork") && profile.id) {
     try {
       const supabase = await createClient();
+      
+      // Fetch follower counts and nominations
+      const [
+        { count: fers }, 
+        { count: fing },
+        { count: noms }
+      ] = await Promise.all([
+        supabase.from("follows").select("*", { count: "exact", head: true }).eq("following_id", profile.id),
+        supabase.from("follows").select("*", { count: "exact", head: true }).eq("follower_id", profile.id),
+        supabase.from("showcase_nominations").select("*", { count: "exact", head: true }).eq("user_id", profile.id)
+      ]);
+      
+      followersCount = fers || 0;
+      followingCount = fing || 0;
+      nominationsCount = noms || 0;
+
       const { data: { user } } = await supabase.auth.getUser();
       currentUserId = user?.id ?? null;
 
@@ -94,25 +114,17 @@ export default async function ProfilePage({ params }: Props) {
         />
 
         {/* Header / Nav */}
-        <header className="flex justify-between items-center mb-16 relative z-10">
-          <Link href="/" className="logo">huev<span>site</span>.io</Link>
-
-          <div className="flex items-center gap-3">
-            {showFollowButton && (
-              <FollowButton
-                profileId={profile.id!}
-                initialIsFollowing={isFollowing}
-                accentColor={profile.accentColor}
-              />
-            )}
-            <Link
-              href="/login"
-              className="btn btn-ghost !px-6 !text-xs !py-3"
-            >
-              Buildá el tuyo 🇦🇷
-            </Link>
-          </div>
-        </header>
+        <ProfileHeader 
+          profileId={profile.id}
+          isFollowing={isFollowing}
+          followersCount={followersCount}
+          followingCount={followingCount}
+          nominationsCount={nominationsCount}
+          accentColor={profile.accentColor}
+          showFollowButton={showFollowButton}
+          currentUserId={currentUserId}
+          isEnabledSocialNetwork={isEnabled("socialNetwork")}
+        />
 
         {/* Bento Grid (Client Component for animations) */}
         <div className="relative z-10">

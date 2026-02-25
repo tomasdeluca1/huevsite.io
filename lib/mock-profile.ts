@@ -3,8 +3,8 @@ import { ProfileData } from "./profile-types";
 export const MOCK_PROFILE: ProfileData = {
   username: "toms",
   displayName: "Tomás",
+  subscriptionTier: "free",
   accentColor: "#C8FF00",
-  recentColors: [],
   extraBlocksFromShare: 0,
   twitterShareUnlocked: false,
   blocks: [

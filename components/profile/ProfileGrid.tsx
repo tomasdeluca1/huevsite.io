@@ -5,7 +5,7 @@ import { HeroBlock } from "@/components/blocks/HeroBlock"
 import { BuildingBlock } from "@/components/blocks/BuildingBlock"
 import { GitHubBlock } from "@/components/blocks/GitHubBlock"
 import { ProjectBlock } from "@/components/blocks/ProjectBlock"
-import { MetricBlock, SocialBlock } from "@/components/blocks/Widgets"
+import { MetricBlock, SocialBlock, CVBlock } from "@/components/blocks/Widgets"
 import { StackBlock, CommunityBlock, WritingBlock } from "@/components/blocks/ExtraBlocks"
 import type { BlockData } from "@/lib/profile-types"
 
@@ -45,6 +45,8 @@ export function ProfileGrid({ blocks, accentColor }: ProfileGridProps) {
         return <CommunityBlock {...props} />
       case "writing":
         return <WritingBlock {...props} />
+      case "cv":
+        return <CVBlock {...props} />
       default:
         return null
     }

@@ -36,8 +36,14 @@ export default function LandingPage() {
       <nav>
         <div className="logo">huev<span>site</span>.io</div>
         <div className="nav-right">
-          <Link href="/explore" className="btn btn-ghost">Ver ejemplos</Link>
-          <Link href="/login" className="btn btn-accent">Crear mi huevsite →</Link>
+          <Link href="/explore" className="btn btn-ghost">
+            <span className="hidden sm:inline">Ver ejemplos</span>
+            <span className="sm:hidden">Explorar</span>
+          </Link>
+          <Link href="/login" className="btn btn-accent">
+            <span className="hidden sm:inline">Crear mi huevsite →</span>
+            <span className="sm:hidden">Empezar</span>
+          </Link>
         </div>
       </nav>
 

@@ -13,23 +13,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    // Obtener IDs de usuarios que sigo
-    const { data: follows, error: followsError } = await supabase
-      .from("follows")
-      .select("following_id")
-      .eq("follower_id", user.id);
-
-    if (followsError) {
-      return NextResponse.json({ error: followsError.message }, { status: 500 });
-    }
-
-    const followingIds = follows?.map((f) => f.following_id) ?? [];
-
-    if (followingIds.length === 0) {
-      return NextResponse.json({ activities: [] });
-    }
-
-    // Obtener actividad reciente de esos usuarios
+    // En lugar de limitar la vista solo a los "seguidos",
+    // hacemos que el feed sea GLOBAL para darle más vida a la comunidad pequeña.
     const { data: activities, error: activitiesError } = await supabase
       .from("activities")
       .select(`
@@ -45,7 +30,6 @@ export async function GET(request: NextRequest) {
           accent_color
         )
       `)
-      .in("user_id", followingIds)
       .order("created_at", { ascending: false })
       .limit(50);
 

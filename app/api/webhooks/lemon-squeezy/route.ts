@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
@@ -7,14 +8,14 @@ export const dynamic = 'force-dynamic';
 export async function POST(req: NextRequest) {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
 
-    if (!supabaseServiceKey) {
-      console.error("Falta SUPABASE_SERVICE_ROLE_KEY");
-      return NextResponse.json({ error: "Supabase service key not configured" }, { status: 500 });
+    if (!supabaseKey) {
+      console.error("Falta NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY");
+      return NextResponse.json({ error: "Supabase key not configured" }, { status: 500 });
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient(supabaseUrl, supabaseKey);
     
     const secret = process.env.LEMON_SQUEEZY_WEBHOOK_SECRET;
     
@@ -67,6 +68,14 @@ export async function POST(req: NextRequest) {
        if (error) {
            console.error("Error actualizando el perfil en Supabase:", error);
            return NextResponse.json({ error: "Database update failed" }, { status: 500 });
+       }
+
+       if (eventName === "subscription_created" && isPro) {
+          await supabase.from("activities").insert({
+             user_id: userId,
+             type: "pro_upgrade",
+             data: {},
+          });
        }
     } 
     // Handle Subscription Cancelled/Expired

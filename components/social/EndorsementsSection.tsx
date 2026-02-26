@@ -33,16 +33,17 @@ interface Props {
   profileAccentColor: string;
   currentUserId: string | null;
   isFollowing: boolean;
+  hasNominated: boolean;
 }
 
-export function EndorsementsSection({ profileId, profileAccentColor, currentUserId, isFollowing }: Props) {
+export function EndorsementsSection({ profileId, profileAccentColor, currentUserId, isFollowing, hasNominated }: Props) {
   const [endorsements, setEndorsements] = useState<Endorsement[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingEndorsement, setEditingEndorsement] = useState<Endorsement | null>(null);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 
-  const canEndorse = !!currentUserId && currentUserId !== profileId && isFollowing;
+  const canEndorse = !!currentUserId && currentUserId !== profileId && (isFollowing || hasNominated);
 
   useEffect(() => {
     fetch(`/api/social/endorsements?toId=${profileId}`)

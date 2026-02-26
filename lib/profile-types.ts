@@ -47,7 +47,8 @@ export interface HeroBlockData extends BaseBlock {
   name: string;
   avatarUrl: string;
   tagline: string;
-  roles: Role[];
+  description?: string;
+  roles?: Role[];
   status: string;
   location: string;
 }

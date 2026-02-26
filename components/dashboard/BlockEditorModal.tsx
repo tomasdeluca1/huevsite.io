@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Save, Sparkles } from "lucide-react";
+import { X, Save, Sparkles, Search, Github } from "lucide-react";
 import { BlockData } from "@/lib/profile-types";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
@@ -19,6 +19,8 @@ interface Props {
 export function BlockEditorModal({ block, isOpen, onClose, onSave }: Props) {
   const [formData, setFormData] = useState<any>(block);
   const [mounted, setMounted] = useState(false);
+  const [githubResults, setGithubResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -27,7 +29,33 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave }: Props) {
   // Actualizar formData cuando cambia el bloque
   useEffect(() => {
     setFormData(block);
+    setGithubSearch("");
+    setGithubResults([]);
   }, [block]);
+
+  const [githubSearch, setGithubSearch] = useState("");
+
+  useEffect(() => {
+    if (githubSearch.length < 3) {
+      setGithubResults([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const res = await fetch(`https://api.github.com/search/users?q=${githubSearch}&per_page=5`);
+        const data = await res.json();
+        setGithubResults(data.items || []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [githubSearch]);
 
   const handleChange = (key: string, value: any) => {
     setFormData((prev: any) => ({ ...prev, [key]: value }));
@@ -80,6 +108,35 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave }: Props) {
                 />
               </div>
               <div className="space-y-2">
+                 <div className="section-label !text-[9px] px-1">// rol / tagline corto</div>
+                <input 
+                  value={formData.tagline || ""} 
+                  onChange={(e) => handleChange("tagline", e.target.value)}
+                  className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all"
+                  placeholder="builder"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+               <div className="section-label !text-[9px] px-1">// descripción (bio)</div>
+              <textarea 
+                value={formData.description || ""} 
+                onChange={(e) => handleChange("description", e.target.value)}
+                className="w-full p-4 h-24 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all resize-none leading-relaxed"
+                placeholder="Buildeo productos desde BA..."
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                 <div className="section-label !text-[9px] px-1">// status</div>
+                <input 
+                  value={formData.status || ""} 
+                  onChange={(e) => handleChange("status", e.target.value)}
+                  className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all"
+                  placeholder="disponible para proyectos"
+                />
+              </div>
+              <div className="space-y-2">
                  <div className="section-label !text-[9px] px-1">// ubicación</div>
                 <input 
                   value={formData.location || ""} 
@@ -88,24 +145,6 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave }: Props) {
                   placeholder="Buenos Aires 🇦🇷"
                 />
               </div>
-            </div>
-            <div className="space-y-2">
-               <div className="section-label !text-[9px] px-1">// tagline</div>
-              <textarea 
-                value={formData.tagline || ""} 
-                onChange={(e) => handleChange("tagline", e.target.value)}
-                className="w-full p-4 h-24 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all resize-none leading-relaxed"
-                placeholder="Buildeo productos desde BA..."
-              />
-            </div>
-            <div className="space-y-2">
-               <div className="section-label !text-[9px] px-1">// status</div>
-              <input 
-                value={formData.status || ""} 
-                onChange={(e) => handleChange("status", e.target.value)}
-                className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all"
-                placeholder="disponible para proyectos"
-              />
             </div>
           </div>
         );
@@ -385,66 +424,105 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave }: Props) {
       case "github":
         return (
           <div className="space-y-6">
-            <div className="space-y-2">
-              <div className="section-label !text-[9px] px-1">// username de GitHub</div>
-              <input
-                value={formData.username || ""}
-                onChange={(e) => handleChange("username", e.target.value)}
-                className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-mono"
-                placeholder="tu-username"
-              />
+            <div className="space-y-4">
+              <div className="section-label !text-[9px] px-1">// buscar perfil de github</div>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Buscá por nombre o usuario..."
+                  className="w-full p-4 pl-12 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-medium"
+                  value={githubSearch}
+                  onChange={(e) => setGithubSearch(e.target.value)}
+                />
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-dim)]">
+                  {isSearching ? (
+                    <div className="w-4 h-4 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Search size={18} />
+                  )}
+                </div>
+              </div>
+
+              {githubResults.length > 0 && (
+                <div className="space-y-2 p-2 bg-black/20 rounded-2xl border border-[var(--border)]">
+                  {githubResults.map((user: any) => (
+                    <button
+                      key={user.id}
+                      onClick={async () => {
+                        handleChange("username", user.login);
+                        setGithubResults([]);
+                        // Auto sync stats
+                        try {
+                          const [userRes, reposRes] = await Promise.all([
+                            fetch(`https://api.github.com/users/${user.login}`),
+                            fetch(`https://api.github.com/users/${user.login}/repos?sort=stars&per_page=100`)
+                          ]);
+                          
+                          if (!userRes.ok) return;
+                          
+                          const userData = await userRes.json();
+                          const repos = await reposRes.json();
+                          const totalStars = Array.isArray(repos) ? repos.reduce((sum: number, r: any) => sum + r.stargazers_count, 0) : 0;
+
+                          handleChange("stats", {
+                            stars: totalStars,
+                            repos: userData.public_repos,
+                            followers: userData.followers
+                          });
+                        } catch (err) {
+                          console.error(err);
+                        }
+                      }}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--surface2)] transition-all group text-left"
+                    >
+                      <img src={user.avatar_url} alt={user.login} className="w-10 h-10 rounded-full border border-[var(--border)]" />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold text-sm truncate">{user.login}</div>
+                        <div className="text-[10px] text-[var(--text-dim)] font-mono">github.com/{user.login}</div>
+                      </div>
+                      <div className="opacity-0 group-hover:opacity-100 text-[var(--accent)] text-[10px] font-bold uppercase tracking-widest transition-opacity">
+                        Seleccionar
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
+
+            <div className="flex items-center gap-4 py-4 border-t border-b border-[var(--border)]/50">
+              <div className="w-12 h-12 rounded-full bg-black/40 flex items-center justify-center border border-[var(--border)] shrink-0">
+                <Github size={24} className="text-white" />
+              </div>
+              <div>
+                <div className="text-[10px] text-[var(--text-dim)] uppercase tracking-widest font-mono">Perfil seleccionado</div>
+                <div className="font-bold text-lg text-[var(--accent)] font-mono">@{formData.username || "sin-perfil"}</div>
+              </div>
+            </div>
+
             <div className="space-y-2">
-              <div className="section-label !text-[9px] px-1">// estadísticas</div>
+              <div className="section-label !text-[9px] px-1">// estadísticas actuales</div>
               <div className="grid grid-cols-3 gap-3">
-                <div className="text-center py-3 bg-[var(--bg)] border border-[var(--border)] rounded-lg">
-                  <div className="text-[9px] text-[var(--text-muted)] uppercase tracking-wider mb-1">Stars</div>
-                  <div className="font-bold text-lg">{formData.stats?.stars || 0}</div>
+                <div className="p-4 bg-[var(--bg)] border border-[var(--border)] rounded-2xl text-center group hover:border-[var(--accent)] transition-all">
+                  <div className="text-[9px] text-[var(--text-disabled)] uppercase tracking-wider mb-1 font-mono">Stars</div>
+                  <div className="font-black text-2xl tracking-tighter">{formData.stats?.stars || 0}</div>
                 </div>
-                <div className="text-center py-3 bg-[var(--bg)] border border-[var(--border)] rounded-lg">
-                  <div className="text-[9px] text-[var(--text-muted)] uppercase tracking-wider mb-1">Repos</div>
-                  <div className="font-bold text-lg">{formData.stats?.repos || 0}</div>
+                <div className="p-4 bg-[var(--bg)] border border-[var(--border)] rounded-2xl text-center group hover:border-[var(--accent)] transition-all">
+                  <div className="text-[9px] text-[var(--text-disabled)] uppercase tracking-wider mb-1 font-mono">Repos</div>
+                  <div className="font-black text-2xl tracking-tighter text-[var(--accent)]">{formData.stats?.repos || 0}</div>
                 </div>
-                <div className="text-center py-3 bg-[var(--bg)] border border-[var(--border)] rounded-lg">
-                  <div className="text-[9px] text-[var(--text-muted)] uppercase tracking-wider mb-1">Followers</div>
-                  <div className="font-bold text-lg">{formData.stats?.followers || 0}</div>
+                <div className="p-4 bg-[var(--bg)] border border-[var(--border)] rounded-2xl text-center group hover:border-[var(--accent)] transition-all">
+                  <div className="text-[9px] text-[var(--text-disabled)] uppercase tracking-wider mb-1 font-mono">Followers</div>
+                  <div className="font-black text-2xl tracking-tighter text-blue-400">{formData.stats?.followers || 0}</div>
                 </div>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={async () => {
-                if (!formData.username) {
-                  alert('Primero ingresá tu username de GitHub');
-                  return;
-                }
-                try {
-                  const response = await fetch(`https://api.github.com/users/${formData.username}`);
-                  if (!response.ok) throw new Error('Usuario no encontrado');
-                  const userData = await response.json();
-
-                  const reposResponse = await fetch(`https://api.github.com/users/${formData.username}/repos?sort=stars&per_page=100`);
-                  const repos = await reposResponse.json();
-                  const totalStars = repos.reduce((sum: number, repo: any) => sum + repo.stargazers_count, 0);
-
-                  handleChange("stats", {
-                    stars: totalStars,
-                    repos: userData.public_repos,
-                    followers: userData.followers
-                  });
-                  alert('Stats importados correctamente!');
-                } catch (error) {
-                  alert('Error al importar datos de GitHub. Verificá el username.');
-                }
-              }}
-              className="w-full p-4 rounded-xl border border-[var(--border-bright)] bg-[var(--surface2)] hover:bg-[var(--accent)] hover:text-black transition-all font-bold"
-            >
-              🔄 Sincronizar stats de GitHub
-            </button>
-            <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-              <p className="text-xs text-blue-400 leading-relaxed">
-                💡 Tip: Hacé clic para mantener tus estadísticas actualizadas. No se pueden editar manualmente.
-              </p>
+            
+            <div className="p-5 bg-[var(--accent-dim)]/20 border border-[var(--accent)]/20 rounded-2xl flex gap-4 items-start">
+               <div className="pt-1"><Sparkles size={16} className="text-[var(--accent)]" /></div>
+               <p className="text-xs text-[var(--text-dim)] leading-relaxed">
+                 Las estadísticas se actualizan automáticamente al elegir tu perfil. <br/>
+                 <span className="text-white font-medium">Click en Guardar para persistir los cambios en tu huevsite.</span>
+               </p>
             </div>
           </div>
         );
@@ -478,18 +556,50 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave }: Props) {
           </div>
         );
       default:
-        return (
-          <div className="py-20 text-center">
-            <div className="w-16 h-16 rounded-full bg-[var(--surface2)] border border-[var(--border-bright)] flex items-center justify-center mx-auto mb-6">
-              <Sparkles size={32} className="text-[var(--text-muted)]" />
-            </div>
-            <p className="section-sub text-center mx-auto">
-              El editor para este bloque estará disponible pronto. 🇦🇷 <br/>
-              Por ahora podés reordenarlo en el grid.
-            </p>
-          </div>
-        );
+        return <div>Editor no implementado para este tipo de bloque</div>;
     }
+  };
+
+  const renderSizeControls = () => {
+    // Blocks that make sense to resize
+    const resizableTypes = ['hero', 'building', 'project', 'github', 'stack', 'community', 'writing', 'cv'];
+    if (!resizableTypes.includes(block.type)) return null;
+
+    return (
+      <div className="space-y-4 pt-6 mt-6 border-t border-[var(--border)]/50">
+        <div className="section-label !text-[9px] px-1 text-[var(--accent)]">// tamaño en la grilla</div>
+        <div className="grid grid-cols-2 gap-4">
+           <div className="space-y-2">
+             <label className="text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-widest px-1 block mb-1">Ancho (Columnas)</label>
+             <select 
+               value={formData.col_span || 1}
+               onChange={(e) => handleChange("col_span", parseInt(e.target.value))}
+               className="w-full p-3 rounded-xl bg-[var(--bg)] border border-[var(--border-bright)] outline-none font-mono text-sm cursor-pointer hover:border-[var(--accent)] transition-colors focus:border-[var(--accent)] appearance-none"
+             >
+               <option value={1}>1 col (Chico)</option>
+               <option value={2}>2 cols (Mitad)</option>
+               <option value={3}>3 cols (Ancho)</option>
+               <option value={4}>4 cols (Completo)</option>
+             </select>
+           </div>
+           <div className="space-y-2">
+             <label className="text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-widest px-1 block mb-1">Alto (Filas)</label>
+             <select 
+               value={formData.row_span || 1}
+               onChange={(e) => handleChange("row_span", parseInt(e.target.value))}
+               className="w-full p-3 rounded-xl bg-[var(--bg)] border border-[var(--border-bright)] outline-none font-mono text-sm cursor-pointer hover:border-[var(--accent)] transition-colors focus:border-[var(--accent)] appearance-none"
+             >
+               <option value={1}>1 fila (Normal)</option>
+               <option value={2}>2 filas (Alto)</option>
+               <option value={3}>3 filas (Muy Alto)</option>
+             </select>
+           </div>
+        </div>
+        <p className="text-[10px] text-[var(--text-dim)] px-1">
+          Ajustá el tamaño del bloque para destacarlo. Tip: en celulares todos ocupan el 100% del ancho.
+        </p>
+      </div>
+    );
   };
 
   if (!mounted) return null;
@@ -502,33 +612,31 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave }: Props) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/80 backdrop-blur-md"
             onClick={onClose}
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm z-0"
           />
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 50 }}
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 50 }}
-            className="relative w-[90%] max-w-xl bg-[var(--surface)] border border-[var(--border-bright)] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col z-10 mx-auto"
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="relative w-full max-w-lg bg-[var(--surface)] border border-[var(--border)] rounded-3xl overflow-hidden z-10 shadow-2xl flex flex-col max-h-[90vh]"
           >
-            <div className="p-8 border-b border-[var(--border)] flex justify-between items-center bg-black/40">
+            <div className="flex items-center justify-between p-6 border-b border-[var(--border)] shrink-0">
               <div>
-                <div className="section-label mb-1">// configuración</div>
-                <h3 className="text-3xl font-extrabold tracking-tight">Editar bloque</h3>
+                <h3 className="text-xl font-bold">Editar Bloque</h3>
+                <p className="text-sm text-[var(--text-dim)] font-mono mt-1 uppercase tracking-widest">type: {block.type}</p>
               </div>
-              <button 
-                onClick={onClose}
-                className="p-3 rounded-full hover:bg-[var(--surface2)] transition-all text-[var(--text-muted)] hover:text-white"
-              >
-                <X size={24} />
+              <button onClick={onClose} className="p-2 hover:bg-[var(--surface2)] rounded-full transition-colors">
+                <X size={20} className="text-[var(--text-muted)]" />
               </button>
             </div>
-
-            <div className="p-8 max-h-[60vh] overflow-y-auto custom-scrollbar">
+            
+            <div className="p-8 overflow-y-auto custom-scrollbar bg-gradient-to-b from-[var(--surface)] to-[var(--bg)] flex-1">
               {renderFields()}
+              {renderSizeControls()}
             </div>
 
-            <div className="p-8 border-t border-[var(--border)] bg-black/20 flex gap-4">
+            <div className="p-6 border-t border-[var(--border)] bg-[var(--surface)] flex gap-4 shrink-0">
               <button 
                 onClick={onClose}
                 className="btn btn-ghost !px-8 flex-1 py-4"

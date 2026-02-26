@@ -69,18 +69,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "El comentario no puede superar 140 caracteres." }, { status: 400 });
     }
 
-    // Verificar que el usuario sigue al perfil o tienen GitHub en común
-    // (Para MVP verificamos solo que el from esté logueado — simplificamos el check de "follow o colaboración")
-    const { data: follow } = await supabase
-      .from("follows")
-      .select("id")
-      .eq("follower_id", user.id)
-      .eq("following_id", toId)
-      .maybeSingle();
-
-    if (!follow) {
+    // Verificar que el usuario sigue al perfil o lo ha nominado
+    const [{ data: follow }, { data: nomination }] = await Promise.all([
+      supabase.from("follows").select("id").eq("follower_id", user.id).eq("following_id", toId).maybeSingle(),
+      supabase.from("showcase_nominations").select("id").eq("from_id", user.id).eq("user_id", toId).maybeSingle()
+    ]);
+    
+    if (!follow && !nomination) {
       return NextResponse.json(
-        { error: "Solo podés endorsar a builders que seguís." },
+        { error: "Solo podés endorsar a builders que seguís o nominás." },
         { status: 403 }
       );
     }

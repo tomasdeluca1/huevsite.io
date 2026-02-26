@@ -15,8 +15,8 @@ interface ShowcaseUser {
 }
 
 interface ShowcaseData {
-  week: string;
-  winner: { week: string; user: ShowcaseUser } | null;
+  month: string;
+  winner: { month: string; user: ShowcaseUser } | null;
   finalists: Array<{ userId: string; count: number; user: ShowcaseUser }>;
 }
 
@@ -42,18 +42,18 @@ export default function ShowcasePage() {
         <header className="flex justify-between items-center mb-16">
           <Link href="/" className="logo">huev<span>site</span>.io</Link>
           <Link href="/login" className="btn btn-ghost !px-5 !text-xs !py-2.5">
-            Buildá el tuyo 🇦🇷
+            Buildeá el tuyo 🇦🇷
           </Link>
         </header>
 
         <div className="mb-16 text-center">
-          <div className="section-label mb-3 justify-center">// showcase semanal</div>
+          <div className="section-label mb-3 justify-center">// showcase mensual</div>
           <h1 className="text-5xl font-extrabold tracking-tighter mb-4">
-            El builder de la semana.
+            El builder del mes.
           </h1>
           <p className="section-sub mx-auto max-w-md">
-            El builder de la semana en Argentina y LATAM.<br />
-            {data?.week && <span className="font-mono text-xs text-[var(--accent)]">{data.week}</span>}
+            El builder más nominado de Argentina y LATAM.<br />
+            {data?.month && <span className="font-mono text-xs text-[var(--accent)]">{data.month}</span>}
           </p>
         </div>
 
@@ -110,7 +110,7 @@ export default function ShowcasePage() {
                       className="inline-block text-xs font-bold px-3 py-1 rounded-lg mb-4 text-black"
                       style={{ backgroundColor: data.winner.user.accent_color }}
                     >
-                      🏆 Winner — {data.winner.week}
+                      🏆 Winner — {data.winner.month}
                     </div>
                     <h2 className="text-4xl font-extrabold tracking-tight mb-2">
                       {data.winner.user.name ?? data.winner.user.username}
@@ -144,7 +144,7 @@ export default function ShowcasePage() {
             {/* Finalists */}
             {data.finalists.length > 0 && (
               <div>
-                <div className="section-label mb-6">// finalistas de la semana</div>
+                <div className="section-label mb-6">// finalistas del mes</div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {data.finalists.map((finalist, i) => (
                     <motion.div
@@ -190,7 +190,7 @@ export default function ShowcasePage() {
 
             {data.finalists.length === 0 && !data.winner && (
               <p className="text-center text-xs text-[var(--text-muted)] font-mono mt-8">
-                Todavía no hay nominados esta semana. Explorá perfiles y nominá builders que te inspiran.
+                Todavía no hay nominados este mes. Explorá perfiles y nominá builders que te inspiran.
               </p>
             )}
           </>

@@ -12,19 +12,25 @@ import type { BlockData } from "@/lib/profile-types"
 interface ProfileGridProps {
   blocks: BlockData[]
   accentColor: string
+  displayName?: string
+  tagline?: string
 }
 
-export function ProfileGrid({ blocks, accentColor }: ProfileGridProps) {
+export function ProfileGrid({ blocks, accentColor, displayName, tagline }: ProfileGridProps) {
   // Filtrar solo bloques visibles y ordenar
   const visibleBlocks = blocks
     .filter(block => block.visible)
     .sort((a, b) => a.order - b.order)
 
+  const hasHero = visibleBlocks.some(b => b.type === 'hero');
+
   // Mapear tipo de bloque a componente
   const renderBlock = (block: BlockData) => {
     // Los bloques vienen del profile-service con todas las propiedades esparcidas,
-    // así que pasamos todo el bloque como data a los componentes
-    const props = { data: block as any, accentColor }
+    const props = { 
+      data: block as any, 
+      accentColor 
+    }
 
     switch (block.type) {
       case "hero":
@@ -78,6 +84,19 @@ export function ProfileGrid({ blocks, accentColor }: ProfileGridProps) {
       transition={{ duration: 0.5 }}
       className="bento-grid"
     >
+      {/* Fallback Header if no Hero block exists */}
+      {!hasHero && displayName && (
+        <motion.div
+           initial={{ opacity: 0, y: 20 }}
+           animate={{ opacity: 1, y: 0 }}
+           className="md:col-span-2 md:row-span-1"
+        >
+           <div className="bento-block flex flex-col justify-center p-8 bg-[var(--surface)] border border-[var(--border)] rounded-[2rem]">
+              <h1 className="text-3xl font-extrabold text-white mb-1">{displayName}</h1>
+              <p className="text-sm text-[var(--text-dim)] font-mono">// {tagline || 'builder'}</p>
+           </div>
+        </motion.div>
+      )}
       {visibleBlocks.map((block, index) => (
         <motion.div
           key={block.id}

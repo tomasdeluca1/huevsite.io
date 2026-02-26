@@ -27,6 +27,8 @@ export default async function ExplorePage() {
     console.error("Error fetching explore profiles:", error);
   }
 
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
     <div className="min-h-screen bg-[var(--bg)] font-display flex flex-col">
       {/* NAV */}
@@ -35,8 +37,8 @@ export default async function ExplorePage() {
           huev<span className="text-[var(--accent)]">site</span>.io
         </Link>
         <div className="flex items-center gap-4">
-          <Link href="/login" className="btn btn-accent text-sm font-bold">
-            Crear mi huevsite →
+          <Link href={user ? "/dashboard" : "/login"} className="btn btn-accent text-sm font-bold">
+            {user ? "Mi huevsite 🇦🇷" : "Crear mi huevsite →"}
           </Link>
         </div>
       </nav>
@@ -73,12 +75,12 @@ export default async function ExplorePage() {
           <div className="logo text-[var(--text-muted)] text-sm font-mono font-bold tracking-tight">
             huevsite.io
           </div>
-          <div className="text-xs text-[var(--text-dim)]">Mostrá lo que buildás.</div>
+          <div className="text-xs text-[var(--text-dim)]">Mostrá lo que buildeás.</div>
         </div>
         <div className="flex gap-6">
-           <Link href="#" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">Twitter/X</Link>
-           <Link href="#" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">Discord</Link>
-           <Link href="#" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">GitHub</Link>
+           <Link href="https://x.com/i/communities/2026312282527932637" target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">X Community</Link>
+           <Link href="https://discord.gg/59683238" target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">Discord Community</Link>
+           <Link href="https://github.com/tomasdeluca1" target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">GitHub</Link>
         </div>
       </footer>
     </div>

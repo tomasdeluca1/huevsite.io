@@ -126,6 +126,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: insertError.message }, { status: 500 });
     }
 
+    // Registrar actividad de "new_nomination"
+    const { data: targetProfile } = await supabase
+      .from("profiles")
+      .select("username")
+      .eq("id", userId)
+      .single();
+
+    if (targetProfile) {
+      await supabase.from("activities").insert({
+        user_id: user.id,
+        type: "new_nomination",
+        data: { targetUsername: targetProfile.username },
+      });
+    }
+
     return NextResponse.json({ success: true, week, remaining: 0 });
   } catch (error) {
     console.error("Nominate error:", error);

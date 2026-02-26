@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { isEnabled } from "@/lib/feature-flags";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
@@ -26,6 +25,12 @@ const ACTIVITY_LABELS: Record<string, (data: Record<string, string>, username: s
   new_project: (data, u) => `${u} lanzó un proyecto: ${data.projectName ?? ""}`,
   new_block: (data, u) => `${u} agregó un nuevo bloque: ${data.blockType ?? ""}`,
   milestone: (data, u) => `${u} llegó a ${data.value ?? ""} ${data.metric ?? ""}`,
+  new_follow: (data, u) => `${u} empezó a seguir a ${data.targetUsername ?? "alguien"}`,
+  new_nomination: (data, u) => `${u} nominó a ${data.targetUsername ?? "alguien"} como creador de la semana 🏆`,
+  new_endorsement: (data, u) => `${u} dejó un endorsement a ${data.targetUsername ?? "alguien"}`,
+  pro_upgrade: (data, u) => `${u} se pasó a PRO 🚀`,
+  new_builder: (data, u) => `${data.username ?? u} se acaba de unir a huevsite.io 🎉`,
+  showcase_winner: (data, u) => `${u} ganó como builder de la semana 🏆🥚`,
 };
 
 function timeAgo(date: string): string {
@@ -43,8 +48,6 @@ export default function FeedPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isEnabled("socialNetwork")) return;
-
     fetch("/api/social/feed")
       .then(r => r.json())
       .then(data => setActivities(data.activities ?? []))
@@ -52,17 +55,13 @@ export default function FeedPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (!isEnabled("socialNetwork")) {
-    notFound();
-  }
-
   return (
     <div className="min-h-screen bg-[var(--bg)] font-display py-12 px-4 max-w-2xl mx-auto">
       <header className="mb-12">
         <Link href="/" className="logo mb-8 block">huev<span>site</span>.io</Link>
         <div className="section-label mb-2">// actividad reciente</div>
         <h1 className="text-4xl font-extrabold tracking-tighter">Tu feed</h1>
-        <p className="section-sub mt-2">Lo que están buildeando los que seguís.</p>
+        <p className="section-sub mt-2">Lo que está pasando ahora mismo en la comunidad.</p>
       </header>
 
       {loading ? (
@@ -74,8 +73,8 @@ export default function FeedPage() {
       ) : activities.length === 0 ? (
         <div className="text-center py-32">
           <p className="text-[var(--text-dim)] font-mono text-sm leading-relaxed">
-            Acá va a aparecer la actividad de los builders que seguís.<br />
-            <span className="text-[var(--accent)]">Explorá perfiles y empezá a seguir gente 🇦🇷</span>
+            El feed global está vacío de momento. La comunidad está muy tranquila.<br />
+            <span className="text-[var(--accent)]">Sé el primero en aportar actividad interactuando o editando tu perfil 🇦🇷</span>
           </p>
           <Link href="/explore" className="btn btn-ghost mt-8 inline-flex">
             Explorar builders →

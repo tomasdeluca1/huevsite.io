@@ -119,6 +119,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Registrar actividad de nuevo builder en el feed
+    await supabase.from('activities').insert({
+      user_id: user.id,
+      type: 'new_builder',
+      data: { username: body.username }
+    });
+
     return NextResponse.json({
       success: true,
       profile,

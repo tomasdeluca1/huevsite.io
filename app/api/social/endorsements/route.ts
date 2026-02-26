@@ -108,6 +108,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    // Registrar actividad de "new_endorsement"
+    const { data: targetProfile } = await supabase
+      .from("profiles")
+      .select("username")
+      .eq("id", toId)
+      .single();
+
+    if (targetProfile) {
+      await supabase.from("activities").insert({
+        user_id: user.id,
+        type: "new_endorsement",
+        data: { targetUsername: targetProfile.username, skill: skill },
+      });
+    }
+
     return NextResponse.json({ success: true, endorsement: data });
   } catch (error) {
     console.error("Create endorsement error:", error);

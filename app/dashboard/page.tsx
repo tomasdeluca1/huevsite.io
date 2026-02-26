@@ -16,7 +16,7 @@ import {
   sortableKeyboardCoordinates, 
   rectSortingStrategy 
 } from "@dnd-kit/sortable";
-import { Save, Eye, Layout as LayoutIcon, Settings, LogOut, Plus, Sparkles, MessageSquare } from "lucide-react";
+import { Save, Eye, Layout as LayoutIcon, Settings, LogOut, Plus, Sparkles, MessageSquare, Activity, Compass } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { MOCK_PROFILE } from "@/lib/mock-profile";
@@ -597,6 +597,18 @@ export default function DashboardPage() {
               }}
             />
           </div>
+        </div>
+
+        <div className="mt-8 space-y-1">
+          <div className="section-label !text-[9px] mb-3 px-1">// comunidad</div>
+          <Link href="/feed" className="flex items-center gap-3 w-full p-3 rounded-xl bg-transparent text-sm font-medium text-[var(--text-dim)] hover:text-white hover:bg-[var(--surface2)] transition-all group shrink-0">
+            <Activity size={18} className="shrink-0 group-hover:scale-110 transition-transform" /> 
+            <span className="truncate">Feed de Actividad</span>
+          </Link>
+          <Link href="/explore" className="flex items-center gap-3 w-full p-3 rounded-xl bg-transparent text-sm font-medium text-[var(--text-dim)] hover:text-white hover:bg-[var(--surface2)] transition-all group shrink-0">
+            <Compass size={18} className="shrink-0 group-hover:scale-110 transition-transform" /> 
+            <span className="truncate">Explorar Builders</span>
+          </Link>
         </div>
 
         <div className="mt-8 space-y-1">

@@ -35,6 +35,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    // Registrar actividad de "new_follow"
+    const { data: targetProfile } = await supabase
+      .from("profiles")
+      .select("username")
+      .eq("id", followingId)
+      .single();
+
+    if (targetProfile) {
+      await supabase.from("activities").insert({
+        user_id: user.id,
+        type: "new_follow",
+        data: { targetUsername: targetProfile.username },
+      });
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Follow error:", error);

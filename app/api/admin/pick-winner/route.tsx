@@ -138,6 +138,15 @@ export async function POST(request: NextRequest) {
     // 6. Eliminar Nominaciones de esa semana
     await supabase.from("showcase_nominations").delete().eq("week", week);
 
+    // 7. Insertar Actividad en el Feed
+    for (const winnerProfile of winnerProfiles) {
+      await supabase.from("activities").insert({
+        user_id: winnerProfile.id,
+        type: "showcase_winner",
+        data: { week }
+      });
+    }
+
     return NextResponse.json({ 
       success: true, 
       winners: winnerProfiles.map(w => w.username), 

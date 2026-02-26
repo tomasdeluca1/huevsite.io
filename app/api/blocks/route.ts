@@ -91,6 +91,15 @@ export async function POST(request: NextRequest) {
 
     console.log('POST - Success:', block)
 
+    // Log the activity to the feed
+    const { error: activityError } = await supabase.from('activities').insert({
+       user_id: user.id,
+       type: 'new_block',
+       data: { blockType: body.type }
+    });
+    
+    if (activityError) console.error("Error logging block activity", activityError);
+
     return NextResponse.json({
       success: true,
       block,

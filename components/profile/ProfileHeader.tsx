@@ -47,10 +47,16 @@ export function ProfileHeader({
           
           {/* Mobile only CTA */}
           <div className="md:hidden">
-            <Link href="/login" className="btn btn-ghost !text-[10px] !py-2 !px-4 !rounded-xl">
-              Buildá el tuyo 🇦🇷
-            </Link>
-          </div>
+        {currentUserId ? (
+          <Link href="/dashboard" className="btn btn-ghost !text-[10px] !py-2 !px-4 !rounded-xl">
+            Mi huevsite 🇦🇷
+          </Link>
+        ) : (
+          <Link href="/login" className="btn btn-ghost !text-[10px] !py-2 !px-4 !rounded-xl">
+            Buildeá el tuyo 🇦🇷
+          </Link>
+        )}
+      </div>
         </div>
 
         {/* Center/Right Section: Stats and Social Actions */}
@@ -108,9 +114,15 @@ export function ProfileHeader({
             )}
             
             <div className="hidden md:block">
-              <Link href="/login" className="btn btn-ghost !px-5 !text-xs !py-3 !rounded-2xl hover:!border-[var(--accent)] transition-all">
-                Buildá el tuyo 🇦🇷
-              </Link>
+              {currentUserId ? (
+                <Link href="/dashboard" className="btn btn-ghost !px-5 !text-xs !py-3 !rounded-2xl hover:!border-[var(--accent)] transition-all">
+                  Ir a mi huevsite 🇦🇷
+                </Link>
+              ) : (
+                <Link href="/login" className="btn btn-ghost !px-5 !text-xs !py-3 !rounded-2xl hover:!border-[var(--accent)] transition-all">
+                  Buildeá el tuyo 🇦🇷
+                </Link>
+              )}
             </div>
           </div>
         </div>

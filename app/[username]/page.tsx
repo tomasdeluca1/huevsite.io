@@ -12,6 +12,16 @@ interface Props {
   params: { username: string };
 }
 
+function getCurrentWeek(): string {
+  const now = new Date();
+  const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const profile = await profileService.getProfile(params.username);
 
@@ -60,6 +70,9 @@ export default async function ProfilePage({ params }: Props) {
   let followersCount = 0;
   let followingCount = 0;
   let nominationsCount = 0;
+  let hasNominated = false;
+
+  const currentWeek = getCurrentWeek();
 
   if (isEnabled("socialNetwork") && profile.id) {
     try {
@@ -73,7 +86,7 @@ export default async function ProfilePage({ params }: Props) {
       ] = await Promise.all([
         supabase.from("follows").select("*", { count: "exact", head: true }).eq("following_id", profile.id),
         supabase.from("follows").select("*", { count: "exact", head: true }).eq("follower_id", profile.id),
-        supabase.from("showcase_nominations").select("*", { count: "exact", head: true }).eq("user_id", profile.id)
+        supabase.from("showcase_nominations").select("*", { count: "exact", head: true }).eq("user_id", profile.id).eq("week", currentWeek)
       ]);
       
       followersCount = fers || 0;
@@ -84,13 +97,12 @@ export default async function ProfilePage({ params }: Props) {
       currentUserId = user?.id ?? null;
 
       if (currentUserId && currentUserId !== profile.id) {
-        const { data: follow } = await supabase
-          .from("follows")
-          .select("id")
-          .eq("follower_id", currentUserId)
-          .eq("following_id", profile.id)
-          .maybeSingle();
+        const [{ data: follow }, { data: nomination }] = await Promise.all([
+          supabase.from("follows").select("id").eq("follower_id", currentUserId).eq("following_id", profile.id).maybeSingle(),
+          supabase.from("showcase_nominations").select("id").eq("nominated_by", currentUserId).eq("user_id", profile.id).eq("week", currentWeek).maybeSingle()
+        ]);
         isFollowing = !!follow;
+        hasNominated = !!nomination;
       }
     } catch {
       // ignorar errores de auth en perfil público
@@ -131,6 +143,8 @@ export default async function ProfilePage({ params }: Props) {
           <ProfileGrid
             blocks={profile.blocks}
             accentColor={profile.accentColor}
+            displayName={profile.displayName}
+            tagline={profile.tagline}
           />
         </div>
 
@@ -142,6 +156,7 @@ export default async function ProfilePage({ params }: Props) {
               profileAccentColor={profile.accentColor}
               currentUserId={currentUserId}
               isFollowing={isFollowing}
+              hasNominated={hasNominated}
             />
           </div>
         )}

@@ -20,13 +20,13 @@ export function HeroBlock({ data, accentColor }: Props) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bento-block block-hero h-full"
+      className="bento-block block-hero h-full flex flex-col justify-between"
       style={{ '--accent': accentColor } as any}
     >
       <div>
         <div className="hero-avatar" style={{ background: avatarUrl ? 'transparent' : `linear-gradient(135deg, ${accentColor}, #00FF88)` }}>
           {avatarUrl ? (
-            <img src={avatarUrl} alt={name} className="w-full h-full object-cover rounded-full" />
+            <img src={avatarUrl} alt={name} className="w-full h-full object-cover rounded-full border border-[var(--border)]" />
           ) : (
             name.charAt(0).toUpperCase()
           )}
@@ -34,12 +34,12 @@ export function HeroBlock({ data, accentColor }: Props) {
         </div>
         <div className="hero-name">{name}</div>
         <div className="hero-role">
-          // {roles.length > 0 ? roles.map(r => r.replace('_', ' ')).join(' & ') : 'builder'}
+          // {tagline}
         </div>
       </div>
-      <div>
-        <p className="hero-tagline">{tagline}</p>
-        <div className="hero-tags">
+      <div className="mt-4">
+        {data.description && <p className="hero-tagline">{data.description}</p>}
+        <div className="hero-tags mt-auto pt-4">
           {status && (
             <span className="tag accent" style={{ background: `${accentColor}20`, borderColor: `${accentColor}40`, color: accentColor }}>
               {status}

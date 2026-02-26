@@ -18,10 +18,12 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "huevsite.io | Mostrá lo que buildás",
+  title: "huevsite.io | Mostrá lo que buildeás",
   description: "Red social y portfolio para builders de Argentina y LATAM.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
 };
+
+import { GlobalUpdateModal } from "@/components/social/GlobalUpdateModal";
 
 export default function RootLayout({
   children,
@@ -31,6 +33,7 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${bricolage.variable} ${jetbrains.variable}`}>
       <body className="antialiased selection:bg-[var(--accent)] selection:text-black font-sans">
+        <GlobalUpdateModal />
         {children}
       </body>
       <Script 

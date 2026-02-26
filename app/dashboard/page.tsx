@@ -188,8 +188,8 @@ export default function DashboardPage() {
           ...initialData,
           name: profile?.displayName || "Tu nombre",
           avatarUrl: "",
-          tagline: "Contanos qué estás haciendo",
-          roles: [],
+          tagline: profile?.tagline || "builder",
+          description: "Contanos qué estás haciendo...",
           status: "disponible para proyectos",
           location: "Buenos Aires 🇦🇷",
         };
@@ -398,7 +398,10 @@ export default function DashboardPage() {
   };
 
   const renderBlockContent = (block: BlockData) => {
-    const props = { data: block as any, accentColor: profile?.accentColor || '#C8FF00' };
+    const props = { 
+      data: block as any,
+      accentColor: profile?.accentColor || '#C8FF00' 
+    };
     
     switch (block.type) {
       case "hero": return <HeroBlock {...props} />;
@@ -540,21 +543,25 @@ export default function DashboardPage() {
               <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-mono text-[var(--text-muted)] tracking-widest uppercase pointer-events-none">
                 Editar
               </div>
-              <input
-                type="text"
-                value={profile.displayName}
-                onChange={(e) => handleProfileDetailChange('name', e.target.value)}
-                className="bg-transparent border-none outline-none text-2xl font-extrabold truncate text-white w-full p-0 placeholder-[var(--text-muted)] focus:text-[var(--accent)] transition-colors"
-                placeholder="Tu Nombre"
-              />
-              <input
-                type="text"
-                value={profile.tagline || ""}
-                onChange={(e) => handleProfileDetailChange('tagline', e.target.value)}
-                className="bg-transparent border-none outline-none text-sm text-[var(--text-dim)] w-full p-0 placeholder-[var(--text-muted)] block"
-                placeholder="Un tagline cortito..."
-              />
-              <div className="flex items-center gap-1 pt-3 mt-1 border-t border-[var(--border)]/50">
+              {!profile.blocks.some(b => b.type === 'hero') && (
+                <>
+                  <input
+                    type="text"
+                    value={profile.displayName}
+                    onChange={(e) => handleProfileDetailChange('name', e.target.value)}
+                    className="bg-transparent border-none outline-none text-2xl font-extrabold truncate text-white w-full p-0 placeholder-[var(--text-muted)] focus:text-[var(--accent)] transition-colors"
+                    placeholder="Tu Nombre"
+                  />
+                  <input
+                    type="text"
+                    value={profile.tagline || ""}
+                    onChange={(e) => handleProfileDetailChange('tagline', e.target.value)}
+                    className="bg-transparent border-none outline-none text-sm text-[var(--text-dim)] w-full p-0 placeholder-[var(--text-muted)] block"
+                    placeholder="Un tagline cortito..."
+                  />
+                </>
+              )}
+              <div className={`flex items-center gap-1 ${!profile.blocks.some(b => b.type === 'hero') ? 'pt-3 mt-1 border-t border-[var(--border)]/50' : ''}`}>
                 <span className="text-[11px] text-[var(--text-muted)] font-mono">huevsite.io/</span>
                 <input
                   type="text"
@@ -680,17 +687,32 @@ export default function DashboardPage() {
                     </p>
                   </div>
                 ) : (
-                  profile.blocks.map((block) => (
-                    <SortableBlock
-                      key={block.id}
-                      id={block.id}
-                      block={block}
-                      onRemove={removeBlock}
-                      onEdit={(b) => setEditingBlock(b)}
-                    >
-                      {renderBlockContent(block)}
-                    </SortableBlock>
-                  ))
+                  <>
+                    {/* Fallback Header Preview if no Hero block exists */}
+                    {!profile.blocks.some(b => b.type === 'hero') && profile.displayName && (
+                      <div className="md:col-span-2 md:row-span-1 opacity-50 grayscale-[0.5]">
+                        <div className="bento-block flex flex-col justify-center p-8 bg-[var(--surface)] border border-dashed border-[var(--border)] rounded-[2rem]">
+                          <div className="flex justify-between items-start mb-2">
+                            <h1 className="text-3xl font-extrabold text-white mb-1">{profile.displayName}</h1>
+                            <span className="text-[9px] font-mono text-[var(--accent)] border border-[var(--accent)] px-2 py-0.5 rounded-full uppercase">Fallback</span>
+                          </div>
+                          <p className="text-sm text-[var(--text-dim)] font-mono">// {profile.tagline || 'builder'}</p>
+                        </div>
+                      </div>
+                    )}
+                    {profile.blocks.map((block) => (
+                      <SortableBlock
+                        key={block.id}
+                        id={block.id}
+                        block={block}
+                        onRemove={removeBlock}
+                        onEdit={(b) => setEditingBlock(b)}
+                        onResize={(id, colSpan, rowSpan) => updateBlock({ ...block, col_span: colSpan, row_span: rowSpan })}
+                      >
+                        {renderBlockContent(block)}
+                      </SortableBlock>
+                    ))}
+                  </>
                 )}
               </div>
             </SortableContext>

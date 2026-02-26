@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { Resend } from "resend";
+import { FeedbackEmail } from "@/components/emails/FeedbackEmail";
+import { renderToStaticMarkup } from "react-dom/server";
 
 
 
@@ -38,21 +40,21 @@ export async function POST(req: NextRequest) {
     if (process.env.RESEND_API_KEY) {
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
+        
+        const html = renderToStaticMarkup(
+          <FeedbackEmail 
+            userEmail={user.email || 'Anónimo'} 
+            category={category} 
+            content={content} 
+            userId={user.id} 
+          />
+        );
+
         await resend.emails.send({
-          from: "Huevsite Feedback <onboarding@resend.dev>", // Usamos el default de test si no hay dominio verificado
+          from: "onboarding@resend.dev",
           to: "tomasdelucaa@gmail.com",
           subject: `🚀 Nuevo Feedback: ${category}`,
-          html: `
-            <div style="font-family: sans-serif; padding: 20px; color: #333;">
-              <h2 style="color: #C8FF00; background: #000; padding: 10px;">Nuevo Feedback en Huevsite</h2>
-              <p><strong>Usuario:</strong> ${user.email}</p>
-              <p><strong>Categoría:</strong> ${category}</p>
-              <div style="background: #f4f4f4; padding: 15px; border-radius: 8px; margin-top: 10px;">
-                ${content.replace(/\n/g, '<br/>')}
-              </div>
-              <p style="font-size: 12px; color: #999; margin-top: 20px;">ID de Usuario: ${user.id}</p>
-            </div>
-          `,
+          html,
         });
       } catch (emailError) {
         console.error("Resend email error:", emailError);

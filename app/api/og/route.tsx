@@ -8,27 +8,39 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const username = searchParams.get('username');
+    const titleParam = searchParams.get('title');
+    const taglineParam = searchParams.get('tagline');
+    const colorParam = searchParams.get('color');
 
     if (!username) {
       return new Response('Username is required', { status: 400 });
     }
 
-    const supabase = await createClient();
+    let displayName = titleParam;
+    let tagline = taglineParam;
+    let accentColor = colorParam;
 
-    // Fetch user profile
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('name, username, tagline, accent_color')
-      .eq('username', username)
-      .single();
+    // Fallback: si no recibimos los datos, los vamos a buscar a la BD
+    if (!displayName || !tagline || !accentColor) {
+      const supabase = await createClient();
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('name, username, tagline, accent_color')
+        .eq('username', username)
+        .single();
 
-    if (!profile) {
-      return new Response('Profile not found', { status: 404 });
+      if (!profile) {
+        return new Response('Profile not found', { status: 404 });
+      }
+
+      displayName = displayName || profile.name || profile.username;
+      tagline = tagline || profile.tagline || 'Builder de LATAM 🇦🇷';
+      accentColor = accentColor || profile.accent_color || '#C8FF00';
+    } else {
+      displayName = displayName || username;
+      tagline = tagline || 'Builder en huevsite.io';
+      accentColor = accentColor || '#C8FF00';
     }
-
-    const displayName = profile.name || profile.username;
-    const tagline = profile.tagline || 'Builder de LATAM 🇦🇷';
-    const accentColor = profile.accent_color || '#C8FF00';
 
     return new ImageResponse(
       (
@@ -68,7 +80,7 @@ export async function GET(request: NextRequest) {
               border: '1px solid rgba(255,255,255,0.1)',
               borderRadius: '24px',
               backgroundColor: 'rgba(255,255,255,0.02)',
-              boxShadow: `0 0 80px ${accentColor}20`,
+              boxShadow: `0 0 80px ${accentColor as string}20`,
             }}
           >
             {/* Logo */}
@@ -82,7 +94,7 @@ export async function GET(request: NextRequest) {
                 fontFamily: 'monospace',
               }}
             >
-              huev<span style={{ color: accentColor }}>site</span>.io
+              huev<span style={{ color: accentColor as string }}>site</span>.io
             </div>
 
             {/* User Info */}
@@ -117,10 +129,10 @@ export async function GET(request: NextRequest) {
                   marginTop: 40,
                   fontSize: 24,
                   fontWeight: 600,
-                  color: accentColor,
+                  color: accentColor as string,
                }}
             >
-              huevsite.io/{profile.username}
+              huevsite.io/{username}
             </div>
           </div>
         </div>

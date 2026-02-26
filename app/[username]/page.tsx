@@ -27,10 +27,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!profile) return { title: "Usuario no encontrado | huevsite.io" };
 
-  const ogImageUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://huevsite.io'}/api/og?username=${params.username}`;
-
   const heroBlock = profile.blocks.find(b => b.type === 'hero');
   const tagline = (heroBlock as any)?.tagline || 'Builder en huevsite.io';
+
+  const cacheBuster = Date.now();
+  const searchParams = new URLSearchParams({
+    username: params.username,
+    title: profile.displayName || params.username,
+    tagline: tagline,
+    color: profile.accentColor || '#C8FF00',
+    v: cacheBuster.toString()
+  });
+
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://huevsite.io';
+  const ogImageUrl = `${baseUrl}/api/og?${searchParams.toString()}`;
 
   return {
     title: `${profile.displayName} (@${profile.username}) | huevsite.io`,

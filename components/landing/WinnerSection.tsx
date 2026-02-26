@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { ProfileGrid } from "@/components/profile/ProfileGrid";
@@ -10,6 +10,7 @@ interface ShowcaseData {
   week: string;
   winners: any[];
   finalists: any[];
+  randoms?: any[];
 }
 
 interface WinnerSectionProps {
@@ -56,12 +57,24 @@ export function WinnerSection({ initialData }: WinnerSectionProps) {
       .finally(() => setLoading(false));
   }, [initialData]);
 
+  const [currentRandomIndex, setCurrentRandomIndex] = useState(0);
+
+  useEffect(() => {
+    if (data && (!data.winners || data.winners.length === 0) && data.randoms && data.randoms.length > 0) {
+      const interval = setInterval(() => {
+        setCurrentRandomIndex((prev) => (prev + 1) % data.randoms!.length);
+      }, 4000);
+      return () => clearInterval(interval);
+    }
+  }, [data]);
+
   if (loading || !data) return null;
 
   // Determine what profiles to show
   let profilesToShow: any[] = [];
   let titleText = "builder de la semana";
   let descText = "";
+  let isSliding = false;
 
   if (data.winners && data.winners.length > 0) {
     profilesToShow = data.winners.map(w => transformUser(w.user));
@@ -71,13 +84,14 @@ export function WinnerSection({ initialData }: WinnerSectionProps) {
       titleText = "builders de la semana";
       descText = `Conocé a los builders en empate más nominados de la semana pasada (${data.week}).`;
     }
-  } else if (data.finalists && data.finalists.length > 0) {
-    profilesToShow = data.finalists.slice(0, 2).map((f: any) => transformUser(f.user));
-    titleText = "top nominados de la semana";
-    descText = `Conocé a los builders que lideran las nominaciones para la semana (${data.week}).`;
+  } else if (data.randoms && data.randoms.length > 0) {
+    isSliding = true;
+    profilesToShow = [transformUser(data.randoms[currentRandomIndex])];
+    titleText = "descubrí la comunidad";
+    descText = "Conocé a los creadores de todo LATAM que están buildeando cosas increíbles hoy mismo.";
   }
 
-  if (profilesToShow.length === 0) return null;
+  if (profilesToShow.length === 0 || !profilesToShow[0]) return null;
 
   return (
     <section className="demo-section !mt-20">
@@ -88,48 +102,91 @@ export function WinnerSection({ initialData }: WinnerSectionProps) {
           {descText}
         </p>
       </div>
-      
-      <div className="max-w-[1400px] mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-8 justify-center">
-        {profilesToShow.map((profile, idx) => (
-          <motion.div
-            key={profile.id || idx}
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: idx * 0.2 }}
-            className={`w-full ${profilesToShow.length === 1 ? 'md:col-span-2 max-w-5xl mx-auto' : ''}`}
-          >
-            <div className="demo-browser" style={{ height: '100%', minHeight: '600px' }}>
-              <div className="browser-bar">
-                <div className="browser-dots">
-                  <span className="bd1"></span>
-                  <span className="bd2"></span>
-                  <span className="bd3"></span>
+      {isSliding ? (
+        <div className="max-w-[1400px] mx-auto px-4 grid grid-cols-1 justify-center overflow-hidden">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={profilesToShow[0].id}
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 50 }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+              className="w-full md:col-span-2 max-w-5xl mx-auto"
+            >
+              <div className="demo-browser" style={{ height: '100%', minHeight: '600px' }}>
+                <div className="browser-bar">
+                  <div className="browser-dots">
+                    <span className="bd1"></span>
+                    <span className="bd2"></span>
+                    <span className="bd3"></span>
+                  </div>
+                  <Link 
+                    href={`/${profilesToShow[0].username}`}
+                    target="_blank"
+                    className="browser-url group flex items-center justify-center gap-1 hover:text-white transition-colors"
+                  >
+                    huevsite.io/<span>{profilesToShow[0].username}</span>
+                    <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-all -translate-x-1 group-hover:translate-x-0" />
+                  </Link>
                 </div>
-                <Link 
-                  href={`/${profile.username}`}
-                  target="_blank"
-                  className="browser-url group flex items-center justify-center gap-1 hover:text-white transition-colors"
-                >
-                  huevsite.io/<span>{profile.username}</span>
-                  <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-all -translate-x-1 group-hover:translate-x-0" />
-                </Link>
-              </div>
 
-              <div className="profile-page !p-4 md:!p-8 scrollbar-hide bg-black/20 h-full overflow-y-auto">
-                <div className="relative z-10 w-full max-w-4xl mx-auto">
-                  <ProfileGrid 
-                    blocks={profile.blocks} 
-                    accentColor={profile.accent_color}
-                    displayName={profile.name || profile.username}
-                    tagline={profile.tagline || undefined}
-                  />
+                <div className="profile-page !p-4 md:!p-8 scrollbar-hide bg-black/20 h-full overflow-y-auto">
+                  <div className="relative z-10 w-full max-w-4xl mx-auto pointer-events-none">
+                    <ProfileGrid 
+                      blocks={profilesToShow[0].blocks} 
+                      accentColor={profilesToShow[0].accent_color}
+                      displayName={profilesToShow[0].name || profilesToShow[0].username}
+                      tagline={profilesToShow[0].tagline || undefined}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      ) : (
+        <div className="max-w-[1400px] mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-8 justify-center">
+          {profilesToShow.map((profile, idx) => (
+            <motion.div
+              key={profile.id || idx}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: idx * 0.2 }}
+              className={`w-full ${profilesToShow.length === 1 ? 'md:col-span-2 max-w-5xl mx-auto' : ''}`}
+            >
+              <div className="demo-browser" style={{ height: '100%', minHeight: '600px' }}>
+                <div className="browser-bar">
+                  <div className="browser-dots">
+                    <span className="bd1"></span>
+                    <span className="bd2"></span>
+                    <span className="bd3"></span>
+                  </div>
+                  <Link 
+                    href={`/${profile.username}`}
+                    target="_blank"
+                    className="browser-url group flex items-center justify-center gap-1 hover:text-white transition-colors"
+                  >
+                    huevsite.io/<span>{profile.username}</span>
+                    <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-all -translate-x-1 group-hover:translate-x-0" />
+                  </Link>
+                </div>
+
+                <div className="profile-page !p-4 md:!p-8 scrollbar-hide bg-black/20 h-full overflow-y-auto pointer-events-none">
+                  <div className="relative z-10 w-full max-w-4xl mx-auto">
+                    <ProfileGrid 
+                      blocks={profile.blocks} 
+                      accentColor={profile.accent_color}
+                      displayName={profile.name || profile.username}
+                      tagline={profile.tagline || undefined}
+                    />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
     </section>
   );
 }

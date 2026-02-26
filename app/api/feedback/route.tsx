@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { Resend } from "resend";
 import { FeedbackEmail } from "@/components/emails/FeedbackEmail";
-import { renderToStaticMarkup } from "react-dom/server";
 
 
 
@@ -41,20 +40,16 @@ export async function POST(req: NextRequest) {
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
         
-        const html = renderToStaticMarkup(
-          <FeedbackEmail 
-            userEmail={user.email || 'Anónimo'} 
-            category={category} 
-            content={content} 
-            userId={user.id} 
-          />
-        );
-
         await resend.emails.send({
           from: "onboarding@resend.dev",
           to: "tomasdelucaa@gmail.com",
           subject: `🚀 Nuevo Feedback: ${category}`,
-          html,
+          react: <FeedbackEmail 
+            userEmail={user.email || 'Anónimo'} 
+            category={category} 
+            content={content} 
+            userId={user.id} 
+          />,
         });
       } catch (emailError) {
         console.error("Resend email error:", emailError);

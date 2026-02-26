@@ -82,13 +82,34 @@ export async function getShowcaseData(requestedWeek?: string | null) {
       .slice(0, 5)
       .map(([userId, data]) => ({ userId, count: data.count, user: data.user }));
 
+    let randoms: any[] = [];
+    if (winners.length === 0) {
+      const { data: randomData } = await supabase
+        .from("profiles")
+        .select(`
+          id, username, name, image, accent_color, tagline,
+          blocks:blocks (*)
+        `)
+        // No traemos el auth.uid, traemos cualquiera activo
+        .order("updated_at", { ascending: false })
+        .limit(20);
+
+      if (randomData) {
+        // Filtrar los que tienen al menos un bloque para no mostrar vacios
+        const validProfiles = randomData.filter(p => p.blocks && p.blocks.length > 0);
+        // Shuffle them
+        randoms = validProfiles.sort(() => 0.5 - Math.random()).slice(0, 5);
+      }
+    }
+
     return { 
       week: currentWeek, 
       winners: winners, 
-      finalists 
+      finalists,
+      randoms
     };
   } catch (error) {
     console.error("Showcase service error:", error);
-    return { week: currentWeek, winners: [], finalists: [] };
+    return { week: currentWeek, winners: [], finalists: [], randoms: [] };
   }
 }

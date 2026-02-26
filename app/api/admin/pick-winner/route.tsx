@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { Resend } from "resend";
 import { WinnerEmail } from "@/components/emails/WinnerEmail";
-import { renderToStaticMarkup } from "react-dom/server";
 
 export const dynamic = "force-dynamic";
 
@@ -118,19 +117,15 @@ export async function POST(request: NextRequest) {
     for (const winnerProfile of winnerProfiles) {
       if (winnerProfile.email) {
         try {
-          const html = renderToStaticMarkup(
-            <WinnerEmail 
-              name={winnerProfile.name || winnerProfile.username} 
-              username={winnerProfile.username} 
-              week={week} 
-            />
-          );
-
           await resend.emails.send({
             from: 'hi@huevsite.studio',
             to: winnerProfile.email,
             subject: '🏆 ¡Sos el builder de la semana en Huevsite!',
-            html,
+            react: <WinnerEmail 
+              name={winnerProfile.name || winnerProfile.username} 
+              username={winnerProfile.username} 
+              week={week} 
+            />,
           });
           console.log(`Email enviado a ${winnerProfile.email}`);
         } catch (emailErr) {

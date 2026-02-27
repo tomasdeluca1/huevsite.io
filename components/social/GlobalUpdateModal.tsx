@@ -4,29 +4,19 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { X, Sparkles, RefreshCcw, Eye, ArrowRight } from "lucide-react";
 
-export function GlobalUpdateModal() {
-  const [show, setShow] = useState(false);
+interface Props {
+  isOpen: boolean;
+  onClose: () => void;
+}
 
-  useEffect(() => {
-    // Only show once
-    const hasSeen = localStorage.getItem("huevsite_update_feb25");
-    if (!hasSeen) {
-      setShow(true);
-    }
-  }, []);
-
-  const handleClose = () => {
-    localStorage.setItem("huevsite_update_feb25", "true");
-    setShow(false);
-  };
-
-  if (!show) return null;
+export function GlobalUpdateModal({ isOpen, onClose }: Props) {
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
       <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[2rem] p-8 max-w-md w-full shadow-[0_20px_60px_-15px_rgba(200,255,0,0.15)] relative animate-in fade-in zoom-in-95 duration-300">
         <button 
-          onClick={handleClose}
+          onClick={onClose}
           className="absolute top-6 right-6 text-[var(--text-muted)] hover:text-white transition-colors p-1 rounded-full hover:bg-[var(--surface2)]"
         >
           <X size={20} />
@@ -85,14 +75,14 @@ export function GlobalUpdateModal() {
         <div className="flex flex-col gap-3">
           <Link
             href="/explore"
-            onClick={handleClose}
+            onClick={onClose}
             className="w-full flex items-center justify-center gap-2 bg-[var(--accent)] text-black font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity"
           >
             Ir al Explorar
             <ArrowRight size={16} />
           </Link>
           <button
-            onClick={handleClose}
+            onClick={onClose}
             className="w-full flex items-center justify-center py-3 rounded-xl border border-transparent text-[var(--text-dim)] hover:text-white hover:bg-[var(--surface2)] font-mono text-xs transition-colors"
           >
             Cerrar

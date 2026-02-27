@@ -89,6 +89,13 @@ export function NominateButton({ userId, accentColor }: { userId: string; accent
         setRemaining(0);
         setAnotherNominated(null);
       } else {
+        if (res.status === 409 && data.nominatedUser) {
+          setAnotherNominated(data.nominatedUser);
+          setShowModal(true);
+          setStatus("idle");
+          return;
+        }
+
         setStatus("error");
         setMsg(data.error ?? "Error al nominar.");
         setTimeout(() => setStatus("idle"), 2000);
@@ -152,8 +159,7 @@ export function NominateButton({ userId, accentColor }: { userId: string; accent
             <h3 className="text-xl font-bold mb-2">Cambiar nominación</h3>
             <div className="flex flex-col gap-2 mb-6">
               <p className="text-sm text-[var(--text-dim)]">
-                Actualmente tenés nominado a <strong className="text-white">@{anotherNominated.username}</strong>. 
-                Si votás ahora por este perfil, tu voto anterior se anulará. ¿Estás seguro de que querés cambiarlo?
+                ¿Seguro que querés dejar de nominar a <strong className="text-white">@{anotherNominated.username}</strong> y nominar a este builder?
               </p>
               <div className="p-3 rounded-xl bg-[var(--surface2)] border border-[var(--border)] mt-2">
                 <p className="text-xs text-[var(--text-muted)] flex gap-2">

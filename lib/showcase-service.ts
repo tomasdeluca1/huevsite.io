@@ -102,11 +102,16 @@ export async function getShowcaseData(requestedWeek?: string | null) {
       }
     }
 
+    const { count: totalBuilders } = await supabase
+      .from("profiles")
+      .select('*', { count: 'exact', head: true });
+
     return { 
       week: currentWeek, 
       winners: winners, 
       finalists,
-      randoms
+      randoms,
+      total_builders: totalBuilders || 0
     };
   } catch (error) {
     console.error("Showcase service error:", error);

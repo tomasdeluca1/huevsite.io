@@ -83,6 +83,7 @@ export async function PATCH(request: NextRequest) {
       'location',
       'available',
       'image',
+      'has_seen_update_feb25',
     ]
 
     const updateData: any = {}

@@ -23,7 +23,6 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
 };
 
-import { GlobalUpdateModal } from "@/components/social/GlobalUpdateModal";
 
 export default function RootLayout({
   children,
@@ -33,7 +32,6 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${bricolage.variable} ${jetbrains.variable}`}>
       <body className="antialiased selection:bg-[var(--accent)] selection:text-black font-sans">
-        <GlobalUpdateModal />
         {children}
       </body>
       <Script 

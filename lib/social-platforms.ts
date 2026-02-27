@@ -53,6 +53,12 @@ export const SOCIAL_PLATFORMS = {
     buildUrl: (h: string) => h,
     icon: "🔗",
   },
+  instagram: {
+    label: "Instagram",
+    placeholder: "usuario",
+    buildUrl: (h: string) => `https://instagram.com/${h.replace("@", "")}`,
+    icon: "📸",
+  },
 } as const;
 
 export type SocialPlatformKey = keyof typeof SOCIAL_PLATFORMS;

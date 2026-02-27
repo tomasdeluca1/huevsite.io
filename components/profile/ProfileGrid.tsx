@@ -68,22 +68,19 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline }: Profi
   }
 
   // Mapear col_span a clase CSS (aplicado solo en desktop/md+)
-  const getColSpanClass = (colSpan: number) => {
-    switch (colSpan) {
-      case 2: return "md:col-span-2"
-      case 3: return "md:col-span-3"
-      case 4: return "md:col-span-4"
-      default: return "md:col-span-1"
+  const getGridClasses = (block: BlockData) => {
+    if (block.type === 'hero') {
+      const col = Math.min(block.col_span || 2, 2);
+      return `col-${col} row-2`;
     }
-  }
 
-  // Mapear row_span a clase CSS (aplicado solo en desktop/md+)
-  const getRowSpanClass = (rowSpan: number) => {
-    switch (rowSpan) {
-      case 2: return "md:row-span-2"
-      case 3: return "md:row-span-3"
-      default: return "md:row-span-1"
-    }
+    const col = block.col_span || 1;
+    const row = block.row_span || 1;
+    
+    const colClass = col > 1 ? `col-${col}` : "";
+    const rowClass = row > 1 ? `row-${row}` : "";
+    
+    return `${colClass} ${rowClass}`.trim();
   }
 
   return (
@@ -98,7 +95,7 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline }: Profi
         <motion.div
            initial={{ opacity: 0, y: 20 }}
            animate={{ opacity: 1, y: 0 }}
-           className="md:col-span-2 md:row-span-1"
+           className="col-2"
         >
            <div className="bento-block flex flex-col justify-center p-8 bg-[var(--surface)] border border-[var(--border)] rounded-[2rem]">
               <h1 className="text-3xl font-extrabold text-white mb-1">{displayName}</h1>
@@ -112,7 +109,7 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline }: Profi
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.05, duration: 0.4 }}
-          className={`${getColSpanClass(block.col_span)} ${getRowSpanClass(block.row_span)}`}
+          className={getGridClasses(block)}
         >
           {renderBlock(block)}
         </motion.div>

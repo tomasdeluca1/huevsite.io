@@ -126,22 +126,33 @@ export default async function ProfilePage({ params }: Props) {
     currentUserId !== profile.id;
 
   return (
-    <div className="landing min-h-screen font-display">
-      <main className="min-h-screen pt-12 pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto relative overflow-hidden">
+    <div className="landing min-h-screen font-display selection:bg-[var(--accent)] selection:text-black">
+      {/* Noise Texture Overlay */}
+      <div className="noise" />
+
+      <main className="min-h-screen pt-12 pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto relative">
+        {/* Dynamic Cinematic Backgrounds */}
+        <div 
+          className="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] opacity-[0.08] blur-[120px] pointer-events-none transition-all duration-1000"
+          style={{ backgroundColor: profile.accentColor }}
+        />
+        <div 
+          className="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] opacity-[0.05] blur-[100px] pointer-events-none transition-all duration-1000"
+          style={{ backgroundColor: profile.accentColor }}
+        />
+
         <style dangerouslySetInnerHTML={{ __html: `
           :root {
             --accent: ${profile.accentColor};
             --accent-dim: ${profile.accentColor}1f;
             --accent-mid: ${profile.accentColor}4d;
+            --white: #F2F2F2;
+          }
+          ::selection {
+            background-color: ${profile.accentColor};
+            color: black;
           }
         `}} />
-
-        <div
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] opacity-10 pointer-events-none"
-          style={{
-            background: `radial-gradient(circle, ${profile.accentColor} 0%, transparent 70%)`
-          }}
-        />
 
         {/* Header / Nav */}
         <ProfileHeader 
@@ -168,7 +179,7 @@ export default async function ProfilePage({ params }: Props) {
 
         {/* Endorsements (feature flag: red social) */}
         {isEnabled("socialNetwork") && profile.id && (
-          <div className="relative z-10 max-w-4xl mx-auto mt-8">
+          <div className="relative z-10 max-w-4xl mx-auto mt-12 pb-12">
             <EndorsementsSection
               profileId={profile.id}
               profileAccentColor={profile.accentColor}
@@ -180,11 +191,11 @@ export default async function ProfilePage({ params }: Props) {
         )}
 
         {/* Footer message */}
-        <footer className="mt-40 text-center relative z-10">
-          <div className="section-label !text-[var(--text-muted)] opacity-50">
+        <footer className="mt-32 text-center relative z-10 border-t border-white/5 pt-12">
+          <div className="section-label !text-[var(--text-muted)] opacity-30">
             // builder logic • {profile.displayName} &apos;s huevsite
           </div>
-          <div className="logo mt-4 scale-75 opacity-20 filter grayscale">huev<span>site</span>.io</div>
+          <div className="logo mt-4 scale-75 opacity-10 filter grayscale select-none">huev<span>site</span>.io</div>
         </footer>
       </main>
     </div>

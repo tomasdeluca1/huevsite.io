@@ -13,8 +13,8 @@
   --accent-dim: rgba(200, 255, 0, 0.12);
   --accent-mid: rgba(200, 255, 0, 0.3);
   --text: #f0f0f0;
-  --text-muted: #666;
-  --text-dim: #999;
+  --text-muted: #888888;
+  --text-dim: #D1D1D1;
   --red: #FF3B3B;
   --blue: #4D9FFF;
   --purple: #A855F7;
@@ -29,9 +29,29 @@
   --glow: 0 0 30px rgba(200, 255, 0, 0.15);
 }
 
+.title-tracking {
+  letter-spacing: -0.04em;
+}
+
+.glass-stroke {
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { scroll-behavior: smooth; }
+
+.noise {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.05;
+  z-index: 9999;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
 
 body {
   background: var(--bg);
@@ -323,26 +343,45 @@ nav {
 }
 
 .bento-block {
-  background: var(--surface);
-  border: 1px solid var(--border) !important;
-  border-radius: var(--radius-lg);
-  padding: 20px;
+  background: rgba(17,17,17,0.4);
+  backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  border-radius: var(--radius-xl);
+  padding: 24px;
   position: relative;
   overflow: hidden;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.bento-block:hover { border-color: var(--border-bright) !important; }
+.bento-block::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%);
+  pointer-events: none;
+}
+.bento-block:hover { 
+  border-color: rgba(255,255,255,0.1) !important; 
+  background: rgba(25,25,25,0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 20px 40px -12px rgba(0,0,0,0.5);
+}
 
 .col-2 { grid-column: span 2; }
 .col-3 { grid-column: span 3; }
 .col-4 { grid-column: span 4; }
 .row-2 { grid-row: span 2; }
 .row-3 { grid-row: span 3; }
+.row-4 { grid-row: span 4; }
+
+.col-span-2 { grid-column: span 2; }
+.col-span-3 { grid-column: span 3; }
+.col-span-4 { grid-column: span 4; }
+.row-span-2 { grid-row: span 2; }
+.row-span-3 { grid-row: span 3; }
+.row-span-4 { grid-row: span 4; }
 
 /* Block Specifics from HTML */
 .block-hero {
-  grid-column: span 2;
-  grid-row: span 2;
   background: linear-gradient(145deg, #131313 0%, #0d0d0d 100%);
   border-color: #2a2a2a !important;
   display: flex;
@@ -385,7 +424,6 @@ nav {
 .hero-tags { display: flex; gap: 6px; flex-wrap: wrap; }
 
 .block-building {
-  grid-column: span 2;
   background: linear-gradient(135deg, #0f1a00, #0d0d0d);
   border-color: rgba(200,255,0,0.2) !important;
   position: relative;
@@ -445,7 +483,7 @@ nav {
 .metric-trend { font-size: 11px; color: #00C853; font-family: var(--font-mono); margin-top: 4px; }
 
 /* Project Showcase */
-.block-project { grid-column: span 2; padding: 0; overflow: hidden; }
+.block-project { padding: 0; overflow: hidden; }
 .project-preview {
   height: 140px; background: linear-gradient(135deg, #1a0033, #000814, #001a1a); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;
 }
@@ -614,7 +652,10 @@ footer { padding: 40px; border-top: 1px solid var(--border); display: flex; alig
   .col-4,
   .row-2,
   .row-3,
-  .block-hero {
+  .row-4,
+  .row-span-2,
+  .row-span-3,
+  .row-span-4 {
     grid-column: span 1 !important;
     grid-row: auto !important;
   }
@@ -640,4 +681,29 @@ footer { padding: 40px; border-top: 1px solid var(--border); display: flex; alig
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Sortable Items UI */
+.sortable-item {
+  transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.sortable-item:active {
+  cursor: grabbing;
+}
+
+.sortable-item-dragging {
+  z-index: 50;
+  box-shadow: 0 20px 40px -10px rgba(0,0,0,0.8), 0 0 0 1px var(--accent);
+  background: var(--surface) !important;
+  opacity: 0.95;
+}
+
+.drag-handle {
+  touch-action: none;
+  cursor: grab;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
 }

@@ -16,12 +16,20 @@ export function MetricBlock({ data, accentColor }: MetricProps) {
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="bento-block block-metric h-full"
+      className="bento-block block-metric h-full flex flex-col justify-center relative group"
     >
-      <div className="block-label">{data.label}</div>
-      <div className="metric-num" style={{ color: accentColor }}>{data.value}</div>
-      <div className="metric-lbl"> {data.label}</div>
-      <div className="metric-trend" style={{ color: `${accentColor}CC` }}>↑ actualizado hace poco</div>
+      <div 
+        className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none"
+        style={{ background: `radial-gradient(circle at center, ${accentColor} 0%, transparent 70%)` }}
+      />
+      <div className="block-label opacity-40 uppercase tracking-[0.2em] text-[10px] mb-2">{data.label}</div>
+      <div className="text-5xl font-black text-white title-tracking mb-1" style={{ color: accentColor }}>
+        {data.value}
+      </div>
+      <div className="flex items-center gap-2 mt-2">
+        <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+        <span className="text-[10px] uppercase font-bold tracking-widest text-[var(--text-muted)] opacity-60">En tiempo real</span>
+      </div>
     </motion.div>
   );
 }
@@ -56,26 +64,29 @@ export function SocialBlock({ data, accentColor }: SocialProps) {
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="bento-block block-social h-full flex flex-col justify-between"
+      className="bento-block block-social h-full flex flex-col justify-between group"
       style={{ "--accent": accentColor } as React.CSSProperties}
     >
-      <div className="block-label">Links y Redes</div>
-      <div className="flex flex-col gap-2 mt-4">
+      <div className="block-label opacity-40 uppercase tracking-[0.2em] text-[10px] mb-4">Conectemos</div>
+      <div className="flex flex-col gap-2 mt-auto">
         {links.filter(l => l.url).map((l, i) => (
           <a
             key={i}
             href={formatUrl(l.url)}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center gap-3 p-3 rounded-xl bg-black/20 hover:bg-[var(--accent)] hover:text-black transition-all group"
+            className="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-[var(--accent)]/30 hover:bg-[var(--accent)]/[0.06] transition-all group/item"
           >
-            <span className="text-lg opacity-70 group-hover:opacity-100 w-6 text-center shrink-0">{getIcon(l.platform)}</span>
-            <span className="font-medium text-sm truncate">{getLabel(l)}</span>
+            <span className="text-xl grayscale group-hover/item:grayscale-0 transition-all">{getIcon(l.platform)}</span>
+            <div className="flex flex-col overflow-hidden">
+               <span className="font-bold text-sm text-white group-hover/item:text-[var(--accent)] transition-colors">{getLabel(l)}</span>
+               <span className="text-[10px] text-[var(--text-muted)] truncate opacity-50">{l.url.replace('https://', '')}</span>
+            </div>
           </a>
         ))}
         {links.filter(l => l.url).length === 0 && (
-          <p className="text-xs text-[var(--text-dim)] font-mono py-4 text-center">
-            Sin links todavía.
+          <p className="text-xs text-[var(--text-dim)] font-mono py-8 text-center opacity-40">
+            // sin coordenadas
           </p>
         )}
       </div>

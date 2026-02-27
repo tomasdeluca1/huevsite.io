@@ -569,6 +569,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
               value={formData.url}
               onChange={(url) => handleChange("url", url)}
               folder="media"
+              accept="image/*,video/*"
             />
             <div className="space-y-2">
               <div className="section-label !text-[9px] px-1">// url (o link externo de youtube/vimeo)</div>

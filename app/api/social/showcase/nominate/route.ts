@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
         .from("showcase_nominations")
         .select(`
           user_id,
-          user:profiles (
+          user:profiles!user_id (
             username, name
           )
         `)

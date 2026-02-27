@@ -31,9 +31,14 @@ export function ProfileHeader({
 }: Props) {
   const [modalType, setModalType] = useState<"followers" | "following" | null>(null);
   const [localFollowersCount, setLocalFollowersCount] = useState(followersCount);
+  const [localNominationsCount, setLocalNominationsCount] = useState(nominationsCount);
 
   const handleFollowChange = (nowFollowing: boolean) => {
     setLocalFollowersCount(prev => nowFollowing ? prev + 1 : prev - 1);
+  };
+
+  const handleNominateChange = (nowNominated: boolean) => {
+    setLocalNominationsCount(prev => nowNominated ? prev + 1 : prev - 1);
   };
 
   return (
@@ -89,7 +94,7 @@ export function ProfileHeader({
 
               <div className="flex flex-col items-center px-4 py-1.5">
                 <span className="font-mono font-bold text-white text-base leading-tight">
-                  {nominationsCount}
+                  {localNominationsCount}
                 </span>
                 <span className="text-[9px] uppercase tracking-tighter text-[var(--text-muted)] font-bold">Noms 🏆</span>
               </div>
@@ -110,6 +115,7 @@ export function ProfileHeader({
               <NominateButton
                 userId={profileId}
                 accentColor={accentColor}
+                onStatusChange={handleNominateChange}
               />
             )}
             

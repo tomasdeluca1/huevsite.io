@@ -21,6 +21,20 @@ export const PRESET_COLORS = [
   "#FFFFFF", // Clean White
 ];
 
+export function getContrastColor(hexColor: string): string {
+  if (!hexColor || typeof hexColor !== "string") return "#000000";
+  const hex = hexColor.replace("#", "");
+  if (hex.length !== 6 && hex.length !== 3) return "#000000";
+  
+  const r = parseInt(hex.length === 3 ? hex[0] + hex[0] : hex.slice(0, 2), 16);
+  const g = parseInt(hex.length === 3 ? hex[1] + hex[1] : hex.slice(2, 4), 16);
+  const b = parseInt(hex.length === 3 ? hex[2] + hex[2] : hex.slice(4, 6), 16);
+  
+  // Calculate relative luminance using YIQ
+  const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+  return yiq >= 128 ? "#000000" : "#FFFFFF";
+}
+
 export type BlockType =
   | "hero"
   | "building"
@@ -31,7 +45,11 @@ export type BlockType =
   | "social"
   | "community"
   | "writing"
-  | "cv";
+  | "cv"
+  | "media"
+  | "certification"
+  | "achievement"
+  | "custom";
 
 export interface BaseBlock {
   id: string;
@@ -127,6 +145,37 @@ export interface CVBlockData extends BaseBlock {
   fileUrl: string;
 }
 
+export interface MediaBlockData extends BaseBlock {
+  type: "media";
+  url: string; // image or video URL
+  title?: string;
+  description?: string;
+}
+
+export interface CertificationBlockData extends BaseBlock {
+  type: "certification";
+  name: string;
+  issuer: string;
+  date: string;
+  link?: string;
+  icon?: string;
+}
+
+export interface AchievementBlockData extends BaseBlock {
+  type: "achievement";
+  title: string;
+  description: string;
+  date?: string;
+}
+
+export interface CustomBlockData extends BaseBlock {
+  type: "custom";
+  label: string; // The "name" of the element at the top
+  title: string;
+  description: string;
+  link?: string;
+}
+
 export type BlockData =
   | HeroBlockData
   | BuildingBlockData
@@ -137,7 +186,11 @@ export type BlockData =
   | SocialBlockData
   | CommunityBlockData
   | WritingBlockData
-  | CVBlockData;
+  | CVBlockData
+  | MediaBlockData
+  | CertificationBlockData
+  | AchievementBlockData
+  | CustomBlockData;
 
 export interface ProfileData {
   id?: string;
@@ -148,5 +201,6 @@ export interface ProfileData {
   subscriptionTier: "free" | "pro";
   twitterShareUnlocked: boolean;
   extraBlocksFromShare: number;
+  hasSeenUpdateFeb25?: boolean;
   blocks: BlockData[];
 }

@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Save, Sparkles, Search, Github } from "lucide-react";
-import { BlockData } from "@/lib/profile-types";
+import { BlockData, getContrastColor } from "@/lib/profile-types";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { ImageUpload } from "@/components/dashboard/ImageUpload";
@@ -14,9 +14,10 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   onSave: (updatedBlock: BlockData) => void;
+  accentColor?: string;
 }
 
-export function BlockEditorModal({ block, isOpen, onClose, onSave }: Props) {
+export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor = "#C8FF00" }: Props) {
   const [formData, setFormData] = useState<any>(block);
   const [mounted, setMounted] = useState(false);
   const [githubResults, setGithubResults] = useState<any[]>([]);
@@ -91,12 +92,17 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave }: Props) {
       case "hero":
         return (
           <div className="space-y-6">
-            <ImageUpload 
-              label="Foto de Perfil"
-              value={formData.avatarUrl}
-              onChange={(url) => handleChange("avatarUrl", url)}
-              folder="avatars"
-            />
+            <div className="space-y-1">
+              <ImageUpload 
+                label="Foto de Perfil"
+                value={formData.avatarUrl}
+                onChange={(url) => handleChange("avatarUrl", url)}
+                folder="avatars"
+              />
+              <p className="text-[10px] text-[var(--text-muted)] font-mono text-center">
+                Proporción recomendada: 1:1 (cuadrada)
+              </p>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <div className="section-label !text-[9px] px-1">// nombre</div>
@@ -555,6 +561,166 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave }: Props) {
             </div>
           </div>
         );
+      case "media":
+        return (
+          <div className="space-y-6">
+            <FileUpload
+              label="Archivo Media (Imagen o Video)"
+              value={formData.url}
+              onChange={(url) => handleChange("url", url)}
+              folder="media"
+            />
+            <div className="space-y-2">
+              <div className="section-label !text-[9px] px-1">// url (o link externo de youtube/vimeo)</div>
+              <input
+                value={formData.url || ""}
+                onChange={(e) => handleChange("url", e.target.value)}
+                className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-mono text-xs"
+                placeholder="https://..."
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="section-label !text-[9px] px-1">// título (opcional)</div>
+              <input
+                value={formData.title || ""}
+                onChange={(e) => handleChange("title", e.target.value)}
+                className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-bold"
+                placeholder="Demo del producto"
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="section-label !text-[9px] px-1">// descripción (opcional)</div>
+              <textarea
+                value={formData.description || ""}
+                onChange={(e) => handleChange("description", e.target.value)}
+                className="w-full p-4 h-24 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all resize-none leading-relaxed"
+                placeholder="Mostrando cómo funciona..."
+              />
+            </div>
+          </div>
+        );
+      case "certification":
+        return (
+          <div className="space-y-6">
+            <ImageUpload
+              label="Icono / Logo de Emisor"
+              value={formData.icon}
+              onChange={(url) => handleChange("icon", url)}
+              folder="certs"
+            />
+            <div className="space-y-2">
+              <div className="section-label !text-[9px] px-1">// nombre de certificación</div>
+              <input
+                value={formData.name || ""}
+                onChange={(e) => handleChange("name", e.target.value)}
+                className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-bold"
+                placeholder="AWS Certified Solutions Architect"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <div className="section-label !text-[9px] px-1">// emisor</div>
+                <input
+                  value={formData.issuer || ""}
+                  onChange={(e) => handleChange("issuer", e.target.value)}
+                  className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all"
+                  placeholder="Amazon Web Services"
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="section-label !text-[9px] px-1">// fecha</div>
+                <input
+                  value={formData.date || ""}
+                  onChange={(e) => handleChange("date", e.target.value)}
+                  className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all"
+                  placeholder="2024"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="section-label !text-[9px] px-1">// link al certificado</div>
+              <input
+                value={formData.link || ""}
+                onChange={(e) => handleChange("link", e.target.value)}
+                className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-mono text-xs"
+                placeholder="https://..."
+              />
+            </div>
+          </div>
+        );
+      case "achievement":
+        return (
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <div className="section-label !text-[9px] px-1">// título</div>
+              <input
+                value={formData.title || ""}
+                onChange={(e) => handleChange("title", e.target.value)}
+                className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-bold"
+                placeholder="Ganador Hackathon Vercel"
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="section-label !text-[9px] px-1">// descripción</div>
+              <textarea
+                value={formData.description || ""}
+                onChange={(e) => handleChange("description", e.target.value)}
+                className="w-full p-4 h-24 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all resize-none leading-relaxed"
+                placeholder="Primer puesto entre más de 500 equipos..."
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="section-label !text-[9px] px-1">// fecha (opcional)</div>
+              <input
+                value={formData.date || ""}
+                onChange={(e) => handleChange("date", e.target.value)}
+                className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all"
+                placeholder="Noviembre 2023"
+              />
+            </div>
+          </div>
+        );
+      case "custom":
+        return (
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <div className="section-label !text-[9px] px-1">// etiqueta / tag</div>
+              <input
+                value={formData.label || ""}
+                onChange={(e) => handleChange("label", e.target.value)}
+                className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-mono text-xs uppercase"
+                placeholder="TIPO DE CONTENIDO"
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="section-label !text-[9px] px-1">// título</div>
+              <input
+                value={formData.title || ""}
+                onChange={(e) => handleChange("title", e.target.value)}
+                className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-bold text-xl"
+                placeholder="Música o Diseño 3D"
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="section-label !text-[9px] px-1">// descripción</div>
+              <textarea
+                value={formData.description || ""}
+                onChange={(e) => handleChange("description", e.target.value)}
+                className="w-full p-4 h-24 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all resize-none leading-relaxed"
+                placeholder="Un poco de contexto sobre esto..."
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="section-label !text-[9px] px-1">// link (opcional)</div>
+              <input
+                value={formData.link || ""}
+                onChange={(e) => handleChange("link", e.target.value)}
+                className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-mono text-xs"
+                placeholder="https://..."
+              />
+            </div>
+          </div>
+        );
       default:
         return <div>Editor no implementado para este tipo de bloque</div>;
     }
@@ -562,7 +728,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave }: Props) {
 
   const renderSizeControls = () => {
     // Blocks that make sense to resize
-    const resizableTypes = ['hero', 'building', 'project', 'github', 'stack', 'community', 'writing', 'cv'];
+    const resizableTypes = ['hero', 'building', 'project', 'github', 'stack', 'community', 'writing', 'cv', 'media', 'certification', 'achievement', 'custom'];
     if (!resizableTypes.includes(block.type)) return null;
 
     return (
@@ -607,7 +773,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave }: Props) {
   return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="portal-root fixed inset-0 z-[200] flex items-center justify-center p-4 lg:p-0">
+        <div className="portal-root fixed inset-0 z-[200] flex items-end md:items-center justify-center p-0 md:p-4">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -616,37 +782,39 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave }: Props) {
             className="absolute inset-0 bg-black/80 backdrop-blur-sm z-0"
           />
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-lg bg-[var(--surface)] border border-[var(--border)] rounded-3xl overflow-hidden z-10 shadow-2xl flex flex-col max-h-[90vh]"
+            initial={{ opacity: 0, y: "100%" }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="relative w-full md:max-w-lg bg-[var(--surface)] border-t md:border border-[var(--border)] rounded-t-3xl md:rounded-3xl overflow-hidden z-10 shadow-2xl flex flex-col max-h-[90vh] pt-4 md:pt-0"
           >
-            <div className="flex items-center justify-between p-6 border-b border-[var(--border)] shrink-0">
+            <div className="w-12 h-1.5 bg-[var(--border-bright)] rounded-full mx-auto md:hidden mb-2 shrink-0" />
+            <div className="flex items-center justify-between p-4 md:p-6 border-b border-[var(--border)] shrink-0">
               <div>
                 <h3 className="text-xl font-bold">Editar Bloque</h3>
-                <p className="text-sm text-[var(--text-dim)] font-mono mt-1 uppercase tracking-widest">type: {block.type}</p>
+                <p className="text-sm text-[var(--text-dim)] font-mono mt-1 uppercase tracking-widest hidden md:block">type: {block.type}</p>
               </div>
-              <button onClick={onClose} className="p-2 hover:bg-[var(--surface2)] rounded-full transition-colors">
+              <button onClick={onClose} className="p-2 hover:bg-[var(--surface2)] rounded-full transition-colors hidden md:block">
                 <X size={20} className="text-[var(--text-muted)]" />
               </button>
             </div>
             
-            <div className="p-8 overflow-y-auto custom-scrollbar bg-gradient-to-b from-[var(--surface)] to-[var(--bg)] flex-1">
+            <div className="p-4 md:p-8 overflow-y-auto custom-scrollbar bg-gradient-to-b from-[var(--surface)] to-[var(--bg)] flex-1">
               {renderFields()}
               {renderSizeControls()}
             </div>
 
-            <div className="p-6 border-t border-[var(--border)] bg-[var(--surface)] flex gap-4 shrink-0">
+            <div className="p-4 md:p-6 border-t border-[var(--border)] bg-[var(--surface)] flex gap-4 shrink-0 pb-8 md:pb-6">
               <button 
                 onClick={onClose}
-                className="btn btn-ghost !px-8 flex-1 py-4"
+                className="btn btn-ghost !px-6 md:!px-8 flex-1 py-4 text-sm md:text-base"
               >
                 Cancelar
               </button>
               <button 
                 onClick={handleSave}
-                className="btn btn-primary flex items-center gap-2"
-                style={{ backgroundColor: "var(--accent)", color: "black" }}
+                className="btn btn-primary flex flex-[2] items-center justify-center gap-2 text-sm md:text-base whitespace-nowrap transition-colors"
+                style={{ backgroundColor: accentColor, color: getContrastColor(accentColor) }}
               >
                 <Save size={18} />
                 Guardar cambios

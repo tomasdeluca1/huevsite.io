@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Check, Pipette, Clock } from "lucide-react";
-import { PRESET_COLORS } from "@/lib/profile-types";
+import { PRESET_COLORS, getContrastColor } from "@/lib/profile-types";
 
 interface Props {
   value: string;
@@ -59,16 +59,16 @@ export function ColorPicker({ value, onChange }: Props) {
             style={{ backgroundColor: color }}
           >
             {displayed.toLowerCase() === color.toLowerCase() && (
-              <motion.div
-                layoutId="color-check"
-                className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[1px]"
-              >
-                <Check
-                  size={16}
-                  className={color === "#FFFFFF" ? "text-black" : "text-white"}
-                  strokeWidth={3}
-                />
-              </motion.div>
+                <motion.div
+                  layoutId="color-check"
+                  className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[1px]"
+                >
+                  <Check
+                    size={16}
+                    style={{ color: getContrastColor(color) }}
+                    strokeWidth={3}
+                  />
+                </motion.div>
             )}
           </button>
         ))}
@@ -109,8 +109,8 @@ export function ColorPicker({ value, onChange }: Props) {
             </button>
             <button
               onClick={handleApply}
-              className="text-xs font-bold py-2 rounded-xl transition-all text-black"
-              style={{ backgroundColor: previewColor ?? "#C8FF00" }}
+              className="text-xs font-bold py-2 rounded-xl transition-all"
+              style={{ backgroundColor: previewColor ?? "#C8FF00", color: getContrastColor(previewColor ?? "#C8FF00") }}
             >
               Aplicar este color
             </button>

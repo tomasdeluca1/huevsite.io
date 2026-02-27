@@ -80,7 +80,7 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
             <div className="avatar a4">L</div>
             <div className="avatar a5">P</div>
           </div>
-          <span className="social-proof-text"><strong>+2.400 builders</strong> ya armaron su huevsite</span>
+          <span className="social-proof-text"><strong>+{(Math.floor((showcaseData.total_builders || 50) / 10) * 10).toLocaleString()} builders</strong> ya armaron su huevsite</span>
         </div>
       </section>
       

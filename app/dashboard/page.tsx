@@ -20,18 +20,21 @@ import { Save, Eye, Layout as LayoutIcon, Settings, LogOut, Plus, Sparkles, Mess
 import { motion, AnimatePresence } from "framer-motion";
 
 import { MOCK_PROFILE } from "@/lib/mock-profile";
-import { BlockData, BlockType, ProfileData, PRESET_COLORS } from "@/lib/profile-types";
+import { BlockData, BlockType, ProfileData, PRESET_COLORS, getContrastColor } from "@/lib/profile-types";
 import { HeroBlock } from "@/components/blocks/HeroBlock";
 import { BuildingBlock } from "@/components/blocks/BuildingBlock";
 import { GitHubBlock } from "@/components/blocks/GitHubBlock";
 import { ProjectBlock } from "@/components/blocks/ProjectBlock";
 import { MetricBlock, SocialBlock, CVBlock } from "@/components/blocks/Widgets";
 import { StackBlock, CommunityBlock, WritingBlock } from "@/components/blocks/ExtraBlocks";
+import { MediaBlock, CertificationBlock, AchievementBlock, CustomBlock } from "@/components/blocks/NewBlocks";
 import { SortableBlock } from "@/components/dashboard/SortableBlock";
 import { BlockSelector } from "@/components/dashboard/BlockSelector";
 import { BlockEditorModal } from "@/components/dashboard/BlockEditorModal";
 import { ColorPicker } from "@/components/dashboard/ColorPicker";
 import { FeedbackModal } from "@/components/dashboard/FeedbackModal";
+import { OnboardingModal } from "@/components/dashboard/OnboardingModal";
+import { GlobalUpdateModal } from "@/components/social/GlobalUpdateModal";
 import Link from "next/link";
 
 import { createClient } from "@/lib/supabase/client";
@@ -43,6 +46,8 @@ export default function DashboardPage() {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [editingBlock, setEditingBlock] = useState<BlockData | null>(null);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+  const [isGlobalUpdateOpen, setIsGlobalUpdateOpen] = useState(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const supabase = createClient();
   
@@ -75,6 +80,7 @@ export default function DashboardPage() {
           subscriptionTier: data.profile.pro_since ? 'pro' : 'free',
           extraBlocksFromShare: data.profile.extra_blocks_from_share || 0,
           twitterShareUnlocked: data.profile.twitter_share_unlocked || false,
+          hasSeenUpdateFeb25: data.profile.has_seen_update_feb25 || false,
           tagline: data.profile.tagline || "",
           blocks: data.blocks.map((block: any) => {
             const { id, type, order, col_span, row_span, visible, ...cleanData } = block.data || {};
@@ -91,6 +97,17 @@ export default function DashboardPage() {
         };
 
         setProfile(transformedProfile);
+        
+        // Show onboarding?
+        if (transformedProfile.blocks.length === 0) {
+          const hasSeen = localStorage.getItem("huevsite_onboarding_seen");
+          if (!hasSeen) {
+            setIsOnboardingOpen(true);
+          }
+        } else if (data.profile.has_seen_update_feb25 === false) {
+          // Si ya tiene bloques pero no vio el update modal
+          setIsGlobalUpdateOpen(true);
+        }
       } catch (error) {
         console.error('Error fetching profile:', error);
         // Quitamos el fallback al MOCK_PROFILE para que no muestre data "hardcodeada"
@@ -103,6 +120,20 @@ export default function DashboardPage() {
 
     fetchProfile();
   }, []);
+
+  const handleCloseGlobalUpdate = async () => {
+    setIsGlobalUpdateOpen(false);
+    try {
+      await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ has_seen_update_feb25: true })
+      });
+      setProfile(prev => prev ? { ...prev, hasSeenUpdateFeb25: true } : prev);
+    } catch(e) { 
+      console.error(e); 
+    }
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -271,6 +302,41 @@ export default function DashboardPage() {
           fileUrl: "",
         };
         break;
+      case "media":
+        initialData = {
+          ...initialData,
+          url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop",
+          title: "Mi diseño / video",
+          description: "Un vistazo a mi trabajo más reciente.",
+        };
+        break;
+      case "certification":
+        initialData = {
+          ...initialData,
+          name: "AWS Certified Solutions Architect",
+          issuer: "Amazon Web Services",
+          date: "2024",
+          link: "",
+          icon: "",
+        };
+        break;
+      case "achievement":
+        initialData = {
+          ...initialData,
+          title: "1k Followers en X",
+          description: "Llegué a un milestone importante para mi proyecto.",
+          date: "Octubre 2024",
+        };
+        break;
+      case "custom":
+        initialData = {
+          ...initialData,
+          label: "MI EXPERIENCIA",
+          title: "Trabajos Anteriores",
+          description: "No solo buildeo, también estuve en empresas piolas.",
+          link: "",
+        };
+        break;
     }
 
     // Agregar el bloque localmente primero
@@ -414,6 +480,10 @@ export default function DashboardPage() {
       case "community": return <CommunityBlock {...props} />;
       case "writing": return <WritingBlock {...props} />;
       case "cv": return <CVBlock {...props} />;
+      case "media": return <MediaBlock {...props} />;
+      case "certification": return <CertificationBlock {...props} />;
+      case "achievement": return <AchievementBlock {...props} />;
+      case "custom": return <CustomBlock {...props} />;
       default: return (
         <div className="bento-block h-full flex items-center justify-center p-8 border-dashed border-[var(--border-bright)]">
           <p className="text-xs text-[var(--text-dim)] font-mono text-center">Bloque fantasma 🇦🇷</p>
@@ -534,13 +604,15 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-[var(--bg)] font-display overflow-x-hidden">
       {/* SIDEBAR */}
-      <aside className="relative md:fixed md:inset-y-0 md:left-0 w-full md:w-[320px] shrink-0 border-b md:border-b-0 md:border-r border-[var(--border)] bg-[var(--surface)] p-6 md:p-8 flex flex-col gap-8 top-0 h-auto md:h-screen overflow-y-auto z-10">
-        <div>
-          <Link href="/" className="logo mb-10 block">huev<span>site</span>.io</Link>
+      <aside className="relative md:fixed md:inset-y-0 md:left-0 w-full md:w-[320px] shrink-0 border-b md:border-b-0 md:border-r border-[var(--border)] bg-[var(--surface)] p-4 md:p-8 flex flex-col md:gap-8 top-0 h-auto md:h-screen overflow-y-auto overflow-x-hidden z-10 custom-scrollbar">
+        <div className="flex justify-between items-center mb-4 md:mb-10">
+          <Link href="/" className="logo block text-xl md:text-2xl">huev<span>site</span>.io</Link>
+        </div>
 
+        <div className="flex flex-col gap-6">
           <div className="space-y-6">
-            <div className="space-y-2 mb-8 bg-[var(--surface2)]/50 p-4 rounded-2xl border border-[var(--border)] relative group transition-colors hover:border-[var(--border-bright)] shadow-sm">
-              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-mono text-[var(--text-muted)] tracking-widest uppercase pointer-events-none">
+            <div className="space-y-2 md:mb-8 bg-[var(--surface2)]/50 p-4 rounded-2xl border border-[var(--border)] relative group transition-colors hover:border-[var(--border-bright)] shadow-sm">
+              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-mono text-[var(--text-muted)] tracking-widest uppercase pointer-events-none hidden md:block">
                 Editar
               </div>
               {!profile.blocks.some(b => b.type === 'hero') && (
@@ -599,35 +671,39 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="mt-8 space-y-1">
-          <div className="section-label !text-[9px] mb-3 px-1">// comunidad</div>
-          <Link href="/feed" className="flex items-center gap-3 w-full p-3 rounded-xl bg-transparent text-sm font-medium text-[var(--text-dim)] hover:text-white hover:bg-[var(--surface2)] transition-all group shrink-0">
-            <Activity size={18} className="shrink-0 group-hover:scale-110 transition-transform" /> 
-            <span className="truncate">Feed de Actividad</span>
-          </Link>
-          <Link href="/explore" className="flex items-center gap-3 w-full p-3 rounded-xl bg-transparent text-sm font-medium text-[var(--text-dim)] hover:text-white hover:bg-[var(--surface2)] transition-all group shrink-0">
-            <Compass size={18} className="shrink-0 group-hover:scale-110 transition-transform" /> 
-            <span className="truncate">Explorar Builders</span>
-          </Link>
+        <div className="mt-2 md:mt-8 space-y-2">
+          <div className="section-label !text-[9px] mb-2 px-1 hidden md:block">// comunidad</div>
+          <div className="flex md:flex-col gap-2 overflow-x-auto no-scrollbar snap-x pb-2 md:pb-0">
+            <Link href="/feed" className="flex items-center gap-3 md:w-full p-3 rounded-xl bg-[var(--surface2)] md:bg-transparent text-sm font-medium text-[var(--text-dim)] hover:text-white md:hover:bg-[var(--surface2)] transition-all group shrink-0 snap-center">
+              <Activity size={18} className="shrink-0 group-hover:scale-110 transition-transform" /> 
+              <span className="whitespace-nowrap">Feed</span>
+            </Link>
+            <Link href="/explore" className="flex items-center gap-3 md:w-full p-3 rounded-xl bg-[var(--surface2)] md:bg-transparent text-sm font-medium text-[var(--text-dim)] hover:text-white md:hover:bg-[var(--surface2)] transition-all group shrink-0 snap-center">
+              <Compass size={18} className="shrink-0 group-hover:scale-110 transition-transform" /> 
+              <span className="whitespace-nowrap">Explorar</span>
+            </Link>
+          </div>
         </div>
 
-        <div className="mt-8 space-y-1">
-          <div className="section-label !text-[9px] mb-3 px-1">// configuración</div>
-          <button onClick={() => alert('Próximamente 🇦🇷')} className="flex items-center gap-3 w-full p-3 rounded-xl bg-transparent text-sm font-medium text-[var(--text-dim)] hover:text-white hover:bg-[var(--surface2)] transition-all group shrink-0">
-            <Settings size={18} className="shrink-0 group-hover:rotate-45 transition-transform" /> 
-            <span className="truncate">Ajustes del perfil</span>
-          </button>
-          <button onClick={() => alert('Próximamente 🇦🇷')} className="flex items-center gap-3 w-full p-3 rounded-xl bg-transparent text-sm font-medium text-[var(--text-dim)] hover:text-white hover:bg-[var(--surface2)] transition-all shrink-0">
-            <LayoutIcon size={18} className="shrink-0" /> 
-            <span className="truncate">Gestionar Layout</span>
-          </button>
-          <button onClick={() => setIsFeedbackOpen(true)} className="flex items-center gap-3 w-full p-3 rounded-xl bg-transparent text-sm font-medium text-[var(--accent)] hover:bg-[var(--accent-dim)] transition-all shrink-0">
-            <MessageSquare size={18} className="shrink-0" /> 
-            <span className="truncate">Enviar Feedback 🇦🇷</span>
-          </button>
+        <div className="mt-2 md:mt-auto space-y-2">
+          <div className="section-label !text-[9px] mb-2 px-1 hidden md:block">// configuración</div>
+          <div className="flex md:flex-col gap-2 overflow-x-auto no-scrollbar snap-x pb-2 md:pb-0">
+            <button onClick={() => alert('Próximamente 🇦🇷')} className="flex items-center gap-3 md:w-full p-3 rounded-xl bg-[var(--surface2)] md:bg-transparent text-sm font-medium text-[var(--text-dim)] hover:text-white md:hover:bg-[var(--surface2)] transition-all group shrink-0 snap-center">
+              <Settings size={18} className="shrink-0 group-hover:rotate-45 transition-transform" /> 
+              <span className="whitespace-nowrap">Ajustes</span>
+            </button>
+            <button onClick={() => setIsFeedbackOpen(true)} className="flex items-center gap-3 md:w-full p-3 rounded-xl bg-[var(--surface2)] md:bg-transparent text-sm font-medium text-[var(--accent)] hover:bg-[var(--accent-dim)] transition-all shrink-0 snap-center">
+              <MessageSquare size={18} className="shrink-0" /> 
+              <span className="whitespace-nowrap">Feedback 🇦🇷</span>
+            </button>
+            <button onClick={handleLogout} className="md:hidden flex items-center gap-3 p-3 rounded-xl text-red-400 bg-red-400/10 text-sm font-medium transition-colors shrink-0 snap-center">
+              <LogOut size={18} className="shrink-0" /> 
+              <span className="whitespace-nowrap">Salir</span>
+            </button>
+          </div>
         </div>
 
-        <div className="mt-auto pt-6 border-t border-[var(--border)]">
+        <div className="hidden md:block mt-auto pt-6 border-t border-[var(--border)]">
           <button onClick={handleLogout} className="flex items-center gap-3 w-full p-3 rounded-xl text-red-400/70 hover:text-red-400 text-sm font-medium hover:bg-red-500/10 transition-colors group shrink-0">
             <LogOut size={18} className="shrink-0 group-hover:-translate-x-1 transition-transform" /> 
             <span className="truncate">Cerrar sesión</span>
@@ -639,41 +715,43 @@ export default function DashboardPage() {
       <main className="flex-1 p-4 lg:p-8 overflow-y-auto relative z-0 md:ml-[320px]">
         <div className="absolute top-0 right-0 w-full lg:w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(200,255,0,0.03)_0%,transparent_70%)] pointer-events-none" />
         
-        <header className="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-6 mb-12 max-w-7xl mx-auto">
+        <header className="flex flex-col md:flex-row md:justify-between md:items-end gap-6 mb-8 md:mb-12 max-w-7xl mx-auto items-center text-center md:text-left">
           <div>
-            <div className="section-label mb-2">// editor de huevsite</div>
-            <h2 className="text-4xl font-extrabold tracking-tighter">Armá tu huevsite.</h2>
-            <p className="section-sub !text-sm mt-2">
+            <div className="section-label mb-2 hidden md:block">// editor de huevsite</div>
+            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tighter">Armá tu huevsite.</h2>
+            <p className="section-sub !text-sm mt-2 hidden md:block">
               Arrastrá para reordenar. Click en el rayito <Sparkles size={14} className="inline text-[var(--accent)]" /> para editar.
             </p>
           </div>
 
-          <div className="flex gap-4 items-center">
+          <div className="flex flex-col md:flex-row gap-4 items-center w-full md:w-auto">
             {lastSaved && !isSaving && (
-              <span className="text-xs text-[var(--text-muted)] font-mono">
+              <span className="text-xs text-[var(--text-muted)] font-mono hidden md:inline">
                 Guardado · hace {Math.floor((Date.now() - lastSaved.getTime()) / 1000)}s
               </span>
             )}
             {isSaving && (
-              <span className="text-xs text-[var(--accent)] font-mono animate-pulse">
+              <span className="text-xs text-[var(--accent)] font-mono animate-pulse hidden md:inline">
                 Guardando...
               </span>
             )}
-            <Link
-              href={`/${profile.username}`}
-              target="_blank"
-              className="btn btn-ghost !px-6"
-            >
-              <Eye size={16} className="mr-2" /> Ver perfil
-            </Link>
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="btn btn-accent !px-8 shadow-xl"
-              style={{ backgroundColor: profile.accentColor }}
-            >
-              <Save size={16} className="mr-2" /> {isSaving ? 'Guardando...' : 'Guardar cambios'}
-            </button>
+            <div className="flex gap-2 w-full md:w-auto">
+              <Link
+                href={`/${profile.username}`}
+                target="_blank"
+                className="btn btn-ghost !px-6 flex-1 md:flex-none justify-center"
+              >
+                <Eye size={16} className="md:mr-2" /> <span className="hidden md:inline">Ver perfil</span>
+              </Link>
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="btn btn-accent !px-8 shadow-xl flex-1 md:flex-none justify-center whitespace-nowrap"
+                style={{ backgroundColor: profile.accentColor, color: getContrastColor(profile.accentColor) }}
+              >
+                <Save size={16} className="md:mr-2" /> <span className="md:inline">{isSaving ? 'Guardando' : 'Guardar'}</span>
+              </button>
+            </div>
           </div>
         </header>
 
@@ -740,6 +818,7 @@ export default function DashboardPage() {
             isOpen={!!editingBlock}
             onClose={() => setEditingBlock(null)}
             onSave={updateBlock}
+            accentColor={profile?.accentColor || "#C8FF00"}
           />
         )}
       </AnimatePresence>
@@ -747,6 +826,20 @@ export default function DashboardPage() {
       <FeedbackModal 
         isOpen={isFeedbackOpen} 
         onClose={() => setIsFeedbackOpen(false)} 
+      />
+
+      <GlobalUpdateModal 
+        isOpen={isGlobalUpdateOpen}
+        onClose={handleCloseGlobalUpdate}
+      />
+
+      <OnboardingModal
+        isOpen={isOnboardingOpen}
+        onClose={() => {
+          localStorage.setItem("huevsite_onboarding_seen", "true");
+          setIsOnboardingOpen(false);
+        }}
+        username={profile.username}
       />
     </div>
   );

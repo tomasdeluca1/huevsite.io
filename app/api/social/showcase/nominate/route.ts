@@ -102,7 +102,21 @@ export async function POST(request: NextRequest) {
 
     if ((count || 0) >= 1) {
       if (!override) {
-        return NextResponse.json({ error: "Solo podés nominar a una persona por semana." }, { status: 409 });
+        // Find who they actually nominated
+        const { data: existing } = await supabase
+          .from("showcase_nominations")
+          .select("user:profiles!user_id(username, name)")
+          .eq("nominated_by", user.id)
+          .eq("week", week)
+          .single();
+
+        return NextResponse.json({ 
+          error: "Solo podés nominar a una persona por semana.",
+          nominatedUser: existing ? {
+            username: (existing.user as any)?.username,
+            name: (existing.user as any)?.name
+          } : null
+        }, { status: 409 });
       }
       
       // If override, delete the previous nomination for this week

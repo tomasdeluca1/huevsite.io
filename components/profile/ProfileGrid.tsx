@@ -7,6 +7,7 @@ import { GitHubBlock } from "@/components/blocks/GitHubBlock"
 import { ProjectBlock } from "@/components/blocks/ProjectBlock"
 import { MetricBlock, SocialBlock, CVBlock } from "@/components/blocks/Widgets"
 import { StackBlock, CommunityBlock, WritingBlock } from "@/components/blocks/ExtraBlocks"
+import { MediaBlock, CertificationBlock, AchievementBlock, CustomBlock } from "@/components/blocks/NewBlocks"
 import type { BlockData } from "@/lib/profile-types"
 
 interface ProfileGridProps {
@@ -53,6 +54,14 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline }: Profi
         return <WritingBlock {...props} />
       case "cv":
         return <CVBlock {...props} />
+      case "media":
+        return <MediaBlock {...props} />
+      case "certification":
+        return <CertificationBlock {...props} />
+      case "achievement":
+        return <AchievementBlock {...props} />
+      case "custom":
+        return <CustomBlock {...props} />
       default:
         return null
     }

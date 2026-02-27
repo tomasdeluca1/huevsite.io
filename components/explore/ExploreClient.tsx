@@ -22,14 +22,16 @@ interface ExploreProfile {
 export function ExploreClient({ initialTotal }: { initialTotal: number }) {
   const [profiles, setProfiles] = useState<ExploreProfile[]>([]);
   const [page, setPage] = useState(0);
-  const [search, setSearch] = useState("");
-  const [sort, setSort] = useState("category");
+  const [search, setSearch] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('huevsite_explore_search') || "" : ""));
+  const [sort, setSort] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('huevsite_explore_sort') || "category" : "category"));
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
 
   // Debounce search
   useEffect(() => {
+    localStorage.setItem('huevsite_explore_search', search);
+    localStorage.setItem('huevsite_explore_sort', sort);
     const timer = setTimeout(() => {
       setPage(0);
       loadProfiles(0, true);

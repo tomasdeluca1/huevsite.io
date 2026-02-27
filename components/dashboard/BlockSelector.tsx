@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Plus, X, Layout as LayoutIcon, MessageSquare, Rocket, Github, Star, Layers, Users, BookOpen, Sparkles, FileText, Image, Award, Trophy, PenTool } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BlockType, MAX_FREE_BLOCKS } from "@/lib/profile-types";
+import { BlockType, MAX_FREE_BLOCKS, isDarkColor } from "@/lib/profile-types";
 import { UpgradeModal } from "@/components/dashboard/UpgradeModal";
 import { ShareModal } from "@/components/dashboard/ShareModal";
 
@@ -112,8 +112,11 @@ export function BlockSelector({
 
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="btn btn-accent w-full !rounded-2xl flex items-center justify-center gap-2 py-4"
-        style={{ backgroundColor: accentColor }}
+        className="btn btn-accent w-full !rounded-2xl flex items-center justify-center gap-2 py-4 border"
+        style={{ 
+          backgroundColor: accentColor,
+          borderColor: isDarkColor(accentColor) ? 'rgba(255,255,255,0.15)' : 'transparent'
+        }}
       >
         {isOpen ? <X size={20} /> : <Plus size={20} />}
         {isOpen ? "Cerrar" : "Agregar Bloque"}

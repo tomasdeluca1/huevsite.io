@@ -6,16 +6,19 @@ export const dynamic = "force-dynamic";
 // GET /api/social/feed — actividad reciente de usuarios seguidos
 export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const tab = searchParams.get("tab") || "global"; // "global" | "following"
+
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+      if (tab === "following") {
+        return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+      }
     }
 
-    // En lugar de limitar la vista solo a los "seguidos",
-    // hacemos que el feed sea GLOBAL para darle más vida a la comunidad pequeña.
-    const { data: activities, error: activitiesError } = await supabase
+    let query = supabase
       .from("activities")
       .select(`
         id,
@@ -29,7 +32,28 @@ export async function GET(request: NextRequest) {
           image,
           accent_color
         )
-      `)
+      `);
+
+    if (tab === "following" && user) {
+      // Fetch who the user follows
+      const { data: followsData } = await supabase
+        .from("follows")
+        .select("following_id")
+        .eq("follower_id", user.id);
+        
+      const followingIds = (followsData || []).map(f => f.following_id);
+      
+      if (followingIds.length === 0) {
+        return NextResponse.json({ activities: [] });
+      }
+      
+      query = query.in("user_id", followingIds);
+    } else {
+      // Global feed: Exclude nominations to avoid noise
+      query = query.neq("type", "new_nomination");
+    }
+
+    const { data: activities, error: activitiesError } = await query
       .order("created_at", { ascending: false })
       .limit(50);
 

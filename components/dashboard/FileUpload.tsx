@@ -12,7 +12,13 @@ interface Props {
   accept?: string;
 }
 
-export function FileUpload({ value, onChange, label, folder = "general", accept = "application/pdf" }: Props) {
+export function FileUpload({ 
+  value, 
+  onChange, 
+  label, 
+  folder = "general", 
+  accept = "application/pdf,image/*,video/*" 
+}: Props) {
   const supabase = createClient();
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -66,7 +72,15 @@ export function FileUpload({ value, onChange, label, folder = "general", accept 
         {value ? (
           <div className="relative p-6 rounded-[1.5rem] border border-[var(--border-bright)] bg-[var(--surface2)] shadow-xl flex items-center justify-between">
             <div className="flex items-center gap-3 overflow-hidden">
-              <FileText size={24} className="text-[var(--accent)] shrink-0" />
+              {value.match(/\.(mp4|webm|ogg)$/i) ? (
+                <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center shrink-0">
+                  <Upload size={20} className="text-red-400" />
+                </div>
+              ) : value.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                <img src={value} className="w-10 h-10 rounded-lg object-cover shrink-0" alt="Preview" />
+              ) : (
+                <FileText size={24} className="text-[var(--accent)] shrink-0" />
+              )}
               <span className="font-mono text-sm truncate">{getFileName(value)}</span>
             </div>
             <div className="flex gap-2 shrink-0">
@@ -105,7 +119,11 @@ export function FileUpload({ value, onChange, label, folder = "general", accept 
                 </div>
                 <div className="text-center">
                   <p className="text-sm font-bold tracking-tight">Seleccionar archivo</p>
-                  <p className="text-[9px] font-mono text-[var(--text-muted)] uppercase tracking-widest mt-1">PDF hasta 5MB</p>
+                  <p className="text-[9px] font-mono text-[var(--text-muted)] uppercase tracking-widest mt-1">
+                    {accept.includes('pdf') ? 'PDF' : ''} 
+                    {accept.includes('image') ? 'Imagen' : ''} 
+                    {accept.includes('video') ? 'Video' : ''} hasta 5MB
+                  </p>
                 </div>
               </>
             )}

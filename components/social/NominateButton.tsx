@@ -9,7 +9,15 @@ interface NominatedUser {
   name: string | null;
 }
 
-export function NominateButton({ userId, accentColor }: { userId: string; accentColor: string }) {
+export function NominateButton({ 
+  userId, 
+  accentColor,
+  onStatusChange 
+}: { 
+  userId: string; 
+  accentColor: string;
+  onStatusChange?: (nominated: boolean) => void;
+}) {
   const [status, setStatus] = useState<"idle" | "loading" | "nominated" | "error">("idle");
   const [msg, setMsg] = useState("");
   const [remaining, setRemaining] = useState<number | null>(null);
@@ -54,6 +62,7 @@ export function NominateButton({ userId, accentColor }: { userId: string; accent
           setStatus("idle");
           setRemaining(1);
           setAnotherNominated(null);
+          onStatusChange?.(false);
         } else {
           setStatus("error");
           const data = await res.json();
@@ -88,6 +97,7 @@ export function NominateButton({ userId, accentColor }: { userId: string; accent
         setStatus("nominated");
         setRemaining(0);
         setAnotherNominated(null);
+        onStatusChange?.(true);
       } else {
         if (res.status === 409 && data.nominatedUser) {
           setAnotherNominated(data.nominatedUser);

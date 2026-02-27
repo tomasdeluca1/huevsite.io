@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Star, Loader2, Info } from "lucide-react";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface NominatedUser {
   username: string;
@@ -163,39 +164,66 @@ export function NominateButton({
         )}
       </div>
 
-      {showModal && anotherNominated && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-3xl p-6 max-w-sm w-full animate-in fade-in zoom-in-95 shadow-2xl">
-            <h3 className="text-xl font-bold mb-2">Cambiar nominación</h3>
-            <div className="flex flex-col gap-2 mb-6">
-              <p className="text-sm text-[var(--text-dim)]">
-                ¿Seguro que querés dejar de nominar a <strong className="text-white">@{anotherNominated.username}</strong> y nominar a este builder?
-              </p>
-              <div className="p-3 rounded-xl bg-[var(--surface2)] border border-[var(--border)] mt-2">
-                <p className="text-xs text-[var(--text-muted)] flex gap-2">
-                  <Info size={14} className="shrink-0 mt-0.5" />
-                  Podés cambiar tu voto las veces que quieras, el recuento final de la semana cierra el domingo a la medianoche.
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowModal(false)}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-[var(--border)] font-bold text-sm hover:bg-[var(--surface2)] transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => executeNominate(true)}
-                className="flex-1 px-4 py-2.5 rounded-xl text-black font-bold text-sm transition-colors hover:opacity-90"
+      {/* Confirmation Modal */}
+      <AnimatePresence>
+        {showModal && anotherNominated && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+              onClick={() => setShowModal(false)}
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-[var(--surface)] border border-[var(--border)] rounded-3xl p-8 max-w-md w-full relative shadow-2xl overflow-hidden"
+            >
+              {/* Subtle accent glow */}
+              <div 
+                className="absolute -top-24 -right-24 w-48 h-48 rounded-full opacity-20 blur-3xl pointer-events-none"
                 style={{ backgroundColor: accentColor }}
-              >
-                Cambiar voto
-              </button>
-            </div>
+              />
+
+              <h3 className="text-2xl font-black mb-4 tracking-tighter">¿Cambiar nominación?</h3>
+              
+              <div className="space-y-4 mb-8">
+                <p className="text-base text-[var(--text-dim)] leading-relaxed">
+                  Ya nominaste a <strong className="text-white">@{anotherNominated.username}</strong> esta semana.
+                </p>
+                <p className="text-base text-[var(--text-dim)] leading-relaxed">
+                  ¿Querés cambiar tu voto para nominar a este builder en su lugar?
+                </p>
+                
+                <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] flex gap-3">
+                  <Info size={18} className="text-[var(--accent)] shrink-0 mt-0.5" />
+                  <p className="text-xs text-[var(--text-muted)] leading-normal">
+                    Tu voto final es el que cuenta al cierre de la semana (domingo a la medianoche). Podés cambiarlo todas las veces que quieras.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="flex-1 px-6 py-3.5 rounded-2xl border border-[var(--border)] font-bold text-sm hover:bg-[var(--surface2)] transition-all order-2 sm:order-1"
+                >
+                  Mantener anterior
+                </button>
+                <button
+                  onClick={() => executeNominate(true)}
+                  className="flex-1 px-6 py-3.5 rounded-2xl text-black font-bold text-sm transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-black/20 order-1 sm:order-2"
+                  style={{ backgroundColor: accentColor }}
+                >
+                  Sí, cambiar voto
+                </button>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </>
   );
 }

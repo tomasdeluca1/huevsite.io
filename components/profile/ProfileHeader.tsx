@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { FollowButton } from "@/components/social/FollowButton";
 import { NominateButton } from "@/components/social/NominateButton";
@@ -33,6 +33,16 @@ export function ProfileHeader({
   const [localFollowersCount, setLocalFollowersCount] = useState(followersCount);
   const [localNominationsCount, setLocalNominationsCount] = useState(nominationsCount);
 
+  // Scroll lock when modal is open
+  useEffect(() => {
+    if (modalType) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => { document.body.style.overflow = "unset"; };
+  }, [modalType]);
+
   const handleFollowChange = (nowFollowing: boolean) => {
     setLocalFollowersCount(prev => nowFollowing ? prev + 1 : prev - 1);
   };
@@ -45,9 +55,17 @@ export function ProfileHeader({
     <header className="relative z-[100] mb-10">
       {/* Upper bar: Logo + User Actions + Main CTA */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-4">
-        <div className="flex items-center justify-between w-full md:w-auto">
+        <div className="flex items-center gap-4 justify-between w-full md:w-auto">
           <Link href="/" className="logo shrink-0">
             huev<span>site</span>.io
+          </Link>
+
+          {/* Volver a Explore - Idealmente oculto si no viene de allí, pero lo ponemos como opción de UX */}
+          <Link 
+            href="/explore" 
+            className="hidden md:flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
+          >
+            ← Volver a explorar
           </Link>
           
           {/* Mobile only CTA */}

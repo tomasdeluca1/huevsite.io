@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Loader2 } from "lucide-react";
+import { X, Loader2, Search } from "lucide-react";
 import Link from "next/link";
 import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
@@ -25,26 +25,41 @@ interface Props {
 export function FollowListModal({ isOpen, onClose, userId, type, accentColor }: Props) {
   const [users, setUsers] = useState<FollowUser[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
     if (isOpen) {
-      loadUsers();
+      setPage(0);
+      loadUsers(0, true, search);
     }
-  }, [isOpen, userId, type]);
+  }, [isOpen, userId, type, search]);
 
-  const loadUsers = async () => {
+  const loadUsers = async (pageToLoad: number, reset = false, query = "") => {
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/social/${type}?userId=${userId}`);
+      const res = await fetch(`/api/social/${type}?userId=${userId}&page=${pageToLoad}&q=${encodeURIComponent(query)}`);
       if (res.ok) {
         const data = await res.json();
-        setUsers(data[type] || []);
+        if (reset) {
+          setUsers(data[type] || []);
+        } else {
+          setUsers(prev => [...prev, ...(data[type] || [])]);
+        }
+        setHasMore(data.hasMore);
       }
     } catch (error) {
       console.error(`Error loading ${type}:`, error);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    loadUsers(nextPage, false, search);
   };
 
   const [mounted, setMounted] = useState(false);
@@ -68,16 +83,28 @@ export function FollowListModal({ isOpen, onClose, userId, type, accentColor }: 
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           className="relative w-[90%] max-w-md bg-[var(--surface)] border border-[var(--border-bright)] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col z-10 max-h-[80vh]"
         >
-          <div className="p-6 border-b border-[var(--border)] flex justify-between items-center bg-black/40">
-            <h3 className="text-xl font-bold tracking-tight capitalize">
-              {type === "followers" ? "Seguidores" : "Siguiendo"}
-            </h3>
-            <button 
-              onClick={onClose}
-              className="p-2 rounded-full hover:bg-[var(--surface2)] transition-all text-[var(--text-muted)] hover:text-white"
-            >
-              <X size={20} />
-            </button>
+          <div className="p-6 border-b border-[var(--border)] bg-black/40">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold tracking-tight capitalize">
+                {type === "followers" ? "Seguidores" : "Siguiendo"}
+              </h3>
+              <button 
+                onClick={onClose}
+                className="p-2 rounded-full hover:bg-[var(--surface2)] transition-all text-[var(--text-muted)] hover:text-white"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="relative">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+              <input
+                type="text"
+                placeholder="Buscar builder..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full bg-[var(--bg)] border border-[var(--border)] rounded-xl py-2 pl-9 pr-4 text-xs outline-none focus:border-[var(--accent)] transition-all"
+              />
+            </div>
           </div>
 
           <div className="p-2 overflow-y-auto custom-scrollbar flex-1">
@@ -108,7 +135,7 @@ export function FollowListModal({ isOpen, onClose, userId, type, accentColor }: 
                         <img src={user.image} alt="" className="w-full h-full object-cover" />
                       ) : (
                         <span style={{ color: user.accent_color || accentColor }}>
-                          {(user.name || user.username).substring(0, 2).toUpperCase()}
+                          {(user.name || user.username).substring(0, 1).toUpperCase()}
                         </span>
                       )}
                     </div>
@@ -122,6 +149,15 @@ export function FollowListModal({ isOpen, onClose, userId, type, accentColor }: 
                     </div>
                   </Link>
                 ))}
+                
+                {hasMore && (
+                  <button 
+                    onClick={handleLoadMore}
+                    className="w-full py-4 text-[10px] font-mono uppercase tracking-widest text-[var(--text-dim)] hover:text-white transition-all"
+                  >
+                    {isLoading ? "Cargando..." : "Ver más"}
+                  </button>
+                )}
               </div>
             )}
           </div>

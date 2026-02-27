@@ -35,6 +35,25 @@ export function getContrastColor(hexColor: string): string {
   return yiq >= 145 ? "#000000" : "#FFFFFF";
 }
 
+export function isDarkColor(hexColor: string): boolean {
+  if (!hexColor || typeof hexColor !== "string") return true;
+  const hex = hexColor.replace("#", "");
+  const r = parseInt(hex.length === 3 ? hex[0] + hex[0] : hex.slice(0, 2), 16);
+  const g = parseInt(hex.length === 3 ? hex[1] + hex[1] : hex.slice(2, 4), 16);
+  const b = parseInt(hex.length === 3 ? hex[2] + hex[2] : hex.slice(4, 6), 16);
+  const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+  return yiq < 40;
+}
+
+export function getAdjustedAccentColor(hexColor: string): string {
+  if (isDarkColor(hexColor)) {
+    // If it's too dark for a black background, return something slightly more visible
+    // but keep it as dark as possible to respect user's choice.
+    return "#1a1a1a"; 
+  }
+  return hexColor;
+}
+
 export type BlockType =
   | "hero"
   | "building"

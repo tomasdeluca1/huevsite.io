@@ -20,7 +20,7 @@ import { Save, Eye, Layout as LayoutIcon, Settings, LogOut, Plus, Sparkles, Mess
 import { motion, AnimatePresence } from "framer-motion";
 
 import { MOCK_PROFILE } from "@/lib/mock-profile";
-import { BlockData, BlockType, ProfileData, PRESET_COLORS, getContrastColor } from "@/lib/profile-types";
+import { BlockData, BlockType, ProfileData, PRESET_COLORS, getContrastColor, isDarkColor } from "@/lib/profile-types";
 import { HeroBlock } from "@/components/blocks/HeroBlock";
 import { BuildingBlock } from "@/components/blocks/BuildingBlock";
 import { GitHubBlock } from "@/components/blocks/GitHubBlock";
@@ -713,11 +713,26 @@ export default function DashboardPage() {
 
       {/* CANVAS */}
       <main className="flex-1 p-4 lg:p-8 overflow-y-auto relative z-0 md:ml-[320px]">
+        <style dangerouslySetInnerHTML={{ __html: `
+          :root {
+            --accent: ${profile.accentColor};
+            --accent-dim: ${profile.accentColor}1f;
+            --btn-border: ${isDarkColor(profile.accentColor) ? 'rgba(255,255,255,0.15)' : 'transparent'};
+          }
+        `}} />
         <div className="absolute top-0 right-0 w-full lg:w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(200,255,0,0.03)_0%,transparent_70%)] pointer-events-none" />
         
         <header className="flex flex-col md:flex-row md:justify-between md:items-end gap-6 mb-8 md:mb-12 max-w-7xl mx-auto items-center text-center md:text-left">
-          <div>
-            <div className="section-label mb-2 hidden md:block">// editor de huevsite</div>
+          <div className="w-full md:w-auto">
+            <div className="flex items-center justify-between md:justify-start gap-4 mb-2">
+              <div className="section-label hidden md:block">// editor de huevsite</div>
+              <Link 
+                href="/explore" 
+                className="text-[10px] font-mono uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors inline-flex items-center gap-1.5"
+              >
+                ← Volver a explorar
+              </Link>
+            </div>
             <h2 className="text-3xl md:text-4xl font-extrabold tracking-tighter">Armá tu huevsite.</h2>
             <p className="section-sub !text-sm mt-2 hidden md:block">
               Arrastrá para reordenar. Click en el rayito <Sparkles size={14} className="inline text-[var(--accent)]" /> para editar.
@@ -746,8 +761,12 @@ export default function DashboardPage() {
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="btn btn-accent !px-8 shadow-xl flex-1 md:flex-none justify-center whitespace-nowrap"
-                style={{ backgroundColor: profile.accentColor, color: getContrastColor(profile.accentColor) }}
+                className="btn btn-accent !px-8 shadow-xl flex-1 md:flex-none justify-center whitespace-nowrap border"
+                style={{ 
+                  backgroundColor: profile.accentColor, 
+                  color: getContrastColor(profile.accentColor),
+                  borderColor: 'var(--btn-border)'
+                }}
               >
                 <Save size={16} className="md:mr-2" /> <span className="md:inline">{isSaving ? 'Guardando' : 'Guardar'}</span>
               </button>

@@ -128,6 +128,14 @@ export default async function ProfilePage({ params }: Props) {
   return (
     <div className="landing min-h-screen font-display">
       <main className="min-h-screen pt-12 pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto relative overflow-hidden">
+        <style dangerouslySetInnerHTML={{ __html: `
+          :root {
+            --accent: ${profile.accentColor};
+            --accent-dim: ${profile.accentColor}1f;
+            --accent-mid: ${profile.accentColor}4d;
+          }
+        `}} />
+
         <div
           className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] opacity-10 pointer-events-none"
           style={{

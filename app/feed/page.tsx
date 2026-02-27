@@ -46,22 +46,47 @@ function timeAgo(date: string): string {
 export default function FeedPage() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<"global" | "following">("global");
 
   useEffect(() => {
-    fetch("/api/social/feed")
+    setLoading(true);
+    fetch(`/api/social/feed?tab=${tab}`)
       .then(r => r.json())
       .then(data => setActivities(data.activities ?? []))
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, []);
+  }, [tab]);
 
   return (
     <div className="min-h-screen bg-[var(--bg)] font-display py-12 px-4 max-w-2xl mx-auto">
       <header className="mb-12">
-        <Link href="/" className="logo mb-8 block">huev<span>site</span>.io</Link>
+        <div className="flex items-center justify-between mb-8">
+          <Link href="/" className="logo">huev<span>site</span>.io</Link>
+          <Link 
+            href="/explore" 
+            className="text-[10px] font-mono uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
+          >
+            ← Volver a explorar
+          </Link>
+        </div>
         <div className="section-label mb-2">// actividad reciente</div>
-        <h1 className="text-4xl font-extrabold tracking-tighter">Tu feed</h1>
-        <p className="section-sub mt-2">Lo que está pasando ahora mismo en la comunidad.</p>
+        <h1 className="text-4xl font-extrabold tracking-tighter">Comunidad</h1>
+        <p className="section-sub mt-2">Lo que está pasando ahora mismo.</p>
+
+        <div className="flex gap-4 mt-8 bg-black/20 p-1.5 rounded-2xl border border-[var(--border)] max-w-fit">
+          <button 
+            onClick={() => setTab("global")}
+            className={`px-6 py-2 rounded-xl text-xs font-bold font-mono uppercase tracking-widest transition-all ${tab === 'global' ? 'bg-[var(--surface2)] text-[var(--accent)]' : 'text-[var(--text-muted)] hover:text-white'}`}
+          >
+            Mundo
+          </button>
+          <button 
+            onClick={() => setTab("following")}
+            className={`px-6 py-2 rounded-xl text-xs font-bold font-mono uppercase tracking-widest transition-all ${tab === 'following' ? 'bg-[var(--surface2)] text-[var(--accent)]' : 'text-[var(--text-muted)] hover:text-white'}`}
+          >
+            Siguiendo
+          </button>
+        </div>
       </header>
 
       {loading ? (

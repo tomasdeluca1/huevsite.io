@@ -1,7 +1,7 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Save, Sparkles, Search, Github } from "lucide-react";
+import { motion, AnimatePresence, Reorder } from "framer-motion";
+import { X, Save, Sparkles, Search, Github, GripVertical } from "lucide-react";
 import { BlockData, getContrastColor } from "@/lib/profile-types";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
@@ -29,7 +29,17 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
 
   // Actualizar formData cuando cambia el bloque
   useEffect(() => {
-    setFormData(block);
+    let initialData = { ...block };
+    
+    // Añadir IDs temporales para drag & drop estable
+    if (initialData.type === 'social' && Array.isArray(initialData.links)) {
+      initialData.links = initialData.links.map((l: any) => ({ ...l, _dragId: l._dragId || Math.random().toString(36).substr(2, 9) }));
+    }
+    if (initialData.type === 'community' && Array.isArray(initialData.communities)) {
+      initialData.communities = initialData.communities.map((c: any) => ({ ...c, _dragId: c._dragId || Math.random().toString(36).substr(2, 9) }));
+    }
+
+    setFormData(initialData);
     setGithubSearch("");
     setGithubResults([]);
   }, [block]);
@@ -75,12 +85,22 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
     if (block.type === 'project' && typeof dataToSave.stack === 'string') {
       dataToSave.stack = dataToSave.stack.split(',').map((s: string) => s.trim()).filter((s: string) => s);
     }
-    // Asegurar que las URLs sociales estén construidas desde el handle
+    // Asegurar que las URLs sociales estén construidas desde el handle y limpiar IDs de drag
     if (block.type === 'social' && Array.isArray(dataToSave.links)) {
-      dataToSave.links = dataToSave.links.map((l: any) => ({
-        ...l,
-        url: l.url || buildSocialUrl(l.platform, l.handle || ""),
-      }));
+      dataToSave.links = dataToSave.links.map((l: any) => {
+        const { _dragId, ...rest } = l;
+        return {
+          ...rest,
+          url: l.url || buildSocialUrl(l.platform, l.handle || ""),
+        };
+      });
+    }
+
+    if (block.type === 'community' && Array.isArray(dataToSave.communities)) {
+      dataToSave.communities = dataToSave.communities.map((c: any) => {
+        const { _dragId, ...rest } = c;
+        return rest;
+      });
     }
 
     onSave(dataToSave);
@@ -256,68 +276,87 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
       case "social":
         return (
           <div className="space-y-6">
-            <div className="section-label !text-[9px] px-1">// links sociales — ingresá solo el handle</div>
-            {(formData.links || []).map((linkObj: any, index: number) => {
-              const platform = linkObj.platform || "twitter";
-              const platformConfig = SOCIAL_PLATFORMS[platform as SocialPlatformKey];
-              const handle = linkObj.handle || "";
-              const preview = handle ? getUrlPreview(platform, handle) : "";
+            <div className="section-label !text-[9px] px-1 translate-y-2 opacity-50">// links sociales — arrastrá para reordenar</div>
+            <Reorder.Group axis="y" values={formData.links || []} onReorder={(newLinks) => handleChange("links", newLinks)} className="space-y-3 pt-4">
+              {(formData.links || []).map((linkObj: any, index: number) => {
+                const platform = linkObj.platform || "twitter";
+                const platformConfig = SOCIAL_PLATFORMS[platform as SocialPlatformKey];
+                const handle = linkObj.handle || "";
+                const preview = handle ? getUrlPreview(platform, handle) : "";
 
-              return (
-                <div key={index} className="space-y-3 p-4 bg-[var(--surface2)] rounded-xl border border-[var(--border)]">
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="section-label !text-[9px]">// red {index + 1}</div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const newLinks = [...formData.links];
-                        newLinks.splice(index, 1);
-                        handleChange("links", newLinks);
-                      }}
-                      className="text-red-500 hover:text-red-400 text-xs font-mono"
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-                  <select
-                    value={platform}
-                    onChange={(e) => {
-                      const newLinks = [...formData.links];
-                      newLinks[index] = { ...newLinks[index], platform: e.target.value, handle: "", url: "" };
-                      handleChange("links", newLinks);
-                    }}
-                    className="w-full p-3 rounded-lg bg-[var(--bg)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all text-sm"
+                return (
+                  <Reorder.Item 
+                    key={linkObj._dragId} 
+                    value={linkObj}
+                    whileDrag={{ scale: 1.02, boxShadow: "0 20px 40px rgba(0,0,0,0.4)" }}
+                    className="space-y-3 p-4 bg-black/20 rounded-2xl border border-white/5 relative group/item sortable-item"
                   >
-                    {Object.entries(SOCIAL_PLATFORMS).map(([key, cfg]) => (
-                      <option key={key} value={key}>{cfg.label}</option>
-                    ))}
-                  </select>
-                  <input
-                    value={handle}
-                    onChange={(e) => {
-                      const newHandle = e.target.value;
-                      const newLinks = [...formData.links];
-                      newLinks[index] = {
-                        ...newLinks[index],
-                        handle: newHandle,
-                        url: buildSocialUrl(platform, newHandle),
-                      };
-                      handleChange("links", newLinks);
-                    }}
-                    className="w-full p-3 rounded-lg bg-[var(--bg)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-mono text-sm"
-                    placeholder={platformConfig?.placeholder ?? "handle"}
-                  />
-                  {preview && (
-                    <p className="text-xs text-[var(--text-muted)] font-mono px-1">
-                      → {preview}
-                    </p>
-                  )}
-                </div>
-              );
-            })}
+                    <div className="flex justify-between items-center mb-1">
+                      <div className="flex items-center gap-2">
+                        <div className="drag-handle p-1.5 -ml-1 text-white/20 group-hover/item:text-white/40 transition-colors bg-white/5 rounded-lg">
+                          <GripVertical size={14} />
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[var(--accent)]" style={{ color: accentColor }}>
+                          {platformConfig?.label || platform}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newLinks = [...formData.links];
+                          newLinks.splice(index, 1);
+                          handleChange("links", newLinks);
+                        }}
+                        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-500 transition-all"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <select
+                        value={platform}
+                        onChange={(e) => {
+                          const newLinks = [...formData.links];
+                          newLinks[index] = { ...newLinks[index], platform: e.target.value, handle: "", url: "" };
+                          handleChange("links", newLinks);
+                        }}
+                        className="w-full p-3 rounded-xl bg-black/40 border border-white/5 focus:border-[var(--accent)] outline-none transition-all text-sm font-medium"
+                      >
+                        {Object.entries(SOCIAL_PLATFORMS).map(([key, cfg]) => (
+                          <option key={key} value={key}>{cfg.label}</option>
+                        ))}
+                      </select>
+                      <div className="relative">
+                        <input
+                          value={handle}
+                          onChange={(e) => {
+                            const newHandle = e.target.value;
+                            const newLinks = [...formData.links];
+                            newLinks[index] = {
+                              ...newLinks[index],
+                              handle: newHandle,
+                              url: buildSocialUrl(platform, newHandle),
+                            };
+                            handleChange("links", newLinks);
+                          }}
+                          className="w-full p-3 rounded-xl bg-black/40 border border-white/5 focus:border-[var(--accent)] outline-none transition-all font-mono text-sm"
+                          placeholder={platformConfig?.placeholder ?? "handle"}
+                        />
+                      </div>
+                    </div>
+                    {preview && (
+                      <p className="text-[10px] text-[var(--text-muted)] font-mono px-1 opacity-50 italic">
+                        {preview}
+                      </p>
+                    )}
+                  </Reorder.Item>
+                );
+              })}
+            </Reorder.Group>
             <button
               type="button"
-              onClick={() => handleChange("links", [...(formData.links || []), { platform: "twitter", handle: "", url: "", label: "" }])}
+              onClick={() => handleChange("links", [...(formData.links || []), { platform: "twitter", handle: "", url: "", label: "", _dragId: Math.random().toString(36).substr(2, 9) }])}
               className="w-full p-3 rounded-xl border border-dashed border-[var(--border-bright)] text-[var(--text-muted)] hover:text-white hover:border-[var(--accent)] transition-all text-sm"
             >
               + Agregar otra red
@@ -327,53 +366,81 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
       case "community":
         return (
           <div className="space-y-6">
-            <div className="section-label !text-[9px] px-1">// comunidades</div>
-            {(formData.communities || []).map((comm: any, index: number) => (
-              <div key={index} className="space-y-3 p-4 bg-[var(--surface2)] rounded-xl border border-[var(--border)]">
-                <div className="flex justify-between items-center mb-2">
-                  <div className="section-label !text-[9px]">// comunidad {index + 1}</div>
-                  <button 
-                    type="button"
-                    onClick={() => {
+            <div className="section-label !text-[9px] px-1 translate-y-2 opacity-50">// comunidades — arrastrá para reordenar</div>
+            <Reorder.Group axis="y" values={formData.communities || []} onReorder={(newComms) => handleChange("communities", newComms)} className="space-y-3 pt-4">
+              {(formData.communities || []).map((comm: any, index: number) => (
+                <Reorder.Item 
+                  key={comm._dragId} 
+                  value={comm}
+                  whileDrag={{ scale: 1.02, boxShadow: "0 20px 40px rgba(0,0,0,0.4)" }}
+                  className="space-y-4 p-4 bg-black/20 rounded-2xl border border-white/5 relative group/item sortable-item"
+                >
+                  <div className="flex justify-between items-center mb-1">
+                    <div className="flex items-center gap-2">
+                      <div className="drag-handle p-1.5 -ml-1 text-white/20 group-hover/item:text-white/40 transition-colors bg-white/5 rounded-lg">
+                        <GripVertical size={14} />
+                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-[var(--accent)]" style={{ color: comm.color || accentColor }}>
+                        {comm.name || `Comunidad ${index + 1}`}
+                      </span>
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        const newComms = [...formData.communities];
+                        newComms.splice(index, 1);
+                        handleChange("communities", newComms);
+                      }}
+                      className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-500 transition-all"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <input
+                      value={comm.name || ""}
+                      onChange={(e) => {
+                        const newComms = [...formData.communities];
+                        newComms[index] = { ...newComms[index], name: e.target.value };
+                        handleChange("communities", newComms);
+                      }}
+                      className="w-full p-3 rounded-xl bg-black/40 border border-white/5 focus:border-[var(--accent)] outline-none transition-all font-bold text-sm"
+                      placeholder="Nombre de la comunidad"
+                    />
+                    <div className="flex items-center gap-3 bg-black/20 p-1.5 px-3 rounded-xl border border-white/5">
+                       <div className="w-6 h-6 rounded-full border border-white/10 overflow-hidden shrink-0 relative">
+                         <input
+                            type="color"
+                            value={comm.color || formData.accentColor || "#C8FF00"}
+                            onChange={(e) => {
+                              const newComms = [...formData.communities];
+                              newComms[index] = { ...newComms[index], color: e.target.value };
+                              handleChange("communities", newComms);
+                            }}
+                            className="absolute -inset-2 w-10 h-10 cursor-pointer"
+                          />
+                       </div>
+                       <div className="text-[9px] text-[var(--text-muted)] uppercase tracking-widest font-black opacity-60">Color del badge</div>
+                    </div>
+                  </div>
+
+                  <input
+                    value={comm.link || ""}
+                    onChange={(e) => {
                       const newComms = [...formData.communities];
-                      newComms.splice(index, 1);
+                      newComms[index] = { ...newComms[index], link: e.target.value };
                       handleChange("communities", newComms);
                     }}
-                    className="text-red-500 hover:text-red-400 text-xs font-mono"
-                  >
-                    Eliminar
-                  </button>
-                </div>
-                <input
-                  value={comm.name || ""}
-                  onChange={(e) => {
-                    const newComms = [...formData.communities];
-                    newComms[index] = { ...newComms[index], name: e.target.value };
-                    handleChange("communities", newComms);
-                  }}
-                  className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-bold"
-                  placeholder="Ethereum Argentina, Palermo Valley..."
-                />
-                <div className="flex items-center gap-3">
-                   <div className="w-10 h-10 rounded-full border border-[var(--border-bright)] overflow-hidden shrink-0 relative">
-                     <input
-                        type="color"
-                        value={comm.color || formData.accentColor || "#C8FF00"}
-                        onChange={(e) => {
-                          const newComms = [...formData.communities];
-                          newComms[index] = { ...newComms[index], color: e.target.value };
-                          handleChange("communities", newComms);
-                        }}
-                        className="absolute -inset-2 w-14 h-14 cursor-pointer"
-                      />
-                   </div>
-                   <div className="text-[9px] text-[var(--text-muted)] uppercase tracking-[0.1em] font-mono">Color del badge</div>
-                </div>
-              </div>
-            ))}
+                    className="w-full p-3 rounded-xl bg-black/40 border border-white/5 focus:border-[var(--accent)] outline-none transition-all font-mono text-xs opacity-70"
+                    placeholder="https://link-comunidad.com"
+                  />
+                </Reorder.Item>
+              ))}
+            </Reorder.Group>
              <button
               type="button"
-              onClick={() => handleChange("communities", [...(formData.communities || []), { name: "", color: formData.accentColor || "#C8FF00" }])}
+              onClick={() => handleChange("communities", [...(formData.communities || []), { name: "", color: formData.accentColor || "#C8FF00", _dragId: Math.random().toString(36).substr(2, 9) }])}
               className="w-full p-3 rounded-xl border border-dashed border-[var(--border-bright)] text-[var(--text-muted)] hover:text-white hover:border-[var(--accent)] transition-all text-sm"
             >
               + Agregar otra comunidad
@@ -732,39 +799,79 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
     const resizableTypes = ['hero', 'building', 'project', 'github', 'stack', 'community', 'writing', 'cv', 'media', 'certification', 'achievement', 'custom'];
     if (!resizableTypes.includes(block.type)) return null;
 
+    const isHero = block.type === 'hero';
+
     return (
-      <div className="space-y-4 pt-6 mt-6 border-t border-[var(--border)]/50">
-        <div className="section-label !text-[9px] px-1 text-[var(--accent)]">// tamaño en la grilla</div>
-        <div className="grid grid-cols-2 gap-4">
-           <div className="space-y-2">
-             <label className="text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-widest px-1 block mb-1">Ancho (Columnas)</label>
-             <select 
-               value={formData.col_span || 1}
-               onChange={(e) => handleChange("col_span", parseInt(e.target.value))}
-               className="w-full p-3 rounded-xl bg-[var(--bg)] border border-[var(--border-bright)] outline-none font-mono text-sm cursor-pointer hover:border-[var(--accent)] transition-colors focus:border-[var(--accent)] appearance-none"
-             >
-               <option value={1}>1 col (Chico)</option>
-               <option value={2}>2 cols (Mitad)</option>
-               <option value={3}>3 cols (Ancho)</option>
-               <option value={4}>4 cols (Completo)</option>
-             </select>
-           </div>
-           <div className="space-y-2">
-             <label className="text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-widest px-1 block mb-1">Alto (Filas)</label>
-             <select 
-               value={formData.row_span || 1}
-               onChange={(e) => handleChange("row_span", parseInt(e.target.value))}
-               className="w-full p-3 rounded-xl bg-[var(--bg)] border border-[var(--border-bright)] outline-none font-mono text-sm cursor-pointer hover:border-[var(--accent)] transition-colors focus:border-[var(--accent)] appearance-none"
-             >
-               <option value={1}>1 fila (Normal)</option>
-               <option value={2}>2 filas (Alto)</option>
-               <option value={3}>3 filas (Muy Alto)</option>
-             </select>
-           </div>
+      <div className="space-y-6 pt-8 mt-8 border-t border-white/5">
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: accentColor }} />
+          <div className="section-label !text-[10px] tracking-[0.2em] font-black">// CONFIGURACIÓN DE LA GRILLA</div>
         </div>
-        <p className="text-[10px] text-[var(--text-dim)] px-1">
-          Ajustá el tamaño del bloque para destacarlo. Tip: en celulares todos ocupan el 100% del ancho.
-        </p>
+
+        <div className={`grid ${isHero ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
+           <div className="space-y-3">
+             <label className="text-[10px] text-[var(--text-dim)] font-black uppercase tracking-widest px-1 block opacity-70">
+                Ancho del bloque
+             </label>
+             <div className="relative">
+               <select 
+                 value={formData.col_span || (isHero ? 2 : 1)}
+                 onChange={(e) => handleChange("col_span", parseInt(e.target.value))}
+                 className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none font-bold text-sm cursor-pointer hover:border-[var(--accent)] transition-all focus:ring-2 focus:ring-[var(--accent)]/20 appearance-none pr-10"
+                 style={{ '--accent': accentColor } as any}
+               >
+                 <option value={1}>1 Columna {isHero ? '(Slim)' : '(Mini)'}</option>
+                 <option value={2}>2 Columnas {isHero ? '(Completo)' : '(Estándar)'}</option>
+                 {!isHero && (
+                   <>
+                     <option value={3}>3 Columnas (Grande)</option>
+                     <option value={4}>4 Columnas (Full)</option>
+                   </>
+                 )}
+               </select>
+               <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
+                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                   <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                 </svg>
+               </div>
+             </div>
+           </div>
+
+           {!isHero && (
+             <div className="space-y-3">
+               <label className="text-[10px] text-[var(--text-dim)] font-black uppercase tracking-widest px-1 block opacity-70">
+                  Alto del bloque
+               </label>
+               <div className="relative">
+                 <select 
+                   value={formData.row_span || 1}
+                   onChange={(e) => handleChange("row_span", parseInt(e.target.value))}
+                   className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none font-bold text-sm cursor-pointer hover:border-[var(--accent)] transition-all focus:ring-2 focus:ring-[var(--accent)]/20 appearance-none pr-10"
+                   style={{ '--accent': accentColor } as any}
+                 >
+                   <option value={1}>1 Fila (Bajo)</option>
+                   <option value={2}>2 Filas (Medio)</option>
+                   <option value={3}>3 Filas (Alto)</option>
+                   <option value={4}>4 Filas (Máximo)</option>
+                 </select>
+                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
+                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                     <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                   </svg>
+                 </div>
+               </div>
+             </div>
+           )}
+        </div>
+        
+        <div className="p-4 bg-white/[0.03] rounded-2xl border border-white/5 flex items-start gap-3">
+          <div className="p-1.5 rounded-lg bg-white/5 text-[var(--accent)]" style={{ color: accentColor }}>
+            <Sparkles size={14} />
+          </div>
+          <p className="text-[10px] text-[var(--text-muted)] leading-relaxed font-medium">
+             <span className="text-[var(--text-dim)]">Tip:</span> {isHero ? 'El bloque de Bio tiene una altura fija de 2 filas para asegurar que tu identidad destaque.' : 'Los bloques más anchos o altos captan un <span className="text-white">40% más de atención</span>.'} En mobile, todos los bloques se adaptan automáticamente al ancho disponible.
+          </p>
+        </div>
       </div>
     );
   };

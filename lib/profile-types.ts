@@ -145,6 +145,7 @@ export interface Community {
   name: string;
   color?: string;
   badgeUrl?: string; // keeping for backward compatibility
+  link?: string;
 }
 
 export interface CommunityBlockData extends BaseBlock {

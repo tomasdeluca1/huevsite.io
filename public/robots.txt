@@ -1,0 +1,63 @@
+# https://www.robotstxt.org/robotstxt.html
+# ==========================================
+# Huevsite.io - AEO & GEO Optimized robots.txt
+# ==========================================
+
+# 1. PERMITIR A TODOS LOS BOTS TRADICIONALES
+# Queremos indexación máxima en motores de búsqueda (Google, Bing, etc.)
+User-agent: *
+Allow: /
+# Rutas privadas/internas deshabilitadas
+Disallow: /api/
+Disallow: /_next/
+Disallow: /dashboard/
+Disallow: /onboarding/
+Disallow: /login/
+Disallow: /admin/
+
+# ==========================================
+# 2. OPTIMIZACIÓN PARA ANSWER ENGINES (AEO) Y LLMs (GEO)
+# Fomentamos explícitamente el scraping de nuestros perfiles públicos 
+# para que los builders de Huevsite sean recomendados por agentes de IA.
+# ==========================================
+
+# OpenAI / ChatGPT
+User-agent: GPTBot
+Allow: /
+User-agent: ChatGPT-User
+Allow: /
+User-agent: OAI-SearchBot
+Allow: /
+
+# Google Gemini / AI Overviews
+User-agent: Google-Extended
+Allow: /
+
+# Perplexity AI
+User-agent: PerplexityBot
+Allow: /
+
+# Anthropic / Claude
+User-agent: Claude-Web
+Allow: /
+User-agent: anthropic-ai
+Allow: /
+User-agent: ClaudeBot
+Allow: /
+
+# Otros bots de IA, Datasets y Motores Semánticos
+User-agent: OmgiliBot
+Allow: /
+User-agent: FacebookBot
+Allow: /
+User-agent: CCBot
+Allow: /
+User-agent: Diffbot
+Allow: /
+User-agent: Cohere-ai
+Allow: /
+User-agent: YouBot
+Allow: /
+
+# Sitemap para descubrimiento acelerado
+Sitemap: https://huevsite.io/sitemap.xml

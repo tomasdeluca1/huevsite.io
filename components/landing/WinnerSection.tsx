@@ -113,7 +113,7 @@ export function WinnerSection({ initialData }: WinnerSectionProps) {
               transition={{ duration: 0.5, ease: "easeInOut" }}
               className="w-full md:col-span-2 max-w-5xl mx-auto"
             >
-              <div className="demo-browser" style={{ height: '100%', minHeight: '600px' }}>
+              <div className="demo-browser flex flex-col h-[70vh] min-h-[500px] max-h-[800px] w-full">
                 <div className="browser-bar">
                   <div className="browser-dots">
                     <span className="bd1"></span>
@@ -131,7 +131,7 @@ export function WinnerSection({ initialData }: WinnerSectionProps) {
                 </div>
 
                 <div className="profile-page !p-4 md:!p-8 scrollbar-hide bg-black/20 h-full overflow-y-auto">
-                  <div className="relative z-10 w-full max-w-4xl mx-auto pointer-events-none">
+                  <div className="relative z-10 w-full max-w-4xl mx-auto">
                     <ProfileGrid 
                       blocks={profilesToShow[0].blocks} 
                       accentColor={profilesToShow[0].accent_color}
@@ -155,7 +155,7 @@ export function WinnerSection({ initialData }: WinnerSectionProps) {
               transition={{ duration: 0.8, delay: idx * 0.2 }}
               className={`w-full ${profilesToShow.length === 1 ? 'md:col-span-2 max-w-5xl mx-auto' : ''}`}
             >
-              <div className="demo-browser" style={{ height: '100%', minHeight: '600px' }}>
+              <div className="demo-browser flex flex-col h-[70vh] min-h-[500px] max-h-[800px] w-full">
                 <div className="browser-bar">
                   <div className="browser-dots">
                     <span className="bd1"></span>
@@ -172,7 +172,7 @@ export function WinnerSection({ initialData }: WinnerSectionProps) {
                   </Link>
                 </div>
 
-                <div className="profile-page !p-4 md:!p-8 scrollbar-hide bg-black/20 h-full overflow-y-auto pointer-events-none">
+                <div className="profile-page !p-4 md:!p-8 scrollbar-hide bg-black/20 h-full overflow-y-auto">
                   <div className="relative z-10 w-full max-w-4xl mx-auto">
                     <ProfileGrid 
                       blocks={profile.blocks} 

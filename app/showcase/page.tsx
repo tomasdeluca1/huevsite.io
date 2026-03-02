@@ -20,6 +20,7 @@ interface ShowcaseData {
   finalists: Array<{ userId: string; count: number; user: ShowcaseUser }>;
 }
 
+import { Countdown } from "@/components/social/Countdown";
 import { NominateButton } from "@/components/social/NominateButton";
 
 
@@ -47,14 +48,19 @@ export default function ShowcasePage() {
         </header>
 
         <div className="mb-16 text-center">
-          <div className="section-label mb-3 justify-center">// showcase mensual</div>
+          <div className="section-label mb-3 justify-center">// showcase semanal</div>
           <h1 className="text-5xl font-extrabold tracking-tighter mb-4">
-            El builder del mes.
+            El builder de la semana.
           </h1>
-          <p className="section-sub mx-auto max-w-md">
+          <p className="section-sub mx-auto max-w-md mb-6">
             El builder más nominado de Argentina y LATAM.<br />
             {data?.month && <span className="font-mono text-xs text-[var(--accent)]">{data.month}</span>}
           </p>
+          
+          <div className="inline-flex flex-col items-center p-4 rounded-2xl bg-[var(--surface)] border border-[var(--border)]">
+            <span className="text-xs text-[var(--text-dim)] font-mono uppercase mb-2">Próximo ganador en:</span>
+            <Countdown />
+          </div>
         </div>
 
         {loading ? (
@@ -144,7 +150,7 @@ export default function ShowcasePage() {
             {/* Finalists */}
             {data.finalists.length > 0 && (
               <div>
-                <div className="section-label mb-6">// finalistas del mes</div>
+                <div className="section-label mb-6">// finalistas de la semana</div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {data.finalists.map((finalist, i) => (
                     <motion.div
@@ -190,7 +196,7 @@ export default function ShowcasePage() {
 
             {data.finalists.length === 0 && !data.winner && (
               <p className="text-center text-xs text-[var(--text-muted)] font-mono mt-8">
-                Todavía no hay nominados este mes. Explorá perfiles y nominá builders que te inspiran.
+                Todavía no hay nominados esta semana. Explorá perfiles y nominá builders que te inspiran.
               </p>
             )}
           </>

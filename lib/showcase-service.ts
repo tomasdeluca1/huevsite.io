@@ -1,7 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 
-function getWeekString(date: Date): string {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+export function getWeekString(date: Date): string {
+  // Ajuste a horario de Argentina (UTC-3)
+  const argTime = new Date(date.getTime() - 3 * 60 * 60 * 1000);
+  const d = new Date(Date.UTC(argTime.getUTCFullYear(), argTime.getUTCMonth(), argTime.getUTCDate()));
   const dayNum = d.getUTCDay() || 7;
   d.setUTCDate(d.getUTCDate() + 4 - dayNum);
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
@@ -9,7 +11,7 @@ function getWeekString(date: Date): string {
   return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
 }
 
-function getCurrentWeek(): string {
+export function getCurrentWeek(): string {
   return getWeekString(new Date());
 }
 

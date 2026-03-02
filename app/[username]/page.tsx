@@ -7,20 +7,12 @@ import { isEnabled } from "@/lib/feature-flags";
 import { EndorsementsSection } from "@/components/social/EndorsementsSection";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { createClient } from "@/lib/supabase/server";
-
+import { getCurrentWeek } from "@/lib/showcase-service";
 interface Props {
   params: { username: string };
 }
 
-function getCurrentWeek(): string {
-  const now = new Date();
-  const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
-  const dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
-}
+
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const profile = await profileService.getProfile(params.username);

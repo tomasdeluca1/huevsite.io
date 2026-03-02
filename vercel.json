@@ -1,8 +1,8 @@
 {
   "crons": [
     {
-      "path": "/api/admin/pick-winner?secret=ADMIN_SECRET",
-      "schedule": "0 0 * * 0"
+      "path": "/api/admin/pick-winner",
+      "schedule": "0 3 * * 1"
     }
   ]
 }

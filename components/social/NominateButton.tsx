@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Star, Loader2, Info } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -24,8 +25,10 @@ export function NominateButton({
   const [remaining, setRemaining] = useState<number | null>(null);
   const [anotherNominated, setAnotherNominated] = useState<NominatedUser | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     checkStatus();
   }, [userId]);
 
@@ -165,7 +168,8 @@ export function NominateButton({
       </div>
 
       {/* Confirmation Modal */}
-      <AnimatePresence>
+      {mounted && typeof document !== "undefined" && createPortal(
+        <AnimatePresence>
         {showModal && anotherNominated && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
             <motion.div 
@@ -223,7 +227,9 @@ export function NominateButton({
             </motion.div>
           </div>
         )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
     </>
   );
 }

@@ -20,8 +20,12 @@ export async function POST(request: NextRequest) {
     const secret = searchParams.get("secret");
     const requestedWeek = searchParams.get("week");
 
-    // Simple auth check via environment variable
-    if (!secret || secret !== process.env.ADMIN_SECRET) {
+    // Check auth via Vercel CRON_SECRET or ADMIN_SECRET
+    const authHeader = request.headers.get("authorization");
+    const isValidCron = authHeader === `Bearer ${process.env.CRON_SECRET}`;
+    const isValidAdmin = secret && secret === process.env.ADMIN_SECRET;
+
+    if (!isValidCron && !isValidAdmin) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -29,7 +33,8 @@ export async function POST(request: NextRequest) {
     // probablemente quiere cerrar la semana que pasó.
     const week = requestedWeek || getPreviousWeek();
     
-    const supabase = await createClient();
+    // Use standard authenticated client
+    const supabase = createClient();
 
     // 1. Verificar si ya hay ganador para esa semana
     const { data: existingWinner } = await supabase
@@ -84,18 +89,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No se encontró el perfil de los ganadores." }, { status: 404 });
     }
 
-    // 4. Insertar ganadores en DB
-    const inserts = winnerProfiles.map(wp => ({
-      user_id: wp.id,
-      week: week,
-    }));
+    // 4. Ejecutar función RPC que realiza todas las inserciones/borrados DB de forma segura
+    const { error: rpcError } = await supabase.rpc('admin_pick_winner', {
+      p_week: week,
+      p_winner_ids: winnerIds,
+      p_secret: process.env.ADMIN_SECRET
+    });
 
-    const { error: winError } = await supabase
-      .from("showcase_winners")
-      .insert(inserts);
-
-    if (winError) {
-      return NextResponse.json({ error: winError.message }, { status: 500 });
+    if (rpcError) {
+      console.error("RPC Error:", rpcError);
+      return NextResponse.json({ error: rpcError.message }, { status: 500 });
     }
 
     // 5. Enviar Email con Resend a todos los ganadores
@@ -118,18 +121,6 @@ export async function POST(request: NextRequest) {
           // No fallamos el request si falla el email
         }
       }
-    }
-
-    // 6. Eliminar Nominaciones de esa semana
-    await supabase.from("showcase_nominations").delete().eq("week", week);
-
-    // 7. Insertar Actividad en el Feed
-    for (const winnerProfile of winnerProfiles) {
-      await supabase.from("activities").insert({
-        user_id: winnerProfile.id,
-        type: "showcase_winner",
-        data: { week }
-      });
     }
 
     return NextResponse.json({ 

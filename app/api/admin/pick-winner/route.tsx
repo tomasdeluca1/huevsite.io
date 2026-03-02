@@ -1,32 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { Resend } from "resend";
+import { getWeekString } from "@/lib/showcase-service";
 import { WinnerEmail } from "@/components/emails/WinnerEmail";
 
 export const dynamic = "force-dynamic";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-function getCurrentWeek(): string {
-  const now = new Date();
-  const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
-  const dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
-}
-
 // Para obtener la semana anterior (útil si el cron corre apenas empieza la nueva)
 function getPreviousWeek(): string {
-  const now = new Date();
-  const prev = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const d = new Date(Date.UTC(prev.getFullYear(), prev.getMonth(), prev.getDate()));
-  const dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+  const prev = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  return getWeekString(prev);
 }
 
 export async function POST(request: NextRequest) {

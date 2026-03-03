@@ -70,8 +70,8 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
 
         <h1>
           El <span className="accent">portfolio</span><br />
-          pensado para<br />
-          <span style={{ color: "var(--text)" }}>builders.</span>
+          que no da<br />
+          <span className="strike">vergüenza</span> ajena.
         </h1>
 
         <p>Mostrá quién sos y qué buildeás. Sin diseñar desde cero y con personalidad propia.</p>

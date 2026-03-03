@@ -67,7 +67,7 @@ export default function SetupPage() {
       return;
     }
 
-    // Crear un bento grid por defecto interesante para el usuario
+    // Crear un huevsite grid por defecto interesante para el usuario
     const initialBlocks: any[] = [
       {
         user_id: user.id,

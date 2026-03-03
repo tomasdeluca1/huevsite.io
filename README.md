@@ -101,10 +101,10 @@ app/
 
 components/
 ├── onboarding/           ← Componentes del onboarding (YA COMPLETOS)
-├── blocks/               ← 9 tipos de bloques para el bento grid
+├── blocks/               ← 9 tipos de bloques para el huevsite grid
 ├── dashboard/            ← UI del editor (drag & drop, modals, etc.)
 └── profile/
-    └── ProfileGrid.tsx   ← Renderiza el bento grid público
+    └── ProfileGrid.tsx   ← Renderiza el huevsite grid público
 
 lib/
 ├── supabase/
@@ -133,7 +133,7 @@ supabase/
 - 5 pasos:
   1. Elegir roles (developer, designer, founder, indie_hacker)
   2. Conectar GitHub (opcional, importa repos y actividad)
-  3. Elegir layout del bento (dev_heavy, founder_heavy, minimal, creative)
+  3. Elegir layout del huevsite (dev_heavy, founder_heavy, minimal, creative)
   4. Elegir color de acento
   5. Elegir username (con validación real-time)
 - Al finalizar → POST a `/api/profile/create`
@@ -145,7 +145,7 @@ supabase/
   - URL pública del perfil
   - Selector de color
   - Agregar bloques
-- Canvas con bento grid editable
+- Canvas con huevsite grid editable
 - **Autosave con debounce de 1.5s**
 - Botón "Ver perfil" abre tab nueva con `/[username]`
 
@@ -159,7 +159,7 @@ supabase/
 
 ## Tipos de bloques
 
-El bento grid soporta 9 tipos de bloques:
+El huevsite grid soporta 9 tipos de bloques:
 
 1. **hero** — Avatar, nombre, rol, tagline, tags
 2. **building** — Proyecto actual que estás haciendo
@@ -247,7 +247,7 @@ Cada bloque tiene:
 - **Mono**: 'JetBrains Mono', monospace
 
 ### Grid
-- **Bento Grid**: 4 columnas en desktop, 2 en tablet, 1 en mobile (< 640px)
+- **Huevsite Grid**: 4 columnas en desktop, 2 en tablet, 1 en mobile (< 640px)
 - **Spacing**: Grid de 8pt
 
 ---
@@ -286,7 +286,7 @@ Vercel va a detectar automáticamente Next.js y configurar todo.
 ✅ Importación de datos de GitHub (repos, stats, heatmap)
 ✅ Dashboard con drag & drop
 ✅ Autosave con debounce (1.5s)
-✅ 9 tipos de bloques para el bento grid
+✅ 9 tipos de bloques para el huevsite grid
 ✅ Perfiles públicos con SSR
 ✅ OG images dinámicas
 ✅ Responsive mobile (grid colapsa a 1 columna)

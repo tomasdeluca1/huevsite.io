@@ -10,7 +10,7 @@ export function StackBlock({ data, accentColor }: { data: StackBlockData; accent
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bento-block block-stack h-full flex flex-col justify-between"
+      className="huevsite-block block-stack h-full flex flex-col justify-between"
     >
       <div className="block-label opacity-40 uppercase tracking-[0.2em] text-[10px] mb-6">Tech Stack</div>
       <div className="flex flex-wrap gap-2.5 mt-auto">
@@ -47,7 +47,7 @@ export function CommunityBlock({ data, accentColor }: { data: CommunityBlockData
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bento-block block-community h-full group flex flex-col justify-between"
+      className="huevsite-block block-community h-full group flex flex-col justify-between"
     >
       <div className="block-label opacity-40 uppercase tracking-[0.2em] text-[10px] mb-6">Comunidades</div>
       <div className="flex flex-wrap gap-3 mt-auto">
@@ -92,7 +92,7 @@ export function WritingBlock({ data, accentColor }: { data: WritingBlockData; ac
   };
 
   return (
-    <motion.div className="bento-block block-writing h-full">
+    <motion.div className="huevsite-block block-writing h-full">
       <div className="block-label opacity-40 uppercase tracking-[0.2em] text-[10px] mb-4">Writing</div>
       <div className="writing-posts relative z-20">
         {posts.length > 0 ? (

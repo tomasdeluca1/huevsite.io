@@ -17,7 +17,7 @@ export function BuildingBlock({ data, accentColor }: Props) {
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="bento-block block-building h-full"
+      className="huevsite-block block-building h-full"
       style={{ '--accent': accentColor, borderColor: `${accentColor}40` } as any}
     >
       <div className="block-label">

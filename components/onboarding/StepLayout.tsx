@@ -97,7 +97,7 @@ export function StepLayout({ state, onChange, onNext }: StepLayoutProps) {
                 </span>
               )}
               
-              <BentoPreview blocks={layout.blocks} selected={selected} />
+              <HuevsitePreview blocks={layout.blocks} selected={selected} />
 
               <div className="nm !text-sm mt-4">{layout.label}</div>
               <div className="dc !text-[11px] leading-snug mt-1">{layout.desc}</div>
@@ -117,7 +117,7 @@ export function StepLayout({ state, onChange, onNext }: StepLayoutProps) {
   );
 }
 
-function BentoPreview({
+function HuevsitePreview({
   blocks,
   selected,
 }: {

@@ -116,7 +116,7 @@ export const MOCK_PROFILE: ProfileData = {
       visible: true,
       posts: [
         { title: "Por qué dejé Google por una startup", date: "22 Feb", link: "#" },
-        { title: "El futuro de los portfolios bento", date: "15 Feb", link: "#" },
+        { title: "El futuro de los portfolios huevsite", date: "15 Feb", link: "#" },
       ]
     }
   ],

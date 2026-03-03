@@ -96,7 +96,7 @@ export function OnboardingDone({ state }: OnboardingDoneProps) {
         </div>
 
         <div className="mt-12 text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-[0.3em] opacity-40">
-          bento.me cerró • nosotros no
+          huevsite.me cerró • nosotros no
         </div>
       </motion.div>
     </div>

@@ -19,7 +19,7 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
   const isYouTube = data.url.includes("youtube.com") || data.url.includes("youtu.be");
   const isVimeo = data.url.includes("vimeo.com");
   const isVideo = isDirectVideo || isYouTube || isVimeo;
-  
+
   const isExternal = !data.url.includes('supabase.co') && !data.url.startsWith('/storage');
 
   // Lock scroll when zoomed
@@ -46,8 +46,8 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
 
   return (
     <>
-      <motion.div 
-        className="bento-block block-media h-full p-0 overflow-hidden relative group cursor-zoom-in border"
+      <motion.div
+        className="huevsite-block block-media h-full p-0 overflow-hidden relative group cursor-zoom-in border"
         style={{ borderColor: isDarkColor(accentColor) ? 'rgba(255,255,255,0.1)' : 'var(--border)' }}
         onClick={() => setIsZoomed(true)}
       >
@@ -74,7 +74,7 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
             className="w-full h-full object-cover absolute inset-0 transition-all duration-700 group-hover:scale-105"
           />
         )}
-        
+
         {/* Overlay gradient for text readability */}
         {(data.title || data.description) && (
           <div className="absolute inset-x-0 bottom-0 p-8 bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end transform translate-y-2 group-hover:translate-y-0 transition-transform">
@@ -99,9 +99,9 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
         {/* Play indicator for videos */}
         {isVideo && (
           <div className="absolute inset-0 flex items-center justify-center opacity-40 group-hover:opacity-100 transition-opacity pointer-events-none">
-             <div className="w-16 h-16 rounded-full border border-white/20 bg-white/5 backdrop-blur-sm flex items-center justify-center">
-                <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[12px] border-l-white border-b-[8px] border-b-transparent ml-1" />
-             </div>
+            <div className="w-16 h-16 rounded-full border border-white/20 bg-white/5 backdrop-blur-sm flex items-center justify-center">
+              <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[12px] border-l-white border-b-[8px] border-b-transparent ml-1" />
+            </div>
           </div>
         )}
       </motion.div>
@@ -109,7 +109,7 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
       {/* Lightbox Modal */}
       <AnimatePresence>
         {isZoomed && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -126,7 +126,7 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
               <div className="relative w-full aspect-video md:aspect-auto flex justify-center bg-black/40 rounded-3xl overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-white/10 group/modal">
                 {isYouTube || isVimeo ? (
                   <iframe
-                    src={isYouTube 
+                    src={isYouTube
                       ? `https://www.youtube.com/embed/${data.url.includes("youtu.be") ? data.url.split("/").pop() : new URL(data.url).searchParams.get("v")}?autoplay=1`
                       : `https://player.vimeo.com/video/${data.url.split("/").pop()}?autoplay=1`
                     }
@@ -152,7 +152,7 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
 
                 {/* Overlay link button inside media if external */}
                 {isExternal && (
-                  <a 
+                  <a
                     href={data.url}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -162,20 +162,20 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
                   </a>
                 )}
               </div>
-              
+
               <div className="mt-10 text-center max-w-3xl">
                 {data.title && <h3 className="text-white text-3xl md:text-4xl font-black tracking-tighter mb-4">{data.title}</h3>}
                 {data.description && <p className="text-white/60 text-lg leading-relaxed font-medium mb-8">{data.description}</p>}
-                
+
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                  <button 
+                  <button
                     className="w-full sm:w-auto px-10 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold text-sm transition-all"
                     onClick={() => setIsZoomed(false)}
                   >
                     Esc para cerrar
                   </button>
                   {isExternal && (
-                    <a 
+                    <a
                       href={data.url}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -197,16 +197,16 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
 
 export function CertificationBlock({ data, accentColor }: { data: CertificationBlockData; accentColor: string }) {
   return (
-    <motion.div className="bento-block block-certification h-full flex flex-col justify-between group overflow-hidden relative" style={{ backgroundColor: 'var(--surface)'}}>
+    <motion.div className="huevsite-block block-certification h-full flex flex-col justify-between group overflow-hidden relative" style={{ backgroundColor: 'var(--surface)' }}>
       {/* Decorative background element */}
-      <div 
+      <div
         className="absolute -right-6 -top-6 w-24 h-24 opacity-10 rounded-full blur-2xl group-hover:opacity-20 transition-opacity duration-500"
         style={{ backgroundColor: accentColor }}
       />
-      
+
       <div>
         <div className="flex justify-between items-start mb-4 relative z-10">
-          <div 
+          <div
             className="w-10 h-10 rounded-[10px] flex items-center justify-center border bg-black/40 backdrop-blur-sm"
             style={{ borderColor: `${accentColor}40`, color: accentColor }}
           >
@@ -217,9 +217,9 @@ export function CertificationBlock({ data, accentColor }: { data: CertificationB
             )}
           </div>
           {data.link && (
-            <a 
-              href={data.link} 
-              target="_blank" 
+            <a
+              href={data.link}
+              target="_blank"
               rel="noopener noreferrer"
               className="opacity-50 hover:opacity-100 transition-opacity"
               style={{ color: accentColor }}
@@ -228,16 +228,16 @@ export function CertificationBlock({ data, accentColor }: { data: CertificationB
             </a>
           )}
         </div>
-        
+
         <h3 className="text-xl font-bold text-white tracking-tight leading-tight mb-2 group-hover:text-[var(--accent)] transition-colors relative z-10" style={{ '--accent': accentColor } as any}>
           {data.name}
         </h3>
-        
+
         <div className="flex items-center gap-2 mb-1 relative z-10">
           <span className="text-sm font-medium text-white/90">{data.issuer}</span>
         </div>
       </div>
-      
+
       <div className="text-xs font-mono text-[var(--text-muted)] mt-4 pt-4 border-t border-[var(--border)] relative z-10">
         {data.date}
       </div>
@@ -247,23 +247,23 @@ export function CertificationBlock({ data, accentColor }: { data: CertificationB
 
 export function AchievementBlock({ data, accentColor }: { data: AchievementBlockData; accentColor: string }) {
   return (
-    <motion.div className="bento-block block-achievement h-full relative group p-6 border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] transition-colors overflow-hidden">
-      <div 
+    <motion.div className="huevsite-block block-achievement h-full relative group border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] transition-colors overflow-hidden">
+      <div
         className="absolute left-0 top-0 bottom-0 w-1 opacity-50 group-hover:opacity-100 transition-opacity"
         style={{ backgroundColor: accentColor }}
       />
-      
+
       <div className="flex items-center gap-3 mb-3 relative z-10">
         <Trophy size={18} style={{ color: accentColor }} />
         <h3 className="text-lg font-bold text-white tracking-tight">
           {data.title}
         </h3>
       </div>
-      
+
       <p className="text-sm text-[var(--text-dim)] leading-relaxed mb-4 relative z-10">
         {data.description}
       </p>
-      
+
       {data.date && (
         <div className="text-xs font-mono px-2 py-1 rounded inline-block relative z-10" style={{ backgroundColor: `${accentColor}15`, color: accentColor }}>
           {data.date}
@@ -275,11 +275,11 @@ export function AchievementBlock({ data, accentColor }: { data: AchievementBlock
 
 export function CustomBlock({ data, accentColor }: { data: CustomBlockData; accentColor: string }) {
   return (
-    <motion.div className="bento-block block-custom h-full flex flex-col group relative overflow-hidden bg-gradient-to-b from-[var(--surface)] to-black/40 p-6">
+    <motion.div className="huevsite-block block-custom h-full flex flex-col group relative overflow-hidden bg-gradient-to-b from-[var(--surface)] to-black/40">
       <div className="block-label mb-3 uppercase tracking-widest text-[10px] font-bold relative z-10" style={{ color: accentColor }}>
         // {data.label}
       </div>
-      
+
       <div className="flex-1 relative z-10">
         <h3 className="text-2xl font-black text-white tracking-tight mb-3">
           {data.title}

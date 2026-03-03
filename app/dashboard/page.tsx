@@ -485,7 +485,7 @@ export default function DashboardPage() {
       case "achievement": return <AchievementBlock {...props} />;
       case "custom": return <CustomBlock {...props} />;
       default: return (
-        <div className="bento-block h-full flex items-center justify-center p-8 border-dashed border-[var(--border-bright)]">
+        <div className="huevsite-block h-full flex items-center justify-center p-8 border-dashed border-[var(--border-bright)]">
           <p className="text-xs text-[var(--text-dim)] font-mono text-center">Bloque fantasma 🇦🇷</p>
         </div>
       );
@@ -784,7 +784,7 @@ export default function DashboardPage() {
               items={profile.blocks.map(b => b.id)}
               strategy={rectSortingStrategy}
             >
-              <div className="bento-grid min-h-[600px] p-8 rounded-[2rem] border border-dashed border-[var(--border-bright)] bg-white/[0.02]">
+              <div className="huevsite-grid min-h-[600px] p-8 rounded-[2rem] border border-dashed border-[var(--border-bright)] bg-white/[0.02]">
                 {profile.blocks.length === 0 ? (
                   <div className="col-span-full flex flex-col items-center justify-center py-40 text-center">
                     <div className="w-16 h-16 rounded-full bg-[var(--surface2)] flex items-center justify-center mb-6 border border-[var(--border-bright)] animate-pulse">
@@ -800,7 +800,7 @@ export default function DashboardPage() {
                     {/* Fallback Header Preview if no Hero block exists */}
                     {!profile.blocks.some(b => b.type === 'hero') && profile.displayName && (
                       <div className="md:col-span-2 md:row-span-1 opacity-50 grayscale-[0.5]">
-                        <div className="bento-block flex flex-col justify-center p-8 bg-[var(--surface)] border border-dashed border-[var(--border)] rounded-[2rem]">
+                        <div className="huevsite-block flex flex-col justify-center p-8 bg-[var(--surface)] border border-dashed border-[var(--border)] rounded-[2rem]">
                           <div className="flex justify-between items-start mb-2">
                             <h1 className="text-3xl font-extrabold text-white mb-1">{profile.displayName}</h1>
                             <span className="text-[9px] font-mono text-[var(--accent)] border border-[var(--accent)] px-2 py-0.5 rounded-full uppercase">Fallback</span>

@@ -34,9 +34,9 @@ export function GitHubBlock({ data, accentColor }: Props) {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="bento-block block-github h-full flex flex-col justify-between relative group !p-5"
+      className="huevsite-block block-github h-full flex flex-col justify-between relative group"
     >
-      <a 
+      <a
         href={`https://github.com/${username}`}
         target="_blank"
         rel="noopener noreferrer"
@@ -63,7 +63,7 @@ export function GitHubBlock({ data, accentColor }: Props) {
           </div>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-[repeat(13,1fr)] gap-[3px] mt-auto">
         {heatmap.map((cls, i) => (
           <div

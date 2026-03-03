@@ -11,6 +11,15 @@ interface LandingPageClientProps {
 
 export default function LandingPageClient({ showcaseData }: LandingPageClientProps) {
   const [heatmap, setHeatmap] = useState<string[]>([]);
+  const [selectedRoles, setSelectedRoles] = useState<string[]>(['Developer', 'Founder']);
+
+  const toggleRole = (role: string) => {
+    if (selectedRoles.includes(role)) {
+      setSelectedRoles(selectedRoles.filter(r => r !== role));
+    } else {
+      setSelectedRoles([...selectedRoles, role]);
+    }
+  };
 
   useEffect(() => {
     // Si caemos en /?code=... (por error de config de Supabase), redirigimos al callback
@@ -61,11 +70,11 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
 
         <h1>
           El <span className="accent">portfolio</span><br />
-          que no da<br />
-          <span className="strike">vergüenza</span> ajena.
+          pensado para<br />
+          <span style={{ color: "var(--text)" }}>builders.</span>
         </h1>
 
-        <p>Mostrá quién sos y qué buildeás. Sin diseñar desde cero, sin LinkedIn genérico. Con personalidad propia.</p>
+        <p>Mostrá quién sos y qué buildeás. Sin diseñar desde cero y con personalidad propia.</p>
 
         <div className="hero-ctas">
           <Link href="/login" className="btn btn-accent">Empezar gratis</Link>
@@ -83,7 +92,7 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
           <span className="social-proof-text"><strong>+{(Math.floor((showcaseData.total_builders || 50) / 10) * 10).toLocaleString()} builders</strong> ya armaron su huevsite</span>
         </div>
       </section>
-      
+
       <WinnerSection initialData={showcaseData} />
 
       {/* ONBOARDING SECTION */}
@@ -127,25 +136,25 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
           </div>
 
           <div className="onboard-ui">
-            <div className="ou-q">¿Qué sos, básicamente?</div>
-            <div className="ou-sub">Podés elegir más de uno, che.</div>
+            <div className="ou-q">¿Qué perfil tenés?</div>
+            <div className="ou-sub">Podés elegir más de uno.</div>
             <div className="ou-options">
-              <div className="ou-option selected" onClick={(e) => e.currentTarget.classList.toggle('selected')}>
+              <div className={`ou-option ${selectedRoles.includes('Developer') ? 'selected' : ''}`} onClick={() => toggleRole('Developer')}>
                 <div className="em" style={{ fontSize: '28px', marginBottom: '6px' }}>⌨️</div>
                 <div className="nm">Developer</div>
                 <div className="dc">Código, repos, commits</div>
               </div>
-              <div className="ou-option" onClick={(e) => e.currentTarget.classList.toggle('selected')}>
+              <div className={`ou-option ${selectedRoles.includes('Designer') ? 'selected' : ''}`} onClick={() => toggleRole('Designer')}>
                 <div className="em" style={{ fontSize: '28px', marginBottom: '6px' }}>🎨</div>
                 <div className="nm">Designer</div>
                 <div className="dc">Figma, UI, sistemas</div>
               </div>
-              <div className="ou-option selected" onClick={(e) => e.currentTarget.classList.toggle('selected')}>
+              <div className={`ou-option ${selectedRoles.includes('Founder') ? 'selected' : ''}`} onClick={() => toggleRole('Founder')}>
                 <div className="em" style={{ fontSize: '28px', marginBottom: '6px' }}>🚀</div>
                 <div className="nm">Founder</div>
                 <div className="dc">Startups, MRR, tracción</div>
               </div>
-              <div className="ou-option" onClick={(e) => e.currentTarget.classList.toggle('selected')}>
+              <div className={`ou-option ${selectedRoles.includes('Indie Hacker') ? 'selected' : ''}`} onClick={() => toggleRole('Indie Hacker')}>
                 <div className="em" style={{ fontSize: '28px', marginBottom: '6px' }}>🛠</div>
                 <div className="nm">Indie Hacker</div>
                 <div className="dc">Side projects, solodev</div>
@@ -161,7 +170,7 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
       <section className="tokens-section">
         <div className="section-label">// sistema de diseño</div>
         <h2 className="section-title">Tokens de diseño</h2>
-        <p className="section-sub">Una identidad que no pide disculpas por existir.</p>
+        <p className="section-sub">Una identidad visual moderna y directa, para destacar tu trabajo.</p>
 
         <div className="tokens-grid">
           <div className="token-card">
@@ -191,11 +200,11 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
             <div className="type-sample">
               <div className="ts-item">
                 <div className="ts-label">Display — Bricolage Grotesque</div>
-                <div style={{ fontSize: '28px', fontWeight: 800, letterSpacing: '-1px', lineHeight: 1 }}>Buildeo, luego existo.</div>
+                <div style={{ fontSize: '28px', fontWeight: 800, letterSpacing: '-1px', lineHeight: 1 }}>Crear, luego existir.</div>
               </div>
               <div className="ts-item">
                 <div className="ts-label">Body — Bricolage Grotesque 400</div>
-                <div style={{ fontSize: '14px', lineHeight: 1.6, color: 'var(--text-dim)' }}>Una identidad visual sin vergüenza, con personalidad argentina.</div>
+                <div style={{ fontSize: '14px', lineHeight: 1.6, color: 'var(--text-dim)' }}>Una identidad visual pensada para la comunidad de LATAM.</div>
               </div>
               <div className="ts-item">
                 <div className="ts-label">Mono — JetBrains Mono</div>
@@ -236,16 +245,16 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
         <div className="microcopy-inner">
           <div className="section-label">// microcopy</div>
           <h2 className="section-title">Tono de voz</h2>
-          <p className="section-sub">Español rioplatense. Sin vueltas. Con humor inteligente.</p>
+          <p className="section-sub">Español de LATAM. Claro, directo y cercano.</p>
 
           <div className="microcopy-grid">
             {[
-              { c: "Empty state — Proyectos", t: "Este bloque está más vacío que el INDEC.", s: "Agregá tu primer proyecto y dejá de scrollear Twitter.", a: "+ Agregar proyecto" },
-              { c: "Empty state — GitHub", t: "¿Estás buildando o pensando en buildear?", s: "Conectá tu GitHub y mostrá que el code es real.", a: "Conectar →" },
-              { c: "Onboarding — Step 2", t: "¿Qué onda tu stack?", s: "Elegís tu stack tecnológico. Te lo ordenamos bien, no en un párrafo de LinkedIn." },
-              { c: "Onboarding — Bienvenida", t: "Buenas. Armémonos el perfil que merecés.", s: "Tres minutos, sin dolor. Prometemos que no te pedimos tu \"summary profesional\"." },
-              { c: "CTA — Perfil público", t: "Mostrá lo que buildeás.", s: "Tu obra. Tu URL. Sin necesidad de un diseñador caro ni un CV de Word de 2017." },
-              { c: "Error — GitHub desconectado", t: "El GitHub no conectó. Nos pasa a todos.", s: "Revisá que hayas dado acceso a repos públicos. O cargá tus proyectos manualmente.", a: "Reintentar" }
+              { c: "Empty state — Proyectos", t: "Aún no hay proyectos cargados.", s: "Agregá tu primer proyecto para empezar a mostrar tu trabajo.", a: "+ Agregar proyecto" },
+              { c: "Empty state — GitHub", t: "¿Qué estás construyendo?", s: "Conectá tu GitHub para mostrar tus repositorios más recientes.", a: "Conectar →" },
+              { c: "Onboarding — Step 2", t: "¿Cuál es tu stack?", s: "Elegí las tecnologías que mejor manejás para destacarlas en tu perfil." },
+              { c: "Onboarding — Bienvenida", t: "Hola. Vamos a armar tu perfil ideal.", s: "En pocos pasos vas a tener listo tu espacio para mostrar tus creaciones." },
+              { c: "CTA — Perfil público", t: "Mostrá de qué sos capaz.", s: "Tu experiencia y tus proyectos, todo en un solo lugar fácil de compartir." },
+              { c: "Error — GitHub desconectado", t: "No pudimos conectar con GitHub.", s: "Revisá permisos o agregá manualmente tus repositorios.", a: "Reintentar" }
             ].map((m, i) => (
               <div key={i} className="mc-card">
                 <div className="mc-context">{m.c}</div>
@@ -273,7 +282,7 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
           Crear mi huevsite →
         </Link>
         <div style={{ marginTop: '16px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--text-muted)' }}>
-          Bento.me cerró. Nosotros no.
+          Hecho por y para builders.
         </div>
       </section>
 

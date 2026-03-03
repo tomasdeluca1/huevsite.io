@@ -63,18 +63,18 @@ function LoginContent() {
       <main className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden">
         {/* Background Glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[radial-gradient(circle,rgba(200,255,0,0.08)_0%,transparent 70%)] pointer-events-none z-0" />
-        
+
         {/* Logo */}
         <motion.div
-           initial={{ opacity: 0, y: -20 }}
-           animate={{ opacity: 1, y: 0 }}
-           className="relative z-10 mb-12"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative z-10 mb-12"
         >
           <Link href="/" className="logo !text-2xl">huev<span>site</span>.io</Link>
         </motion.div>
 
         {/* Login Card */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           className="onboard-ui w-full max-w-md relative z-10 !p-10 shadow-2xl"
@@ -89,7 +89,7 @@ function LoginContent() {
 
           <div className="space-y-4">
             {errorMsg && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 className="p-3 mb-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-mono flex items-center gap-2"
@@ -115,9 +115,9 @@ function LoginContent() {
 
             <AnimatePresence mode="wait">
               {!sent ? (
-                <motion.form 
+                <motion.form
                   key="login-form"
-                  onSubmit={handleEmailLogin} 
+                  onSubmit={handleEmailLogin}
                   className="space-y-4"
                   initial={{ opacity: 1 }}
                   exit={{ opacity: 0, x: -20 }}
@@ -145,7 +145,7 @@ function LoginContent() {
                   </button>
                 </motion.form>
               ) : (
-                <motion.div 
+                <motion.div
                   key="sent-message"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -156,10 +156,10 @@ function LoginContent() {
                   </div>
                   <h3 className="text-xl font-bold tracking-tight text-white">¡Checkeá tu correo!</h3>
                   <p className="text-[var(--text-dim)] text-sm leading-relaxed">
-                    Te mandamos un link mágico a <br/>
+                    Te mandamos un link mágico a <br />
                     <strong className="text-[var(--accent)]">{email}</strong>
                   </p>
-                  <button 
+                  <button
                     onClick={() => setSent(false)}
                     className="text-[10px] uppercase font-mono text-[var(--text-muted)] hover:text-white transition-colors pt-4 block w-full"
                   >
@@ -173,7 +173,7 @@ function LoginContent() {
           <div className="mt-10 flex items-start gap-3 p-4 bg-white/[0.02] rounded-2xl border border-[var(--border-bright)]">
             <Info size={18} className="text-[var(--accent)] shrink-0 mt-0.5" />
             <p className="text-[11px] text-[var(--text-dim)] leading-relaxed">
-              <strong>Importante:</strong> Bento.me anunció su cierre. Nosotros estamos rescatando a la comunidad. Si tenías cuenta allá, usa el mismo mail.
+              <strong>Importante:</strong> Ingresá con el mismo mail que usás en GitHub para sincronizar tus proyectos automáticamente.
             </p>
           </div>
         </motion.div>

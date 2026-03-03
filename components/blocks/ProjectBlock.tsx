@@ -22,7 +22,7 @@ export function ProjectBlock({ data, accentColor }: Props) {
       initial={{ opacity: 0, y: 10 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="bento-block block-project h-full !p-0 flex flex-col group overflow-hidden"
+      className="huevsite-block block-project h-full !p-0 flex flex-col group overflow-hidden"
     >
       <div className="project-preview relative aspect-video w-full">
         {imageUrl ? (
@@ -32,7 +32,7 @@ export function ProjectBlock({ data, accentColor }: Props) {
             alt={title}
           />
         ) : (
-          <div 
+          <div
             className="project-preview-code h-full flex flex-col justify-center transition-colors bg-black/40 p-8"
           >
             <div className="opacity-40 font-mono text-[10px] mb-4 uppercase tracking-[0.2em]">Source Code Preview</div>
@@ -44,9 +44,9 @@ export function ProjectBlock({ data, accentColor }: Props) {
               <div className="text-sm">&nbsp; )</div>
               <div className="text-sm">{'}'}</div>
             </div>
-            
+
             {/* Decorative Glow */}
-            <div 
+            <div
               className="absolute bottom-[-20%] right-[-10%] w-32 h-32 rounded-full blur-[40px] opacity-20 pointer-events-none"
               style={{ backgroundColor: accentColor }}
             />
@@ -54,21 +54,21 @@ export function ProjectBlock({ data, accentColor }: Props) {
         )}
       </div>
 
-      <div className="project-info p-6 h-full flex flex-col">
+      <div className="project-info p-5 h-full flex flex-col">
         <div className="flex items-start justify-between gap-4 mb-2">
           <h3 className="project-name text-2xl font-black text-white title-tracking">{title}</h3>
           {link !== "#" && (
-            <div 
-              className="w-2 h-2 rounded-full animate-pulse shadow-[0_0_10px_rgba(200,255,0,0.5)]" 
+            <div
+              className="w-2 h-2 rounded-full animate-pulse shadow-[0_0_10px_rgba(200,255,0,0.5)]"
               style={{ backgroundColor: accentColor }}
             />
           )}
         </div>
-        
+
         <p className="project-desc text-sm text-[var(--text-dim)] leading-relaxed mb-6 opacity-80">
           {description}
         </p>
-        
+
         {stack.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-8">
             {stack.map((tech, i) => (
@@ -92,10 +92,10 @@ export function ProjectBlock({ data, accentColor }: Props) {
           ) : <div />}
 
           {link !== "#" && (
-            <a 
-              href={link} 
-              target="_blank" 
-              rel="noopener noreferrer" 
+            <a
+              href={link}
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest hover:translate-x-1 transition-transform"
               style={{ color: accentColor }}
             >

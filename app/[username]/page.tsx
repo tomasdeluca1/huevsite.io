@@ -159,7 +159,7 @@ export default async function ProfilePage({ params }: Props) {
           isEnabledSocialNetwork={isEnabled("socialNetwork")}
         />
 
-        {/* Bento Grid (Client Component for animations) */}
+        {/* Huevsite Grid (Client Component for animations) */}
         <div className="relative z-10">
           <ProfileGrid
             blocks={profile.blocks}

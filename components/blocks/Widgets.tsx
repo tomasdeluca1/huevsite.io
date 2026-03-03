@@ -16,9 +16,9 @@ export function MetricBlock({ data, accentColor }: MetricProps) {
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="bento-block block-metric h-full flex flex-col justify-center relative group"
+      className="huevsite-block block-metric h-full flex flex-col justify-center relative group"
     >
-      <div 
+      <div
         className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none"
         style={{ background: `radial-gradient(circle at center, ${accentColor} 0%, transparent 70%)` }}
       />
@@ -64,7 +64,7 @@ export function SocialBlock({ data, accentColor }: SocialProps) {
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="bento-block block-social h-full flex flex-col justify-between group"
+      className="huevsite-block block-social h-full flex flex-col justify-between group"
       style={{ "--accent": accentColor } as React.CSSProperties}
     >
       <div className="block-label opacity-40 uppercase tracking-[0.2em] text-[10px] mb-4">Conectemos</div>
@@ -79,8 +79,8 @@ export function SocialBlock({ data, accentColor }: SocialProps) {
           >
             <span className="text-xl grayscale group-hover/item:grayscale-0 transition-all">{getIcon(l.platform)}</span>
             <div className="flex flex-col overflow-hidden">
-               <span className="font-bold text-sm text-white group-hover/item:text-[var(--accent)] transition-colors">{getLabel(l)}</span>
-               <span className="text-[10px] text-[var(--text-muted)] truncate opacity-50">{l.url.replace('https://', '')}</span>
+              <span className="font-bold text-sm text-white group-hover/item:text-[var(--accent)] transition-colors">{getLabel(l)}</span>
+              <span className="text-[10px] text-[var(--text-muted)] truncate opacity-50">{l.url.replace('https://', '')}</span>
             </div>
           </a>
         ))}
@@ -104,8 +104,8 @@ export function CVBlock({ data, accentColor }: CVProps) {
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="bento-block h-full group flex flex-col items-center justify-center p-6 text-center"
-      style={{ 
+      className="huevsite-block h-full group flex flex-col items-center justify-center text-center"
+      style={{
         backgroundColor: "var(--surface2)",
         borderColor: "var(--border)",
       }}
@@ -122,7 +122,7 @@ export function CVBlock({ data, accentColor }: CVProps) {
         </p>
       )}
       {data.fileUrl ? (
-        <a 
+        <a
           href={data.fileUrl}
           target="_blank"
           rel="noopener noreferrer"

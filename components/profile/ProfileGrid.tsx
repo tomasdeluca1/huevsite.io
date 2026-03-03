@@ -88,7 +88,7 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline }: Profi
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="bento-grid"
+      className="huevsite-grid"
     >
       {/* Fallback Header if no Hero block exists */}
       {!hasHero && displayName && (
@@ -97,7 +97,7 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline }: Profi
            animate={{ opacity: 1, y: 0 }}
            className="col-2"
         >
-           <div className="bento-block flex flex-col justify-center p-8 bg-[var(--surface)] border border-[var(--border)] rounded-[2rem]">
+           <div className="huevsite-block flex flex-col justify-center p-8 bg-[var(--surface)] border border-[var(--border)] rounded-[2rem]">
               <h1 className="text-3xl font-extrabold text-white mb-1">{displayName}</h1>
               <p className="text-sm text-[var(--text-dim)] font-mono">// {tagline || 'builder'}</p>
            </div>
@@ -117,7 +117,7 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline }: Profi
 
       {/* Empty state */}
       {visibleBlocks.length === 0 && (
-        <div className="col-span-4 bento-block text-center p-12">
+        <div className="col-span-4 huevsite-block text-center p-12">
           <p className="text-muted-foreground">
             Este bloque está más vacío que el INDEC.
           </p>

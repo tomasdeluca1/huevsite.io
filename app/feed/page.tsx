@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { ChevronUp, Activity, Compass, User } from "lucide-react";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 interface ActivityUser {
@@ -47,7 +48,7 @@ function timeAgo(date: string): string {
   return `hace ${Math.floor(hs / 24)}d`;
 }
 
-export default function FeedPage() {
+function FeedContent() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -138,7 +139,6 @@ export default function FeedPage() {
 
     if (newHasUpvoted) {
       await supabase.from('launch_upvotes').insert({ launch_id: launch.id, user_id: currentUserId });
-      // Assuming RLS allows it or using a simpler un-secured query for demo
       await supabase.from('launches').update({ upvotes: launch.upvotes + 1 }).eq('id', launch.id);
     } else {
       await supabase.from('launch_upvotes').delete().eq('launch_id', launch.id).eq('user_id', currentUserId);
@@ -343,5 +343,17 @@ export default function FeedPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function FeedPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
+        <div className="animate-pulse text-[var(--text-muted)] font-mono">Cargando feed...</div>
+      </div>
+    }>
+      <FeedContent />
+    </Suspense>
   );
 }

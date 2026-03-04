@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "0", 10);
     const limit = parseInt(searchParams.get("limit") || "24", 10);
-    const sort = searchParams.get("sort") || "created_at"; // 'created_at' | 'updated_at'
+    const sort = searchParams.get("sort") || "score"; // 'score' | 'created_at' | 'updated_at' | ...
     const q = searchParams.get("q") || "";
 
     const startIndex = page * limit;
@@ -30,8 +30,7 @@ export async function GET(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
 
     // Sort mapping
-    let sortField = "created_at";
-    let isCategorySort = false;
+    let sortField = "builder_score";
     let isFollowingFilter = false;
     let isFollowersMeFilter = false;
 
@@ -39,17 +38,16 @@ export async function GET(request: NextRequest) {
       isFollowingFilter = true;
     } else if (sort === 'followers_me') {
       isFollowersMeFilter = true;
-    } else if (sort === 'category') {
-      isCategorySort = true;
+      sortField = "updated_at"; // Placeholder logic for now if needed, but we handle score below
     } else {
       sortField = {
+        'score': 'builder_score',
         'created_at': 'created_at',
         'updated_at': 'updated_at',
         'followers': 'followers_count',
         'nominations': 'nominations_count',
-        'endorsements': 'endorsements_count',
-        'score': 'builder_score'
-      }[sort] || 'created_at';
+        'endorsements': 'endorsements_count'
+      }[sort] || 'builder_score';
     }
 
     if (isFollowingFilter) {
@@ -90,11 +88,6 @@ export async function GET(request: NextRequest) {
       }
 
       query = query.in("id", followerIds);
-      query = query.order("is_winner", { ascending: false, nullsFirst: false });
-      query = query.order("pro_since", { ascending: false, nullsFirst: false });
-      query = query.order("created_at", { ascending: false });
-    } else if (isCategorySort) {
-      // Sort by Winner > PRO > Free
       query = query.order("is_winner", { ascending: false, nullsFirst: false });
       query = query.order("pro_since", { ascending: false, nullsFirst: false });
       query = query.order("created_at", { ascending: false });

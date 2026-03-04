@@ -24,7 +24,7 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
   const [profiles, setProfiles] = useState<ExploreProfile[]>([]);
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('huevsite_explore_search') || "" : ""));
-  const [sort, setSort] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('huevsite_explore_sort') || "category" : "category"));
+  const [sort, setSort] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('huevsite_explore_sort') || "score" : "score"));
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
@@ -105,7 +105,7 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
               className="w-full bg-[var(--surface2)] text-sm border border-[var(--border)] rounded-2xl px-5 py-3.5 text-white outline-none focus:border-[var(--accent)] transition-all cursor-pointer appearance-none pr-10"
               style={{ backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23666\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 16px center', backgroundSize: '14px' }}
             >
-              <option value="category">Categoría</option>
+              <option value="score">Top Score 🔥</option>
               <option value="created_at">Más nuevos</option>
               <option value="following">Seguidos</option>
               <option value="followers_me">Seguidores</option>
@@ -113,7 +113,6 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
               <option value="nominations">Nominaciones</option>
               <option value="followers">Más seguidores</option>
               <option value="endorsements">Más comentarios</option>
-              <option value="score">Top Score 🔥</option>
             </select>
           </div>
         </div>

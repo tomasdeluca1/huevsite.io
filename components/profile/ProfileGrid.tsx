@@ -7,7 +7,7 @@ import { GitHubBlock } from "@/components/blocks/GitHubBlock"
 import { ProjectBlock } from "@/components/blocks/ProjectBlock"
 import { MetricBlock, SocialBlock, CVBlock } from "@/components/blocks/Widgets"
 import { StackBlock, CommunityBlock, WritingBlock } from "@/components/blocks/ExtraBlocks"
-import { MediaBlock, CertificationBlock, AchievementBlock, CustomBlock } from "@/components/blocks/NewBlocks"
+import { MediaBlock, CertificationBlock, AchievementBlock, CustomBlock, CollabBlock } from "@/components/blocks/NewBlocks"
 import type { BlockData } from "@/lib/profile-types"
 
 interface ProfileGridProps {
@@ -28,9 +28,9 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline }: Profi
   // Mapear tipo de bloque a componente
   const renderBlock = (block: BlockData) => {
     // Los bloques vienen del profile-service con todas las propiedades esparcidas,
-    const props = { 
-      data: block as any, 
-      accentColor 
+    const props = {
+      data: block as any,
+      accentColor
     }
 
     switch (block.type) {
@@ -62,25 +62,28 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline }: Profi
         return <AchievementBlock {...props} />
       case "custom":
         return <CustomBlock {...props} />
+      case "collab":
+        return <CollabBlock {...props} />
       default:
         return null
     }
   }
 
-  // Mapear col_span a clase CSS (aplicado solo en desktop/md+)
+  // Mapear col_span a clase CSS
   const getGridClasses = (block: BlockData) => {
-    if (block.type === 'hero') {
-      const col = Math.min(block.col_span || 2, 2);
-      return `col-${col} row-2`;
-    }
-
     const col = block.col_span || 1;
     const row = block.row_span || 1;
-    
-    const colClass = col > 1 ? `col-${col}` : "";
-    const rowClass = row > 1 ? `row-${row}` : "";
-    
-    return `${colClass} ${rowClass}`.trim();
+
+    // Mobile: defaults to full width if the grid stacked (1 col),
+    // but we use these classes for when it's 2 columns
+    const mobileColSpan = col > 1 ? "col-span-2" : "col-span-1";
+    const mobileRowSpan = row > 1 ? "row-span-2" : "row-span-1";
+
+    // Desktop: use original span with explicit classes
+    const colClass = `md:col-span-${col}`;
+    const rowClass = `md:row-span-${row}`;
+
+    return `${mobileColSpan} ${mobileRowSpan} ${colClass} ${rowClass}`.trim();
   }
 
   return (
@@ -93,14 +96,14 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline }: Profi
       {/* Fallback Header if no Hero block exists */}
       {!hasHero && displayName && (
         <motion.div
-           initial={{ opacity: 0, y: 20 }}
-           animate={{ opacity: 1, y: 0 }}
-           className="col-2"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="col-2"
         >
-           <div className="huevsite-block flex flex-col justify-center p-8 bg-[var(--surface)] border border-[var(--border)] rounded-[2rem]">
-              <h1 className="text-3xl font-extrabold text-white mb-1">{displayName}</h1>
-              <p className="text-sm text-[var(--text-dim)] font-mono">// {tagline || 'builder'}</p>
-           </div>
+          <div className="huevsite-block flex flex-col justify-center p-8 bg-[var(--surface)] border border-[var(--border)] rounded-[2rem]">
+            <h1 className="text-3xl font-extrabold text-white mb-1">{displayName}</h1>
+            <p className="text-sm text-[var(--text-dim)] font-mono">// {tagline || 'builder'}</p>
+          </div>
         </motion.div>
       )}
       {visibleBlocks.map((block, index) => (

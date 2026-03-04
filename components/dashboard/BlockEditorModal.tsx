@@ -30,7 +30,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
   // Actualizar formData cuando cambia el bloque
   useEffect(() => {
     let initialData = { ...block };
-    
+
     // Añadir IDs temporales para drag & drop estable
     if (initialData.type === 'social' && Array.isArray(initialData.links)) {
       initialData.links = initialData.links.map((l: any) => ({ ...l, _dragId: l._dragId || Math.random().toString(36).substr(2, 9) }));
@@ -103,6 +103,13 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
       });
     }
 
+    if (block.type === 'collab' && Array.isArray(dataToSave.users)) {
+      dataToSave.users = dataToSave.users.map((u: any) => {
+        const { _dragId, ...rest } = u;
+        return rest;
+      });
+    }
+
     onSave(dataToSave);
     onClose();
   };
@@ -113,7 +120,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
         return (
           <div className="space-y-6">
             <div className="space-y-1">
-              <ImageUpload 
+              <ImageUpload
                 label="Foto de Perfil"
                 value={formData.avatarUrl}
                 onChange={(url) => handleChange("avatarUrl", url)}
@@ -126,17 +133,17 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <div className="section-label !text-[9px] px-1">// nombre</div>
-                <input 
-                  value={formData.name || ""} 
+                <input
+                  value={formData.name || ""}
                   onChange={(e) => handleChange("name", e.target.value)}
                   className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-bold"
                   placeholder="Tu nombre real"
                 />
               </div>
               <div className="space-y-2">
-                 <div className="section-label !text-[9px] px-1">// rol / tagline corto</div>
-                <input 
-                  value={formData.tagline || ""} 
+                <div className="section-label !text-[9px] px-1">// rol / tagline corto</div>
+                <input
+                  value={formData.tagline || ""}
                   onChange={(e) => handleChange("tagline", e.target.value)}
                   className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all"
                   placeholder="builder"
@@ -144,9 +151,9 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
               </div>
             </div>
             <div className="space-y-2">
-               <div className="section-label !text-[9px] px-1">// descripción (bio)</div>
-              <textarea 
-                value={formData.description || ""} 
+              <div className="section-label !text-[9px] px-1">// descripción (bio)</div>
+              <textarea
+                value={formData.description || ""}
                 onChange={(e) => handleChange("description", e.target.value)}
                 className="w-full p-4 h-24 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all resize-none leading-relaxed"
                 placeholder="Buildeo productos desde BA..."
@@ -154,18 +161,18 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                 <div className="section-label !text-[9px] px-1">// status</div>
-                <input 
-                  value={formData.status || ""} 
+                <div className="section-label !text-[9px] px-1">// status</div>
+                <input
+                  value={formData.status || ""}
                   onChange={(e) => handleChange("status", e.target.value)}
                   className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all"
                   placeholder="disponible para proyectos"
                 />
               </div>
               <div className="space-y-2">
-                 <div className="section-label !text-[9px] px-1">// ubicación</div>
-                <input 
-                  value={formData.location || ""} 
+                <div className="section-label !text-[9px] px-1">// ubicación</div>
+                <input
+                  value={formData.location || ""}
                   onChange={(e) => handleChange("location", e.target.value)}
                   className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all"
                   placeholder="Buenos Aires 🇦🇷"
@@ -178,7 +185,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
       case "project":
         return (
           <div className="space-y-6">
-             {block.type === "project" && (
+            {block.type === "project" && (
               <ImageUpload
                 label="Preview del Proyecto"
                 value={formData.imageUrl}
@@ -285,8 +292,8 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                 const preview = handle ? getUrlPreview(platform, handle) : "";
 
                 return (
-                  <Reorder.Item 
-                    key={linkObj._dragId} 
+                  <Reorder.Item
+                    key={linkObj._dragId}
                     value={linkObj}
                     whileDrag={{ scale: 1.02, boxShadow: "0 20px 40px rgba(0,0,0,0.4)" }}
                     className="space-y-3 p-4 bg-black/20 rounded-2xl border border-white/5 relative group/item sortable-item"
@@ -312,7 +319,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                         <X size={14} />
                       </button>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <select
                         value={platform}
@@ -369,8 +376,8 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
             <div className="section-label !text-[9px] px-1 translate-y-2 opacity-50">// comunidades — arrastrá para reordenar</div>
             <Reorder.Group axis="y" values={formData.communities || []} onReorder={(newComms) => handleChange("communities", newComms)} className="space-y-3 pt-4">
               {(formData.communities || []).map((comm: any, index: number) => (
-                <Reorder.Item 
-                  key={comm._dragId} 
+                <Reorder.Item
+                  key={comm._dragId}
                   value={comm}
                   whileDrag={{ scale: 1.02, boxShadow: "0 20px 40px rgba(0,0,0,0.4)" }}
                   className="space-y-4 p-4 bg-black/20 rounded-2xl border border-white/5 relative group/item sortable-item"
@@ -384,7 +391,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                         {comm.name || `Comunidad ${index + 1}`}
                       </span>
                     </div>
-                    <button 
+                    <button
                       type="button"
                       onClick={() => {
                         const newComms = [...formData.communities];
@@ -409,19 +416,19 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                       placeholder="Nombre de la comunidad"
                     />
                     <div className="flex items-center gap-3 bg-black/20 p-1.5 px-3 rounded-xl border border-white/5">
-                       <div className="w-6 h-6 rounded-full border border-white/10 overflow-hidden shrink-0 relative">
-                         <input
-                            type="color"
-                            value={comm.color || formData.accentColor || "#C8FF00"}
-                            onChange={(e) => {
-                              const newComms = [...formData.communities];
-                              newComms[index] = { ...newComms[index], color: e.target.value };
-                              handleChange("communities", newComms);
-                            }}
-                            className="absolute -inset-2 w-10 h-10 cursor-pointer"
-                          />
-                       </div>
-                       <div className="text-[9px] text-[var(--text-muted)] uppercase tracking-widest font-black opacity-60">Color del badge</div>
+                      <div className="w-6 h-6 rounded-full border border-white/10 overflow-hidden shrink-0 relative">
+                        <input
+                          type="color"
+                          value={comm.color || formData.accentColor || "#C8FF00"}
+                          onChange={(e) => {
+                            const newComms = [...formData.communities];
+                            newComms[index] = { ...newComms[index], color: e.target.value };
+                            handleChange("communities", newComms);
+                          }}
+                          className="absolute -inset-2 w-10 h-10 cursor-pointer"
+                        />
+                      </div>
+                      <div className="text-[9px] text-[var(--text-muted)] uppercase tracking-widest font-black opacity-60">Color del badge</div>
                     </div>
                   </div>
 
@@ -438,7 +445,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                 </Reorder.Item>
               ))}
             </Reorder.Group>
-             <button
+            <button
               type="button"
               onClick={() => handleChange("communities", [...(formData.communities || []), { name: "", color: formData.accentColor || "#C8FF00", _dragId: Math.random().toString(36).substr(2, 9) }])}
               className="w-full p-3 rounded-xl border border-dashed border-[var(--border-bright)] text-[var(--text-muted)] hover:text-white hover:border-[var(--accent)] transition-all text-sm"
@@ -530,9 +537,9 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                             fetch(`https://api.github.com/users/${user.login}`),
                             fetch(`https://api.github.com/users/${user.login}/repos?sort=stars&per_page=100`)
                           ]);
-                          
+
                           if (!userRes.ok) return;
-                          
+
                           const userData = await userRes.json();
                           const repos = await reposRes.json();
                           const totalStars = Array.isArray(repos) ? repos.reduce((sum: number, r: any) => sum + r.stargazers_count, 0) : 0;
@@ -572,7 +579,37 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-black/20 rounded-2xl border border-white/5">
+                <div>
+                  <div className="text-sm font-bold text-white">Advanced Stats</div>
+                  <div className="text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-widest">PRO Feature</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const show = !formData.showAdvanced;
+                    handleChange("showAdvanced", show);
+                    if (show && !formData.stats?.topLanguages) {
+                      // Mock some data if empty
+                      handleChange("stats", {
+                        ...formData.stats,
+                        topLanguages: [
+                          { name: "TypeScript", percent: 65 },
+                          { name: "React", percent: 25 },
+                          { name: "Node.js", percent: 10 }
+                        ],
+                        totalCommits: 842,
+                        issuesClosed: 124
+                      });
+                    }
+                  }}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${formData.showAdvanced ? 'bg-[#C8FF00]' : 'bg-white/10'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${formData.showAdvanced ? 'left-7' : 'left-1'}`} />
+                </button>
+              </div>
+
               <div className="section-label !text-[9px] px-1">// estadísticas actuales</div>
               <div className="grid grid-cols-3 gap-3">
                 <div className="p-4 bg-[var(--bg)] border border-[var(--border)] rounded-2xl text-center group hover:border-[var(--accent)] transition-all">
@@ -588,14 +625,40 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                   <div className="font-black text-2xl tracking-tighter text-blue-400">{formData.stats?.followers || 0}</div>
                 </div>
               </div>
+
+              {formData.showAdvanced && (
+                <div className="p-5 bg-white/5 border border-white/10 rounded-2xl space-y-4">
+                  <div className="text-xs font-bold text-white mb-2">Advanced Metrics Configuration</div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <div className="text-[8px] text-[var(--text-muted)] uppercase font-mono">Commits / Year</div>
+                      <input
+                        type="number"
+                        value={formData.stats?.totalCommits || 0}
+                        onChange={(e) => handleChange("stats", { ...formData.stats, totalCommits: parseInt(e.target.value) })}
+                        className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-sm text-white"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-[8px] text-[var(--text-muted)] uppercase font-mono">Issues Resolved</div>
+                      <input
+                        type="number"
+                        value={formData.stats?.issuesClosed || 0}
+                        onChange={(e) => handleChange("stats", { ...formData.stats, issuesClosed: parseInt(e.target.value) })}
+                        className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-sm text-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-            
+
             <div className="p-5 bg-[var(--accent-dim)]/20 border border-[var(--accent)]/20 rounded-2xl flex gap-4 items-start">
-               <div className="pt-1"><Sparkles size={16} className="text-[var(--accent)]" /></div>
-               <p className="text-xs text-[var(--text-dim)] leading-relaxed">
-                 Las estadísticas se actualizan automáticamente al elegir tu perfil. <br/>
-                 <span className="text-white font-medium">Click en Guardar para persistir los cambios en tu huevsite.</span>
-               </p>
+              <div className="pt-1"><Sparkles size={16} className="text-[var(--accent)]" /></div>
+              <p className="text-xs text-[var(--text-dim)] leading-relaxed">
+                Las estadísticas se actualizan automáticamente al elegir tu perfil. <br />
+                <span className="text-white font-medium">Click en Guardar para persistir los cambios en tu huevsite.</span>
+              </p>
             </div>
           </div>
         );
@@ -789,6 +852,63 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
             </div>
           </div>
         );
+      case "collab":
+        return (
+          <div className="space-y-6">
+            <div className="section-label !text-[9px] px-1 translate-y-2 opacity-50">// colaboradores — arrastrá para reordenar (pronto)</div>
+            <div className="space-y-3 pt-4">
+              {(formData.users || []).map((user: any, index: number) => (
+                <div key={user._dragId || index} className="space-y-3 p-4 bg-black/20 rounded-2xl border border-white/5 relative group/item">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-[var(--accent)]" style={{ color: accentColor }}>
+                      Colaborador {index + 1}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newUsers = [...formData.users];
+                        newUsers.splice(index, 1);
+                        handleChange("users", newUsers);
+                      }}
+                      className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-500 transition-all"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <input
+                      value={user.username || ""}
+                      onChange={(e) => {
+                        const newUsers = [...(formData.users || [])];
+                        newUsers[index] = { ...newUsers[index], username: e.target.value };
+                        handleChange("users", newUsers);
+                      }}
+                      className="w-full p-3 rounded-xl bg-black/40 border border-white/5 focus:border-[var(--accent)] outline-none transition-all font-mono text-sm"
+                      placeholder="Username en Huevsite"
+                    />
+                    <input
+                      value={user.role || ""}
+                      onChange={(e) => {
+                        const newUsers = [...(formData.users || [])];
+                        newUsers[index] = { ...newUsers[index], role: e.target.value };
+                        handleChange("users", newUsers);
+                      }}
+                      className="w-full p-3 rounded-xl bg-black/40 border border-white/5 focus:border-[var(--accent)] outline-none transition-all text-sm"
+                      placeholder="Rol (ej. Co-founder)"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => handleChange("users", [...(formData.users || []), { username: "", role: "", _dragId: Math.random().toString(36).substr(2, 9) }])}
+              className="w-full p-3 rounded-xl border border-dashed border-[var(--border-bright)] text-[var(--text-muted)] hover:text-white hover:border-[var(--accent)] transition-all text-sm"
+            >
+              + Agregar colaborador
+            </button>
+          </div>
+        );
       default:
         return <div>Editor no implementado para este tipo de bloque</div>;
     }
@@ -796,7 +916,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
 
   const renderSizeControls = () => {
     // Blocks that make sense to resize
-    const resizableTypes = ['hero', 'building', 'project', 'github', 'stack', 'community', 'writing', 'cv', 'media', 'certification', 'achievement', 'custom'];
+    const resizableTypes = ['hero', 'building', 'project', 'github', 'stack', 'community', 'writing', 'cv', 'media', 'certification', 'achievement', 'custom', 'collab'];
     if (!resizableTypes.includes(block.type)) return null;
 
     const isHero = block.type === 'hero';
@@ -809,67 +929,67 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
         </div>
 
         <div className={`grid ${isHero ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
-           <div className="space-y-3">
-             <label className="text-[10px] text-[var(--text-dim)] font-black uppercase tracking-widest px-1 block opacity-70">
-                Ancho del bloque
-             </label>
-             <div className="relative">
-               <select 
-                 value={formData.col_span || (isHero ? 2 : 1)}
-                 onChange={(e) => handleChange("col_span", parseInt(e.target.value))}
-                 className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none font-bold text-sm cursor-pointer hover:border-[var(--accent)] transition-all focus:ring-2 focus:ring-[var(--accent)]/20 appearance-none pr-10"
-                 style={{ '--accent': accentColor } as any}
-               >
-                 <option value={1}>1 Columna {isHero ? '(Slim)' : '(Mini)'}</option>
-                 <option value={2}>2 Columnas {isHero ? '(Completo)' : '(Estándar)'}</option>
-                 {!isHero && (
-                   <>
-                     <option value={3}>3 Columnas (Grande)</option>
-                     <option value={4}>4 Columnas (Full)</option>
-                   </>
-                 )}
-               </select>
-               <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
-                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                   <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                 </svg>
-               </div>
-             </div>
-           </div>
+          <div className="space-y-3">
+            <label className="text-[10px] text-[var(--text-dim)] font-black uppercase tracking-widest px-1 block opacity-70">
+              Ancho del bloque
+            </label>
+            <div className="relative">
+              <select
+                value={formData.col_span || (isHero ? 2 : 1)}
+                onChange={(e) => handleChange("col_span", parseInt(e.target.value))}
+                className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none font-bold text-sm cursor-pointer hover:border-[var(--accent)] transition-all focus:ring-2 focus:ring-[var(--accent)]/20 appearance-none pr-10"
+                style={{ '--accent': accentColor } as any}
+              >
+                <option value={1}>1 Columna {isHero ? '(Slim)' : '(Mini)'}</option>
+                <option value={2}>2 Columnas {isHero ? '(Completo)' : '(Estándar)'}</option>
+                {!isHero && (
+                  <>
+                    <option value={3}>3 Columnas (Grande)</option>
+                    <option value={4}>4 Columnas (Full)</option>
+                  </>
+                )}
+              </select>
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+            </div>
+          </div>
 
-           {!isHero && (
-             <div className="space-y-3">
-               <label className="text-[10px] text-[var(--text-dim)] font-black uppercase tracking-widest px-1 block opacity-70">
-                  Alto del bloque
-               </label>
-               <div className="relative">
-                 <select 
-                   value={formData.row_span || 1}
-                   onChange={(e) => handleChange("row_span", parseInt(e.target.value))}
-                   className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none font-bold text-sm cursor-pointer hover:border-[var(--accent)] transition-all focus:ring-2 focus:ring-[var(--accent)]/20 appearance-none pr-10"
-                   style={{ '--accent': accentColor } as any}
-                 >
-                   <option value={1}>1 Fila (Bajo)</option>
-                   <option value={2}>2 Filas (Medio)</option>
-                   <option value={3}>3 Filas (Alto)</option>
-                   <option value={4}>4 Filas (Máximo)</option>
-                 </select>
-                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
-                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                     <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                   </svg>
-                 </div>
-               </div>
-             </div>
-           )}
+          {!isHero && (
+            <div className="space-y-3">
+              <label className="text-[10px] text-[var(--text-dim)] font-black uppercase tracking-widest px-1 block opacity-70">
+                Alto del bloque
+              </label>
+              <div className="relative">
+                <select
+                  value={formData.row_span || 1}
+                  onChange={(e) => handleChange("row_span", parseInt(e.target.value))}
+                  className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none font-bold text-sm cursor-pointer hover:border-[var(--accent)] transition-all focus:ring-2 focus:ring-[var(--accent)]/20 appearance-none pr-10"
+                  style={{ '--accent': accentColor } as any}
+                >
+                  <option value={1}>1 Fila (Bajo)</option>
+                  <option value={2}>2 Filas (Medio)</option>
+                  <option value={3}>3 Filas (Alto)</option>
+                  <option value={4}>4 Filas (Máximo)</option>
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-        
+
         <div className="p-4 bg-white/[0.03] rounded-2xl border border-white/5 flex items-start gap-3">
           <div className="p-1.5 rounded-lg bg-white/5 text-[var(--accent)]" style={{ color: accentColor }}>
             <Sparkles size={14} />
           </div>
           <p className="text-[10px] text-[var(--text-muted)] leading-relaxed font-medium">
-             <span className="text-[var(--text-dim)]">Tip:</span> {isHero ? 'El bloque de Bio tiene una altura fija de 2 filas para asegurar que tu identidad destaque.' : 'Los bloques más anchos o altos captan un <span className="text-white">40% más de atención</span>.'} En mobile, todos los bloques se adaptan automáticamente al ancho disponible.
+            <span className="text-[var(--text-dim)]">Tip:</span> {isHero ? 'El bloque de Bio tiene una altura fija de 2 filas para asegurar que tu identidad destaque.' : 'Los bloques más anchos o altos captan un <span className="text-white">40% más de atención</span>.'} En mobile, todos los bloques se adaptan automáticamente al ancho disponible.
           </p>
         </div>
       </div>
@@ -906,22 +1026,22 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                 <X size={20} className="text-[var(--text-muted)]" />
               </button>
             </div>
-            
+
             <div className="p-4 md:p-8 overflow-y-auto custom-scrollbar bg-gradient-to-b from-[var(--surface)] to-[var(--bg)] flex-1">
               {renderFields()}
               {renderSizeControls()}
             </div>
 
             <div className="p-4 md:p-6 border-t border-[var(--border)] bg-[var(--surface)] flex gap-4 shrink-0 pb-8 md:pb-6">
-              <button 
+              <button
                 onClick={onClose}
-                className="btn btn-ghost !px-6 md:!px-8 flex-1 py-4 text-sm md:text-base"
+                className="px-6 md:px-8 py-4 rounded-2xl font-bold text-sm md:text-base text-[var(--text-muted)] hover:text-white hover:bg-white/5 transition-all"
               >
                 Cancelar
               </button>
-              <button 
+              <button
                 onClick={handleSave}
-                className="btn btn-primary flex flex-[2] items-center justify-center gap-2 text-sm md:text-base whitespace-nowrap transition-colors"
+                className="flex-1 py-4 px-6 rounded-2xl font-bold flex items-center justify-center gap-2 text-sm md:text-base whitespace-nowrap transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg"
                 style={{ backgroundColor: accentColor, color: getContrastColor(accentColor) }}
               >
                 <Save size={18} />

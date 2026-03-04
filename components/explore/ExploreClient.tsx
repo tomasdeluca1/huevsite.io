@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowRight, Search, Loader2, Sparkles } from "lucide-react";
+import { ArrowRight, Search, Loader2, Sparkles, X } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface ExploreProfile {
@@ -16,6 +16,7 @@ interface ExploreProfile {
   followers_count?: number;
   nominations_count?: number;
   endorsements_count?: number;
+  builder_score?: number;
   is_winner?: boolean;
 }
 
@@ -75,35 +76,46 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
   return (
     <div className="flex flex-col gap-8">
       {/* Controls */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-center mb-4">
-        <div className="relative w-full sm:max-w-xs">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+      <div className="flex flex-col md:flex-row gap-6 items-center mb-10 w-full md:justify-between px-1">
+        <div className="relative w-full md:max-w-xl">
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
           <input
             type="text"
             placeholder="Buscar por nombre o usuario..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 rounded-full bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none text-sm transition-colors text-white placeholder-[var(--text-muted)]"
+            className="w-full pl-12 pr-12 py-3.5 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none text-sm transition-all text-white placeholder-[var(--text-muted)] group-hover:bg-[var(--surface)]"
           />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-[var(--border)] text-[var(--text-muted)] transition-colors"
+            >
+              <X size={14} />
+            </button>
+          )}
         </div>
-        
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <span className="text-xs font-mono text-[var(--text-dim)] uppercase tracking-wider">Ordenar:</span>
-          <select 
-            value={sort} 
-            onChange={(e) => setSort(e.target.value)}
-            className="bg-[var(--surface)] text-sm border border-[var(--border)] rounded-full px-4 py-2 text-white outline-none focus:border-[var(--accent)] transition-colors appearance-none pr-8 relative cursor-pointer"
-            style={{ backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'white\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '12px' }}
-          >
-            <option value="category">Categoría</option>
-            <option value="created_at">Más nuevos</option>
-            <option value="following">Seguidos</option>
-            <option value="followers_me">Seguidores</option>
-            <option value="updated_at">Cambios recientes</option>
-            <option value="nominations">Nominaciones</option>
-            <option value="followers">Más seguidores</option>
-            <option value="endorsements">Más endorsements</option>
-          </select>
+
+        <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
+          <span className="text-[10px] font-mono text-[var(--text-dim)] uppercase tracking-widest hidden sm:block">Ordenar por:</span>
+          <div className="relative flex-1 md:w-48">
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+              className="w-full bg-[var(--surface2)] text-sm border border-[var(--border)] rounded-2xl px-5 py-3.5 text-white outline-none focus:border-[var(--accent)] transition-all cursor-pointer appearance-none pr-10"
+              style={{ backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23666\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 16px center', backgroundSize: '14px' }}
+            >
+              <option value="category">Categoría</option>
+              <option value="created_at">Más nuevos</option>
+              <option value="following">Seguidos</option>
+              <option value="followers_me">Seguidores</option>
+              <option value="updated_at">Actualizados</option>
+              <option value="nominations">Nominaciones</option>
+              <option value="followers">Más seguidores</option>
+              <option value="endorsements">Más comentarios</option>
+              <option value="score">Top Score 🔥</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -119,13 +131,13 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {profiles.map((profile, i) => (
-              <motion.div 
-                key={profile.id} 
+              <motion.div
+                key={profile.id}
                 className={`relative h-full ${profile.is_winner ? 'pt-8 z-10' : ''}`}
                 initial={{ opacity: 0, y: profile.is_winner ? 40 : 20, scale: profile.is_winner ? 0.95 : 1 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ 
-                  duration: profile.is_winner ? 0.8 : 0.4, 
+                transition={{
+                  duration: profile.is_winner ? 0.8 : 0.4,
                   delay: i * 0.05,
                   type: profile.is_winner ? "spring" : "tween",
                   bounce: profile.is_winner ? 0.4 : 0
@@ -142,106 +154,107 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
                   href={`/${profile.username}`}
                   className="group h-full relative z-10 bg-[var(--surface)] border border-[var(--border)] rounded-[1.5rem] p-8 hover:border-[var(--border-bright)] transition-all overflow-hidden flex flex-col min-h-[220px]"
                 >
-                {/* Accent glow on hover */}
-                <div 
-                  className="absolute inset-0 opacity-0 group-hover:opacity-[0.03] transition-opacity duration-500 pointer-events-none"
-                  style={{ backgroundColor: profile.accent_color || 'var(--accent)' }}
-                />
+                  {/* Accent glow on hover */}
+                  <div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-[0.03] transition-opacity duration-500 pointer-events-none"
+                    style={{ backgroundColor: profile.accent_color || 'var(--accent)' }}
+                  />
 
 
 
-                {/* Pro Badge */}
-                {profile.pro_since && !profile.is_winner && (
-                  <div className="absolute top-4 right-4 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-500 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1.5 shadow-[0_0_15px_rgba(245,158,11,0.2)] z-20 backdrop-blur-sm">
-                    <Sparkles size={12} className="text-amber-400 animate-pulse" />
-                    PRO
-                  </div>
-                )}
+                  {/* Pro Badge */}
+                  {profile.pro_since && !profile.is_winner && (
+                    <div className="absolute top-4 right-4 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-500 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1.5 shadow-[0_0_15px_rgba(245,158,11,0.2)] z-20 backdrop-blur-sm">
+                      <Sparkles size={12} className="text-amber-400 animate-pulse" />
+                      PRO
+                    </div>
+                  )}
 
-                <div className="flex flex-col h-full relative z-10">
-                  <div className="mb-auto">
-                    <div className="flex items-start gap-4 mb-4">
-                       <div className="w-12 h-12 shrink-0 rounded-full flex items-center justify-center text-lg font-black text-black shadow-sm" style={{ background: profile.image ? 'transparent' : `linear-gradient(135deg, ${profile.accent_color || 'var(--accent)'}, #00FF88)` }}>
-                         {profile.image ? (
-                           <img src={profile.image} alt={profile.name || profile.username} className="w-full h-full object-cover rounded-full border border-[var(--border)] bg-[var(--surface2)]" />
-                         ) : (
-                           (profile.name || profile.username).charAt(0).toUpperCase()
-                         )}
-                       </div>
-                       
-                       <div className="flex-1 min-w-0">
-                         <h2 className="text-xl font-bold tracking-tight mb-1 group-hover:text-white transition-colors truncate pr-8">
-                           {profile.name || profile.username}
-                         </h2>
-                         <p className="text-[13px] text-[var(--text-dim)] font-mono line-clamp-2 leading-relaxed">
+                  <div className="flex flex-col h-full relative z-10">
+                    <div className="mb-auto">
+                      <div className="flex items-start gap-4 mb-4">
+                        <div className="w-12 h-12 shrink-0 rounded-full flex items-center justify-center text-lg font-black text-black shadow-sm" style={{ background: profile.image ? 'transparent' : `linear-gradient(135deg, ${profile.accent_color || 'var(--accent)'}, #00FF88)` }}>
+                          {profile.image ? (
+                            <img src={profile.image} alt={profile.name || profile.username} className="w-full h-full object-cover rounded-full border border-[var(--border)] bg-[var(--surface2)]" />
+                          ) : (
+                            (profile.name || profile.username).charAt(0).toUpperCase()
+                          )}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <h2 className="text-xl font-bold tracking-tight mb-1 group-hover:text-white transition-colors truncate pr-8">
+                            {profile.name || profile.username}
+                          </h2>
+                          <p className="text-[13px] text-[var(--text-dim)] font-mono line-clamp-2 leading-relaxed">
                            // {profile.tagline || "Creator"}
-                         </p>
-                       </div>
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex gap-4 mt-6 mb-4">
-                    {Number(profile.followers_count) > 0 && (
-                      <div className="flex flex-col">
-                        <span className="text-white font-bold text-xs">{profile.followers_count}</span>
-                        <span className="text-[9px] text-[var(--text-muted)] uppercase tracking-tighter">Followers</span>
+                    <div className="flex items-center justify-between mt-8 mb-6 p-3 bg-white/[0.03] border border-white/[0.05] rounded-2xl">
+                      <div className="flex flex-col items-center flex-1 px-1 border-r border-white/5">
+                        <span className="text-white font-black text-sm leading-none mb-1">{profile.followers_count || 0}</span>
+                        <span className="text-[7px] text-[var(--text-muted)] uppercase tracking-[0.1em] font-mono">Seguidores</span>
                       </div>
-                    )}
-                    {Number(profile.nominations_count) > 0 && (
-                      <div className="flex flex-col">
-                        <span className="text-white font-bold text-xs">{profile.nominations_count}</span>
-                        <span className="text-[9px] text-[var(--text-muted)] uppercase tracking-tighter">Nominado</span>
-                      </div>
-                    )}
-                    {Number(profile.endorsements_count) > 0 && (
-                      <div className="flex flex-col">
-                        <span className="text-white font-bold text-xs">{profile.endorsements_count}</span>
-                        <span className="text-[9px] text-[var(--text-muted)] uppercase tracking-tighter">Endorsed</span>
-                      </div>
-                    )}
-                  </div>
 
-                  <div className="pt-8 mt-auto flex items-center justify-between border-t border-[var(--border-bright)]/30 group-hover:border-[var(--border-bright)] transition-colors">
-                    <div className="font-mono text-xs text-[var(--text-muted)] flex items-center gap-2">
-                       <span 
-                         className="w-2 h-2 rounded-full inline-block shadow-sm" 
-                         style={{ backgroundColor: profile.accent_color || 'var(--accent)', boxShadow: `0 0 8px ${profile.accent_color || 'var(--accent)'}40` }} 
-                       />
-                       @{profile.username}
+                      <div className="flex flex-col items-center flex-1 px-1 border-r border-white/5">
+                        <span className="text-white font-black text-sm leading-none mb-1">{profile.nominations_count || 0}</span>
+                        <span className="text-[7px] text-[var(--text-muted)] uppercase tracking-[0.1em] font-mono">Votos</span>
+                      </div>
+
+                      <div className="flex flex-col items-center flex-1 px-1 border-r border-white/5">
+                        <span className="text-white font-black text-sm leading-none mb-1">{profile.endorsements_count || 0}</span>
+                        <span className="text-[7px] text-[var(--text-muted)] uppercase tracking-[0.1em] font-mono">Comentarios</span>
+                      </div>
+
+                      <div className="flex flex-col items-center flex-1 px-1">
+                        <span className="text-[var(--accent)] font-black text-sm leading-none mb-1">{profile.builder_score || 0}</span>
+                        <span className="text-[7px] text-[var(--accent)]/60 uppercase tracking-[0.1em] font-mono">Score</span>
+                      </div>
                     </div>
-                    <div 
-                      className="w-8 h-8 rounded-full bg-[var(--surface2)] flex items-center justify-center opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all border border-[var(--border-bright)]"
-                      style={{ color: profile.accent_color || 'var(--accent)' }}
-                    >
-                       <ArrowRight size={14} />
+
+                    <div className="pt-8 mt-auto flex items-center justify-between border-t border-[var(--border-bright)]/30 group-hover:border-[var(--border-bright)] transition-colors">
+                      <div className="font-mono text-xs text-[var(--text-muted)] flex items-center gap-2">
+                        <span
+                          className="w-2 h-2 rounded-full inline-block shadow-sm"
+                          style={{ backgroundColor: profile.accent_color || 'var(--accent)', boxShadow: `0 0 8px ${profile.accent_color || 'var(--accent)'}40` }}
+                        />
+                        @{profile.username}
+                      </div>
+                      <div
+                        className="w-8 h-8 rounded-full bg-[var(--surface2)] flex items-center justify-center opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all border border-[var(--border-bright)]"
+                        style={{ color: profile.accent_color || 'var(--accent)' }}
+                      >
+                        <ArrowRight size={14} />
+                      </div>
                     </div>
                   </div>
-                </div>
-                {/* Special border for Winner or PRO */}
-                {profile.is_winner ? (
-                   <div className="absolute inset-0 border-2 border-[var(--accent)]/30 rounded-[1.5rem] pointer-events-none transition-colors shadow-[inset_0_0_20px_rgba(200,255,0,0.05)]" />
-                ) : profile.pro_since ? (
-                   <div className="absolute inset-0 border border-amber-500/20 rounded-[1.5rem] pointer-events-none group-hover:border-amber-500/50 transition-colors shadow-[inset_0_0_15px_rgba(245,158,11,0.05)]" />
-                ) : null}
+                  {/* Special border for Winner or PRO */}
+                  {profile.is_winner ? (
+                    <div className="absolute inset-0 border-2 border-[var(--accent)]/30 rounded-[1.5rem] pointer-events-none transition-colors shadow-[inset_0_0_20px_rgba(200,255,0,0.05)]" />
+                  ) : profile.pro_since ? (
+                    <div className="absolute inset-0 border border-amber-500/20 rounded-[1.5rem] pointer-events-none group-hover:border-amber-500/50 transition-colors shadow-[inset_0_0_15px_rgba(245,158,11,0.05)]" />
+                  ) : null}
                 </Link>
               </motion.div>
             ))}
           </div>
 
           {hasMore && (
-           <div className="flex justify-center mt-8">
-             <button
-               onClick={handleLoadMore}
-               disabled={isFetchingMore}
-               className="btn btn-outline border-dashed text-sm font-mono hover:text-white disabled:opacity-50"
-             >
-               {isFetchingMore ? (
-                 <span className="flex items-center gap-2"><Loader2 size={16} className="animate-spin" /> Cargando...</span>
-               ) : (
-                 "Cargar más huevsites"
-               )}
-             </button>
-           </div>
+            <div className="flex justify-center mt-8">
+              <button
+                onClick={handleLoadMore}
+                disabled={isFetchingMore}
+                className="btn btn-outline border-dashed text-sm font-mono hover:text-white disabled:opacity-50"
+              >
+                {isFetchingMore ? (
+                  <span className="flex items-center gap-2"><Loader2 size={16} className="animate-spin" /> Cargando...</span>
+                ) : (
+                  "Cargar más huevsites"
+                )}
+              </button>
+            </div>
           )}
         </>
       )}

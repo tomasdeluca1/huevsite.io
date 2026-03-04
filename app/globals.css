@@ -85,13 +85,19 @@ nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 40px;
+  padding: 16px 20px;
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
   z-index: 100;
   background: rgba(8, 8, 8, 0.7);
   backdrop-filter: blur(24px) saturate(180%);
+}
+
+@media (min-width: 1024px) {
+  nav {
+    padding: 20px 40px;
+  }
 }
 
 .logo {
@@ -108,14 +114,26 @@ nav {
 .nav-right {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
+}
+
+@media (min-width: 1024px) {
+  .nav-right {
+    gap: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .nav-right {
+    display: none !important;
+  }
 }
 
 .btn {
   font-family: var(--font-display);
   font-weight: 600;
   font-size: 14px;
-  padding: 10px 20px;
+  padding: 8px 14px;
   border-radius: var(--radius-sm);
   border: none;
   cursor: pointer;
@@ -123,6 +141,14 @@ nav {
   text-decoration: none;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+@media (min-width: 1024px) {
+  .btn {
+    padding: 10px 20px;
+  }
 }
 
 .btn-ghost {
@@ -340,10 +366,16 @@ nav {
 
 /* Demo Browser */
 .demo-section {
-  padding: 40px 40px 80px;
+  padding: 40px 0 80px;
   max-width: 1280px;
   margin: 0 auto;
   width: 100%;
+}
+
+@media (min-width: 768px) {
+  .demo-section {
+    padding: 40px 40px 80px;
+  }
 }
 
 .demo-label {
@@ -421,9 +453,38 @@ nav {
 
 .huevsite-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-auto-rows: minmax(120px, auto);
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-rows: minmax(110px, auto);
   gap: 12px;
+  grid-auto-flow: dense;
+}
+
+/* Mobile: Force single column on very small screens or anytime the grid breaks */
+@media (max-width: 639px) {
+  .huevsite-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px;
+  }
+
+  /* Reset all spans to 1 to prevent horizontal overflow */
+  .huevsite-grid>* {
+    grid-column: span 1 !important;
+    grid-row: auto !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .huevsite-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+}
+
+/* Large desktop: more breathing room */
+@media (min-width: 1280px) {
+  .huevsite-grid {
+    gap: 20px;
+  }
 }
 
 .huevsite-block {
@@ -452,6 +513,10 @@ nav {
   box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.5);
 }
 
+.col-1 {
+  grid-column: span 1;
+}
+
 .col-2 {
   grid-column: span 2;
 }
@@ -462,6 +527,10 @@ nav {
 
 .col-4 {
   grid-column: span 4;
+}
+
+.row-1 {
+  grid-row: span 1;
 }
 
 .row-2 {
@@ -476,6 +545,10 @@ nav {
   grid-row: span 4;
 }
 
+.col-span-1 {
+  grid-column: span 1;
+}
+
 .col-span-2 {
   grid-column: span 2;
 }
@@ -488,6 +561,10 @@ nav {
   grid-column: span 4;
 }
 
+.row-span-1 {
+  grid-row: span 1;
+}
+
 .row-span-2 {
   grid-row: span 2;
 }
@@ -498,6 +575,41 @@ nav {
 
 .row-span-4 {
   grid-row: span 4;
+}
+
+/* Hardcode common responsive spans because dynamic Tailwind classes often fail */
+@media (min-width: 768px) {
+  .md\:col-span-1 {
+    grid-column: span 1;
+  }
+
+  .md\:col-span-2 {
+    grid-column: span 2;
+  }
+
+  .md\:col-span-3 {
+    grid-column: span 3;
+  }
+
+  .md\:col-span-4 {
+    grid-column: span 4;
+  }
+
+  .md\:row-span-1 {
+    grid-row: span 1;
+  }
+
+  .md\:row-span-2 {
+    grid-row: span 2;
+  }
+
+  .md\:row-span-3 {
+    grid-row: span 3;
+  }
+
+  .md\:row-span-4 {
+    grid-row: span 4;
+  }
 }
 
 /* Block Specifics from HTML */
@@ -1333,33 +1445,47 @@ footer {
 
   .hero {
     padding: 60px 20px 40px;
+    text-align: center;
   }
 
   .hero h1 {
-    font-size: 44px;
-    letter-spacing: -2px;
+    font-size: 36px;
+    line-height: 1.1;
+    letter-spacing: -1.5px;
   }
 
-  .huevsite-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .hero p {
+    font-size: 15px;
+    max-width: 100%;
   }
 
+  .tokens-grid,
+  .microcopy-grid,
   .onboarding-inner {
     grid-template-columns: 1fr;
   }
 
-  .tokens-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .microcopy-grid {
-    grid-template-columns: 1fr;
+  .microcopy-inner,
+  .tokens-section,
+  .onboarding-section {
+    padding: 60px 20px;
   }
 
   footer {
+    padding: 40px 20px;
     flex-direction: column;
     gap: 20px;
     align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .ou-options {
+    grid-template-columns: 1fr;
+  }
+
+  .hero h1 {
+    font-size: 32px;
   }
 }
 

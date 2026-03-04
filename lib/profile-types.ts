@@ -25,11 +25,11 @@ export function getContrastColor(hexColor: string): string {
   if (!hexColor || typeof hexColor !== "string") return "#000000";
   const hex = hexColor.replace("#", "");
   if (hex.length !== 6 && hex.length !== 3) return "#000000";
-  
+
   const r = parseInt(hex.length === 3 ? hex[0] + hex[0] : hex.slice(0, 2), 16);
   const g = parseInt(hex.length === 3 ? hex[1] + hex[1] : hex.slice(2, 4), 16);
   const b = parseInt(hex.length === 3 ? hex[2] + hex[2] : hex.slice(4, 6), 16);
-  
+
   // Calculate relative luminance using YIQ
   const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
   return yiq >= 145 ? "#000000" : "#FFFFFF";
@@ -49,7 +49,7 @@ export function getAdjustedAccentColor(hexColor: string): string {
   if (isDarkColor(hexColor)) {
     // If it's too dark for a black background, return something slightly more visible
     // but keep it as dark as possible to respect user's choice.
-    return "#1a1a1a"; 
+    return "#1a1a1a";
   }
   return hexColor;
 }
@@ -68,6 +68,7 @@ export type BlockType =
   | "media"
   | "certification"
   | "achievement"
+  | "collab"
   | "custom";
 
 export interface BaseBlock {
@@ -101,10 +102,14 @@ export interface BuildingBlockData extends BaseBlock {
 export interface GitHubBlockData extends BaseBlock {
   type: "github";
   username: string;
+  showAdvanced?: boolean;
   stats: {
     stars: number;
     repos: number;
     followers: number;
+    topLanguages?: Array<{ name: string; percent: number }>;
+    issuesClosed?: number;
+    totalCommits?: number;
   };
 }
 
@@ -155,7 +160,7 @@ export interface CommunityBlockData extends BaseBlock {
 
 export interface WritingBlockData extends BaseBlock {
   type: "writing";
-  posts: Array<{ title: string; date: string; link: string }>;
+  posts: Array<{ title: string; date: string; link: string; content?: string }>;
 }
 
 export interface CVBlockData extends BaseBlock {
@@ -196,6 +201,11 @@ export interface CustomBlockData extends BaseBlock {
   link?: string;
 }
 
+export interface CollabBlockData extends BaseBlock {
+  type: "collab";
+  users: Array<{ username: string; role: string }>;
+}
+
 export type BlockData =
   | HeroBlockData
   | BuildingBlockData
@@ -210,6 +220,7 @@ export type BlockData =
   | MediaBlockData
   | CertificationBlockData
   | AchievementBlockData
+  | CollabBlockData
   | CustomBlockData;
 
 export interface ProfileData {
@@ -217,10 +228,13 @@ export interface ProfileData {
   username: string;
   displayName: string;
   tagline?: string;
+  avatarUrl?: string;
+  githubHandle?: string;
   accentColor: string;
   subscriptionTier: "free" | "pro";
   twitterShareUnlocked: boolean;
   extraBlocksFromShare: number;
   hasSeenUpdateFeb25?: boolean;
+  builderScore?: number;
   blocks: BlockData[];
 }

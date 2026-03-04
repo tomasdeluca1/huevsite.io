@@ -47,7 +47,8 @@ export async function GET(request: NextRequest) {
         'updated_at': 'updated_at',
         'followers': 'followers_count',
         'nominations': 'nominations_count',
-        'endorsements': 'endorsements_count'
+        'endorsements': 'endorsements_count',
+        'score': 'builder_score'
       }[sort] || 'created_at';
     }
 
@@ -55,19 +56,19 @@ export async function GET(request: NextRequest) {
       if (!user) {
         return NextResponse.json({ error: "Debes estar logueado para ver a quién seguís." }, { status: 401 });
       }
-      
+
       // Fetch who the user follows
       const { data: followsData } = await supabase
         .from("follows")
         .select("following_id")
         .eq("follower_id", user.id);
-        
+
       const followingIds = (followsData || []).map(f => f.following_id);
-      
+
       if (followingIds.length === 0) {
         return NextResponse.json({ profiles: [], count: 0, hasMore: false }, { status: 200 });
       }
-      
+
       query = query.in("id", followingIds);
       query = query.order("pro_since", { ascending: false, nullsFirst: false });
       query = query.order("created_at", { ascending: false });
@@ -75,19 +76,19 @@ export async function GET(request: NextRequest) {
       if (!user) {
         return NextResponse.json({ error: "Debes estar logueado para ver quién te sigue." }, { status: 401 });
       }
-      
+
       // Fetch who follows the user
       const { data: followersData } = await supabase
         .from("follows")
         .select("follower_id")
         .eq("following_id", user.id);
-        
+
       const followerIds = (followersData || []).map(f => f.follower_id);
-      
+
       if (followerIds.length === 0) {
         return NextResponse.json({ profiles: [], count: 0, hasMore: false }, { status: 200 });
       }
-      
+
       query = query.in("id", followerIds);
       query = query.order("is_winner", { ascending: false, nullsFirst: false });
       query = query.order("pro_since", { ascending: false, nullsFirst: false });

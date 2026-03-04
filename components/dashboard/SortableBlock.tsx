@@ -33,11 +33,19 @@ export function SortableBlock({ id, block, children, onRemove, onEdit, onResize 
   };
 
   const getColSpanClass = (span: number) => {
-    return span === 2 ? "md:col-span-2" : span === 3 ? "md:col-span-3" : span === 4 ? "md:col-span-4" : "md:col-span-1";
+    // Mobile: span 1 or 2
+    const mobileSpan = span > 1 ? "col-span-2" : "col-span-1";
+
+    // Desktop: use original span with explicit classes
+    const desktopSpan = span === 2 ? "md:col-span-2" : span === 3 ? "md:col-span-3" : span === 4 ? "md:col-span-4" : "md:col-span-1";
+
+    return `${mobileSpan} ${desktopSpan}`;
   };
 
   const getRowSpanClass = (span: number) => {
-    return span === 2 ? "md:row-span-2" : span === 3 ? "md:row-span-3" : "md:row-span-1";
+    const mobileSpan = span > 1 ? "row-span-2" : "row-span-1";
+    const desktopSpan = span === 2 ? "md:row-span-2" : span === 3 ? "md:row-span-3" : "md:row-span-1";
+    return `${mobileSpan} ${desktopSpan}`;
   };
 
   return (
@@ -68,30 +76,30 @@ export function SortableBlock({ id, block, children, onRemove, onEdit, onResize 
       {onResize && (
         <div className="absolute bottom-3 right-3 flex flex-col gap-1 z-[60] opacity-0 group-hover:opacity-100 transition-all transform translate-y-1 group-hover:translate-y-0">
           <div className="flex items-center bg-[var(--surface)]/80 backdrop-blur-md border border-[var(--border-bright)] rounded-lg overflow-hidden shadow-lg">
-            <button 
-              onClick={() => onResize(id, Math.max(1, block.col_span - 1), block.row_span)} 
-              className="p-1.5 hover:bg-[var(--accent)] hover:text-black transition-colors" 
-              title="Reducir Ancho"
-            ><ChevronLeft size={12}/></button>
-            <span className="text-[9px] font-mono px-1.5 font-bold text-[var(--accent)] select-none">{block.col_span}w</span>
-            <button 
-              onClick={() => onResize(id, Math.min(4, block.col_span + 1), block.row_span)} 
-              className="p-1.5 hover:bg-[var(--accent)] hover:text-black transition-colors" 
-              title="Aumentar Ancho"
-            ><ChevronRight size={12}/></button>
+            <button
+              onClick={() => onResize(id, Math.max(1, block.col_span - 1), block.row_span)}
+              className="p-1.5 hover:bg-[var(--accent)] hover:text-black transition-colors"
+              title="Reducir ancho"
+            ><ChevronLeft size={12} /></button>
+            <span className="text-[10px] font-mono px-2 font-bold text-[var(--accent)] select-none whitespace-nowrap">↔ {block.col_span} Ancho</span>
+            <button
+              onClick={() => onResize(id, Math.min(4, block.col_span + 1), block.row_span)}
+              className="p-1.5 hover:bg-[var(--accent)] hover:text-black transition-colors"
+              title="Aumentar ancho"
+            ><ChevronRight size={12} /></button>
           </div>
-          <div className="flex items-center bg-[var(--surface)]/80 backdrop-blur-md border border-[var(--border-bright)] rounded-lg overflow-hidden shadow-lg">
-            <button 
-              onClick={() => onResize(id, block.col_span, Math.max(1, block.row_span - 1))} 
-              className="p-1.5 hover:bg-[var(--accent)] hover:text-black transition-colors" 
-              title="Reducir Alto"
-            ><ChevronUp size={12}/></button>
-            <span className="text-[9px] font-mono px-1.5 font-bold text-[var(--accent)] select-none">{block.row_span}h</span>
-            <button 
-              onClick={() => onResize(id, block.col_span, Math.min(3, block.row_span + 1))} 
-              className="p-1.5 hover:bg-[var(--accent)] hover:text-black transition-colors" 
-              title="Aumentar Alto"
-            ><ChevronDown size={12}/></button>
+          <div className="flex items-center bg-[var(--surface)]/80 backdrop-blur-md border border-[var(--border-bright)] rounded-lg overflow-hidden shadow-lg" title="Ajustar altura del bloque">
+            <button
+              onClick={() => onResize(id, block.col_span, Math.max(1, block.row_span - 1))}
+              className="p-1.5 hover:bg-[var(--accent)] hover:text-black transition-colors"
+              title="Reducir alto"
+            ><ChevronUp size={12} /></button>
+            <span className="text-[10px] font-mono px-2 font-bold text-[var(--accent)] select-none whitespace-nowrap">↕ {block.row_span} Alto</span>
+            <button
+              onClick={() => onResize(id, block.col_span, Math.min(3, block.row_span + 1))}
+              className="p-1.5 hover:bg-[var(--accent)] hover:text-black transition-colors"
+              title="Aumentar alto"
+            ><ChevronDown size={12} /></button>
           </div>
         </div>
       )}

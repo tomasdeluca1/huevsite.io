@@ -23,7 +23,7 @@ export function MetricBlock({ data, accentColor }: MetricProps) {
         style={{ background: `radial-gradient(circle at center, ${accentColor} 0%, transparent 70%)` }}
       />
       <div className="block-label opacity-40 uppercase tracking-[0.2em] text-[10px] mb-2">{data.label}</div>
-      <div className="text-5xl font-black text-white title-tracking mb-1" style={{ color: accentColor }}>
+      <div className="text-3xl md:text-5xl font-black text-white title-tracking mb-1" style={{ color: accentColor }}>
         {data.value}
       </div>
       <div className="flex items-center gap-2 mt-2">
@@ -75,12 +75,12 @@ export function SocialBlock({ data, accentColor }: SocialProps) {
             href={formatUrl(l.url)}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-[var(--accent)]/30 hover:bg-[var(--accent)]/[0.06] transition-all group/item"
+            className="flex items-center gap-3 md:gap-4 p-3 md:p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-[var(--accent)]/30 hover:bg-[var(--accent)]/[0.06] transition-all group/item"
           >
-            <span className="text-xl grayscale group-hover/item:grayscale-0 transition-all">{getIcon(l.platform)}</span>
+            <span className="text-lg md:text-xl grayscale group-hover/item:grayscale-0 transition-all">{getIcon(l.platform)}</span>
             <div className="flex flex-col overflow-hidden">
-              <span className="font-bold text-sm text-white group-hover/item:text-[var(--accent)] transition-colors">{getLabel(l)}</span>
-              <span className="text-[10px] text-[var(--text-muted)] truncate opacity-50">{l.url.replace('https://', '')}</span>
+              <span className="font-bold text-xs md:text-sm text-white group-hover/item:text-[var(--accent)] transition-colors line-clamp-1">{getLabel(l)}</span>
+              <span className="text-[9px] md:text-[10px] text-[var(--text-muted)] truncate opacity-50">{l.url.replace('https://', '')}</span>
             </div>
           </a>
         ))}

@@ -79,10 +79,10 @@ export default async function ProfilePage({ params }: Props) {
   if (isEnabled("socialNetwork") && profile.id) {
     try {
       const supabase = await createClient();
-      
+
       // Fetch follower counts and nominations
       const [
-        { count: fers }, 
+        { count: fers },
         { count: fing },
         { count: noms }
       ] = await Promise.all([
@@ -90,7 +90,7 @@ export default async function ProfilePage({ params }: Props) {
         supabase.from("follows").select("*", { count: "exact", head: true }).eq("follower_id", profile.id),
         supabase.from("showcase_nominations").select("*", { count: "exact", head: true }).eq("user_id", profile.id).eq("week", currentWeek)
       ]);
-      
+
       followersCount = fers || 0;
       followingCount = fing || 0;
       nominationsCount = noms || 0;
@@ -114,7 +114,6 @@ export default async function ProfilePage({ params }: Props) {
   const showFollowButton =
     isEnabled("socialNetwork") &&
     !!profile.id &&
-    !!currentUserId &&
     currentUserId !== profile.id;
 
   return (
@@ -124,16 +123,17 @@ export default async function ProfilePage({ params }: Props) {
 
       <main className="min-h-screen pt-12 pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto relative">
         {/* Dynamic Cinematic Backgrounds */}
-        <div 
+        <div
           className="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] opacity-[0.08] blur-[120px] pointer-events-none transition-all duration-1000"
           style={{ backgroundColor: profile.accentColor }}
         />
-        <div 
+        <div
           className="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] opacity-[0.05] blur-[100px] pointer-events-none transition-all duration-1000"
           style={{ backgroundColor: profile.accentColor }}
         />
 
-        <style dangerouslySetInnerHTML={{ __html: `
+        <style dangerouslySetInnerHTML={{
+          __html: `
           :root {
             --accent: ${profile.accentColor};
             --accent-dim: ${profile.accentColor}1f;
@@ -147,12 +147,13 @@ export default async function ProfilePage({ params }: Props) {
         `}} />
 
         {/* Header / Nav */}
-        <ProfileHeader 
+        <ProfileHeader
           profileId={profile.id}
           isFollowing={isFollowing}
           followersCount={followersCount}
           followingCount={followingCount}
           nominationsCount={nominationsCount}
+          builderScore={profile.builderScore || 0}
           accentColor={profile.accentColor}
           showFollowButton={showFollowButton}
           currentUserId={currentUserId}

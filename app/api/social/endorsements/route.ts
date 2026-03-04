@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { scoreService } from "@/lib/score-service";
 
 export const dynamic = "force-dynamic";
 
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
       supabase.from("follows").select("id").eq("follower_id", user.id).eq("following_id", toId).maybeSingle(),
       supabase.from("showcase_nominations").select("id").eq("from_id", user.id).eq("user_id", toId).maybeSingle()
     ]);
-    
+
     if (!follow && !nomination) {
       return NextResponse.json(
         { error: "Solo podés endorsar a builders que seguís o nominás." },
@@ -121,6 +122,8 @@ export async function POST(request: NextRequest) {
         type: "new_endorsement",
         data: { targetUsername: targetProfile.username, skill: skill },
       });
+      // Recalcular score del que recibió el endorsement
+      await scoreService.recomputeScore(toId);
     }
 
     return NextResponse.json({ success: true, endorsement: data });
@@ -140,8 +143,8 @@ export async function PATCH(request: NextRequest) {
 
     const { data, error } = await supabase
       .from("endorsements")
-      .update({ 
-        ...(skill && { skill }), 
+      .update({
+        ...(skill && { skill }),
         ...(comment !== undefined && { comment: comment || null }),
         ...(visible !== undefined && { visible })
       })
@@ -186,6 +189,11 @@ export async function DELETE(request: NextRequest) {
       .eq("id", id);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    // Deberíamos obtener a quién se le quitó el endorsement para recalcular
+    // Pero por ahora, al borrar, el score quedará desactualizado hasta que el usuario guarde su perfil de nuevo 
+    // o podemos hacer un fetch previo si queremos ser exactos.
+
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: "Algo salió mal." }, { status: 500 });

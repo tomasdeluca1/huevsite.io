@@ -101,6 +101,19 @@ export async function PATCH(
       )
     }
 
+    // Log the activity to the feed
+    const { error: activityError } = await supabase.from('activities').insert({
+      user_id: user.id,
+      type: 'block_update',
+      data: {
+        blockType: block.type,
+        blockId: block.id,
+        updateType: Object.keys(updateData).filter(k => k !== 'data')
+      }
+    });
+
+    if (activityError) console.error("Error logging block activity", activityError);
+
     return NextResponse.json({
       success: true,
       block,

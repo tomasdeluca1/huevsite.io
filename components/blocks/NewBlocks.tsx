@@ -7,6 +7,7 @@ import {
   CertificationBlockData,
   AchievementBlockData,
   CustomBlockData,
+  CollabBlockData,
   isDarkColor
 } from "@/lib/profile-types";
 import { ExternalLink, Award, Trophy, Star, Sparkles } from "lucide-react";
@@ -302,6 +303,35 @@ export function CustomBlock({ data, accentColor }: { data: CustomBlockData; acce
           </a>
         </div>
       )}
+    </motion.div>
+  );
+}
+
+export function CollabBlock({ data, accentColor }: { data: CollabBlockData; accentColor: string }) {
+  return (
+    <motion.div className="huevsite-block block-collab h-full flex flex-col group relative overflow-hidden bg-[var(--surface)]">
+      <div className="block-label mb-4 uppercase tracking-widest text-[10px] font-bold" style={{ color: accentColor }}>
+        // TRABAJO CON...
+      </div>
+
+      <div className="flex flex-col gap-3 flex-1 overflow-y-auto custom-scrollbar pr-2 cursor-ns-resize">
+        {data.users.map((user, idx) => (
+          <div key={idx} className="flex items-center justify-between p-3 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] group-hover:border-[var(--border-bright)] transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center font-bold text-sm border" style={{ borderColor: `${accentColor}40`, color: accentColor }}>
+                {user.username.substring(0, 2).toUpperCase()}
+              </div>
+              <div className="flex flex-col">
+                <span className="font-bold text-white text-sm">@{user.username}</span>
+                <span className="text-xs text-[var(--text-muted)] font-mono">{user.role}</span>
+              </div>
+            </div>
+            <a href={`/${user.username}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-xl bg-black/20 text-[var(--text-muted)] hover:text-white transition-colors" style={{ color: accentColor }}>
+              <ExternalLink size={14} />
+            </a>
+          </div>
+        ))}
+      </div>
     </motion.div>
   );
 }

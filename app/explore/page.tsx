@@ -5,8 +5,10 @@ import { ExploreClient } from "@/components/explore/ExploreClient";
 
 export const revalidate = 60; // Revalidate simple cache every 60s
 
-export default async function ExplorePage() {
+export default async function ExplorePage({ searchParams }: { searchParams: Promise<{ from?: string }> }) {
   const supabase = await createClient();
+  const params = await searchParams;
+  const fromDashboard = params.from === "dashboard";
 
   // Fetch profiles that have a username set, order by created_at latest
   const { data: profiles, error } = await supabase
@@ -22,23 +24,22 @@ export default async function ExplorePage() {
     .not("username", "is", null);
 
   const totalRegistered = count || 0;
+  const { data: { user } } = await supabase.auth.getUser();
 
   if (error) {
     console.error("Error fetching explore profiles:", error);
   }
 
-  const { data: { user } } = await supabase.auth.getUser();
-
   return (
     <div className="min-h-screen bg-[var(--bg)] font-display flex flex-col">
       {/* NAV */}
-      <nav className="flex items-center justify-between px-6 md:px-10 py-5 border-b border-[var(--border)] sticky top-0 z-50 bg-[rgba(8,8,8,0.85)] backdrop-blur-xl">
-        <Link href="/" className="logo text-lg font-mono font-bold tracking-tight">
-          huev<span className="text-[var(--accent)]">site</span>.io
+      <nav className="flex items-center justify-between px-6 py-6 md:px-10 max-w-7xl mx-auto w-full relative z-50">
+        <Link href={fromDashboard ? "/dashboard" : "/"} className="logo text-2xl">
+          huev<span>site</span>.io
         </Link>
-        <div className="flex items-center gap-4">
-          <Link href={user ? "/dashboard" : "/login"} className="btn btn-accent text-sm font-bold">
-            {user ? "Mi huevsite 🇦🇷" : "Crear mi huevsite →"}
+        <div className="flex items-center gap-2">
+          <Link href={user ? "/dashboard" : "/login"} className="btn btn-accent text-xs md:text-sm font-bold !px-6 !py-3 !rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-lg shadow-[var(--accent)]/20">
+            {user ? "Mi huevsite" : "Crear mi huevsite"}
           </Link>
         </div>
       </nav>
@@ -53,7 +54,7 @@ export default async function ExplorePage() {
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-6">
             Inspirate con
             <br />
-            <span className="text-[var(--text-muted)] line-through mr-2 inline-block -rotate-1 decoration-[var(--accent)]">
+            <span className="text-[var(--text-muted)] line-through mr-2 inline-block -rotate-1 decoration-[var(--accent)] text-4xl md:text-6xl">
               portfolios
             </span>
             huevsites.
@@ -65,7 +66,7 @@ export default async function ExplorePage() {
       </header>
 
       {/* GRID */}
-      <main className="flex-1 px-6 md:px-10 pb-32 max-w-7xl mx-auto w-full">
+      <main className="flex-1 px-6 md:px-10 pb-32 max-w-7xl mx-auto w-full pt-12">
         <ExploreClient initialTotal={totalRegistered} />
       </main>
 
@@ -78,9 +79,9 @@ export default async function ExplorePage() {
           <div className="text-xs text-[var(--text-dim)]">Mostrá lo que buildeás.</div>
         </div>
         <div className="flex gap-6">
-           <Link href="https://x.com/i/communities/2026312282527932637" target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">X Community</Link>
-           <Link href="https://discord.gg/qE4CWG6D" target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">Discord Community</Link>
-           <Link href="https://github.com/tomasdeluca1" target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">GitHub</Link>
+          <Link href="https://x.com/i/communities/2026312282527932637" target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">X Community</Link>
+          <Link href="https://discord.gg/qE4CWG6D" target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">Discord Community</Link>
+          <Link href="https://github.com/tomasdeluca1" target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">GitHub</Link>
         </div>
       </footer>
     </div>

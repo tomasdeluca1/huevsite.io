@@ -12,6 +12,7 @@ interface Props {
   followersCount: number;
   followingCount: number;
   nominationsCount: number;
+  builderScore: number;
   accentColor: string;
   showFollowButton: boolean;
   currentUserId?: string | null;
@@ -24,6 +25,7 @@ export function ProfileHeader({
   followersCount,
   followingCount,
   nominationsCount,
+  builderScore,
   accentColor,
   showFollowButton,
   currentUserId,
@@ -59,8 +61,8 @@ export function ProfileHeader({
           <Link href="/" className="logo shrink-0 text-xl md:text-2xl">
             huev<span>site</span>.io
           </Link>
-          <Link 
-            href="/explore" 
+          <Link
+            href="/explore"
             className="hidden sm:flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
           >
             ← Explorar
@@ -69,23 +71,23 @@ export function ProfileHeader({
 
         <div className="flex items-center gap-2">
           {currentUserId ? (
-            <Link href="/dashboard" className="btn btn-ghost !text-[10px] !py-2 !px-4 !rounded-xl border border-white/5 bg-white/5 md:hidden">
-              Mi Dashboard 🇦🇷
+            <Link href="/dashboard" className="btn btn-ghost !text-[10px] !py-2 !px-4 !rounded-xl border border-white/5 bg-white/5 md:hidden transition-all hover:bg-white/10">
+              Mi huevsite
             </Link>
           ) : (
-            <Link href="/login" className="btn btn-ghost !text-[10px] !py-2 !px-4 !rounded-xl border border-white/5 bg-white/5 md:hidden">
-              Empezar 🇦🇷
+            <Link href="/login" className="btn btn-ghost !text-[10px] !py-2 !px-4 !rounded-xl border border-white/5 bg-white/5 md:hidden transition-all hover:bg-white/10">
+              Crear mi huevsite
             </Link>
           )}
 
           <div className="hidden md:block">
             {currentUserId ? (
               <Link href="/dashboard" className="btn btn-ghost !px-5 !text-xs !py-3 !rounded-2xl hover:!border-[var(--accent)] transition-all bg-white/5 border border-white/5">
-                Dashboard 🇦🇷
+                Mi huevsite
               </Link>
             ) : (
               <Link href="/login" className="btn btn-ghost !px-5 !text-xs !py-3 !rounded-2xl hover:!border-[var(--accent)] transition-all bg-white/5 border border-white/5">
-                Crear mi huevsite 🇦🇷
+                Crear mi huevsite
               </Link>
             )}
           </div>
@@ -93,43 +95,56 @@ export function ProfileHeader({
       </div>
 
       {/* Stats and Social Actions Bar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 p-1 rounded-3xl md:bg-white/[0.02] md:border md:border-white/5 md:backdrop-blur-md">
+      <div className="huevsite-block !p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-6 !rounded-[2rem]">
         {isEnabledSocialNetwork && profileId && (
-          <div className="flex items-center justify-between sm:justify-start bg-[var(--surface)] sm:bg-transparent border border-[var(--border)] sm:border-none rounded-2xl px-1 py-1 sm:p-0 shadow-sm sm:shadow-none w-full lg:w-auto">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
             <button
               onClick={() => setModalType("followers")}
-              className="flex flex-col items-center flex-1 sm:flex-none px-4 py-2 sm:py-3 rounded-xl hover:bg-white/5 transition-all group"
+              className="flex flex-col items-center px-5 py-2.5 rounded-2xl hover:bg-white/5 transition-all group shrink-0 border border-transparent hover:border-white/5"
             >
-              <span className="font-mono font-bold text-white text-base leading-tight group-hover:scale-110 transition-transform">
+              <span className="font-mono font-bold text-white text-lg leading-tight group-hover:scale-110 transition-transform">
                 {localFollowersCount || 0}
               </span>
-              <span className="text-[9px] uppercase tracking-tighter text-[var(--text-muted)] font-bold">Followers</span>
+              <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-bold">Seguidores</span>
             </button>
 
-            <div className="w-px h-6 bg-[var(--border)] my-auto opacity-50 block sm:hidden md:block" />
+            <div className="w-px h-8 bg-white/10 shrink-0" />
 
             <button
               onClick={() => setModalType("following")}
-              className="flex flex-col items-center flex-1 sm:flex-none px-4 py-2 sm:py-3 rounded-xl hover:bg-white/5 transition-all group"
+              className="flex flex-col items-center px-5 py-2.5 rounded-2xl hover:bg-white/5 transition-all group shrink-0 border border-transparent hover:border-white/5"
             >
-              <span className="font-mono font-bold text-white text-base leading-tight group-hover:scale-110 transition-transform">
+              <span className="font-mono font-bold text-white text-lg leading-tight group-hover:scale-110 transition-transform">
                 {followingCount || 0}
               </span>
-              <span className="text-[9px] uppercase tracking-tighter text-[var(--text-muted)] font-bold">Following</span>
+              <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-bold">Seguidos</span>
             </button>
 
-            <div className="w-px h-6 bg-[var(--border)] my-auto opacity-50 block sm:hidden md:block" />
+            <div className="w-px h-8 bg-white/10 shrink-0" />
 
-            <div className="flex flex-col items-center flex-1 sm:flex-none px-4 py-2 sm:py-3">
-              <span className="font-mono font-bold text-white text-base leading-tight">
+            <div className="flex flex-col items-center px-5 py-2.5 shrink-0">
+              <span className="font-mono font-bold text-white text-lg leading-tight">
                 {localNominationsCount || 0}
               </span>
-              <span className="text-[9px] uppercase tracking-tighter text-[var(--text-muted)] font-bold">Noms 🏆</span>
+              <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-bold">Nominaciones</span>
+            </div>
+
+            <div className="w-px h-8 bg-white/10 shrink-0" />
+
+            <div className="flex flex-col items-center px-5 py-2.5 group relative shrink-0">
+              <span className="font-mono text-[var(--accent)] text-xl leading-tight group-hover:scale-110 transition-transform font-black">
+                {builderScore || 0}
+              </span>
+              <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-bold">Score 🔥</span>
+
+              <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-black border border-white/10 px-4 py-2 rounded-xl text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all transform translate-y-1 group-hover:translate-y-0 pointer-events-none z-50 shadow-2xl">
+                Score de calidad y comunidad
+              </div>
             </div>
           </div>
         )}
 
-        <div className="flex items-center gap-2 w-full lg:w-auto">
+        <div className="flex items-center gap-3 w-full lg:w-auto">
           {showFollowButton && profileId && (
             <div className="flex-1 lg:flex-none">
               <FollowButton
@@ -140,8 +155,8 @@ export function ProfileHeader({
               />
             </div>
           )}
-          
-          {isEnabledSocialNetwork && profileId && currentUserId && (
+
+          {isEnabledSocialNetwork && profileId && currentUserId && currentUserId !== profileId && (
             <div className="flex-1 lg:flex-none">
               <NominateButton
                 userId={profileId}

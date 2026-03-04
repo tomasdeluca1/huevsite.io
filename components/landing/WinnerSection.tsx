@@ -15,9 +15,10 @@ interface ShowcaseData {
 
 interface WinnerSectionProps {
   initialData?: ShowcaseData | null;
+  user?: any;
 }
 
-export function WinnerSection({ initialData }: WinnerSectionProps) {
+export function WinnerSection({ initialData, user }: WinnerSectionProps) {
   const [data, setData] = useState<ShowcaseData | null>(null);
   const [loading, setLoading] = useState(!initialData);
 
@@ -128,7 +129,7 @@ export function WinnerSection({ initialData }: WinnerSectionProps) {
         </p>
       </div>
       {isSliding ? (
-        <div className="max-w-[1400px] mx-auto px-4 grid grid-cols-1 justify-center overflow-hidden h-[60vh] min-h-[450px] md:h-[70vh] md:min-h-[600px] max-h-[800px]">
+        <div className="max-w-[1400px] mx-auto px-0 md:px-4 grid grid-cols-1 justify-center overflow-hidden h-[60vh] min-h-[450px] md:h-[70vh] md:min-h-[600px] max-h-[800px]">
           <AnimatePresence mode="wait">
             <motion.div
               key={profilesToShow[0].id}
@@ -138,7 +139,7 @@ export function WinnerSection({ initialData }: WinnerSectionProps) {
               transition={{ duration: 0.5, ease: "easeInOut" }}
               className="w-full h-full md:col-span-2 max-w-5xl mx-auto flex"
             >
-              <div className="demo-browser flex flex-col w-full h-[60vh] min-h-[450px] md:h-[70vh] md:min-h-[600px] max-h-[800px]">
+              <div className="demo-browser flex flex-col w-full h-[60vh] min-h-[450px] md:h-[70vh] md:min-h-[600px] max-h-[800px] !border-x-0 md:!border-x !rounded-none md:!rounded-[var(--radius-xl)]">
                 <div className="browser-bar">
                   <div className="browser-dots">
                     <span className="bd1"></span>
@@ -155,7 +156,7 @@ export function WinnerSection({ initialData }: WinnerSectionProps) {
                   </Link>
                 </div>
 
-                <div className="profile-page !bg-transparent !p-4 md:!p-8 scrollbar-hide h-full overflow-y-auto">
+                <div className="profile-page !bg-transparent !p-0 md:!p-8 scrollbar-hide h-full overflow-y-auto">
                   <div className="relative z-10 w-full max-w-4xl mx-auto">
                     <ProfileGrid
                       blocks={profilesToShow[0].blocks}
@@ -170,7 +171,7 @@ export function WinnerSection({ initialData }: WinnerSectionProps) {
           </AnimatePresence>
         </div>
       ) : (
-        <div className="max-w-[1400px] mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-8 justify-center">
+        <div className="max-w-[1400px] mx-auto px-0 md:px-4 grid grid-cols-1 md:grid-cols-2 gap-8 justify-center">
           {profilesToShow.map((profile, idx) => (
             <motion.div
               key={profile.id || idx}
@@ -180,7 +181,7 @@ export function WinnerSection({ initialData }: WinnerSectionProps) {
               transition={{ duration: 0.8, delay: idx * 0.2 }}
               className={`w-full ${profilesToShow.length === 1 ? 'md:col-span-2 max-w-5xl mx-auto' : ''}`}
             >
-              <div className="demo-browser flex flex-col h-full w-full">
+              <div className="demo-browser flex flex-col h-full w-full !border-x-0 md:!border-x !rounded-none md:!rounded-[var(--radius-xl)]">
                 <div className="browser-bar">
                   <div className="browser-dots">
                     <span className="bd1"></span>
@@ -197,7 +198,7 @@ export function WinnerSection({ initialData }: WinnerSectionProps) {
                   </Link>
                 </div>
 
-                <div className="profile-page !bg-transparent !p-4 md:!p-8 scrollbar-hide h-full overflow-y-auto">
+                <div className="profile-page !bg-transparent !p-0 md:!p-8 scrollbar-hide h-full overflow-y-auto">
                   <div className="relative z-10 w-full max-w-4xl mx-auto">
                     <ProfileGrid
                       blocks={profile.blocks}
@@ -255,8 +256,8 @@ export function WinnerSection({ initialData }: WinnerSectionProps) {
               </div>
             </div>
 
-            <Link href="/login" className="w-full px-6 py-3 bg-[var(--surface2)] hover:bg-[var(--border-bright)] border border-[var(--border-bright)] rounded-lg text-[14px] font-bold transition-all text-white text-center whitespace-nowrap hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(200,255,0,0.1)]">
-              Subir mi perfil ahora →
+            <Link href={user ? "/dashboard" : "/login"} className="w-full px-6 py-3 bg-[var(--surface2)] hover:bg-[var(--border-bright)] border border-[var(--border-bright)] rounded-lg text-[14px] font-bold transition-all text-white text-center whitespace-nowrap hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(200,255,0,0.1)]">
+              {user ? "Ir a mi dashboard →" : "Subir mi perfil ahora →"}
             </Link>
           </div>
         </div>

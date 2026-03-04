@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { scoreService } from '@/lib/score-service'
 
 export const dynamic = 'force-dynamic'
 
@@ -83,6 +84,7 @@ export async function PATCH(request: NextRequest) {
       'location',
       'available',
       'image',
+      'github_handle',
       'has_seen_update_feb25',
     ]
 
@@ -114,6 +116,23 @@ export async function PATCH(request: NextRequest) {
         { error: 'Error al actualizar perfil' },
         { status: 500 }
       )
+    }
+
+    // Al actualizar el perfil (name, tagline, image), el score puede cambiar
+    const newScore = await scoreService.recomputeScore(user.id);
+    if (profile) {
+      profile.builder_score = newScore;
+
+      // Log activity to the feed
+      const { error: activityError } = await supabase.from('activities').insert({
+        user_id: user.id,
+        type: 'profile_update',
+        data: {
+          updatedFields: Object.keys(updateData),
+          displayName: profile.name || profile.username
+        }
+      });
+      if (activityError) console.error("Error logging profile activity", activityError);
     }
 
     return NextResponse.json({

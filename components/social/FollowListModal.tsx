@@ -88,7 +88,7 @@ export function FollowListModal({ isOpen, onClose, userId, type, accentColor }: 
               <h3 className="text-xl font-bold tracking-tight capitalize">
                 {type === "followers" ? "Seguidores" : "Siguiendo"}
               </h3>
-              <button 
+              <button
                 onClick={onClose}
                 className="p-2 rounded-full hover:bg-[var(--surface2)] transition-all text-[var(--text-muted)] hover:text-white"
               >
@@ -102,7 +102,7 @@ export function FollowListModal({ isOpen, onClose, userId, type, accentColor }: 
                 placeholder="Buscar builder..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-[var(--bg)] border border-[var(--border)] rounded-xl py-2 pl-9 pr-4 text-xs outline-none focus:border-[var(--accent)] transition-all"
+                className="w-full bg-[var(--bg)] border border-[var(--border)] rounded-2xl py-3 pl-10 pr-4 text-xs outline-none focus:border-[var(--accent)] transition-all shadow-inner shadow-black/20"
               />
             </div>
           </div>
@@ -115,8 +115,8 @@ export function FollowListModal({ isOpen, onClose, userId, type, accentColor }: 
               </div>
             ) : users.length === 0 ? (
               <div className="text-center py-12 text-[var(--text-dim)] font-mono text-sm px-4 whitespace-pre-line">
-                {type === "followers" 
-                  ? "Todavía no lo sigue nadie. \n¡Sé el primero!" 
+                {type === "followers"
+                  ? "Todavía no lo sigue nadie. \n¡Sé el primero!"
                   : "Todavía no sigue a nadie."}
               </div>
             ) : (
@@ -126,9 +126,9 @@ export function FollowListModal({ isOpen, onClose, userId, type, accentColor }: 
                     href={`/${user.username}`}
                     key={user.id}
                     onClick={onClose}
-                    className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors group"
+                    className="flex items-center gap-4 p-3.5 rounded-2xl hover:bg-white/5 transition-all group active:scale-[0.98]"
                   >
-                    <div 
+                    <div
                       className="w-10 h-10 rounded-full bg-[var(--surface2)] flex items-center justify-center text-sm font-bold border border-white/5 overflow-hidden"
                     >
                       {user.image ? (
@@ -149,9 +149,9 @@ export function FollowListModal({ isOpen, onClose, userId, type, accentColor }: 
                     </div>
                   </Link>
                 ))}
-                
+
                 {hasMore && (
-                  <button 
+                  <button
                     onClick={handleLoadMore}
                     className="w-full py-4 text-[10px] font-mono uppercase tracking-widest text-[var(--text-dim)] hover:text-white transition-all"
                   >

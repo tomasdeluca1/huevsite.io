@@ -15,6 +15,8 @@ function LoginContent() {
   const [sent, setSent] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  const nextParam = searchParams.get("next");
+
   useEffect(() => {
     const error = searchParams.get("error");
     if (error === "auth_failed") {
@@ -25,10 +27,15 @@ function LoginContent() {
   const handleGitHubLogin = async () => {
     setIsLoading(true);
     setErrorMsg(null);
+    const callbackUrl = new URL(`${window.location.origin}/auth/callback`);
+    if (nextParam) {
+      callbackUrl.searchParams.set("next", nextParam);
+    }
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "github",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: callbackUrl.toString(),
         queryParams: {
           prompt: 'select_account',
         },
@@ -44,10 +51,15 @@ function LoginContent() {
     e.preventDefault();
     setIsLoading(true);
     setErrorMsg(null);
+    const callbackUrl = new URL(`${window.location.origin}/auth/callback`);
+    if (nextParam) {
+      callbackUrl.searchParams.set("next", nextParam);
+    }
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: callbackUrl.toString(),
       },
     });
     if (error) {

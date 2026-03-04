@@ -1,22 +1,22 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { 
-  DndContext, 
-  closestCenter, 
-  KeyboardSensor, 
-  PointerSensor, 
-  useSensor, 
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
   useSensors,
   DragEndEvent
 } from "@dnd-kit/core";
-import { 
-  arrayMove, 
-  SortableContext, 
-  sortableKeyboardCoordinates, 
-  rectSortingStrategy 
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy
 } from "@dnd-kit/sortable";
-import { Save, Eye, Layout as LayoutIcon, Settings, LogOut, Plus, Sparkles, MessageSquare, Activity, Compass } from "lucide-react";
+import { Save, Eye, Layout as LayoutIcon, Settings, LogOut, Plus, Sparkles, MessageSquare, Activity, Compass, Trash2, Copy, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { MOCK_PROFILE } from "@/lib/mock-profile";
@@ -27,7 +27,7 @@ import { GitHubBlock } from "@/components/blocks/GitHubBlock";
 import { ProjectBlock } from "@/components/blocks/ProjectBlock";
 import { MetricBlock, SocialBlock, CVBlock } from "@/components/blocks/Widgets";
 import { StackBlock, CommunityBlock, WritingBlock } from "@/components/blocks/ExtraBlocks";
-import { MediaBlock, CertificationBlock, AchievementBlock, CustomBlock } from "@/components/blocks/NewBlocks";
+import { MediaBlock, CertificationBlock, AchievementBlock, CustomBlock, CollabBlock } from "@/components/blocks/NewBlocks";
 import { SortableBlock } from "@/components/dashboard/SortableBlock";
 import { BlockSelector } from "@/components/dashboard/BlockSelector";
 import { BlockEditorModal } from "@/components/dashboard/BlockEditorModal";
@@ -48,20 +48,45 @@ export default function DashboardPage() {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [isGlobalUpdateOpen, setIsGlobalUpdateOpen] = useState(false);
+  const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [tempProfileData, setTempProfileData] = useState({
+    username: '',
+    display_name: '',
+    tagline: '',
+    avatarUrl: '',
+    githubHandle: ''
+  });
+  const [copied, setCopied] = useState(false);
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(() => (typeof window !== "undefined" ? localStorage.getItem("huevsite_autosave") === "true" : false));
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSavedVersionRef = useRef<string>("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const supabase = createClient();
-  
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     window.location.href = '/login';
   };
-  
+
+  const handleCopyUrl = async () => {
+    if (!profile) return;
+    const url = `${window.location.origin}/${profile.username}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Error al copiar:', err);
+    }
+  };
+
   // Fetch profile on mount
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const response = await fetch('/api/profile');
-        
+
         if (!response.ok) {
           if (response.status === 404) {
             // Usuario autenticado pero sin perfil (posiblemente borrado por el cambio de schema)
@@ -82,6 +107,9 @@ export default function DashboardPage() {
           twitterShareUnlocked: data.profile.twitter_share_unlocked || false,
           hasSeenUpdateFeb25: data.profile.has_seen_update_feb25 || false,
           tagline: data.profile.tagline || "",
+          avatarUrl: data.profile.image || "",
+          githubHandle: data.profile.github_handle || "",
+          builderScore: data.profile.builder_score || 0,
           blocks: data.blocks.map((block: any) => {
             const { id, type, order, col_span, row_span, visible, ...cleanData } = block.data || {};
             return {
@@ -97,8 +125,10 @@ export default function DashboardPage() {
         };
 
         setProfile(transformedProfile);
-        
-        // Show onboarding?
+
+        // Initializing last saved version to avoid immediate autosave on load
+        const { builderScore, ...content } = transformedProfile;
+        lastSavedVersionRef.current = JSON.stringify(content);
         if (transformedProfile.blocks.length === 0) {
           const hasSeen = localStorage.getItem("huevsite_onboarding_seen");
           if (!hasSeen) {
@@ -130,8 +160,8 @@ export default function DashboardPage() {
         body: JSON.stringify({ has_seen_update_feb25: true })
       });
       setProfile(prev => prev ? { ...prev, hasSeenUpdateFeb25: true } : prev);
-    } catch(e) { 
-      console.error(e); 
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -337,6 +367,14 @@ export default function DashboardPage() {
           link: "",
         };
         break;
+      case "collab":
+        initialData = {
+          ...initialData,
+          users: [
+            { username: "ejemplo", role: "Co-founder" }
+          ]
+        };
+        break;
     }
 
     // Agregar el bloque localmente primero
@@ -399,7 +437,7 @@ export default function DashboardPage() {
           )
         };
       });
-      
+
       // Asignar el bloque al modal usando el ID real que nos dio Supabase
       setEditingBlock({ ...initialData, id: block.id } as BlockData);
     } catch (error) {
@@ -464,11 +502,11 @@ export default function DashboardPage() {
   };
 
   const renderBlockContent = (block: BlockData) => {
-    const props = { 
+    const props = {
       data: block as any,
-      accentColor: profile?.accentColor || '#C8FF00' 
+      accentColor: profile?.accentColor || '#C8FF00'
     };
-    
+
     switch (block.type) {
       case "hero": return <HeroBlock {...props} />;
       case "building": return <BuildingBlock {...props} />;
@@ -484,6 +522,7 @@ export default function DashboardPage() {
       case "certification": return <CertificationBlock {...props} />;
       case "achievement": return <AchievementBlock {...props} />;
       case "custom": return <CustomBlock {...props} />;
+      case "collab": return <CollabBlock {...props} />;
       default: return (
         <div className="huevsite-block h-full flex items-center justify-center p-8 border-dashed border-[var(--border-bright)]">
           <p className="text-xs text-[var(--text-dim)] font-mono text-center">Bloque fantasma 🇦🇷</p>
@@ -519,7 +558,7 @@ export default function DashboardPage() {
 
   const handleProfileDetailChange = (field: 'username' | 'name' | 'tagline', value: string) => {
     setProfile(prev => prev ? { ...prev, [field === 'name' ? 'displayName' : field]: value } : null);
-    
+
     // Auto-save logic handles persistence
   };
 
@@ -529,7 +568,7 @@ export default function DashboardPage() {
     setIsSaving(true);
     try {
       // Save profile metadata
-      await fetch('/api/profile', {
+      const response = await fetch('/api/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -539,6 +578,13 @@ export default function DashboardPage() {
           tagline: profile.tagline,
         }),
       });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.profile?.builder_score !== undefined) {
+          setProfile(prev => prev ? { ...prev, builderScore: data.profile.builder_score } : prev);
+        }
+      }
 
       // Save blocks order (ignoring temporary ones that haven't been created yet)
       const blockOrders = profile.blocks
@@ -561,24 +607,40 @@ export default function DashboardPage() {
     }
   };
 
-  // Autosave with debounce
+  // Autosave with debounce (only if enabled)
   useEffect(() => {
-    if (!profile || loading) return;
+    if (!profile || loading || !autoSaveEnabled) return;
+
+    // Evitar loop infinito: comparar contenido actual con la última versión guardada
+    // Ignoramos el builderScore ya que lo devuelve el servidor
+    const { builderScore, ...content } = profile;
+    const currentVersion = JSON.stringify(content);
+
+    if (currentVersion === lastSavedVersionRef.current) {
+      return;
+    }
 
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
 
     saveTimeoutRef.current = setTimeout(() => {
+      lastSavedVersionRef.current = currentVersion;
       handleSave();
-    }, 1500); // Debounce de 1.5s
+    }, 2000); // Higher debounce for safety
 
     return () => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [profile]);
+  }, [profile, autoSaveEnabled, loading]);
+
+  const toggleAutoSave = () => {
+    const newVal = !autoSaveEnabled;
+    setAutoSaveEnabled(newVal);
+    localStorage.setItem("huevsite_autosave", String(newVal));
+  };
 
   if (loading) {
     return (
@@ -603,45 +665,92 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-[var(--bg)] font-display overflow-x-hidden">
-      {/* SIDEBAR */}
-      <aside className="relative md:fixed md:inset-y-0 md:left-0 w-full md:w-[320px] shrink-0 border-b md:border-b-0 md:border-r border-[var(--border)] bg-[var(--surface)] p-4 md:p-8 flex flex-col md:gap-8 top-0 h-auto md:h-screen overflow-y-auto overflow-x-hidden z-10 custom-scrollbar">
-        <div className="flex justify-between items-center mb-4 md:mb-10">
-          <Link href="/" className="logo block text-xl md:text-2xl">huev<span>site</span>.io</Link>
+      {/* MOBILE HEADER */}
+      <div className="md:hidden flex items-center justify-between p-4 bg-[var(--surface)] border-b border-[var(--border)] sticky top-0 z-[100] backdrop-blur-md">
+        <Link href="/" className="logo block text-lg font-extrabold tracking-tight">huev<span>site</span>.io</Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="p-2 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-[var(--accent)]"
+          >
+            <Settings size={20} />
+          </button>
+          <button onClick={handleLogout} className="p-2 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20">
+            <LogOut size={20} />
+          </button>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-md z-[105] md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* SIDEBAR / DRAWER */}
+      <aside className={`
+        fixed inset-y-0 left-0 w-[280px] shrink-0 border-r border-[var(--border)] bg-[var(--surface)] p-6 
+        flex flex-col gap-6 z-[110] transition-transform duration-300 ease-in-out custom-scrollbar overflow-y-auto
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        md:fixed md:inset-y-0 md:left-0
+      `}>
+        <div className="hidden md:flex justify-between items-center mb-6">
+          <Link href="/" className="logo block text-2xl font-extrabold tracking-tight">huev<span>site</span>.io</Link>
         </div>
 
         <div className="flex flex-col gap-6">
           <div className="space-y-6">
-            <div className="space-y-2 md:mb-8 bg-[var(--surface2)]/50 p-4 rounded-2xl border border-[var(--border)] relative group transition-colors hover:border-[var(--border-bright)] shadow-sm">
-              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-mono text-[var(--text-muted)] tracking-widest uppercase pointer-events-none hidden md:block">
+            <div
+              onClick={() => {
+                setTempProfileData({
+                  username: profile.username,
+                  display_name: profile.displayName,
+                  tagline: profile.tagline || '',
+                  avatarUrl: profile.avatarUrl || '',
+                  githubHandle: profile.githubHandle || ''
+                });
+                setIsProfileModalOpen(true);
+              }}
+              className="space-y-1.5 md:mb-4 bg-[var(--surface2)]/50 p-4 rounded-2xl border border-[var(--border)] relative group transition-all hover:border-[var(--border-bright)] cursor-pointer hover:bg-[var(--surface2)] shadow-sm"
+            >
+              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity text-[8px] font-mono text-[var(--accent)] tracking-widest uppercase pointer-events-none hidden md:block">
                 Editar
               </div>
               {!profile.blocks.some(b => b.type === 'hero') && (
                 <>
-                  <input
-                    type="text"
-                    value={profile.displayName}
-                    onChange={(e) => handleProfileDetailChange('name', e.target.value)}
-                    className="bg-transparent border-none outline-none text-2xl font-extrabold truncate text-white w-full p-0 placeholder-[var(--text-muted)] focus:text-[var(--accent)] transition-colors"
-                    placeholder="Tu Nombre"
-                  />
-                  <input
-                    type="text"
-                    value={profile.tagline || ""}
-                    onChange={(e) => handleProfileDetailChange('tagline', e.target.value)}
-                    className="bg-transparent border-none outline-none text-sm text-[var(--text-dim)] w-full p-0 placeholder-[var(--text-muted)] block"
-                    placeholder="Un tagline cortito..."
-                  />
+                  <div className="text-xl font-black truncate text-white w-full p-0">
+                    {profile.displayName || "Tu Nombre"}
+                  </div>
+                  <div className="text-[11px] text-[var(--text-dim)] w-full p-0 block truncate font-mono uppercase tracking-tight opacity-70">
+                    {profile.tagline || "Sin tagline"}
+                  </div>
                 </>
               )}
-              <div className={`flex items-center gap-1 ${!profile.blocks.some(b => b.type === 'hero') ? 'pt-3 mt-1 border-t border-[var(--border)]/50' : ''}`}>
-                <span className="text-[11px] text-[var(--text-muted)] font-mono">huevsite.io/</span>
-                <input
-                  type="text"
-                  value={profile.username}
-                  onChange={(e) => handleProfileDetailChange('username', e.target.value)}
-                  className="bg-transparent border-none outline-none text-[11px] font-bold truncate text-[var(--accent)] font-mono flex-1 p-0 focus:underline tracking-wide"
-                  placeholder="username"
-                />
+              <div
+                className={`flex items-center justify-between gap-2 p-2 px-3 rounded-xl bg-black/30 border border-white/5 group/url mt-3`}
+              >
+                <div className="flex items-center gap-1 min-w-0">
+                  <span className="text-[10px] text-[var(--text-muted)] font-mono shrink-0">huevsite.io/</span>
+                  <span className="text-xs font-black truncate text-[var(--accent)] font-mono">
+                    {profile.username}
+                  </span>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCopyUrl();
+                  }}
+                  className="shrink-0 p-1.5 rounded-lg hover:bg-white/10 text-[var(--text-muted)] hover:text-white transition-all bg-white/5"
+                  title="Copiar URL"
+                >
+                  {copied ? <Check size={12} className="text-[var(--accent)]" /> : <Copy size={12} />}
+                </button>
               </div>
             </div>
 
@@ -650,7 +759,69 @@ export default function DashboardPage() {
               onChange={handleColorChange}
             />
 
-            <div className="h-px bg-[var(--border)]" />
+            <div className="h-px bg-[var(--border)] hidden md:block" />
+
+            {/* Builder Score */}
+            <div className="bg-[var(--surface2)]/30 rounded-2xl p-4 border border-[var(--border)] relative overflow-hidden">
+              <div
+                className="absolute inset-0 opacity-10 pointer-events-none"
+                style={{ background: `radial-gradient(circle at right, ${profile.accentColor}, transparent)` }}
+              />
+              <div className="flex justify-between items-end mb-2 relative z-10">
+                <span className="text-[9px] font-mono text-[var(--text-muted)] uppercase tracking-widest font-bold">Builder Score</span>
+                <span className="text-lg font-black font-mono text-white leading-none">{profile.builderScore || 0}</span>
+              </div>
+              <div className="w-full bg-black/50 h-1 rounded-full overflow-hidden relative z-10">
+                <div
+                  className="h-full rounded-full transition-all duration-1000 ease-out"
+                  style={{
+                    width: `${Math.min(((profile.builderScore || 0) / 500) * 100, 100)}%`,
+                    backgroundColor: profile.accentColor
+                  }}
+                />
+              </div>
+              <p className="text-[9px] font-mono text-[var(--text-dim)] mt-2 leading-[1.4] line-clamp-2 italic">
+                {(profile.builderScore || 0) < 50 || (!profile.avatarUrl || profile.displayName === profile.username) ? (
+                  <span className="text-orange-400/80">⚠️ Completá tu nombre y foto para validar tu identidad. (+150 pts)</span>
+                ) : !profile.blocks.some(b => (b.type === 'project' || b.type === 'building')) ? (
+                  <span className="text-orange-400/80">🚀 Casi listo. Agregá al menos un proyecto real para sumar fuerte. (+100 pts)</span>
+                ) : !(profile.githubHandle || profile.blocks.some(b => b.type === 'github')) ? (
+                  <span className="text-[var(--accent)]/80">💻 Conectá tu GitHub para mostrar tus repos y actividad dev. (+100 pts)</span>
+                ) : (profile.builderScore || 0) < 400 ? (
+                  <span className="text-[var(--accent)]/80">✨ ¡Gran perfil! Ahora pedí comentarios a otros builders para subir al top.</span>
+                ) : (
+                  <span className="text-emerald-400/80">🔥 Perfil de Elite. Tu huevsite está entre los mejores de la comunidad.</span>
+                )}
+              </p>
+
+              <div className="mt-3 pt-3 border-t border-white/5 space-y-1.5 hidden md:block">
+                {[
+                  {
+                    label: 'Identidad (Nombre + Bio + Foto)',
+                    done: !!profile.tagline && !!profile.avatarUrl && profile.displayName !== profile.username
+                  },
+                  {
+                    label: 'Contenido (Mínimo 1 proyecto)',
+                    done: profile.blocks.some(b => (b.type === 'project' || b.type === 'building') && (b as any).title && !(b as any).title.includes('Mi primer proyecto'))
+                  },
+                  {
+                    label: 'Dev Stack (GitHub conectado)',
+                    done: !!profile.githubHandle || profile.blocks.some(b => b.type === 'github')
+                  },
+                  {
+                    label: 'Social (Recibir comentarios)',
+                    done: (profile.builderScore || 0) > 300
+                  }
+                ].map((task, i) => (
+                  <div key={i} className="flex items-center gap-1.5">
+                    <div className={`w-1 h-1 rounded-full ${task.done ? 'bg-[var(--accent)]' : 'bg-red-500/20'}`} />
+                    <span className={`text-[9px] font-mono tracking-tight ${task.done ? 'text-[var(--text-dim)]' : 'text-[var(--text-muted)]'}`}>
+                      {task.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
 
             <BlockSelector
               onAdd={addBlock}
@@ -671,49 +842,54 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="mt-2 md:mt-8 space-y-2">
-          <div className="section-label !text-[9px] mb-2 px-1 hidden md:block">// comunidad</div>
-          <div className="flex md:flex-col gap-2 overflow-x-auto no-scrollbar snap-x pb-2 md:pb-0">
-            <Link href="/feed" className="flex items-center gap-3 md:w-full p-3 rounded-xl bg-[var(--surface2)] md:bg-transparent text-sm font-medium text-[var(--text-dim)] hover:text-white md:hover:bg-[var(--surface2)] transition-all group shrink-0 snap-center">
-              <Activity size={18} className="shrink-0 group-hover:scale-110 transition-transform" /> 
+        <div className="mt-4 md:mt-6 space-y-2">
+          <div className="section-label !text-[9px] mb-2 px-1 hidden md:block text-[var(--text-muted)] tracking-widest uppercase">// comunidad</div>
+          <div className="grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-1.5">
+            <Link href="/feed?from=dashboard" className="flex items-center gap-3 w-full p-3 rounded-xl bg-[var(--surface2)]/50 md:bg-transparent text-sm font-bold text-[var(--text-muted)] hover:text-white md:hover:bg-[var(--surface2)] transition-all group">
+              <Activity size={18} className="shrink-0 group-hover:scale-110 transition-transform opacity-70" />
               <span className="whitespace-nowrap">Feed</span>
             </Link>
-            <Link href="/explore" className="flex items-center gap-3 md:w-full p-3 rounded-xl bg-[var(--surface2)] md:bg-transparent text-sm font-medium text-[var(--text-dim)] hover:text-white md:hover:bg-[var(--surface2)] transition-all group shrink-0 snap-center">
-              <Compass size={18} className="shrink-0 group-hover:scale-110 transition-transform" /> 
+            <Link href="/explore?from=dashboard" className="flex items-center gap-3 w-full p-3 rounded-xl bg-[var(--surface2)]/50 md:bg-transparent text-sm font-bold text-[var(--text-muted)] hover:text-white md:hover:bg-[var(--surface2)] transition-all group">
+              <Compass size={18} className="shrink-0 group-hover:scale-110 transition-transform opacity-70" />
               <span className="whitespace-nowrap">Explorar</span>
             </Link>
           </div>
         </div>
 
-        <div className="mt-2 md:mt-auto space-y-2">
-          <div className="section-label !text-[9px] mb-2 px-1 hidden md:block">// configuración</div>
-          <div className="flex md:flex-col gap-2 overflow-x-auto no-scrollbar snap-x pb-2 md:pb-0">
-            <button onClick={() => alert('Próximamente 🇦🇷')} className="flex items-center gap-3 md:w-full p-3 rounded-xl bg-[var(--surface2)] md:bg-transparent text-sm font-medium text-[var(--text-dim)] hover:text-white md:hover:bg-[var(--surface2)] transition-all group shrink-0 snap-center">
-              <Settings size={18} className="shrink-0 group-hover:rotate-45 transition-transform" /> 
-              <span className="whitespace-nowrap">Ajustes</span>
-            </button>
-            <button onClick={() => setIsFeedbackOpen(true)} className="flex items-center gap-3 md:w-full p-3 rounded-xl bg-[var(--surface2)] md:bg-transparent text-sm font-medium text-[var(--accent)] hover:bg-[var(--accent-dim)] transition-all shrink-0 snap-center">
-              <MessageSquare size={18} className="shrink-0" /> 
-              <span className="whitespace-nowrap">Feedback 🇦🇷</span>
-            </button>
-            <button onClick={handleLogout} className="md:hidden flex items-center gap-3 p-3 rounded-xl text-red-400 bg-red-400/10 text-sm font-medium transition-colors shrink-0 snap-center">
-              <LogOut size={18} className="shrink-0" /> 
-              <span className="whitespace-nowrap">Salir</span>
+        <div className="mt-4 md:mt-6 space-y-2">
+          <div className="section-label !text-[9px] mb-2 px-1 hidden md:block text-[var(--text-muted)] tracking-widest uppercase">// configuración</div>
+          <div className="grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-1.5">
+            <div className="flex items-center justify-between gap-3 w-full p-3 rounded-xl bg-[var(--surface2)]/50 md:bg-transparent text-sm font-bold text-[var(--text-muted)] hover:text-white md:hover:bg-[var(--surface2)] transition-all group">
+              <div className="flex items-center gap-3">
+                <Save size={18} className="shrink-0 opacity-70" />
+                <span className="whitespace-nowrap">Auto</span>
+              </div>
+              <button
+                onClick={toggleAutoSave}
+                className={`w-8 h-4.5 rounded-full relative transition-colors ${autoSaveEnabled ? 'bg-[var(--accent)]' : 'bg-white/10'}`}
+              >
+                <div className={`absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white transition-all ${autoSaveEnabled ? 'right-0.5' : 'left-0.5'}`} />
+              </button>
+            </div>
+            <button onClick={() => setIsFeedbackOpen(true)} className="flex items-center gap-3 w-full p-3 rounded-xl bg-[var(--surface2)]/50 md:bg-transparent text-sm font-bold text-[var(--accent)] hover:bg-[var(--accent-dim)] transition-all">
+              <MessageSquare size={18} className="shrink-0 opacity-70" />
+              <span className="whitespace-nowrap">Feedback</span>
             </button>
           </div>
         </div>
 
-        <div className="hidden md:block mt-auto pt-6 border-t border-[var(--border)]">
-          <button onClick={handleLogout} className="flex items-center gap-3 w-full p-3 rounded-xl text-red-400/70 hover:text-red-400 text-sm font-medium hover:bg-red-500/10 transition-colors group shrink-0">
-            <LogOut size={18} className="shrink-0 group-hover:-translate-x-1 transition-transform" /> 
+        <div className="hidden md:block mt-auto pt-4 border-t border-[var(--border)]">
+          <button onClick={handleLogout} className="flex items-center gap-2.5 w-full p-2.5 rounded-xl text-red-400/60 hover:text-red-400 text-[13px] font-medium hover:bg-red-500/10 transition-colors group shrink-0">
+            <LogOut size={16} className="shrink-0 group-hover:-translate-x-1 transition-transform" />
             <span className="truncate">Cerrar sesión</span>
           </button>
         </div>
       </aside>
 
       {/* CANVAS */}
-      <main className="flex-1 p-4 lg:p-8 overflow-y-auto relative z-0 md:ml-[320px]">
-        <style dangerouslySetInnerHTML={{ __html: `
+      <main className="flex-1 p-4 md:p-8 lg:p-10 lg:px-14 overflow-y-auto relative z-0 md:ml-[280px]">
+        <style dangerouslySetInnerHTML={{
+          __html: `
           :root {
             --accent: ${profile.accentColor};
             --accent-dim: ${profile.accentColor}1f;
@@ -721,17 +897,11 @@ export default function DashboardPage() {
           }
         `}} />
         <div className="absolute top-0 right-0 w-full lg:w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(200,255,0,0.03)_0%,transparent_70%)] pointer-events-none" />
-        
-        <header className="flex flex-col md:flex-row md:justify-between md:items-end gap-6 mb-8 md:mb-12 max-w-7xl mx-auto items-center text-center md:text-left">
+
+        <header className="flex flex-col md:flex-row md:justify-between md:items-end gap-6 mb-8 md:mb-14 max-w-7xl mx-auto items-center text-center md:text-left pt-2 md:pt-0">
           <div className="w-full md:w-auto">
-            <div className="flex items-center justify-between md:justify-start gap-4 mb-2">
+            <div className="mb-2">
               <div className="section-label hidden md:block">// editor de huevsite</div>
-              <Link 
-                href="/explore" 
-                className="text-[10px] font-mono uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors inline-flex items-center gap-1.5"
-              >
-                ← Volver a explorar
-              </Link>
             </div>
             <h2 className="text-3xl md:text-4xl font-extrabold tracking-tighter">Armá tu huevsite.</h2>
             <p className="section-sub !text-sm mt-2 hidden md:block">
@@ -741,34 +911,34 @@ export default function DashboardPage() {
 
           <div className="flex flex-col md:flex-row gap-4 items-center w-full md:w-auto">
             {lastSaved && !isSaving && (
-              <span className="text-xs text-[var(--text-muted)] font-mono hidden md:inline">
-                Guardado · hace {Math.floor((Date.now() - lastSaved.getTime()) / 1000)}s
+              <span className="text-[10px] text-[var(--text-muted)] font-mono hidden md:inline uppercase tracking-widest">
+                Guardado hace {Math.floor((Date.now() - lastSaved.getTime()) / 1000)}s
               </span>
             )}
             {isSaving && (
-              <span className="text-xs text-[var(--accent)] font-mono animate-pulse hidden md:inline">
-                Guardando...
+              <span className="text-[10px] text-[var(--accent)] font-mono animate-pulse hidden md:inline uppercase tracking-widest">
+                Guardando cambios...
               </span>
             )}
             <div className="flex gap-2 w-full md:w-auto">
               <Link
                 href={`/${profile.username}`}
                 target="_blank"
-                className="btn btn-ghost !px-6 flex-1 md:flex-none justify-center"
+                className="btn btn-ghost !px-6 flex-1 md:flex-none justify-center !py-3 md:!py-2"
               >
-                <Eye size={16} className="md:mr-2" /> <span className="hidden md:inline">Ver perfil</span>
+                <Eye size={16} className="mr-2" /> <span className="">Ver perfil</span>
               </Link>
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="btn btn-accent !px-8 shadow-xl flex-1 md:flex-none justify-center whitespace-nowrap border"
-                style={{ 
-                  backgroundColor: profile.accentColor, 
+                className="btn btn-accent !px-8 shadow-xl flex-1 md:flex-none justify-center whitespace-nowrap border !py-3 md:!py-2"
+                style={{
+                  backgroundColor: profile.accentColor,
                   color: getContrastColor(profile.accentColor),
                   borderColor: 'var(--btn-border)'
                 }}
               >
-                <Save size={16} className="md:mr-2" /> <span className="md:inline">{isSaving ? 'Guardando' : 'Guardar'}</span>
+                <Save size={16} className="mr-2" /> <span className="">{isSaving ? 'Guardando' : 'Guardar'}</span>
               </button>
             </div>
           </div>
@@ -784,15 +954,15 @@ export default function DashboardPage() {
               items={profile.blocks.map(b => b.id)}
               strategy={rectSortingStrategy}
             >
-              <div className="huevsite-grid min-h-[600px] p-8 rounded-[2rem] border border-dashed border-[var(--border-bright)] bg-white/[0.02]">
+              <div className="huevsite-grid min-h-[600px] p-3 sm:p-6 md:p-8 rounded-[2rem] border border-dashed border-[var(--border-bright)] bg-white/[0.02]">
                 {profile.blocks.length === 0 ? (
                   <div className="col-span-full flex flex-col items-center justify-center py-40 text-center">
                     <div className="w-16 h-16 rounded-full bg-[var(--surface2)] flex items-center justify-center mb-6 border border-[var(--border-bright)] animate-pulse">
-                       <Plus size={32} className="text-[var(--text-dim)]" />
+                      <Plus size={32} className="text-[var(--text-dim)]" />
                     </div>
                     <p className="text-[var(--text-dim)] font-mono text-sm max-w-xs leading-relaxed">
-                       Este portfolio está más vacío que heladera de estudiante. 🇦🇷 <br/>
-                       <span className="text-[var(--accent)]">Empezá agregando tu primer bloque.</span>
+                      Este portfolio está más vacío que heladera de estudiante. 🇦🇷 <br />
+                      <span className="text-[var(--accent)]">Empezá agregando tu primer bloque.</span>
                     </p>
                   </div>
                 ) : (
@@ -814,7 +984,7 @@ export default function DashboardPage() {
                         key={block.id}
                         id={block.id}
                         block={block}
-                        onRemove={removeBlock}
+                        onRemove={(id) => setIsDeletingId(id)}
                         onEdit={(b) => setEditingBlock(b)}
                         onResize={(id, colSpan, rowSpan) => updateBlock({ ...block, col_span: colSpan, row_span: rowSpan })}
                       >
@@ -842,12 +1012,12 @@ export default function DashboardPage() {
         )}
       </AnimatePresence>
 
-      <FeedbackModal 
-        isOpen={isFeedbackOpen} 
-        onClose={() => setIsFeedbackOpen(false)} 
+      <FeedbackModal
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
       />
 
-      <GlobalUpdateModal 
+      <GlobalUpdateModal
         isOpen={isGlobalUpdateOpen}
         onClose={handleCloseGlobalUpdate}
       />
@@ -860,6 +1030,199 @@ export default function DashboardPage() {
         }}
         username={profile.username}
       />
-    </div>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {isDeletingId && (
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+              onClick={() => setIsDeletingId(null)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 30 }}
+              className="relative w-full max-w-sm bg-[var(--surface)] border border-red-500/30 rounded-[2rem] shadow-2xl p-8 z-10 text-center"
+            >
+              <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-6 text-red-500">
+                <Trash2 size={32} />
+              </div>
+              <h3 className="text-2xl font-black mb-3 text-white">¿Eliminar bloque?</h3>
+              <p className="text-[var(--text-dim)] mb-8 text-sm leading-relaxed">
+                Esta acción es irreversible y se perderá todo el contenido del bloque. ¿Estás seguro?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setIsDeletingId(null)}
+                  className="flex-1 py-3.5 rounded-2xl bg-[var(--surface2)] font-bold text-sm text-white hover:bg-[var(--border)] transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    removeBlock(isDeletingId);
+                    setIsDeletingId(null);
+                  }}
+                  className="flex-1 py-3.5 rounded-2xl bg-red-500 font-bold text-sm text-white hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Profile / URL Editing Modal */}
+      <AnimatePresence>
+        {isProfileModalOpen && (
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsProfileModalOpen(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 30 }}
+              className="relative w-full max-w-md bg-[var(--surface)] border border-[var(--border-bright)] rounded-[2.5rem] shadow-2xl overflow-hidden z-10 p-8 pt-10"
+            >
+              <div className="text-center mb-8">
+                <div className="section-label mb-2 mx-auto w-fit">// ajustes de identidad</div>
+                <h3 className="text-2xl font-black tracking-tighter">Editar Perfil</h3>
+              </div>
+
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase font-mono tracking-widest text-[var(--text-muted)] px-1">Tu URL (Username)</label>
+                  <div className="flex items-center gap-2 p-4 rounded-2xl bg-black/40 border border-white/10 focus-within:border-[var(--accent)] transition-all">
+                    <span className="text-xs text-[var(--text-muted)] font-mono">huevsite.io/</span>
+                    <input
+                      value={tempProfileData.username}
+                      onChange={(e) => setTempProfileData(p => ({ ...p, username: e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '') }))}
+                      className="bg-transparent border-none outline-none text-sm font-black text-[var(--accent)] font-mono flex-1 p-0"
+                      placeholder="username"
+                    />
+                  </div>
+                  <p className="text-[10px] text-[var(--text-muted)] font-mono px-1">
+                    Solo letras, números, guiones y guiones bajos.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase font-mono tracking-widest text-[var(--text-muted)] px-1 font-bold">Foto de Perfil (URL)</label>
+                  <input
+                    value={tempProfileData.avatarUrl}
+                    onChange={(e) => setTempProfileData(p => ({ ...p, avatarUrl: e.target.value }))}
+                    className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-[var(--text-dim)] focus:border-[var(--accent)] transition-all font-mono"
+                    placeholder="https://..."
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase font-mono tracking-widest text-[var(--text-muted)] px-1 font-bold">GitHub Username</label>
+                  <input
+                    value={tempProfileData.githubHandle}
+                    onChange={(e) => setTempProfileData(p => ({ ...p, githubHandle: e.target.value }))}
+                    className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-[var(--accent)] font-mono"
+                    placeholder="ej: tomasdeluca"
+                  />
+                  <p className="text-[9px] text-[var(--text-muted)] font-mono px-1">
+                    Esto habilita métricas avanzadas y bloques de repo.
+                  </p>
+                </div>
+
+                <div className="h-px bg-white/5 my-2" />
+
+                <div className="space-y-4 pt-2">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-mono tracking-widest text-[var(--text-muted)] px-1 font-bold">Nombre Público</label>
+                    <input
+                      value={tempProfileData.display_name}
+                      onChange={(e) => setTempProfileData(p => ({ ...p, display_name: e.target.value }))}
+                      className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm font-bold text-white focus:border-[var(--accent)] transition-all"
+                      placeholder="Tu Nombre"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-mono tracking-widest text-[var(--text-muted)] px-1 font-bold">Tagline / Rol</label>
+                    <input
+                      value={tempProfileData.tagline}
+                      onChange={(e) => setTempProfileData(p => ({ ...p, tagline: e.target.value }))}
+                      className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-[var(--text-dim)] focus:border-[var(--accent)] transition-all"
+                      placeholder="p. ej. Product Designer"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-4 mt-10">
+                <button
+                  onClick={() => setIsProfileModalOpen(false)}
+                  className="flex-1 py-4 text-sm font-bold text-[var(--text-muted)] hover:text-white transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={async () => {
+                    const oldUsername = profile.username;
+                    const newUsername = tempProfileData.username;
+
+                    // Actualizar estado local
+                    setProfile(prev => {
+                      if (!prev) return null;
+                      return {
+                        ...prev,
+                        username: newUsername,
+                        displayName: tempProfileData.display_name,
+                        tagline: tempProfileData.tagline,
+                        avatarUrl: tempProfileData.avatarUrl,
+                        githubHandle: tempProfileData.githubHandle
+                      };
+                    });
+
+                    setIsProfileModalOpen(false);
+
+                    // Persistencia inmediata
+                    try {
+                      const response = await fetch('/api/profile', {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          username: newUsername,
+                          name: tempProfileData.display_name,
+                          tagline: tempProfileData.tagline,
+                          image: tempProfileData.avatarUrl,
+                          github_handle: tempProfileData.githubHandle
+                        }),
+                      });
+
+                      if (!response.ok) {
+                        const data = await response.json();
+                        alert(`Error: ${data.error || 'No se pudo actualizar'}`);
+                        // Revertir? Podríamos recargar si falla mucho.
+                      }
+                    } catch (e) {
+                      console.error(e);
+                    }
+                  }}
+                  className="flex-[2] py-4 rounded-2xl bg-[var(--accent)] text-black font-black text-sm shadow-lg shadow-[var(--accent)]/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                  style={{ backgroundColor: profile.accentColor, color: getContrastColor(profile.accentColor) }}
+                >
+                  Confirmar cambios
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div >
   );
 }

@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { ProfileData, BlockData } from './profile-types';
+import { scoreService } from './score-service';
 
 async function getServerClient() {
   const cookieStore = await cookies();
@@ -57,6 +58,7 @@ export const profileService = {
       subscriptionTier: profile.pro_since ? 'pro' : 'free',
       extraBlocksFromShare: profile.extra_blocks_from_share || 0,
       twitterShareUnlocked: profile.twitter_share_unlocked || false,
+      builderScore: profile.builder_score || 0,
       blocks: (blocks || []).map(b => {
         const { id, type, order, col_span, row_span, visible, ...cleanData } = b.data || {};
         return {
@@ -112,5 +114,8 @@ export const profileService = {
       .insert(blocksToInsert);
 
     if (insertError) throw insertError;
+
+    // 3. Recalcular Builder Score
+    await scoreService.recomputeScore(userId);
   }
 };

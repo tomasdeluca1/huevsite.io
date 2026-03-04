@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { scoreService } from "@/lib/score-service";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +49,8 @@ export async function POST(request: NextRequest) {
         type: "new_follow",
         data: { targetUsername: targetProfile.username },
       });
+      // Recalcular score del que recibió el follow
+      await scoreService.recomputeScore(followingId);
     }
 
     return NextResponse.json({ success: true });
@@ -82,6 +85,9 @@ export async function DELETE(request: NextRequest) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    // Recalcular score tras unfollow
+    await scoreService.recomputeScore(followingId);
 
     return NextResponse.json({ success: true });
   } catch (error) {

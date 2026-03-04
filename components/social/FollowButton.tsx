@@ -29,7 +29,8 @@ export function FollowButton({ profileId, initialIsFollowing, accentColor, onTog
         setIsFollowing(willFollow);
         onToggle?.(willFollow);
       } else if (res.status === 401) {
-        window.location.href = "/login";
+        const currentPath = window.location.pathname;
+        window.location.href = `/login?next=${encodeURIComponent(currentPath)}`;
       } else {
         const data = await res.json();
         alert(data.error || "Error al seguir.");

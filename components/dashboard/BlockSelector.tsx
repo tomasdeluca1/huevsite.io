@@ -113,7 +113,7 @@ export function BlockSelector({
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="btn btn-accent w-full !rounded-2xl flex items-center justify-center gap-2 py-4 border"
-        style={{ 
+        style={{
           backgroundColor: accentColor,
           borderColor: isDarkColor(accentColor) ? 'rgba(255,255,255,0.15)' : 'transparent'
         }}
@@ -150,7 +150,7 @@ export function BlockSelector({
                   <div className="space-y-8 md:space-y-10">
                     {categories.map((cat, i) => (
                       <div key={i}>
-                        <h4 className="text-[10px] uppercase font-mono tracking-[0.2em] text-[var(--accent)] mb-4 px-2">{cat.name}</h4>
+                        <h4 className="text-[11px] uppercase font-mono tracking-[0.2em] text-[var(--accent)] mb-5 px-2 font-black italic shadow-[var(--accent)]/10 text-glow">{cat.name}</h4>
                         <div className="grid grid-cols-2 gap-3">
                           {cat.blocks.map((block) => (
                             <button
@@ -159,14 +159,14 @@ export function BlockSelector({
                               className="flex items-start gap-4 p-4 rounded-3xl hover:bg-[var(--surface2)] border border-transparent hover:border-[var(--border-bright)] transition-all group text-left"
                             >
                               <div
-                                className="p-3 rounded-2xl bg-[var(--surface2)] text-[var(--text-dim)] group-hover:text-black group-hover:bg-[var(--accent)] transition-all flex-shrink-0"
+                                className="p-3.5 rounded-2xl bg-[var(--surface2)] text-[var(--text-dim)] group-hover:text-black group-hover:bg-[var(--accent)] transition-all flex-shrink-0 shadow-lg"
                                 style={{ "--accent": accentColor } as React.CSSProperties}
                               >
                                 {block.icon}
                               </div>
-                              <div>
-                                <h5 className="text-sm font-bold mb-1">{block.label}</h5>
-                                <p className="text-[11px] text-[var(--text-dim)] leading-snug">{block.desc}</p>
+                              <div className="flex-1">
+                                <h5 className="text-[15px] font-extrabold mb-1 tracking-tight text-white group-hover:text-[var(--accent)] transition-colors">{block.label}</h5>
+                                <p className="text-[12px] text-[var(--text-dim)] leading-relaxed font-medium">{block.desc}</p>
                               </div>
                             </button>
                           ))}

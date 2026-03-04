@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWeek } from "@/lib/showcase-service";
+import { scoreService } from "@/lib/score-service";
 export const dynamic = "force-dynamic";
 
 
@@ -49,8 +50,8 @@ export async function GET(request: NextRequest) {
 
     const myNomination = allMyNominations.data?.[0] || null;
 
-    return NextResponse.json({ 
-      hasNominated: !!nominationRes.data, 
+    return NextResponse.json({
+      hasNominated: !!nominationRes.data,
       remaining: myNomination ? 0 : 1,
       nominatedUser: myNomination ? {
         username: (myNomination.user as any)?.username,
@@ -102,7 +103,7 @@ export async function POST(request: NextRequest) {
           .eq("week", week)
           .single();
 
-        return NextResponse.json({ 
+        return NextResponse.json({
           error: "Solo podés nominar a una persona por semana.",
           nominatedUser: existing ? {
             username: (existing.user as any)?.username,
@@ -110,7 +111,7 @@ export async function POST(request: NextRequest) {
           } : null
         }, { status: 409 });
       }
-      
+
       // If override, delete the previous nomination for this week
       await supabase
         .from("showcase_nominations")
@@ -145,6 +146,8 @@ export async function POST(request: NextRequest) {
         type: "new_nomination",
         data: { targetUsername: targetProfile.username },
       });
+      // Recalcular score del nominado
+      await scoreService.recomputeScore(userId);
     }
 
     return NextResponse.json({ success: true, week, remaining: 0 });
@@ -182,6 +185,9 @@ export async function DELETE(request: NextRequest) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    // Recalcular score del que fue des-nominado
+    await scoreService.recomputeScore(userId);
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {

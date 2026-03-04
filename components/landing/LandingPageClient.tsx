@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { WinnerSection } from "@/components/landing/WinnerSection";
+import { supabase } from "@/lib/supabase";
+import { User } from "@supabase/supabase-js";
+import { Activity, Compass, Users, PlusCircle, Layout } from "lucide-react";
 
 interface LandingPageClientProps {
   showcaseData: any;
@@ -12,6 +15,8 @@ interface LandingPageClientProps {
 export default function LandingPageClient({ showcaseData }: LandingPageClientProps) {
   const [heatmap, setHeatmap] = useState<string[]>([]);
   const [selectedRoles, setSelectedRoles] = useState<string[]>(['Developer', 'Founder']);
+  const [user, setUser] = useState<User | null>(null);
+  const [showMobileNav, setShowMobileNav] = useState(true);
 
   const toggleRole = (role: string) => {
     if (selectedRoles.includes(role)) {
@@ -22,6 +27,17 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
   };
 
   useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+    };
+    checkUser();
+
+    // Subscribe to auth changes to ensure UI updates when user is logged in
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
     // Si caemos en /?code=... (por error de config de Supabase), redirigimos al callback
     if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
@@ -42,24 +58,79 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
       cells.push(cls);
     }
     setHeatmap(cells);
+
+    // Scroll stop detection
+    let scrollTimeout: NodeJS.Timeout;
+    const handleScroll = () => {
+      setShowMobileNav(false);
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        setShowMobileNav(true);
+      }, 500); // 500ms stop detection
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener("scroll", handleScroll);
+      clearTimeout(scrollTimeout);
+    };
   }, []);
 
   return (
     <div className="landing">
       {/* NAV */}
       <nav>
-        <div className="logo">huev<span>site</span>.io</div>
-        <div className="nav-right">
-          <Link href="/explore" className="btn btn-ghost">
-            <span className="hidden sm:inline">Ver ejemplos</span>
-            <span className="sm:hidden">Explorar</span>
+        <Link href="/" className="logo">huev<span>site</span>.io</Link>
+        <div className="nav-right hidden md:flex">
+          <Link href="/feed" className="btn btn-ghost">
+            <span>Lanzamientos</span>
           </Link>
-          <Link href="/login" className="btn btn-accent">
-            <span className="hidden sm:inline">Crear mi huevsite →</span>
-            <span className="sm:hidden">Empezar</span>
+          <Link href="/explore" className="btn btn-ghost">
+            <span>Explorar</span>
+          </Link>
+          <Link href={user ? "/dashboard" : "/login"} className="btn btn-accent !px-6">
+            {user ? (
+              <>
+                <Layout size={16} className="mr-2" />
+                <span>Mi huevsite</span>
+              </>
+            ) : (
+              <>
+                <span>Crear mi huevsite →</span>
+              </>
+            )}
           </Link>
         </div>
       </nav>
+
+      {/* MOBILE FLOATING NAV */}
+      <AnimatePresence>
+        {showMobileNav && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, x: "-50%", scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, x: "-50%", scale: 1 }}
+            exit={{ opacity: 0, y: 20, x: "-50%", scale: 0.95 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="md:hidden fixed bottom-8 left-1/2 z-[100] w-[90%] max-w-[400px]"
+          >
+            <div className="bg-black/80 backdrop-blur-xl border border-white/10 rounded-full p-2 flex items-center justify-between shadow-2xl">
+              <Link href="/feed" className="flex-1 flex flex-col items-center gap-1 py-1.5 text-[var(--text-dim)] hover:text-[var(--accent)] transition-colors">
+                <Activity size={18} />
+                <span className="text-[9px] font-bold uppercase tracking-tighter">Feed</span>
+              </Link>
+              <Link href="/explore" className="flex-1 flex flex-col items-center gap-1 py-1.5 text-[var(--text-dim)] hover:text-[var(--accent)] transition-colors">
+                <Compass size={18} />
+                <span className="text-[9px] font-bold uppercase tracking-tighter">Explorar</span>
+              </Link>
+              <Link href={user ? "/dashboard" : "/login"} className="flex-1 flex flex-col items-center gap-1 py-1.5 text-[var(--accent)] transition-colors">
+                {user ? <Layout size={18} /> : <PlusCircle size={18} />}
+                <span className="text-[9px] font-bold uppercase tracking-tighter">{user ? 'Mi huevsite' : 'Crear'}</span>
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* HERO */}
       <section className="hero">
@@ -68,16 +139,18 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
           Para builders de Argentina y LATAM
         </div>
 
-        <h1>
-          El <span className="accent">portfolio</span><br />
-          que no da<br />
+        <h1 className="text-center leading-[1.05]">
+          El <span className="accent">portfolio</span> <br className="hidden md:block" />
+          que no da <br className="hidden md:block" />
           <span className="strike">vergüenza</span> ajena.
         </h1>
 
-        <p>Mostrá quién sos y qué buildeás. Sin diseñar desde cero y con personalidad propia.</p>
+        <p className="text-center mx-auto">Mostrá quién sos y qué buildeás. Sin diseñar desde cero y con personalidad propia.</p>
 
-        <div className="hero-ctas">
-          <Link href="/login" className="btn btn-accent">Empezar gratis</Link>
+        <div className="hero-ctas flex justify-center">
+          <Link href={user ? "/dashboard" : "/login"} className="btn btn-accent !px-8 !py-4 text-base">
+            {user ? "Mi huevsite" : "Empezar gratis"}
+          </Link>
           <span className="hero-username-preview">huevsite.io/<strong style={{ color: 'var(--accent)' }}>tuusuario</strong></span>
         </div>
 
@@ -93,7 +166,7 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
         </div>
       </section>
 
-      <WinnerSection initialData={showcaseData} />
+      <WinnerSection initialData={showcaseData} user={user} />
 
       {/* ONBOARDING SECTION */}
       <section className="onboarding-section">
@@ -268,6 +341,30 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
         </div>
       </section>
 
+      {/* PRO FEATURES PROMO */}
+      <section className="pro-promo-section" style={{ padding: '100px 40px', background: 'linear-gradient(180deg, transparent 0%, rgba(200,255,0,0.03) 100%)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <div className="section-label" style={{ color: 'var(--accent)' }}>// huevsite pro</div>
+          <h2 className="section-title">Llevá tu marca al <span style={{ color: 'var(--accent)' }}>próximo nivel.</span></h2>
+          <p className="section-sub" style={{ marginBottom: '60px' }}>Features avanzadas para builders que quieren destacar y ser descubiertos.</p>
+
+          <div style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', display: 'grid', gap: '24px' }}>
+            {[
+              { icon: '💎', title: 'Diseño Disruptivo', desc: 'Acceso a layouts exclusivos y personalización avanzada para builders que no se conforman.' },
+              { icon: '📈', title: 'Builder Score Elite', desc: 'Ranking dinámico basado en tu actividad real, dándote visibilidad ante la comunidad.' },
+              { icon: '📝', title: 'Blog Integrado', desc: 'Gestioná tus propios artículos y pensamientos directamente en tu huevsite con lectura in-situ.' },
+              { icon: '🚀', title: 'Soporte Prioritario', desc: 'Ayuda directa para optimizar tu huevsite y destacar tus proyectos al máximo.' }
+            ].map((f, i) => (
+              <div key={i} style={{ padding: '32px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', transition: 'all 0.3s' }} className="group hover:border-[var(--accent)]/30">
+                <div style={{ fontSize: '32px', marginBottom: '20px' }}>{f.icon}</div>
+                <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '12px', letterSpacing: '-0.5px' }}>{f.title}</h3>
+                <p style={{ fontSize: '14px', color: 'var(--text-dim)', lineHeight: 1.6 }}>{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* FINAL CTA */}
       <section style={{ textAlign: 'center', padding: '100px 40px', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 50% 50%, rgba(200,255,0,0.06), transparent 60%)', pointerEvents: 'none' }}></div>
@@ -278,8 +375,15 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
         <p style={{ fontSize: '16px', color: 'var(--text-dim)', maxWidth: '400px', margin: '0 auto 36px', lineHeight: 1.6 }}>
           Gratis. Sin tarjeta de crédito. Sin &quot;upgrade to Pro&quot; a los 10 segundos.
         </p>
-        <Link href="/login" className="btn btn-accent" style={{ fontSize: '17px', padding: '16px 36px', display: 'inline-block' }}>
-          Crear mi huevsite →
+        <Link href={user ? "/dashboard" : "/login"} className="btn btn-accent" style={{ fontSize: '17px', padding: '16px 36px', display: 'inline-block' }}>
+          {user ? (
+            <>
+              <Layout size={18} className="mr-2 inline" />
+              <span>Mi huevsite</span>
+            </>
+          ) : (
+            <span>Crear mi huevsite →</span>
+          )}
         </Link>
         <div style={{ marginTop: '16px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--text-muted)' }}>
           Hecho por y para builders.

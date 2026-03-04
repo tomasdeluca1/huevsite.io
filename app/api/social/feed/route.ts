@@ -8,6 +8,10 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const tab = searchParams.get("tab") || "global"; // "global" | "following"
+    const type = searchParams.get("type"); // filter by activity type
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "20");
+    const offset = (page - 1) * limit;
 
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -32,7 +36,12 @@ export async function GET(request: NextRequest) {
           image,
           accent_color
         )
-      `);
+      `, { count: "exact" });
+
+    // Type filtering
+    if (type && type !== "all") {
+      query = query.eq("type", type);
+    }
 
     if (tab === "following" && user) {
       // Fetch who the user follows
@@ -40,28 +49,36 @@ export async function GET(request: NextRequest) {
         .from("follows")
         .select("following_id")
         .eq("follower_id", user.id);
-        
+
       const followingIds = (followsData || []).map(f => f.following_id);
-      
+
       if (followingIds.length === 0) {
-        return NextResponse.json({ activities: [] });
+        return NextResponse.json({ activities: [], count: 0 });
       }
-      
+
       query = query.in("user_id", followingIds);
     } else {
-      // Global feed: Exclude nominations to avoid noise
-      query = query.neq("type", "new_nomination");
+      // Global feed: Exclude nominations and minor profile updates if not explicitly filtered to avoid noise
+      if (!type || type === "all") {
+        query = query.not("type", "in", '("new_nomination","profile_update")');
+      }
     }
 
-    const { data: activities, error: activitiesError } = await query
+    const { data: activities, error: activitiesError, count } = await query
       .order("created_at", { ascending: false })
-      .limit(50);
+      .range(offset, offset + limit - 1);
 
     if (activitiesError) {
       return NextResponse.json({ error: activitiesError.message }, { status: 500 });
     }
 
-    return NextResponse.json({ activities: activities ?? [] });
+    return NextResponse.json({
+      activities: activities ?? [],
+      count: count ?? 0,
+      page,
+      limit,
+      totalPages: count ? Math.ceil(count / limit) : 0
+    });
   } catch (error) {
     console.error("Feed error:", error);
     return NextResponse.json({ error: "Algo salió mal." }, { status: 500 });

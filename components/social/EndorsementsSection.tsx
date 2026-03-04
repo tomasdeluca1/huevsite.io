@@ -65,7 +65,7 @@ export function EndorsementsSection({ profileId, profileAccentColor, currentUser
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("¿Seguro que querés eliminar este endorsement?")) return;
+    if (!confirm("¿Seguro que querés eliminar este comentario?")) return;
     try {
       const res = await fetch(`/api/social/endorsements?id=${id}`, { method: "DELETE" });
       if (res.ok) {
@@ -103,7 +103,7 @@ export function EndorsementsSection({ profileId, profileAccentColor, currentUser
     <section className="mt-20">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-8">
         <div>
-          <div className="section-label mb-2">// endorsements</div>
+          <div className="section-label mb-2">// comentarios</div>
           <h2 className="text-3xl font-extrabold tracking-tight">
             Lo que dicen los que laburaron.
           </h2>
@@ -130,7 +130,7 @@ export function EndorsementsSection({ profileId, profileAccentColor, currentUser
       ) : endorsements.length === 0 ? (
         <div className="text-center py-20 border border-dashed border-[var(--border-bright)] rounded-3xl">
           <p className="text-[var(--text-dim)] font-mono text-sm">
-            Todavía nadie lo endorsó. Sé el primero.
+            Todavía nadie comentó. Sé el primero.
           </p>
           {canEndorse && (
             <button
@@ -138,7 +138,7 @@ export function EndorsementsSection({ profileId, profileAccentColor, currentUser
               className="mt-4 px-5 py-2 rounded-xl font-bold text-sm text-black transition-all"
               style={{ backgroundColor: profileAccentColor }}
             >
-              Endorsar ahora →
+              Comentar ahora →
             </button>
           )}
         </div>
@@ -210,23 +210,23 @@ export function EndorsementsSection({ profileId, profileAccentColor, currentUser
                   {/* Acciones */}
                   {(currentUserId === e.from.id || currentUserId === profileId) && (
                     <div className="relative">
-                      <button 
+                      <button
                         onClick={() => setActiveMenuId(activeMenuId === e.id ? null : e.id)}
                         className="p-1.5 rounded-lg hover:bg-[var(--surface2)] text-[var(--text-muted)] transition-colors"
                       >
                         <MoreHorizontal size={16} />
                       </button>
-                      
+
                       <AnimatePresence>
                         {activeMenuId === e.id && (
-                          <motion.div 
+                          <motion.div
                             initial={{ opacity: 0, scale: 0.9, y: -10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: -10 }}
                             className="absolute right-0 top-full mt-1 w-40 bg-[var(--surface2)] border border-[var(--border-bright)] rounded-xl shadow-xl z-20 overflow-hidden"
                           >
                             {currentUserId === e.from.id && (
-                              <button 
+                              <button
                                 onClick={() => { setEditingEndorsement(e); setModalOpen(true); setActiveMenuId(null); }}
                                 className="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-white/5 transition-colors"
                               >
@@ -234,14 +234,14 @@ export function EndorsementsSection({ profileId, profileAccentColor, currentUser
                               </button>
                             )}
                             {currentUserId === profileId && (
-                              <button 
+                              <button
                                 onClick={() => { toggleVisibility(e.id, e.visible); setActiveMenuId(null); }}
                                 className="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-white/5 transition-colors"
                               >
                                 {e.visible ? <><EyeOff size={12} /> Ocultar</> : <><Eye size={12} /> Mostrar</>}
                               </button>
                             )}
-                            <button 
+                            <button
                               onClick={() => { handleDelete(e.id); setActiveMenuId(null); }}
                               className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-400/10 transition-colors"
                             >
@@ -318,18 +318,18 @@ function EndorseModal({
       const res = await fetch("/api/social/endorsements", {
         method: isEditing ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           id: editingEndorsement?.id,
-          toId: profileId, 
-          skill: skill.trim(), 
-          comment: comment.trim() || undefined 
+          toId: profileId,
+          skill: skill.trim(),
+          comment: comment.trim() || undefined
         }),
       });
       const data = await res.json();
       if (res.ok) {
         onSubmit(data.endorsement);
       } else {
-        alert(data.error || "Error al endorsar.");
+        alert(data.error || "Error al comentar.");
       }
     } finally {
       setLoading(false);
@@ -356,9 +356,9 @@ function EndorseModal({
         >
           <div className="p-6 border-b border-[var(--border)] flex justify-between items-start bg-black/40">
             <div>
-              <div className="section-label mb-1">// {editingEndorsement ? 'editar' : 'endorsar'} builder</div>
+              <div className="section-label mb-1">// {editingEndorsement ? 'editar' : 'comentar'} builder</div>
               <h3 className="text-2xl font-extrabold tracking-tight">
-                {editingEndorsement ? 'Ajustá tu endorsement' : '¿En qué destacó?'}
+                {editingEndorsement ? 'Ajustá tu comentario' : '¿En qué destacó?'}
               </h3>
             </div>
             <button onClick={onClose} className="p-2 rounded-full hover:bg-[var(--surface2)] transition-all">
@@ -417,7 +417,7 @@ function EndorseModal({
               className="flex-1 py-3 rounded-2xl font-bold text-sm text-black flex items-center justify-center gap-2 transition-all"
               style={{ backgroundColor: skill.trim() ? accentColor : "var(--surface2)", opacity: loading ? 0.7 : 1 }}
             >
-              {loading ? <Loader2 size={16} className="animate-spin" /> : (editingEndorsement ? "Guardar cambios" : "Endorsar →")}
+              {loading ? <Loader2 size={16} className="animate-spin" /> : (editingEndorsement ? "Guardar cambios" : "Comentar →")}
             </button>
           </div>
         </motion.div>

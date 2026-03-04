@@ -16,7 +16,10 @@ import {
   sortableKeyboardCoordinates,
   rectSortingStrategy
 } from "@dnd-kit/sortable";
-import { Save, Eye, Layout as LayoutIcon, Settings, LogOut, Plus, Sparkles, MessageSquare, Activity, Compass, Trash2, Copy, Check } from "lucide-react";
+import {
+  Save, Eye, Layout as LayoutIcon, Settings, LogOut, Plus, Sparkles, MessageSquare,
+  Activity, Compass, Trash2, Copy, Check, Trophy, ArrowUpRight
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { MOCK_PROFILE } from "@/lib/mock-profile";
@@ -38,6 +41,7 @@ import { GlobalUpdateModal } from "@/components/social/GlobalUpdateModal";
 import Link from "next/link";
 
 import { createClient } from "@/lib/supabase/client";
+import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -50,6 +54,7 @@ export default function DashboardPage() {
   const [isGlobalUpdateOpen, setIsGlobalUpdateOpen] = useState(false);
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isScoreInfoOpen, setIsScoreInfoOpen] = useState(false);
   const [tempProfileData, setTempProfileData] = useState({
     username: '',
     display_name: '',
@@ -762,66 +767,81 @@ export default function DashboardPage() {
             <div className="h-px bg-[var(--border)] hidden md:block" />
 
             {/* Builder Score */}
-            <div className="bg-[var(--surface2)]/30 rounded-2xl p-4 border border-[var(--border)] relative overflow-hidden">
+            <motion.button
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setIsScoreInfoOpen(true)}
+              className="w-full text-left bg-gradient-to-br from-[var(--surface2)]/50 to-black/30 rounded-2xl p-5 border border-white/5 relative overflow-hidden group/score hover:border-[var(--accent)]/40 transition-all shadow-xl"
+            >
+              {/* Dynamic Glow Accent */}
               <div
-                className="absolute inset-0 opacity-10 pointer-events-none"
-                style={{ background: `radial-gradient(circle at right, ${profile.accentColor}, transparent)` }}
+                className="absolute -top-12 -right-12 w-24 h-24 blur-[40px] rounded-full group-hover/score:w-32 group-hover/score:h-32 transition-all duration-700 opacity-20 group-hover/score:opacity-40"
+                style={{ backgroundColor: profile.accentColor }}
               />
-              <div className="flex justify-between items-end mb-2 relative z-10">
-                <span className="text-[9px] font-mono text-[var(--text-muted)] uppercase tracking-widest font-bold">Builder Score</span>
-                <span className="text-lg font-black font-mono text-white leading-none">{profile.builderScore || 0}</span>
-              </div>
-              <div className="w-full bg-black/50 h-1 rounded-full overflow-hidden relative z-10">
-                <div
-                  className="h-full rounded-full transition-all duration-1000 ease-out"
-                  style={{
-                    width: `${Math.min(((profile.builderScore || 0) / 500) * 100, 100)}%`,
-                    backgroundColor: profile.accentColor
-                  }}
-                />
-              </div>
-              <p className="text-[9px] font-mono text-[var(--text-dim)] mt-2 leading-[1.4] line-clamp-2 italic">
-                {(profile.builderScore || 0) < 50 || (!profile.avatarUrl || profile.displayName === profile.username) ? (
-                  <span className="text-orange-400/80">⚠️ Completá tu nombre y foto para validar tu identidad. (+150 pts)</span>
-                ) : !profile.blocks.some(b => (b.type === 'project' || b.type === 'building')) ? (
-                  <span className="text-orange-400/80">🚀 Casi listo. Agregá al menos un proyecto real para sumar fuerte. (+100 pts)</span>
-                ) : !(profile.githubHandle || profile.blocks.some(b => b.type === 'github')) ? (
-                  <span className="text-[var(--accent)]/80">💻 Conectá tu GitHub para mostrar tus repos y actividad dev. (+100 pts)</span>
-                ) : (profile.builderScore || 0) < 400 ? (
-                  <span className="text-[var(--accent)]/80">✨ ¡Gran perfil! Ahora pedí comentarios a otros builders para subir al top.</span>
-                ) : (
-                  <span className="text-emerald-400/80">🔥 Perfil de Elite. Tu huevsite está entre los mejores de la comunidad.</span>
-                )}
-              </p>
 
-              <div className="mt-3 pt-3 border-t border-white/5 space-y-1.5 hidden md:block">
-                {[
-                  {
-                    label: 'Identidad (Nombre + Bio + Foto)',
-                    done: !!profile.tagline && !!profile.avatarUrl && profile.displayName !== profile.username
-                  },
-                  {
-                    label: 'Contenido (Mínimo 1 proyecto)',
-                    done: profile.blocks.some(b => (b.type === 'project' || b.type === 'building') && (b as any).title && !(b as any).title.includes('Mi primer proyecto'))
-                  },
-                  {
-                    label: 'Dev Stack (GitHub conectado)',
-                    done: !!profile.githubHandle || profile.blocks.some(b => b.type === 'github')
-                  },
-                  {
-                    label: 'Social (Recibir comentarios)',
-                    done: (profile.builderScore || 0) > 300
-                  }
-                ].map((task, i) => (
-                  <div key={i} className="flex items-center gap-1.5">
-                    <div className={`w-1 h-1 rounded-full ${task.done ? 'bg-[var(--accent)]' : 'bg-red-500/20'}`} />
-                    <span className={`text-[9px] font-mono tracking-tight ${task.done ? 'text-[var(--text-dim)]' : 'text-[var(--text-muted)]'}`}>
-                      {task.label}
+              <div className="flex justify-between items-start mb-4 relative z-10">
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-black font-mono text-[var(--text-muted)] uppercase tracking-widest flex items-center gap-2">
+                    Builder Status
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse shadow-[0_0_8px_var(--accent)]" />
+                  </span>
+                  <div className="flex items-baseline gap-1 mt-1">
+                    <span className="text-3xl font-black font-mono text-white tracking-tighter group-hover/score:text-[var(--accent)] transition-colors">
+                      {profile.builderScore || 0}
                     </span>
+                    <span className="text-[10px] font-bold text-[var(--text-dim)] uppercase tracking-wider">pts</span>
                   </div>
-                ))}
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-[var(--accent)] shadow-inner group-hover/score:bg-[var(--accent)] group-hover/score:text-black transition-all duration-300">
+                  <Trophy size={18} />
+                </div>
               </div>
-            </div>
+
+              {/* Progress Bar */}
+              <div className="space-y-2 relative z-10 mb-4">
+                <div className="flex justify-between text-[8px] font-mono text-[var(--text-muted)] uppercase font-bold px-0.5">
+                  <span className="group-hover/score:text-[var(--text-dim)] transition-colors">Progreso de Ranking</span>
+                  <span className="text-[var(--accent)]">
+                    {Math.round(((profile.builderScore || 0) / 1000) * 100)}%
+                  </span>
+                </div>
+                <div className="w-full bg-black/40 h-2 rounded-full overflow-hidden border border-white/5 p-0.5 shadow-inner">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min(((profile.builderScore || 0) / 1000) * 100, 100)}%` }}
+                    transition={{ duration: 1, ease: "easeOut" }}
+                    className="h-full rounded-full shadow-[0_0_10px_var(--accent)]"
+                    style={{ backgroundColor: profile.accentColor }}
+                  />
+                </div>
+              </div>
+
+              {/* Next Steps / Tip */}
+              <div className="relative z-10 pt-3 border-t border-white/5 mt-1">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <span className="text-[8px] font-black font-mono text-[var(--accent)] uppercase tracking-widest">Siguiente Nivel</span>
+                  <ArrowUpRight size={10} className="text-[var(--accent)] opacity-50 group-hover/score:translate-x-0.5 group-hover/score:-translate-y-0.5 transition-transform" />
+                </div>
+                <p className="text-[11px] text-[var(--text-dim)] leading-tight italic bg-white/5 p-2.5 px-3 rounded-xl border border-white/5 group-hover/score:bg-white/[0.08] transition-colors group-hover/score:text-[var(--text-muted)]">
+                  {(profile.builderScore || 0) < 50 || (!profile.avatarUrl || profile.displayName === profile.username) ? (
+                    "Validá tu identidad con nombre y foto."
+                  ) : !profile.blocks.some(b => (b.type === 'project' || b.type === 'building')) ? (
+                    "Agregá al menos un proyecto real."
+                  ) : !(profile.githubHandle || profile.blocks.some(b => b.type === 'github')) ? (
+                    "Conectá tu GitHub para sumar fuerte."
+                  ) : (profile.builderScore || 0) < 400 ? (
+                    "Pedí recomendaciones para subir al top."
+                  ) : (
+                    "¡Perfil de Elite! Seguí buildeando."
+                  )}
+                </p>
+              </div>
+
+              {/* Interactive Tooltip Badge */}
+              <div className="absolute bottom-2 right-4 text-[8px] font-black uppercase tracking-widest text-[var(--accent)] opacity-0 group-hover/score:opacity-100 translate-y-1 group-hover/score:translate-y-0 transition-all pointer-events-none">
+                ¿Cómo subir mi score?
+              </div>
+            </motion.button>
 
             <BlockSelector
               onAdd={addBlock}
@@ -997,20 +1017,22 @@ export default function DashboardPage() {
             </SortableContext>
           </DndContext>
         </div>
-      </main>
+      </main >
 
       {/* Editor Modal */}
       <AnimatePresence>
-        {editingBlock && (
-          <BlockEditorModal
-            block={editingBlock}
-            isOpen={!!editingBlock}
-            onClose={() => setEditingBlock(null)}
-            onSave={updateBlock}
-            accentColor={profile?.accentColor || "#C8FF00"}
-          />
-        )}
-      </AnimatePresence>
+        {
+          editingBlock && (
+            <BlockEditorModal
+              block={editingBlock}
+              isOpen={!!editingBlock}
+              onClose={() => setEditingBlock(null)}
+              onSave={updateBlock}
+              accentColor={profile?.accentColor || "#C8FF00"}
+            />
+          )
+        }
+      </AnimatePresence >
 
       <FeedbackModal
         isOpen={isFeedbackOpen}
@@ -1223,6 +1245,8 @@ export default function DashboardPage() {
           </div>
         )}
       </AnimatePresence>
+
+      <ScoreInfoModal isOpen={isScoreInfoOpen} onClose={() => setIsScoreInfoOpen(false)} accentColor={profile.accentColor} />
     </div >
   );
 }

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ArrowRight, Search, Loader2, Sparkles, X } from "lucide-react";
 import { motion } from "framer-motion";
 
+import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
+
 interface ExploreProfile {
   id: string;
   username: string;
@@ -23,16 +25,21 @@ interface ExploreProfile {
 export function ExploreClient({ initialTotal }: { initialTotal: number }) {
   const [profiles, setProfiles] = useState<ExploreProfile[]>([]);
   const [page, setPage] = useState(0);
-  const [search, setSearch] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('huevsite_explore_search') || "" : ""));
-  const [sort, setSort] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('huevsite_explore_sort') || "score" : "score"));
+  const [search, setSearch] = useState(() =>
+    typeof window !== "undefined" ? localStorage.getItem("huevsite_explore_search") || "" : ""
+  );
+  const [sort, setSort] = useState(() =>
+    typeof window !== "undefined" ? localStorage.getItem("huevsite_explore_sort") || "score" : "score"
+  );
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const [isScoreInfoOpen, setIsScoreInfoOpen] = useState(false);
 
   // Debounce search
   useEffect(() => {
-    localStorage.setItem('huevsite_explore_search', search);
-    localStorage.setItem('huevsite_explore_sort', sort);
+    localStorage.setItem("huevsite_explore_search", search);
+    localStorage.setItem("huevsite_explore_sort", sort);
     const timer = setTimeout(() => {
       setPage(0);
       loadProfiles(0, true);
@@ -48,14 +55,16 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
     }
 
     try {
-      const res = await fetch(`/api/explore?page=${pageToLoad}&limit=24&sort=${sort}&q=${encodeURIComponent(search)}`);
+      const res = await fetch(
+        `/api/explore?page=${pageToLoad}&limit=24&sort=${sort}&q=${encodeURIComponent(search)}`
+      );
       if (res.ok) {
         const data = await res.json();
         // The API sorts pro_since first, then created_at/updated_at.
         if (reset) {
           setProfiles(data.profiles || []);
         } else {
-          setProfiles(prev => [...prev, ...(data.profiles || [])]);
+          setProfiles((prev) => [...prev, ...(data.profiles || [])]);
         }
         setHasMore(data.hasMore);
       }
@@ -97,13 +106,27 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
         </div>
 
         <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
-          <span className="text-[10px] font-mono text-[var(--text-dim)] uppercase tracking-widest hidden sm:block">Ordenar por:</span>
+          <button
+            onClick={() => setIsScoreInfoOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[var(--accent)]/10 border border-[var(--accent)]/20 text-[var(--accent)] text-[10px] font-bold uppercase tracking-widest hover:bg-[var(--accent)]/20 transition-all"
+          >
+            ¿Cómo funciona el score?
+          </button>
+          <span className="text-[10px] font-mono text-[var(--text-dim)] uppercase tracking-widest hidden sm:block">
+            Ordenar por:
+          </span>
           <div className="relative flex-1 md:w-48">
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value)}
               className="w-full bg-[var(--surface2)] text-sm border border-[var(--border)] rounded-2xl px-5 py-3.5 text-white outline-none focus:border-[var(--accent)] transition-all cursor-pointer appearance-none pr-10"
-              style={{ backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23666\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 16px center', backgroundSize: '14px' }}
+              style={{
+                backgroundImage:
+                  'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 24 24\' fill=\'none\' stroke=\'%23666\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")',
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "right 16px center",
+                backgroundSize: "14px",
+              }}
             >
               <option value="score">Top Score 🔥</option>
               <option value="created_at">Más nuevos</option>
@@ -117,6 +140,8 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
           </div>
         </div>
       </div>
+
+      <ScoreInfoModal isOpen={isScoreInfoOpen} onClose={() => setIsScoreInfoOpen(false)} />
 
       {isLoading ? (
         <div className="py-20 flex justify-center text-[var(--text-muted)]">

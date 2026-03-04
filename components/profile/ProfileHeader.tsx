@@ -6,6 +6,8 @@ import { FollowButton } from "@/components/social/FollowButton";
 import { NominateButton } from "@/components/social/NominateButton";
 import { FollowListModal } from "@/components/social/FollowListModal";
 
+import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
+
 interface Props {
   profileId?: string;
   isFollowing: boolean;
@@ -34,23 +36,32 @@ export function ProfileHeader({
   const [modalType, setModalType] = useState<"followers" | "following" | null>(null);
   const [localFollowersCount, setLocalFollowersCount] = useState(followersCount);
   const [localNominationsCount, setLocalNominationsCount] = useState(nominationsCount);
+  const [isScoreOpen, setIsScoreOpen] = useState(false);
+
+  // Sync props to state
+  useEffect(() => {
+    setLocalFollowersCount(followersCount);
+    setLocalNominationsCount(nominationsCount);
+  }, [followersCount, nominationsCount]);
 
   // Scroll lock when modal is open
   useEffect(() => {
-    if (modalType) {
+    if (modalType || isScoreOpen) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "unset";
     }
-    return () => { document.body.style.overflow = "unset"; };
-  }, [modalType]);
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [modalType, isScoreOpen]);
 
   const handleFollowChange = (nowFollowing: boolean) => {
-    setLocalFollowersCount(prev => nowFollowing ? prev + 1 : prev - 1);
+    setLocalFollowersCount((prev: number) => (nowFollowing ? prev + 1 : prev - 1));
   };
 
   const handleNominateChange = (nowNominated: boolean) => {
-    setLocalNominationsCount(prev => nowNominated ? prev + 1 : prev - 1);
+    setLocalNominationsCount((prev: number) => (nowNominated ? prev + 1 : prev - 1));
   };
 
   return (
@@ -71,22 +82,34 @@ export function ProfileHeader({
 
         <div className="flex items-center gap-2">
           {currentUserId ? (
-            <Link href="/dashboard" className="btn btn-ghost !text-[10px] !py-2 !px-4 !rounded-xl border border-white/5 bg-white/5 md:hidden transition-all hover:bg-white/10">
+            <Link
+              href="/dashboard"
+              className="btn btn-ghost !text-[10px] !py-2 !px-4 !rounded-xl border border-white/5 bg-white/5 md:hidden transition-all hover:bg-white/10"
+            >
               Mi huevsite
             </Link>
           ) : (
-            <Link href="/login" className="btn btn-ghost !text-[10px] !py-2 !px-4 !rounded-xl border border-white/5 bg-white/5 md:hidden transition-all hover:bg-white/10">
+            <Link
+              href="/login"
+              className="btn btn-ghost !text-[10px] !py-2 !px-4 !rounded-xl border border-white/5 bg-white/5 md:hidden transition-all hover:bg-white/10"
+            >
               Crear mi huevsite
             </Link>
           )}
 
           <div className="hidden md:block">
             {currentUserId ? (
-              <Link href="/dashboard" className="btn btn-ghost !px-5 !text-xs !py-3 !rounded-2xl hover:!border-[var(--accent)] transition-all bg-white/5 border border-white/5">
+              <Link
+                href="/dashboard"
+                className="btn btn-ghost !px-5 !text-xs !py-3 !rounded-2xl hover:!border-[var(--accent)] transition-all bg-white/5 border border-white/5"
+              >
                 Mi huevsite
               </Link>
             ) : (
-              <Link href="/login" className="btn btn-ghost !px-5 !text-xs !py-3 !rounded-2xl hover:!border-[var(--accent)] transition-all bg-white/5 border border-white/5">
+              <Link
+                href="/login"
+                className="btn btn-ghost !px-5 !text-xs !py-3 !rounded-2xl hover:!border-[var(--accent)] transition-all bg-white/5 border border-white/5"
+              >
                 Crear mi huevsite
               </Link>
             )}
@@ -105,7 +128,9 @@ export function ProfileHeader({
               <span className="font-mono font-bold text-white text-lg leading-tight group-hover:scale-110 transition-transform">
                 {localFollowersCount || 0}
               </span>
-              <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-bold">Seguidores</span>
+              <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-bold">
+                Seguidores
+              </span>
             </button>
 
             <div className="w-px h-8 bg-white/10 shrink-0" />
@@ -117,7 +142,9 @@ export function ProfileHeader({
               <span className="font-mono font-bold text-white text-lg leading-tight group-hover:scale-110 transition-transform">
                 {followingCount || 0}
               </span>
-              <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-bold">Seguidos</span>
+              <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-bold">
+                Seguidos
+              </span>
             </button>
 
             <div className="w-px h-8 bg-white/10 shrink-0" />
@@ -126,21 +153,28 @@ export function ProfileHeader({
               <span className="font-mono font-bold text-white text-lg leading-tight">
                 {localNominationsCount || 0}
               </span>
-              <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-bold">Nominaciones</span>
+              <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-bold">
+                Nominaciones
+              </span>
             </div>
 
             <div className="w-px h-8 bg-white/10 shrink-0" />
 
-            <div className="flex flex-col items-center px-5 py-2.5 group relative shrink-0">
+            <button
+              onClick={() => setIsScoreOpen(true)}
+              className="flex flex-col items-center px-5 py-2.5 group relative shrink-0 border border-transparent hover:border-[var(--accent)]/30 hover:bg-[var(--accent)]/5 rounded-2xl transition-all"
+            >
               <span className="font-mono text-[var(--accent)] text-xl leading-tight group-hover:scale-110 transition-transform font-black">
                 {builderScore || 0}
               </span>
-              <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-bold">Score 🔥</span>
+              <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-bold">
+                Score 🔥
+              </span>
 
               <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-black border border-white/10 px-4 py-2 rounded-xl text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all transform translate-y-1 group-hover:translate-y-0 pointer-events-none z-50 shadow-2xl">
-                Score de calidad y comunidad
+                ¿Qué es esto?
               </div>
-            </div>
+            </button>
           </div>
         )}
 
@@ -158,11 +192,7 @@ export function ProfileHeader({
 
           {isEnabledSocialNetwork && profileId && currentUserId && currentUserId !== profileId && (
             <div className="flex-1 lg:flex-none">
-              <NominateButton
-                userId={profileId}
-                accentColor={accentColor}
-                onStatusChange={handleNominateChange}
-              />
+              <NominateButton userId={profileId} accentColor={accentColor} onStatusChange={handleNominateChange} />
             </div>
           )}
         </div>
@@ -177,6 +207,8 @@ export function ProfileHeader({
           accentColor={accentColor}
         />
       )}
+
+      <ScoreInfoModal isOpen={isScoreOpen} onClose={() => setIsScoreOpen(false)} accentColor={accentColor} />
     </header>
   );
 }

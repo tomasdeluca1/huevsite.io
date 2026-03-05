@@ -12,29 +12,7 @@ interface Props {
 }
 
 export function UpgradeModal({ isOpen, onClose, accentColor }: Props) {
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleUpgrade = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch("/api/checkout", {
-        method: "POST",
-      });
-      
-      const data = await response.json();
-      
-      if (response.ok && data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
-      } else {
-        alert("Error al iniciar el checkout: " + (data.error || "Desconocido"));
-        setIsLoading(false);
-      }
-    } catch (error) {
-      console.error("Error redirecting to checkout:", error);
-      alert("Error de conexión al iniciar el pago.");
-      setIsLoading(false);
-    }
-  };
 
   if (!isOpen) return null;
 
@@ -55,13 +33,13 @@ export function UpgradeModal({ isOpen, onClose, accentColor }: Props) {
           className="relative w-[90%] max-w-lg bg-[var(--surface)] border border-[var(--border-bright)] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col z-10 mx-auto"
         >
           <div className="relative p-8 pb-0 text-center">
-            <button 
+            <button
               onClick={onClose}
               className="absolute top-6 right-6 p-2 rounded-full hover:bg-[var(--surface2)] transition-all text-[var(--border-bright)] hover:text-white"
             >
               <X size={20} />
             </button>
-            <div 
+            <div
               className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 bg-black/40 border-2"
               style={{ borderColor: accentColor, color: accentColor }}
             >
@@ -89,20 +67,12 @@ export function UpgradeModal({ isOpen, onClose, accentColor }: Props) {
               ))}
             </div>
 
-            <button 
-              onClick={handleUpgrade}
-              disabled={isLoading}
+            <button
+              onClick={() => window.location.href = "/api/checkout"}
               className="btn btn-accent w-full py-4 text-base font-bold shadow-[0_0_20px_rgba(200,255,0,0.15)] flex justify-center items-center"
-              style={{ backgroundColor: accentColor, color: "black", opacity: isLoading ? 0.7 : 1 }}
+              style={{ backgroundColor: accentColor, color: "black" }}
             >
-              {isLoading ? (
-                <>
-                  <Loader2 size={18} className="animate-spin mr-2" />
-                  Redirigiendo...
-                </>
-              ) : (
-                "Pasarme a Pro"
-              )}
+              Pasarme a Pro
             </button>
             <p className="text-center text-[10px] text-[var(--text-muted)] mt-4 font-mono uppercase tracking-widest">
               Pago único anual · Cancela cuando quieras

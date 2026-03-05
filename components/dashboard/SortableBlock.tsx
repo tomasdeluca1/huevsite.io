@@ -32,21 +32,8 @@ export function SortableBlock({ id, block, children, onRemove, onEdit, onResize 
     opacity: isDragging ? 0.4 : 1,
   };
 
-  const getColSpanClass = (span: number) => {
-    // Mobile: span 1 or 2
-    const mobileSpan = span > 1 ? "col-span-2" : "col-span-1";
-
-    // Desktop: use original span with explicit classes
-    const desktopSpan = span === 2 ? "md:col-span-2" : span === 3 ? "md:col-span-3" : span === 4 ? "md:col-span-4" : "md:col-span-1";
-
-    return `${mobileSpan} ${desktopSpan}`;
-  };
-
-  const getRowSpanClass = (span: number) => {
-    const mobileSpan = span > 1 ? "row-span-2" : "row-span-1";
-    const desktopSpan = span === 2 ? "md:row-span-2" : span === 3 ? "md:row-span-3" : "md:row-span-1";
-    return `${mobileSpan} ${desktopSpan}`;
-  };
+  const getColSpanClass = (span: number) => `col-span-${span}`;
+  const getRowSpanClass = (span: number) => `row-span-${span}`;
 
   return (
     <div

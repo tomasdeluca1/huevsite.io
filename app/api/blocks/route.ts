@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id)
 
-    const MAX_BASE_FREE = 8
+    const MAX_BASE_FREE = 5
     const MAX_PRO = 16
     const effectiveLimit = profileData?.subscription_tier === 'pro'
       ? MAX_PRO

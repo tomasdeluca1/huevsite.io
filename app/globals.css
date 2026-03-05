@@ -459,7 +459,7 @@ nav {
 
 .huevsite-grid {
   display: grid;
-  /* Default: 2 columns for mobile/small screens */
+  /* Base: 2 columns for mobile and tablet */
   grid-template-columns: repeat(2, 1fr);
   grid-auto-rows: minmax(110px, auto);
   gap: 12px;
@@ -467,48 +467,36 @@ nav {
   width: 100%;
 }
 
-/* Tablet: 3 columns */
-@media (min-width: 640px) {
-  .huevsite-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
-  }
-}
-
-/* Desktop: 4 columns */
-@media (min-width: 768px) {
+/* Stable break: Above 1128px (Desktop), we go to 4 columns */
+@media (min-width: 1128px) {
   .huevsite-grid {
     grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-  }
-}
-
-/* Very Large desktop: more breathing room */
-@media (min-width: 1280px) {
-  .huevsite-grid {
+    grid-auto-rows: minmax(130px, auto);
     gap: 20px;
   }
 }
 
-/* Mobile specific fixes to prevent overflow */
-@media (max-width: 480px) {
+/* Tablet refinement (if needed, but 2 cols is very stable) */
+@media (min-width: 768px) and (max-width: 1127px) {
   .huevsite-grid {
-    gap: 10px;
+    gap: 16px;
+    padding: 0 10px;
   }
-
-  /* Some blocks are just too small for 2 columns on tiny screens */
-  /* Actually, 2 columns at 320px is ~150px per block. It's okay. */
 }
 
 .huevsite-block {
-  background: rgba(17, 17, 17, 0.4);
-  backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.06) !important;
-  border-radius: var(--radius-lg);
-  padding: 20px;
+  background: rgba(17, 17, 17, 0.45);
+  backdrop-filter: blur(20px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: var(--radius-xl);
+  padding: 24px;
   position: relative;
   overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.4s ease;
+  will-change: transform;
 }
 
 .huevsite-block::after {
@@ -521,122 +509,88 @@ nav {
 
 .huevsite-block:hover {
   border-color: rgba(255, 255, 255, 0.1) !important;
-  background: rgba(25, 25, 25, 0.4);
-  transform: translateY(-2px);
+  background: rgba(25, 25, 25, 0.45);
+  transform: translateY(-4px);
   box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.5);
 }
 
-.col-1 {
-  grid-column: span 1;
-}
-
-.col-2 {
-  grid-column: span 2;
-}
-
-.col-3 {
-  grid-column: span 3;
-}
-
-.col-4 {
-  grid-column: span 4;
-}
-
-.row-1 {
-  grid-row: span 1;
-}
-
-.row-2 {
-  grid-row: span 2;
-}
-
-.row-3 {
-  grid-row: span 3;
-}
-
-.row-4 {
-  grid-row: span 4;
-}
-
+/* BENTO GRID SYSTEM v2 */
+.bento-col-1,
 .col-span-1 {
   grid-column: span 1;
 }
 
+.bento-col-2,
 .col-span-2 {
   grid-column: span 2;
 }
 
+/* On 2-col base (mobile/tablet), anything > 1 can be 2 to be safe */
+.bento-col-3,
 .col-span-3 {
-  grid-column: span 3;
+  grid-column: span 2;
 }
 
+.bento-col-4,
 .col-span-4 {
-  grid-column: span 4;
+  grid-column: span 2;
 }
 
+.bento-row-1,
 .row-span-1 {
   grid-row: span 1;
 }
 
+.bento-row-2,
 .row-span-2 {
   grid-row: span 2;
 }
 
+.bento-row-3,
 .row-span-3 {
   grid-row: span 3;
 }
 
+.bento-row-4,
 .row-span-4 {
   grid-row: span 4;
 }
 
-/* Hardcode common responsive spans because dynamic Tailwind classes often fail */
-@media (min-width: 640px) {
-  .sm\:col-span-1 {
-    grid-column: span 1;
-  }
+@media (min-width: 1128px) {
 
-  .sm\:col-span-2 {
-    grid-column: span 2;
-  }
-
-  .sm\:col-span-3 {
-    grid-column: span 3;
-  }
-}
-
-@media (min-width: 768px) {
-  .md\:col-span-1 {
-    grid-column: span 1;
-  }
-
-  .md\:col-span-2 {
-    grid-column: span 2;
-  }
-
-  .md\:col-span-3 {
+  .bento-col-3,
+  .col-span-3 {
     grid-column: span 3;
   }
 
-  .md\:col-span-4 {
+  .bento-col-4,
+  .col-span-4 {
     grid-column: span 4;
   }
 
-  .md\:row-span-1 {
-    grid-row: span 1;
+  /* Reset tailwind-like reactive spans if they were used */
+  .desktop\:col-span-1 {
+    grid-column: span 1;
   }
 
-  .md\:row-span-2 {
-    grid-row: span 2;
+  .desktop\:col-span-2 {
+    grid-column: span 2;
   }
 
-  .md\:row-span-3 {
-    grid-row: span 3;
+  .desktop\:col-span-3 {
+    grid-column: span 3;
   }
 
-  .md\:row-span-4 {
-    grid-row: span 4;
+  .desktop\:col-span-4 {
+    grid-column: span 4;
   }
+}
+
+/* Dashboard stability */
+.dashboard-grid-container {
+  max-width: 100%;
+  overflow-x: hidden;
+  padding-bottom: 50px;
 }
 
 /* Block Specifics from HTML */

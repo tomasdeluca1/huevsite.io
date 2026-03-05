@@ -2,7 +2,7 @@ import { AccentColor, Role } from "./onboarding-types";
 
 export type SubscriptionTier = "free" | "pro";
 
-export const MAX_FREE_BLOCKS = 8;
+export const MAX_FREE_BLOCKS = 5;
 export const MAX_PRO_BLOCKS = 16;
 
 export type TaglineStatus =

@@ -37,7 +37,6 @@ import { BlockEditorModal } from "@/components/dashboard/BlockEditorModal";
 import { ColorPicker } from "@/components/dashboard/ColorPicker";
 import { FeedbackModal } from "@/components/dashboard/FeedbackModal";
 import { OnboardingModal } from "@/components/dashboard/OnboardingModal";
-import { GlobalUpdateModal } from "@/components/social/GlobalUpdateModal";
 import Link from "next/link";
 
 import { createClient } from "@/lib/supabase/client";
@@ -51,7 +50,6 @@ export default function DashboardPage() {
   const [editingBlock, setEditingBlock] = useState<BlockData | null>(null);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
-  const [isGlobalUpdateOpen, setIsGlobalUpdateOpen] = useState(false);
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isScoreInfoOpen, setIsScoreInfoOpen] = useState(false);
@@ -139,9 +137,6 @@ export default function DashboardPage() {
           if (!hasSeen) {
             setIsOnboardingOpen(true);
           }
-        } else if (data.profile.has_seen_update_feb25 === false) {
-          // Si ya tiene bloques pero no vio el update modal
-          setIsGlobalUpdateOpen(true);
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
@@ -156,19 +151,6 @@ export default function DashboardPage() {
     fetchProfile();
   }, []);
 
-  const handleCloseGlobalUpdate = async () => {
-    setIsGlobalUpdateOpen(false);
-    try {
-      await fetch('/api/profile', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ has_seen_update_feb25: true })
-      });
-      setProfile(prev => prev ? { ...prev, hasSeenUpdateFeb25: true } : prev);
-    } catch (e) {
-      console.error(e);
-    }
-  };
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -325,7 +307,7 @@ export default function DashboardPage() {
         initialData = {
           ...initialData,
           posts: [
-            { title: "Mi primer post", link: "", date: "2024-01-01" },
+            { title: "Mi primer post", link: "", date: "2026-01-01" },
           ],
         };
         break;
@@ -350,7 +332,7 @@ export default function DashboardPage() {
           ...initialData,
           name: "AWS Certified Solutions Architect",
           issuer: "Amazon Web Services",
-          date: "2024",
+          date: "2026",
           link: "",
           icon: "",
         };
@@ -360,7 +342,7 @@ export default function DashboardPage() {
           ...initialData,
           title: "1k Followers en X",
           description: "Llegué a un milestone importante para mi proyecto.",
-          date: "Octubre 2024",
+          date: "Octubre 2026",
         };
         break;
       case "custom":
@@ -907,7 +889,7 @@ export default function DashboardPage() {
       </aside>
 
       {/* CANVAS */}
-      <main className="flex-1 p-4 md:p-8 lg:p-10 lg:px-14 overflow-y-auto relative z-0 md:ml-[280px]">
+      <main className="p-4 md:p-8 lg:p-10 lg:px-14 overflow-y-auto relative z-0 md:ml-[280px]">
         <style dangerouslySetInnerHTML={{
           __html: `
           :root {
@@ -974,28 +956,28 @@ export default function DashboardPage() {
               items={profile.blocks.map(b => b.id)}
               strategy={rectSortingStrategy}
             >
-              <div className="huevsite-grid min-h-[600px] p-3 sm:p-6 md:p-8 rounded-[2rem] border border-dashed border-[var(--border-bright)] bg-white/[0.02]">
+              <div className="huevsite-grid min-h-[600px] p-4 sm:p-8 desktop:p-12 rounded-[2.5rem] border border-dashed border-[var(--border-bright)] bg-white/[0.01] transition-all duration-500">
                 {profile.blocks.length === 0 ? (
                   <div className="col-span-full flex flex-col items-center justify-center py-40 text-center">
-                    <div className="w-16 h-16 rounded-full bg-[var(--surface2)] flex items-center justify-center mb-6 border border-[var(--border-bright)] animate-pulse">
+                    <div className="w-20 h-20 rounded-full bg-[var(--surface2)] flex items-center justify-center mb-8 border border-[var(--border-bright)] animate-pulse shadow-xl shadow-black/40">
                       <Plus size={32} className="text-[var(--text-dim)]" />
                     </div>
-                    <p className="text-[var(--text-dim)] font-mono text-sm max-w-xs leading-relaxed">
-                      Este portfolio está más vacío que heladera de estudiante. 🇦🇷 <br />
-                      <span className="text-[var(--accent)]">Empezá agregando tu primer bloque.</span>
+                    <p className="text-[var(--text-dim)] font-mono text-base max-w-sm leading-relaxed font-medium">
+                      Tu huevsite está esperando tu magia. 🇦🇷 <br />
+                      <span className="text-[var(--accent)] mt-2 block">Agregá tu primer bloque para empezar.</span>
                     </p>
                   </div>
                 ) : (
                   <>
                     {/* Fallback Header Preview if no Hero block exists */}
                     {!profile.blocks.some(b => b.type === 'hero') && profile.displayName && (
-                      <div className="md:col-span-2 md:row-span-1 opacity-50 grayscale-[0.5]">
+                      <div className="col-span-2 row-span-1 opacity-50 grayscale-[0.8] scale-[0.98] pointer-events-none">
                         <div className="huevsite-block flex flex-col justify-center p-8 bg-[var(--surface)] border border-dashed border-[var(--border)] rounded-[2rem]">
                           <div className="flex justify-between items-start mb-2">
                             <h1 className="text-3xl font-extrabold text-white mb-1">{profile.displayName}</h1>
-                            <span className="text-[9px] font-mono text-[var(--accent)] border border-[var(--accent)] px-2 py-0.5 rounded-full uppercase">Fallback</span>
+                            <span className="text-[9px] font-mono text-[var(--accent)] border border-[var(--accent)] px-2 py-0.5 rounded-full uppercase tracking-tighter">Vista Previa identity</span>
                           </div>
-                          <p className="text-sm text-[var(--text-dim)] font-mono">// {profile.tagline || 'builder'}</p>
+                          <p className="text-sm text-[var(--text-dim)] font-mono opacity-60">// {profile.tagline || 'builder'}</p>
                         </div>
                       </div>
                     )}
@@ -1039,10 +1021,6 @@ export default function DashboardPage() {
         onClose={() => setIsFeedbackOpen(false)}
       />
 
-      <GlobalUpdateModal
-        isOpen={isGlobalUpdateOpen}
-        onClose={handleCloseGlobalUpdate}
-      />
 
       <OnboardingModal
         isOpen={isOnboardingOpen}

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { X, Sparkles, RefreshCcw, Eye, ArrowRight } from "lucide-react";
+import { X, Sparkles, LayoutGrid, MousePointerClick, Share2, ArrowRight } from "lucide-react";
 
 interface Props {
   isOpen: boolean;
@@ -27,46 +27,46 @@ export function GlobalUpdateModal({ isOpen, onClose }: Props) {
         </div>
 
         <h2 className="text-2xl font-black text-white mb-2 leading-tight">
-          Llegó la revolución social a Huevsite 🥚🔥
+          Tu onboarding express de Huevsite 🥚✨
         </h2>
         
         <p className="text-[var(--text-dim)] text-sm mb-6 leading-relaxed">
-          Esta semana estuvimos trabajando a full en el motor (y en la pintura). Fijate todo lo nuevo que sumamos:
+          Te dejamos una mini guía para que armes un perfil que se vea bien y se entienda en segundos.
         </p>
 
         <div className="flex flex-col gap-4 mb-8">
           <div className="flex gap-4 items-start">
             <div className="w-8 h-8 rounded-full bg-[var(--surface2)] border border-[var(--border-bright)] flex items-center justify-center shrink-0 text-white mt-0.5">
-              <Sparkles size={14} />
+              <LayoutGrid size={14} />
             </div>
             <div>
-              <h4 className="text-white font-bold text-sm mb-1">Más de 10 lanzamientos 🚀</h4>
+              <h4 className="text-white font-bold text-sm mb-1">1) Armá tu grilla en 5 minutos</h4>
               <p className="text-[var(--text-muted)] text-xs leading-relaxed">
-                ¡Endorsements entre builders, mejoras en la cuenta PRO, seguidores, y preparate para el feed social que se viene muy pronto!
+                Sumá 3 bloques base para arrancar fuerte: Hero, Proyecto destacado y Stack. Con eso ya contás quién sos y qué hacés.
               </p>
             </div>
           </div>
 
           <div className="flex gap-4 items-start">
             <div className="w-8 h-8 rounded-full bg-[var(--surface2)] border border-[var(--border-bright)] flex items-center justify-center shrink-0 text-white mt-0.5">
-              <RefreshCcw size={14} />
+              <MousePointerClick size={14} />
             </div>
             <div>
-              <h4 className="text-white font-bold text-sm mb-1">Nominaciones Flexibles 🔄</h4>
+              <h4 className="text-white font-bold text-sm mb-1">2) Dejá todo fácil de explorar</h4>
               <p className="text-[var(--text-muted)] text-xs leading-relaxed">
-                ¿Te arrepentiste? Ahora podés cambiar a quién nominás en la semana en cualquier momento antes de que cierre el domingo a las 00:00.
+                Ordená los bloques por prioridad y dejá arriba lo que querés que vean primero: tus mejores proyectos o tu CTA principal.
               </p>
             </div>
           </div>
 
           <div className="flex gap-4 items-start">
             <div className="w-8 h-8 rounded-full bg-[var(--surface2)] border border-[var(--border-bright)] flex items-center justify-center shrink-0 text-white mt-0.5">
-               <Eye size={14} />
+               <Share2 size={14} />
             </div>
             <div>
-              <h4 className="text-white font-bold text-sm mb-1">Explorador y Tags PRO 👀</h4>
+              <h4 className="text-white font-bold text-sm mb-1">3) Publicalo y compartilo</h4>
               <p className="text-[var(--text-muted)] text-xs leading-relaxed">
-                Ordená por Endorsements, filtrá para ver quiénes te siguen, chusmeá los proyectos actualizados recientemente y mirá los nuevos estilos de diseño Premium.
+                Copiá tu URL desde el dashboard y pegala en tu bio de X, LinkedIn o GitHub. Un solo link, toda tu presencia builder.
               </p>
             </div>
           </div>
@@ -78,7 +78,7 @@ export function GlobalUpdateModal({ isOpen, onClose }: Props) {
             onClick={onClose}
             className="w-full flex items-center justify-center gap-2 bg-[var(--accent)] text-black font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity"
           >
-            Ir al Explorar
+            Ver inspiración en Explorar
             <ArrowRight size={16} />
           </Link>
           <button

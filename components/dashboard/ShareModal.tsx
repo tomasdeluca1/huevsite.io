@@ -45,7 +45,7 @@ export function ShareModal({ isOpen, onClose, accentColor, username, onUnlocked 
 
     setStep("verifying");
     try {
-      const res = await fetch("/api/social/share-unlock", { 
+      const res = await fetch("/api/social/share-unlock", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tweetUrl: tweetUrlInput })
@@ -102,7 +102,7 @@ export function ShareModal({ isOpen, onClose, accentColor, username, onUnlocked 
                 setTweetUrlInput={setTweetUrlInput}
                 onTweet={handleTweet}
                 onConfirm={handleConfirmTweet}
-                onUpgrade={() => { onClose(); window.location.href = "/api/checkout"; }}
+                onUpgrade={() => window.location.href = "/api/checkout"}
               />
             )}
           </div>
@@ -181,7 +181,7 @@ function PromptView({
             </button>
             <button
               onClick={onUpgrade}
-              className="w-full py-3 rounded-2xl border border-[var(--border-bright)] text-sm font-medium text-[var(--text-dim)] hover:text-white hover:border-white transition-all"
+              className="w-full py-3 rounded-2xl border border-[var(--border-bright)] text-sm font-medium text-[var(--text-dim)] hover:text-white hover:border-white transition-all flex items-center justify-center gap-2"
             >
               Ir a Pro — $5/mes
             </button>

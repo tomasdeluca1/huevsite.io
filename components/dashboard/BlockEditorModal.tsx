@@ -764,7 +764,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                   value={formData.date || ""}
                   onChange={(e) => handleChange("date", e.target.value)}
                   className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all"
-                  placeholder="2024"
+                  placeholder="2026"
                 />
               </div>
             </div>
@@ -806,7 +806,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                 value={formData.date || ""}
                 onChange={(e) => handleChange("date", e.target.value)}
                 className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all"
-                placeholder="Noviembre 2023"
+                placeholder="Marzo 2026"
               />
             </div>
           </div>

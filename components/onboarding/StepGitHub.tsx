@@ -32,7 +32,7 @@ interface StepGitHubProps {
 const IMPORT_STEPS = [
   "Iniciando handshake con GitHub...",
   "Clonando metadatos de repositorios...",
-  "Calculando actividad de commits (2024)...",
+  "Calculando actividad de commits (2025)...",
   "Identificando stack tecnológico...",
   "Generando bloques sugeridos...",
 ];
@@ -101,7 +101,7 @@ export function StepGitHub({ state, onConnect, onSkip, onNext }: StepGitHubProps
                 </div>
               ))}
             </div>
-            
+
             <button
               onClick={onSkip}
               className="ou-skip !mt-8 block w-full"
@@ -123,7 +123,7 @@ export function StepGitHub({ state, onConnect, onSkip, onNext }: StepGitHubProps
                 <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
                 <span className="text-[var(--text-muted)] uppercase tracking-widest text-[10px]">github_import.sh</span>
               </div>
-              
+
               <div className="space-y-2 min-h-[120px]">
                 {IMPORT_STEPS.slice(0, importStep + 1).map((s, i) => (
                   <motion.div
@@ -167,7 +167,7 @@ function GitHubDoneView({ data, onNext }: { data: GitHubData; onNext: () => void
 
       <div className="bg-[var(--surface2)] border border-[var(--border-bright)] rounded-[2rem] p-8 space-y-6 mb-10 overflow-hidden relative">
         <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)] opacity-5 blur-3xl pointer-events-none" />
-        
+
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-[var(--accent)] to-[#00FF88] flex items-center justify-center text-black font-black text-2xl shadow-lg">
             {data.name[0]}
@@ -190,7 +190,7 @@ function GitHubDoneView({ data, onNext }: { data: GitHubData; onNext: () => void
             <div className="section-label !text-[8px] !text-[var(--text-muted)]">Followers</div>
           </div>
           <div>
-             <div className="flex gap-1 flex-wrap mt-1">
+            <div className="flex gap-1 flex-wrap mt-1">
               {data.topLanguages.slice(0, 2).map((lang) => (
                 <span key={lang} className="text-[9px] font-mono px-1.5 py-0.5 bg-black/40 border border-[var(--border-bright)] rounded text-[var(--accent)]">
                   {lang}

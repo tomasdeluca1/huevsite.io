@@ -69,26 +69,10 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline }: Profi
     }
   }
 
-  // Mapear col_span a clase CSS con soporte responsive
   const getGridClasses = (block: BlockData) => {
     const col = block.col_span || 1;
     const row = block.row_span || 1;
-
-    // Mobile (2 cols base):
-    // 1 -> 1, 2+ -> 2
-    const mobileCol = col > 1 ? "col-span-2" : "col-span-1";
-    const mobileRow = row > 1 ? "row-span-2" : "row-span-1";
-
-    // Tablet (3 cols):
-    // 1 -> 1, 2 -> 2, 3+ -> 3
-    const tabletCol = col >= 3 ? "sm:col-span-3" : col === 2 ? "sm:col-span-2" : "sm:col-span-1";
-
-    // Desktop (4 cols):
-    // Original span
-    const desktopCol = `md:col-span-${Math.min(col, 4)}`;
-    const desktopRow = `md:row-span-${row}`;
-
-    return `${mobileCol} ${mobileRow} ${tabletCol} ${desktopCol} ${desktopRow}`.trim();
+    return `col-span-${col} row-span-${row}`;
   }
 
   return (

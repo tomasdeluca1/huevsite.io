@@ -78,7 +78,8 @@ export async function POST(req: NextRequest) {
             .update({
                subscription_tier: isPro ? "pro" : "free",
                lemon_squeezy_customer_id: customerId,
-               lemon_squeezy_subscription_id: subscriptionId
+               lemon_squeezy_subscription_id: subscriptionId,
+               pro_since: isPro ? new Date().toISOString() : null
             })
             .eq("id", userId);
 

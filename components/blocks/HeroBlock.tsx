@@ -48,15 +48,15 @@ export function HeroBlock({ data, accentColor }: Props) {
 
         <div className={`flex flex-col min-w-0 ${rowSpan === 1 ? 'flex-1' : 'flex-1 w-full items-center text-center'}`}>
           <div className={rowSpan === 1 ? 'flex flex-wrap items-baseline gap-2 md:gap-3' : 'flex flex-col items-center'}>
-            <h1 className={`${rowSpan === 1 ? 'text-lg md:text-xl' : 'text-3xl'} hero-name text-white font-extrabold tracking-tighter leading-tight`}>
+            <h1 className={`${rowSpan === 1 ? 'text-lg md:text-xl' : 'text-xl sm:text-2xl md:text-3xl'} hero-name text-white font-extrabold tracking-tighter leading-tight`}>
               {name}
             </h1>
-            <div className="hero-role text-[9px] md:text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-widest opacity-60">
+            <div className="hero-role text-[8px] sm:text-[9px] md:text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-widest opacity-60">
               // {roles.length > 0 ? roles.join(', ') : 'builder'}
             </div>
           </div>
 
-          <div className={`${rowSpan === 1 ? 'text-xs md:text-sm mt-0.5' : 'text-base md:text-lg mt-2'} hero-tagline text-[var(--text-dim)] font-medium leading-[1.3] md:leading-relaxed`}>
+          <div className={`${rowSpan === 1 ? 'text-xs md:text-sm mt-0.5' : 'text-xs sm:text-sm md:text-base lg:text-lg mt-2'} hero-tagline text-[var(--text-dim)] font-medium leading-[1.3] md:leading-relaxed`}>
             {tagline}
           </div>
 

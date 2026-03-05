@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Plus, X, Layout as LayoutIcon, MessageSquare, Rocket, Github, Star, Layers, Users, BookOpen, Sparkles, FileText, Image, Award, Trophy, PenTool } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BlockType, MAX_FREE_BLOCKS, isDarkColor } from "@/lib/profile-types";
+import { BlockType, MAX_FREE_BLOCKS, MAX_PRO_BLOCKS, isDarkColor } from "@/lib/profile-types";
 import { UpgradeModal } from "@/components/dashboard/UpgradeModal";
 import { ShareModal } from "@/components/dashboard/ShareModal";
 
@@ -39,10 +39,10 @@ export function BlockSelector({
   }, []);
 
   const effectiveLimit = subscriptionTier === "pro"
-    ? Infinity
+    ? MAX_PRO_BLOCKS
     : MAX_FREE_BLOCKS + extraBlocksFromShare;
 
-  const atLimit = subscriptionTier !== "pro" && currentBlockCount >= effectiveLimit;
+  const atLimit = currentBlockCount >= effectiveLimit;
 
   const categories = [
     {
@@ -95,9 +95,7 @@ export function BlockSelector({
     <div className="relative">
       <div className="flex items-center justify-between mb-2">
         <div className="text-[9px] font-mono text-[var(--text-muted)] uppercase tracking-[0.1em]">
-          {subscriptionTier === "pro"
-            ? "Bloques ilimitados"
-            : `${currentBlockCount} / ${effectiveLimit} bloques`}
+          {currentBlockCount} / {effectiveLimit} bloques
         </div>
         {subscriptionTier !== "pro" && (
           <div className="text-[9px] font-mono text-[var(--text-muted)]">

@@ -30,10 +30,12 @@ export async function POST(req: NextRequest) {
 
       // Verify signature
       const hmac = crypto.createHmac("sha256", secret);
-      const digest = Buffer.from(hmac.update(rawBody).digest("hex"), "utf8");
+      const digest = hmac.update(rawBody).digest("hex");
+
+      const digestBuffer = Buffer.from(digest, "utf8");
       const signatureBuffer = Buffer.from(signature, "utf8");
 
-      if (digest.length !== signatureBuffer.length || !crypto.timingSafeEqual(digest, signatureBuffer)) {
+      if (digestBuffer.length !== signatureBuffer.length || !crypto.timingSafeEqual(digestBuffer, signatureBuffer)) {
          console.error("Firma de Lemon Squeezy inválida.");
          return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
       }
@@ -93,8 +95,31 @@ export async function POST(req: NextRequest) {
             });
          }
       }
-      // Handle Subscription Expired/Payment Failed
-      else if (eventName === 'subscription_expired' || eventName === 'subscription_payment_failed') {
+      // Handle Subscription Resumed
+      else if (eventName === "subscription_resumed") {
+         const subscriptionId = payload.data.id.toString();
+         const status = payload.data.attributes.status;
+         const isPro = status === "active" || status === "on_trial";
+
+         const { error } = await supabase
+            .from("profiles")
+            .update({
+               subscription_tier: isPro ? "pro" : "free",
+            })
+            .eq("lemon_squeezy_subscription_id", subscriptionId);
+
+         if (error) {
+            console.error("Error resumiendo el perfil en Supabase:", error);
+            return NextResponse.json({ error: "Database resume failed" }, { status: 500 });
+         }
+      }
+      // Handle Subscription Expired/Payment Failed/Paused/Cancelled
+      else if (
+         eventName === 'subscription_expired' ||
+         eventName === 'subscription_payment_failed' ||
+         eventName === 'subscription_paused' ||
+         eventName === 'subscription_cancelled'
+      ) {
          // Find the user by subscription ID
          const subscriptionId = payload.data.id.toString();
 

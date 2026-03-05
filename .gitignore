@@ -12,7 +12,9 @@
 # next.js
 /.next/
 /out/
-/huevsite-video/
+/remotion
+/remotion/node_modules
+/remotion/dist
 
 # production
 /build

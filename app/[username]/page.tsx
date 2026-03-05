@@ -6,6 +6,7 @@ import Link from "next/link";
 import { isEnabled } from "@/lib/feature-flags";
 import { EndorsementsSection } from "@/components/social/EndorsementsSection";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
+import { MobileBottomNav, MobileStickyHeader } from "@/components/profile/MobileProfileUI";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWeek } from "@/lib/showcase-service";
 interface Props {
@@ -121,14 +122,14 @@ export default async function ProfilePage({ params }: Props) {
       {/* Noise Texture Overlay */}
       <div className="noise" />
 
-      <main className="min-h-screen pt-12 pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto relative">
+      <main className="min-h-screen pt-8 md:pt-12 pb-16 md:pb-24 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto relative">
         {/* Dynamic Cinematic Backgrounds */}
         <div
-          className="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] opacity-[0.08] blur-[120px] pointer-events-none transition-all duration-1000"
+          className="fixed top-[-10%] left-[-10%] w-[80%] md:w-[50%] h-[50%] opacity-[0.08] blur-[120px] pointer-events-none transition-all duration-1000"
           style={{ backgroundColor: profile.accentColor }}
         />
         <div
-          className="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] opacity-[0.05] blur-[100px] pointer-events-none transition-all duration-1000"
+          className="fixed bottom-[-10%] right-[-10%] w-[60%] md:w-[40%] h-[40%] opacity-[0.05] blur-[100px] pointer-events-none transition-all duration-1000"
           style={{ backgroundColor: profile.accentColor }}
         />
 
@@ -145,6 +146,16 @@ export default async function ProfilePage({ params }: Props) {
             color: black;
           }
         `}} />
+
+        {/* Mobile Specific UI */}
+        <MobileStickyHeader
+          displayName={profile.displayName || profile.username}
+          avatarUrl={profile.avatarUrl}
+          builderScore={profile.builderScore || 0}
+          accentColor={profile.accentColor}
+          username={profile.username}
+        />
+        <MobileBottomNav accentColor={profile.accentColor} currentUserId={currentUserId} />
 
         {/* Header / Nav */}
         <ProfileHeader
@@ -172,7 +183,7 @@ export default async function ProfilePage({ params }: Props) {
 
         {/* Endorsements (feature flag: red social) */}
         {isEnabled("socialNetwork") && profile.id && (
-          <div className="relative z-10 max-w-4xl mx-auto mt-12 pb-12">
+          <div className="relative z-10 max-w-4xl mx-auto mt-16 md:mt-24 pb-12">
             <EndorsementsSection
               profileId={profile.id}
               profileAccentColor={profile.accentColor}
@@ -184,7 +195,7 @@ export default async function ProfilePage({ params }: Props) {
         )}
 
         {/* Footer message */}
-        <footer className="mt-32 text-center relative z-10 border-t border-white/5 pt-12">
+        <footer className="mt-20 md:mt-32 text-center relative z-10 border-t border-white/5 pt-12">
           <div className="section-label !text-[var(--text-muted)] opacity-30">
             // builder logic • {profile.displayName} &apos;s huevsite
           </div>

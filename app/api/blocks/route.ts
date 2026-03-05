@@ -41,12 +41,15 @@ export async function POST(request: NextRequest) {
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id)
 
-    const MAX_BASE_FREE = 5
-    const effectiveLimit = MAX_BASE_FREE + (profileData?.extra_blocks_from_share || 0)
+    const MAX_BASE_FREE = 8
+    const MAX_PRO = 16
+    const effectiveLimit = profileData?.subscription_tier === 'pro'
+      ? MAX_PRO
+      : MAX_BASE_FREE + (profileData?.extra_blocks_from_share || 0)
 
-    if (profileData?.subscription_tier !== 'pro' && blockCount !== null && blockCount >= effectiveLimit) {
+    if (blockCount !== null && blockCount >= effectiveLimit) {
       return NextResponse.json(
-        { error: 'Límite de bloques alcanzado para plan gratuito' },
+        { error: `Límite de bloques alcanzado (${effectiveLimit})` },
         { status: 403 }
       )
     }
@@ -93,11 +96,11 @@ export async function POST(request: NextRequest) {
 
     // Log the activity to the feed
     const { error: activityError } = await supabase.from('activities').insert({
-       user_id: user.id,
-       type: 'new_block',
-       data: { blockType: body.type }
+      user_id: user.id,
+      type: 'new_block',
+      data: { blockType: body.type }
     });
-    
+
     if (activityError) console.error("Error logging block activity", activityError);
 
     return NextResponse.json({

@@ -107,7 +107,7 @@ export default function DashboardPage() {
           username: data.profile.username,
           displayName: data.profile.name || data.profile.username,
           accentColor: data.profile.accent_color,
-          subscriptionTier: data.profile.pro_since ? 'pro' : 'free',
+          subscriptionTier: (data.profile.subscription_tier === 'pro' || !!data.profile.pro_since) ? 'pro' : 'free',
           extraBlocksFromShare: data.profile.extra_blocks_from_share || 0,
           twitterShareUnlocked: data.profile.twitter_share_unlocked || false,
           hasSeenUpdateFeb25: data.profile.has_seen_update_feb25 || false,

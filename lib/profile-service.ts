@@ -55,7 +55,7 @@ export const profileService = {
       displayName: profile.name || profile.username,
       tagline: profile.tagline || "",
       accentColor: profile.accent_color as any,
-      subscriptionTier: profile.pro_since ? 'pro' : 'free',
+      subscriptionTier: (profile.subscription_tier === 'pro' || !!profile.pro_since) ? 'pro' : 'free',
       extraBlocksFromShare: profile.extra_blocks_from_share || 0,
       twitterShareUnlocked: profile.twitter_share_unlocked || false,
       builderScore: profile.builder_score || 0,

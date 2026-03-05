@@ -69,7 +69,7 @@ export function FollowListModal({ isOpen, onClose, userId, type, accentColor }: 
 
   return createPortal(
     <AnimatePresence>
-      <div className="portal-root fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div className="portal-root fixed inset-0 z-[9999] flex items-center justify-center p-0 md:p-4">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -78,12 +78,17 @@ export function FollowListModal({ isOpen, onClose, userId, type, accentColor }: 
           onClick={onClose}
         />
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          initial={{ opacity: 0, scale: 0.95, y: 30 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-[90%] max-w-md bg-[var(--surface)] border border-[var(--border-bright)] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col z-10 max-h-[80vh]"
+          exit={{ opacity: 0, scale: 0.95, y: 30 }}
+          className="relative w-full max-w-md bg-[var(--surface)] border-t md:border border-[var(--border-bright)] rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col z-10 max-h-[85vh] mt-auto md:mt-0"
         >
-          <div className="p-6 border-b border-[var(--border)] bg-black/40">
+          {/* Mobile Drag Handle */}
+          <div className="md:hidden flex justify-center pt-4 shrink-0">
+            <div className="w-12 h-1.5 bg-white/10 rounded-full" />
+          </div>
+
+          <div className="p-6 border-b border-[var(--border)] bg-black/40 shrink-0">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold tracking-tight capitalize">
                 {type === "followers" ? "Seguidores" : "Siguiendo"}

@@ -3,7 +3,7 @@ import { AccentColor, Role } from "./onboarding-types";
 export type SubscriptionTier = "free" | "pro";
 
 export const MAX_FREE_BLOCKS = 5;
-export const MAX_PRO_BLOCKS = 16;
+export const MAX_PRO_BLOCKS = 32; // Limit lowered from 100 per user request // Effectively "Unlimited" for PRO
 
 export type TaglineStatus =
   | "disponible para proyectos"
@@ -111,6 +111,7 @@ export interface GitHubBlockData extends BaseBlock {
     topLanguages?: Array<{ name: string; percent: number }>;
     issuesClosed?: number;
     totalCommits?: number;
+    heatmap?: number[];
   };
 }
 

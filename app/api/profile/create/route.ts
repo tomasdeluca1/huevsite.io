@@ -14,6 +14,7 @@ interface CreateProfileRequest {
   roles: string[]
   location?: string
   githubHandle?: string
+  githubData?: any
   blocks?: Array<{
     type: string
     order: number
@@ -97,9 +98,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Crear bloques iniciales si se proveen
+    // Crear bloques iniciales si se proveen o si tiene handle de GitHub
+    const blocksToInsert = [];
+
     if (body.blocks && body.blocks.length > 0) {
-      const blocksToInsert = body.blocks.map(block => ({
+      blocksToInsert.push(...body.blocks.map(block => ({
         user_id: user.id,
         type: block.type,
         order: block.order,
@@ -107,8 +110,41 @@ export async function POST(request: NextRequest) {
         row_span: block.rowSpan,
         data: block.data,
         visible: block.visible,
-      }))
+      })));
+    }
 
+    // Si no hay bloque de GitHub en body.blocks y tenemos un githubHandle, agregarlo automáticamente
+    const hasGithubBlock = blocksToInsert.some(b => b.type === 'github');
+    const githubHandle = body.githubHandle || user.user_metadata.user_name;
+
+    if (!hasGithubBlock && githubHandle) {
+      const stats = body.githubData ? {
+        stars: body.githubData.topRepos?.reduce((acc: number, r: any) => acc + (r.stars || 0), 0) || 0,
+        repos: body.githubData.publicRepos || 0,
+        followers: body.githubData.followers || 0,
+        topLanguages: body.githubData.topLanguages?.map((l: string) => ({ name: l, percent: 33 })) || [],
+      } : {
+        stars: 0,
+        repos: 0,
+        followers: 0,
+      };
+
+      blocksToInsert.push({
+        user_id: user.id,
+        type: 'github',
+        order: blocksToInsert.length,
+        col_span: 1,
+        row_span: 2,
+        data: {
+          username: githubHandle,
+          stats,
+          showAdvanced: true
+        },
+        visible: true,
+      });
+    }
+
+    if (blocksToInsert.length > 0) {
       const { error: blocksError } = await supabase
         .from('blocks')
         .insert(blocksToInsert)

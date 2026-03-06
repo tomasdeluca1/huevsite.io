@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { scoreService } from '@/lib/score-service'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
       .eq('user_id', user.id)
 
     const MAX_BASE_FREE = 5
-    const MAX_PRO = 16
+    const MAX_PRO = 32 // Consistente con MAX_PRO_BLOCKS en el frontend
     const effectiveLimit = profileData?.subscription_tier === 'pro'
       ? MAX_PRO
       : MAX_BASE_FREE + (profileData?.extra_blocks_from_share || 0)
@@ -102,6 +103,9 @@ export async function POST(request: NextRequest) {
     });
 
     if (activityError) console.error("Error logging block activity", activityError);
+
+    // Recompute score
+    await scoreService.recomputeScore(user.id);
 
     return NextResponse.json({
       success: true,

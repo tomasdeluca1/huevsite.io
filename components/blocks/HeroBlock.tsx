@@ -1,14 +1,16 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { BadgeCheck } from "lucide-react";
 import { HeroBlockData } from "@/lib/profile-types";
 
 interface Props {
   data: HeroBlockData;
   accentColor: string;
+  subscriptionTier?: "free" | "pro";
 }
 
-export function HeroBlock({ data, accentColor }: Props) {
+export function HeroBlock({ data, accentColor, subscriptionTier }: Props) {
   const roles = data.roles || [];
   const name = data.name || "Usuario";
   const tagline = data.tagline || "Builder en huevsite.io";
@@ -49,8 +51,18 @@ export function HeroBlock({ data, accentColor }: Props) {
           </div>
 
           <div className="flex flex-col min-w-0 pt-1 md:pt-2">
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-white leading-[1.1] break-words">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-white leading-[1.1] break-words flex items-center gap-2">
               {name}
+              {subscriptionTier === "pro" && (
+                <motion.span
+                  initial={{ scale: 0, rotate: -20 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  className="shrink-0"
+                  title="Builder PRO"
+                >
+                  <BadgeCheck size={24} className="md:w-7 md:h-7" style={{ color: accentColor }} />
+                </motion.span>
+              )}
             </h1>
             {/* TAGLINE: Justo debajo del nombre */}
             <p className="mt-1 text-sm md:text-base text-[var(--accent)] font-mono opacity-80 break-words">

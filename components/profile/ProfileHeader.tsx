@@ -7,6 +7,7 @@ import { NominateButton } from "@/components/social/NominateButton";
 import { FollowListModal } from "@/components/social/FollowListModal";
 
 import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
+import { BadgeCheck } from "lucide-react";
 
 interface Props {
   profileId?: string;
@@ -19,6 +20,7 @@ interface Props {
   showFollowButton: boolean;
   currentUserId?: string | null;
   isEnabledSocialNetwork: boolean;
+  subscriptionTier?: "free" | "pro";
 }
 
 export function ProfileHeader({
@@ -208,7 +210,7 @@ export function ProfileHeader({
         />
       )}
 
-      <ScoreInfoModal isOpen={isScoreOpen} onClose={() => setIsScoreOpen(false)} accentColor={accentColor} />
+      <ScoreInfoModal isOpen={isScoreOpen} onClose={() => setIsScoreOpen(false)} accentColor={accentColor} profileId={profileId} />
     </header>
   );
 }

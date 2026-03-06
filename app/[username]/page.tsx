@@ -169,6 +169,7 @@ export default async function ProfilePage({ params }: Props) {
           showFollowButton={showFollowButton}
           currentUserId={currentUserId}
           isEnabledSocialNetwork={isEnabled("socialNetwork")}
+          subscriptionTier={profile.subscriptionTier}
         />
 
         {/* Huevsite Grid (Client Component for animations) */}
@@ -178,6 +179,7 @@ export default async function ProfilePage({ params }: Props) {
             accentColor={profile.accentColor}
             displayName={profile.displayName}
             tagline={profile.tagline}
+            subscriptionTier={profile.subscriptionTier}
           />
         </div>
 
@@ -195,11 +197,13 @@ export default async function ProfilePage({ params }: Props) {
         )}
 
         {/* Footer message */}
-        <footer className="mt-20 md:mt-32 text-center relative z-10 border-t border-white/5 pt-12">
+        <footer className="mt-20 md:mt-32 text-center relative z-10 border-t border-white/5 pt-12 pb-8">
           <div className="section-label !text-[var(--text-muted)] opacity-30">
             // builder logic • {profile.displayName} &apos;s huevsite
           </div>
-          <div className="logo mt-4 scale-75 opacity-10 filter grayscale select-none">huev<span>site</span>.io</div>
+          {profile.subscriptionTier !== "pro" && (
+            <div className="logo mt-4 scale-75 opacity-10 filter grayscale select-none">huev<span>site</span>.io</div>
+          )}
         </footer>
       </main>
     </div>

@@ -43,16 +43,44 @@ export function StepGitHub({ state, onConnect, onSkip, onNext }: StepGitHubProps
 
   const handleConnect = async () => {
     setStatus("connecting");
-    await delay(800);
-    setStatus("importing");
 
-    for (let i = 0; i < IMPORT_STEPS.length; i++) {
-      setImportStep(i);
-      await delay(700);
+    try {
+      const response = await fetch('/api/github/import');
+      if (!response.ok) throw new Error('Failed to fetch github data');
+
+      const githubData = await response.json();
+
+      setStatus("importing");
+
+      for (let i = 0; i < IMPORT_STEPS.length; i++) {
+        setImportStep(i);
+        await delay(500);
+      }
+
+      // Convertir el formato de la API al formato de GitHubData de onboarding
+      const formattedData: GitHubData = {
+        username: githubData.username,
+        avatarUrl: githubData.avatarUrl || "",
+        name: githubData.name || githubData.username,
+        bio: githubData.bio || "",
+        publicRepos: githubData.repos,
+        followers: githubData.followers || 0,
+        topLanguages: githubData.languages || [],
+        topRepos: (githubData.topRepos || []).map((r: any) => ({
+          name: r.name,
+          stars: r.stars,
+          description: r.description
+        }))
+      };
+
+      onConnect(formattedData);
+      setStatus("done");
+    } catch (error) {
+      console.error('Error connecting to GitHub:', error);
+      // Fallback a mock solo para demo si falla la API, o mostrar error
+      onConnect(MOCK_GITHUB);
+      setStatus("done");
     }
-
-    onConnect(MOCK_GITHUB);
-    setStatus("done");
   };
 
   if (status === "done" && state.githubData) {

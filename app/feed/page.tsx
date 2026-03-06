@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { ChevronUp, Activity, Compass, User } from "lucide-react";
+import { ChevronUp, Activity, Compass, User, BadgeCheck } from "lucide-react";
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
@@ -15,6 +15,8 @@ interface ActivityUser {
   name: string | null;
   image: string | null;
   accent_color: string;
+  subscription_tier?: "free" | "pro";
+  pro_since?: string | null;
 }
 
 interface Activity {
@@ -311,10 +313,13 @@ function FeedContent() {
                   <p className="text-sm font-medium leading-snug">
                     <Link
                       href={`/${user.username}`}
-                      className="font-bold hover:underline"
+                      className="font-bold hover:underline gap-1 inline-flex items-center"
                       style={{ color: user.accent_color }}
                     >
                       {user.name ?? user.username}
+                      {(user.subscription_tier === 'pro' || !!user.pro_since) && (
+                        <BadgeCheck size={14} className="shrink-0" />
+                      )}
                     </Link>
                     {" "}
                     <span className="text-[var(--text-dim)]">

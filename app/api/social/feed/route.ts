@@ -34,7 +34,9 @@ export async function GET(request: NextRequest) {
           username,
           name,
           image,
-          accent_color
+          accent_color,
+          subscription_tier,
+          pro_since
         )
       `, { count: "exact" });
 

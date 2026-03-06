@@ -18,7 +18,7 @@ import {
 } from "@dnd-kit/sortable";
 import {
   Save, Eye, Layout as LayoutIcon, Settings, LogOut, Plus, Sparkles, MessageSquare,
-  Activity, Compass, Trash2, Copy, Check, Trophy, ArrowUpRight
+  Activity, Compass, Trash2, Copy, Check, Trophy, ArrowUpRight, BadgeCheck
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -254,7 +254,7 @@ export default function DashboardPage() {
       case "github":
         initialData = {
           ...initialData,
-          username: "usuario",
+          username: profile?.githubHandle || "usuario",
           stats: {
             stars: 0,
             repos: 0,
@@ -744,6 +744,7 @@ export default function DashboardPage() {
             <ColorPicker
               value={profile.accentColor}
               onChange={handleColorChange}
+              subscriptionTier={profile.subscriptionTier}
             />
 
             <div className="h-px bg-[var(--border)] hidden md:block" />
@@ -905,7 +906,15 @@ export default function DashboardPage() {
             <div className="mb-2">
               <div className="section-label hidden md:block">// editor de huevsite</div>
             </div>
-            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tighter">Armá tu huevsite.</h2>
+            <div className="flex items-center gap-3">
+              <h2 className="text-3xl md:text-4xl font-extrabold tracking-tighter">Armá tu huevsite.</h2>
+              {profile?.subscriptionTier === "pro" && (
+                <div className="flex items-center gap-1 bg-[var(--accent)]/10 border border-[var(--accent)]/30 px-2.5 py-1 rounded-full mt-1">
+                  <BadgeCheck size={16} style={{ color: profile.accentColor }} />
+                  <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: profile.accentColor }}>PRO</span>
+                </div>
+              )}
+            </div>
             <p className="section-sub !text-sm mt-2 hidden md:block">
               Arrastrá para reordenar. Click en el rayito <Sparkles size={14} className="inline text-[var(--accent)]" /> para editar.
             </p>

@@ -18,17 +18,21 @@ export function GitHubBlock({ data, accentColor }: Props) {
   const username = data.username || "usuario";
 
   useEffect(() => {
-    const cells = [];
-    for (let i = 0; i < 26; i++) {
-      const r = Math.random();
-      if (r > 0.8) cells.push("hm-4");
-      else if (r > 0.6) cells.push("hm-3");
-      else if (r > 0.4) cells.push("hm-2");
-      else if (r > 0.2) cells.push("hm-1");
-      else cells.push("");
+    if (data.stats.heatmap && data.stats.heatmap.length > 0) {
+      setHeatmap(data.stats.heatmap.map(val => val === 0 ? "" : `hm-${val}`));
+    } else {
+      const cells = [];
+      for (let i = 0; i < 26; i++) {
+        const r = Math.random();
+        if (r > 0.8) cells.push("hm-4");
+        else if (r > 0.6) cells.push("hm-3");
+        else if (r > 0.4) cells.push("hm-2");
+        else if (r > 0.2) cells.push("hm-1");
+        else cells.push("");
+      }
+      setHeatmap(cells);
     }
-    setHeatmap(cells);
-  }, []);
+  }, [data.stats.heatmap]);
 
   return (
     <motion.div

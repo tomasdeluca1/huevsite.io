@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { scoreService } from '@/lib/score-service'
 
 export const dynamic = 'force-dynamic'
 
@@ -114,6 +115,9 @@ export async function PATCH(
 
     if (activityError) console.error("Error logging block activity", activityError);
 
+    // Recompute score
+    await scoreService.recomputeScore(user.id);
+
     return NextResponse.json({
       success: true,
       block,
@@ -187,6 +191,9 @@ export async function DELETE(
         { status: 500 }
       )
     }
+
+    // Recompute score
+    await scoreService.recomputeScore(user.id);
 
     console.log('DELETE - Success:', blockId)
     return NextResponse.json({

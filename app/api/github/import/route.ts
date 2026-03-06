@@ -134,9 +134,17 @@ export async function GET(request: NextRequest) {
       totalCommits = publicRepos.length * 50 // estimación
     }
 
+    // Obtener info básica del usuario para followers y avatar
+    const userResponse = await fetch(`https://api.github.com/users/${githubHandle}`, { headers });
+    const userData = userResponse.ok ? await userResponse.json() : {};
+
     // 3. Construir respuesta tipada según GitHubData
     const githubData = {
       username: githubHandle,
+      avatarUrl: userData.avatar_url,
+      name: userData.name,
+      bio: userData.bio,
+      followers: userData.followers || 0,
       commits: totalCommits,
       repos: publicRepos.length,
       topRepos,

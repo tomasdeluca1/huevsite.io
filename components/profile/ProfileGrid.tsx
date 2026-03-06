@@ -15,9 +15,10 @@ interface ProfileGridProps {
   accentColor: string
   displayName?: string
   tagline?: string
+  subscriptionTier?: "free" | "pro"
 }
 
-export function ProfileGrid({ blocks, accentColor, displayName, tagline }: ProfileGridProps) {
+export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscriptionTier }: ProfileGridProps) {
   // Filtrar solo bloques visibles y ordenar
   const visibleBlocks = blocks
     .filter(block => block.visible)
@@ -35,7 +36,7 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline }: Profi
 
     switch (block.type) {
       case "hero":
-        return <HeroBlock {...props} />
+        return <HeroBlock {...props} subscriptionTier={subscriptionTier} />
       case "building":
         return <BuildingBlock {...props} />
       case "github":

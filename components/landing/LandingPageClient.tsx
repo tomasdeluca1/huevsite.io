@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { WinnerSection } from "@/components/landing/WinnerSection";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
-import { Activity, Compass, Users, PlusCircle, Layout } from "lucide-react";
+import { Activity, Compass, Users, PlusCircle, Layout, Check } from "lucide-react";
 
 interface LandingPageClientProps {
   showcaseData: any;
@@ -77,11 +77,14 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
     };
   }, []);
 
+  // Price Section - Only for logged in users
+  const showPricing = !!user;
+
   return (
     <div className="landing">
       {/* NAV */}
       <nav>
-        <Link href="/" className="logo">huev<span>site</span>.io</Link>
+        <Link href="/" className="logo">huev<span style={{ color: 'var(--accent)' }}>site</span>.io</Link>
         <div className="nav-right hidden md:flex">
           <Link href="/feed" className="btn btn-ghost">
             <span>Lanzamientos</span>
@@ -350,10 +353,10 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
 
           <div style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', display: 'grid', gap: '24px' }}>
             {[
-              { icon: '💎', title: 'Diseño Disruptivo', desc: 'Acceso a layouts exclusivos y personalización avanzada para builders que no se conforman.' },
-              { icon: '📈', title: 'Builder Score Elite', desc: 'Ranking dinámico basado en tu actividad real, dándote visibilidad ante la comunidad.' },
-              { icon: '📝', title: 'Blog Integrado', desc: 'Gestioná tus propios artículos y pensamientos directamente en tu huevsite con lectura in-situ.' },
-              { icon: '🚀', title: 'Soporte Prioritario', desc: 'Ayuda directa para optimizar tu huevsite y destacar tus proyectos al máximo.' }
+              { icon: '🔓', title: 'Bloques Ilimitados', desc: 'Armá tu portfolio sin restricciones. Desbloqueá el grid completo para mostrar todo tu potencial.' },
+              { icon: '🎨', title: 'Colores Custom', desc: 'Elegí cualquier color HEX. No te limites a los presets, definí tu marca personal exacta.' },
+              { icon: '✨', title: 'Sin Marca de Agua', desc: 'Eliminamos el logo de huevsite.io de tu footer para un estilo más minimalista y profesional.' },
+              { icon: '✅', title: 'Verified Badge', desc: 'Destacate en el feed y en tu perfil con el badge oficial de Builder PRO.' }
             ].map((f, i) => (
               <div key={i} style={{ padding: '32px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', transition: 'all 0.3s' }} className="group hover:border-[var(--accent)]/30">
                 <div style={{ fontSize: '32px', marginBottom: '20px' }}>{f.icon}</div>
@@ -362,6 +365,51 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
               </div>
             ))}
           </div>
+
+          {/* Pricing Section (Only for Login users) */}
+          {showPricing && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="mt-32 max-w-lg mx-auto"
+            >
+              <div className="bg-white/[0.02] border border-white/5 rounded-[2.5rem] p-12 text-center relative overflow-hidden group">
+                {/* Subtle Glow */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-[var(--accent)]/10 blur-[100px] rounded-full opacity-50 pointer-events-none" />
+
+                <div className="relative z-10">
+                  <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-[var(--text-muted)] mb-4 block">// suscripción pro</span>
+                  <h3 className="text-3xl font-black mb-8 tracking-tighter">Desbloqueá todo</h3>
+
+                  <div className="flex items-baseline justify-center gap-1 mb-10">
+                    <span className="text-6xl font-black text-white">$5</span>
+                    <span className="text-sm font-mono text-[var(--text-muted)]">USD/mes</span>
+                  </div>
+
+                  <ul className="space-y-4 text-left mb-12 max-w-[280px] mx-auto">
+                    {['Hasta 32 bloques en tu grid', 'Color de marca personalizado', 'Perfil verificado Builder PRO', 'Visibilidad en comunidad'].map(item => (
+                      <li key={item} className="flex items-center gap-3 text-sm text-[var(--text-dim)]">
+                        <Check size={14} className="text-[var(--accent)] shrink-0" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Link
+                    href="/api/checkout"
+                    className="btn btn-accent w-full !py-5 !text-base !font-bold !rounded-2xl shadow-xl shadow-[var(--accent)]/5 hover:shadow-[var(--accent)]/20 transition-all"
+                  >
+                    Mejorar mi huevsite →
+                  </Link>
+
+                  <p className="mt-6 text-[9px] font-mono text-[var(--text-muted)] uppercase tracking-widest opacity-40">
+                    Cancela en cualquier momento
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
         </div>
       </section>
 
@@ -373,7 +421,7 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
           Tu obra.<br /><span style={{ color: 'var(--accent)' }}>Tu URL.</span>
         </h2>
         <p style={{ fontSize: '16px', color: 'var(--text-dim)', maxWidth: '400px', margin: '0 auto 36px', lineHeight: 1.6 }}>
-          Gratis. Sin tarjeta de crédito. Sin &quot;upgrade to Pro&quot; a los 10 segundos.
+          Gratis para empezar. Pasate a PRO cuando necesites romper los límites.
         </p>
         <Link href={user ? "/dashboard" : "/login"} className="btn btn-accent" style={{ fontSize: '17px', padding: '16px 36px', display: 'inline-block' }}>
           {user ? (

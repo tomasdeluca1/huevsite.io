@@ -3,13 +3,15 @@
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { PRESET_COLORS, getContrastColor } from "@/lib/profile-types";
+import { Pipette, Sparkles } from "lucide-react";
 
 interface Props {
   value: string;
   onChange: (color: string, confirmed: boolean) => void;
+  subscriptionTier?: "free" | "pro";
 }
 
-export function ColorPicker({ value, onChange }: Props) {
+export function ColorPicker({ value, onChange, subscriptionTier = "free" }: Props) {
   const displayed = value;
 
   const handlePreset = (color: string) => {
@@ -45,6 +47,35 @@ export function ColorPicker({ value, onChange }: Props) {
             )}
           </button>
         ))}
+
+        {/* Custom Color Selector (PRO ONLY) */}
+        <div className="relative w-8 h-8 shrink-0 snap-center">
+          <div
+            className={`w-full h-full rounded-lg border border-white/5 flex items-center justify-center transition-all bg-[var(--surface2)] group/picker active:scale-95 ${subscriptionTier === 'pro' ? 'cursor-pointer hover:bg-[var(--surface)] hover:border-[var(--border-bright)]' : 'cursor-help opacity-60'
+              }`}
+            title={subscriptionTier === 'pro' ? "Color personalizado" : "Custom Color (PRO)"}
+          >
+            {subscriptionTier === 'pro' ? (
+              <Pipette size={14} className="text-[var(--text-muted)] group-hover/picker:text-white transition-colors" />
+            ) : (
+              <Sparkles size={12} className="text-yellow-400" />
+            )}
+            {subscriptionTier === 'pro' && (
+              <input
+                type="color"
+                value={value}
+                onChange={(e) => onChange(e.target.value, true)}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+              />
+            )}
+            {subscriptionTier !== 'pro' && (
+              <div
+                className="absolute inset-0"
+                onClick={() => alert("¡Pasate a PRO para usar cualquier color hex! 🇦🇷")}
+              />
+            )}
+          </div>
+        </div>
       </div>
 
       <p className="text-[9px] text-[var(--text-muted)] font-mono px-1 opacity-60">

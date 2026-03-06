@@ -13,30 +13,62 @@ async function handler(req: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-      return NextResponse.redirect(`${siteUrl}/login`);
+      return NextResponse.redirect(new URL("/login", req.url));
     }
 
-    const checkoutBaseUrl = process.env.LEMON_SQUEEZY_CHECKOUT_URL || "https://huevsite.lemonsqueezy.com/checkout/buy/d1f67827-c296-4708-a267-c6666ea0f3ae";
-    const url = new URL(checkoutBaseUrl);
+    const storeId = process.env.LEMON_SQUEEZY_STORE_ID;
+    const variantId = process.env.LEMON_SQUEEZY_PRO_VARIANT_ID;
 
-    if (user.email) {
-      url.searchParams.set("checkout[email]", user.email);
+    if (!storeId || !variantId) {
+      throw new Error("Configuración de Lemon Squeezy incompleta (Store ID o Variant ID)");
     }
-    url.searchParams.set("checkout[custom][user_id]", user.id);
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-    url.searchParams.set("checkout[redirect_url]", `${siteUrl}/checkout/success`);
 
-    console.log("Redirecting user to:", url.toString());
+    console.log("Creando checkout para el usuario:", user.id);
 
-    return NextResponse.redirect(url.toString(), {
+    // Crear el checkout usando el SDK oficial
+    const { data, error } = await createCheckout(
+      storeId,
+      variantId,
+      {
+        checkoutOptions: {
+          embed: false,
+          media: true,
+          logo: true,
+        },
+        checkoutData: {
+          email: user.email,
+          custom: {
+            user_id: user.id,
+          },
+        },
+        productOptions: {
+          redirectUrl: `${siteUrl}/checkout/success`,
+        }
+      }
+    );
+
+    if (error) {
+      console.error("Error SDK Lemon Squeezy:", error);
+      throw new Error(error.message);
+    }
+
+    const checkoutUrl = data?.data.attributes.url;
+
+    if (!checkoutUrl) {
+      throw new Error("No se pudo generar la URL de checkout");
+    }
+
+    console.log("Redirigiendo a checkout:", checkoutUrl);
+
+    return NextResponse.redirect(checkoutUrl, {
       status: 302,
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in checkout route:", error);
-    return NextResponse.json({ error: "Error redirecting to checkout" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Error al iniciar el pago" }, { status: 500 });
   }
 }
 

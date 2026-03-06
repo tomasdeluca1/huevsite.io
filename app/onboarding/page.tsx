@@ -46,6 +46,7 @@ export default function OnboardingPage() {
           layout: state.layout,
           roles: state.roles,
           githubHandle: state.githubData?.username,
+          githubData: state.githubData,
         }),
       });
 

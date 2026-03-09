@@ -14,7 +14,7 @@ function getPreviousWeek(): string {
   return getWeekString(prev);
 }
 
-export async function POST(request: NextRequest) {
+async function handlePickWinner(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const secret = searchParams.get("secret");
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     // Si el cron corre el Domingo (nuevo ciclo para el usuario), 
     // probablemente quiere cerrar la semana que pasó.
     const week = requestedWeek || getPreviousWeek();
-    
+
     // Use standard authenticated client
     const supabase = createClient();
 
@@ -109,10 +109,10 @@ export async function POST(request: NextRequest) {
             from: 'hi@huevsite.studio',
             to: winnerProfile.email,
             subject: '🏆 ¡Sos el builder de la semana en Huevsite!',
-            react: <WinnerEmail 
-              name={winnerProfile.name || winnerProfile.username} 
-              username={winnerProfile.username} 
-              week={week} 
+            react: <WinnerEmail
+              name={winnerProfile.name || winnerProfile.username}
+              username={winnerProfile.username}
+              week={week}
             />,
           });
           console.log(`Email enviado a ${winnerProfile.email}`);
@@ -123,9 +123,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      winners: winnerProfiles.map(w => w.username), 
+    return NextResponse.json({
+      success: true,
+      winners: winnerProfiles.map(w => w.username),
       week: week,
       votes: maxVotes
     }, { status: 200 });
@@ -134,4 +134,14 @@ export async function POST(request: NextRequest) {
     console.error("Pick winner error:", error);
     return NextResponse.json({ error: "Algo salió mal." }, { status: 500 });
   }
+}
+
+// Vercel Cron Jobs use GET – this is the main entry point
+export async function GET(request: NextRequest) {
+  return handlePickWinner(request);
+}
+
+// Manual admin calls can use POST
+export async function POST(request: NextRequest) {
+  return handlePickWinner(request);
 }

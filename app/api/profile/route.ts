@@ -32,20 +32,33 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Obtener bloques
+    // Obtener bloques del sitio principal (sub_site_id IS NULL)
     const { data: blocks, error: blocksError } = await supabase
       .from('blocks')
       .select('*')
       .eq('user_id', user.id)
+      .is('sub_site_id', null)
       .order('order', { ascending: true })
 
     if (blocksError) {
       console.error('Error fetching blocks:', blocksError)
     }
 
+    // Obtener sub_sites
+    const { data: subSites, error: subSitesError } = await supabase
+      .from('sub_sites')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+
+    if (subSitesError) {
+      console.error('Error fetching subSites:', subSitesError)
+    }
+
     return NextResponse.json({
       profile,
       blocks: blocks || [],
+      subSites: subSites || [],
     })
 
   } catch (error) {
@@ -83,9 +96,9 @@ export async function PATCH(request: NextRequest) {
       'roles',
       'location',
       'available',
-      'image',
       'github_handle',
       'has_seen_update_feb25',
+      'custom_domain',
     ]
 
     const updateData: any = {}

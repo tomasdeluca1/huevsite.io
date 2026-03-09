@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
+import { render } from "@react-email/render";
 import { getWeekString } from "@/lib/showcase-service";
 import { WinnerEmail } from "@/components/emails/WinnerEmail";
+import React from "react";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +32,7 @@ async function handlePickWinner(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Si el cron corre el Domingo (nuevo ciclo para el usuario), 
+    // Si el cron corre el Domingo (nuevo ciclo para el usuario),
     // probablemente quiere cerrar la semana que pasó.
     const week = requestedWeek || getPreviousWeek();
 
@@ -79,10 +82,10 @@ async function handlePickWinner(request: NextRequest) {
       return NextResponse.json({ message: "No se pudo determinar un ganador." }, { status: 400 });
     }
 
-    // 3. Obtener datos de los ganadores (email, nombre)
+    // 3. Obtener datos de los ganadores desde profiles (sin email, que solo está en auth.users)
     const { data: winnerProfiles, error: profileError } = await supabase
       .from("profiles")
-      .select("id, username, name, email")
+      .select("id, username, name")
       .in("id", winnerIds);
 
     if (profileError || !winnerProfiles || winnerProfiles.length === 0) {
@@ -101,33 +104,55 @@ async function handlePickWinner(request: NextRequest) {
       return NextResponse.json({ error: rpcError.message }, { status: 500 });
     }
 
-    // 5. Enviar Email con Resend a todos los ganadores
+    // 5. Obtener emails desde auth.users usando service role (NO están en profiles)
+    const adminClient = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const emailResults: { username: string; sent: boolean; error?: string }[] = [];
+
     for (const winnerProfile of winnerProfiles) {
-      if (winnerProfile.email) {
-        try {
-          await resend.emails.send({
-            from: 'hi@huevsite.studio',
-            to: winnerProfile.email,
-            subject: '🏆 ¡Sos el builder de la semana en Huevsite!',
-            react: <WinnerEmail
-              name={winnerProfile.name || winnerProfile.username}
-              username={winnerProfile.username}
-              week={week}
-            />,
-          });
-          console.log(`Email enviado a ${winnerProfile.email}`);
-        } catch (emailErr) {
-          console.error("Error enviando email:", emailErr);
-          // No fallamos el request si falla el email
+      try {
+        const { data: authUser, error: authError } = await adminClient.auth.admin.getUserById(winnerProfile.id);
+
+        if (authError || !authUser?.user?.email) {
+          console.error(`No se encontró email para ${winnerProfile.username}:`, authError?.message);
+          emailResults.push({ username: winnerProfile.username, sent: false, error: authError?.message || "Sin email en auth.users" });
+          continue;
         }
+
+        const userEmail = authUser.user.email;
+
+        const html = await render(
+          React.createElement(WinnerEmail, {
+            name: winnerProfile.name || winnerProfile.username,
+            username: winnerProfile.username,
+            week,
+          })
+        );
+
+        await resend.emails.send({
+          from: 'hi@huevsite.studio',
+          to: userEmail,
+          subject: '🏆 ¡Sos el builder de la semana en Huevsite!',
+          html,
+        });
+
+        console.log(`✅ Email enviado a ${userEmail} (${winnerProfile.username})`);
+        emailResults.push({ username: winnerProfile.username, sent: true });
+      } catch (emailErr: any) {
+        console.error(`❌ Error enviando email a ${winnerProfile.username}:`, emailErr);
+        emailResults.push({ username: winnerProfile.username, sent: false, error: emailErr?.message });
       }
     }
 
     return NextResponse.json({
       success: true,
       winners: winnerProfiles.map(w => w.username),
-      week: week,
-      votes: maxVotes
+      week,
+      votes: maxVotes,
+      emails: emailResults,
     }, { status: 200 });
 
   } catch (error) {

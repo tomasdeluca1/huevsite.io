@@ -51,9 +51,22 @@ export function ScoreInfoModal({ isOpen, onClose, accentColor = "#C8FF00", profi
             points: breakdown ? `+${breakdown.breakdown.content.score} pts` : "Acumulativo",
             items: [
                 `GitHub conectado: ${breakdown?.breakdown.content.details.has_github ? '+150' : '0'} pts`,
-                `Proyectos: ${breakdown?.breakdown.content.details.project_count || 0} cargados`,
-                `Building (Status): ${breakdown?.breakdown.content.details.building_count || 0} cargados`,
-                `Escritura (Blog): ${breakdown?.breakdown.content.details.writing_count || 0} cargados`
+                `Proyectos: ${breakdown?.breakdown.content.details.project_count || 0} cargados (${breakdown ? (
+                    Math.min(breakdown.breakdown.content.details.project_count, 3) * 75 +
+                    Math.max(0, Math.min(breakdown.breakdown.content.details.project_count - 3, 3)) * 30 +
+                    Math.max(0, breakdown.breakdown.content.details.project_count - 6) * 5
+                ) : 0
+                } pts)`,
+                `Building (Status): ${breakdown?.breakdown.content.details.building_count || 0} cargados (${breakdown ? (
+                    Math.min(breakdown.breakdown.content.details.building_count, 3) * 30 +
+                    Math.max(0, breakdown.breakdown.content.details.building_count - 3) * 10
+                ) : 0
+                } pts)`,
+                `Escritura (Blog): ${breakdown?.breakdown.content.details.writing_count || 0} cargados (${breakdown ? (
+                    Math.min(breakdown.breakdown.content.details.writing_count, 3) * 20 +
+                    Math.max(0, breakdown.breakdown.content.details.writing_count - 3) * 5
+                ) : 0
+                } pts)`
             ]
         },
         {
@@ -112,6 +125,11 @@ export function ScoreInfoModal({ isOpen, onClose, accentColor = "#C8FF00", profi
                                 <div>
                                     <h2 className="text-2xl md:text-3xl font-black tracking-tighter flex items-center gap-2">
                                         Builder Score <span className="text-[var(--accent)]">🔥</span>
+                                        {breakdown && (
+                                            <span className="ml-2 text-white bg-white/10 px-3 py-1 rounded-2xl text-xl animate-in fade-in slide-in-from-left-4 duration-500">
+                                                {breakdown.total} <span className="text-[10px] uppercase font-mono text-[var(--accent)]">pts</span>
+                                            </span>
+                                        )}
                                     </h2>
                                     <p className="text-[var(--text-dim)] font-mono text-[9px] md:text-[10px] uppercase tracking-widest mt-1">
                                        // Gamificación y reputación de comunidad

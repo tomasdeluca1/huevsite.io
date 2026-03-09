@@ -25,6 +25,7 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
   const [data, setData] = useState<ShowcaseData | null>(null);
   const [loading, setLoading] = useState(!initialData);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0 });
   const [mounted, setMounted] = useState(false);
   const [frameHeight, setFrameHeight] = useState<number>(700);
@@ -139,10 +140,10 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
 
   // Auto-advance
   useEffect(() => {
-    if (!isMultiple) return;
+    if (!isMultiple || isPaused) return;
     const interval = setInterval(next, 5000);
     return () => clearInterval(interval);
-  }, [isMultiple, next]);
+  }, [isMultiple, next, isPaused]);
 
   if (loading || !data || profilesToShow.length === 0) return null;
 
@@ -218,6 +219,8 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
         <div
           className="demo-browser flex flex-col w-full !border-x-0 md:!border-x !rounded-none md:!rounded-[var(--radius-xl)] overflow-hidden"
           style={{ height: `${frameHeight}px`, minHeight: 480, maxHeight: 1400 }}
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
         >
           {/* Browser bar */}
           <div className="browser-bar shrink-0">

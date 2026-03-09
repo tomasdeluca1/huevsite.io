@@ -7,7 +7,7 @@ import { NominateButton } from "@/components/social/NominateButton";
 import { FollowListModal } from "@/components/social/FollowListModal";
 
 import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
-import { BadgeCheck } from "lucide-react";
+import { BadgeCheck, Globe, ChevronDown, ArrowUpRight } from "lucide-react";
 
 interface Props {
   profileId?: string;
@@ -19,8 +19,10 @@ interface Props {
   accentColor: string;
   showFollowButton: boolean;
   currentUserId?: string | null;
-  isEnabledSocialNetwork: boolean;
-  subscriptionTier?: "free" | "pro";
+  isEnabledSocialNetwork?: boolean;
+  subscriptionTier?: string;
+  subSites?: { id: string; title: string; slug: string }[];
+  username: string;
 }
 
 export function ProfileHeader({
@@ -34,6 +36,9 @@ export function ProfileHeader({
   showFollowButton,
   currentUserId,
   isEnabledSocialNetwork,
+  subscriptionTier,
+  subSites = [],
+  username,
 }: Props) {
   const [modalType, setModalType] = useState<"followers" | "following" | null>(null);
   const [localFollowersCount, setLocalFollowersCount] = useState(followersCount);
@@ -208,6 +213,25 @@ export function ProfileHeader({
           type={modalType || "followers"}
           accentColor={accentColor}
         />
+      )}
+
+      {subscriptionTier === "pro" && subSites.length > 0 && (
+        <div className="mt-8 flex flex-wrap items-center gap-3">
+          <div className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-widest bg-white/5 border border-white/5 px-3 py-1.5 rounded-full flex items-center gap-2">
+            <Globe size={14} className="opacity-50" />
+            Ecosystem <span className="opacity-30">/</span>
+          </div>
+          {subSites.map(site => (
+            <Link
+              key={site.id}
+              href={`/${username}/${site.slug}`}
+              className="px-4 py-1.5 rounded-full bg-white/5 border border-white/5 text-[11px] font-bold text-[var(--text-dim)] hover:text-white transition-all hover:border-[var(--accent)]/30 hover:bg-[var(--accent)]/5 flex items-center gap-2 group-hover:scale-105 active:scale-95"
+            >
+              {site.title}
+              <ArrowUpRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+            </Link>
+          ))}
+        </div>
       )}
 
       <ScoreInfoModal isOpen={isScoreOpen} onClose={() => setIsScoreOpen(false)} accentColor={accentColor} profileId={profileId} />

@@ -38,9 +38,10 @@ import { ColorPicker } from "@/components/dashboard/ColorPicker";
 import { FeedbackModal } from "@/components/dashboard/FeedbackModal";
 import { OnboardingModal } from "@/components/dashboard/OnboardingModal";
 import Link from "next/link";
-
 import { createClient } from "@/lib/supabase/client";
 import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
+import { ProSettingsModal } from "@/components/dashboard/ProSettingsModal";
+import { Globe } from "lucide-react";
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -53,6 +54,7 @@ export default function DashboardPage() {
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isScoreInfoOpen, setIsScoreInfoOpen] = useState(false);
+  const [isProSettingsOpen, setIsProSettingsOpen] = useState(false);
   const [tempProfileData, setTempProfileData] = useState({
     username: '',
     display_name: '',
@@ -61,6 +63,7 @@ export default function DashboardPage() {
     githubHandle: ''
   });
   const [copied, setCopied] = useState(false);
+  const [selectedSubSiteId, setSelectedSubSiteId] = useState<string | null>(null);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(() => (typeof window !== "undefined" ? localStorage.getItem("huevsite_autosave") === "true" : false));
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedVersionRef = useRef<string>("");
@@ -113,6 +116,8 @@ export default function DashboardPage() {
           avatarUrl: data.profile.image || "",
           githubHandle: data.profile.github_handle || "",
           builderScore: data.profile.builder_score || 0,
+          customDomain: data.profile.custom_domain || "",
+          subSites: data.subSites || [],
           blocks: data.blocks.map((block: any) => {
             const { id, type, order, col_span, row_span, visible, ...cleanData } = block.data || {};
             return {
@@ -150,6 +155,50 @@ export default function DashboardPage() {
 
     fetchProfile();
   }, []);
+
+  // Fetch blocks when switching sub-sites
+  useEffect(() => {
+    if (!profile) return;
+
+    const fetchBlocks = async () => {
+      setLoading(true);
+      try {
+        const url = selectedSubSiteId
+          ? `/api/sub-sites/${selectedSubSiteId}/blocks`
+          : '/api/profile'; // Get main profile blocks
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        const blocks = (data.blocks || []).map((block: any) => {
+          const { id, type, order, col_span, row_span, visible, ...cleanData } = block.data || {};
+          return {
+            id: block.id,
+            type: block.type as BlockType,
+            order: block.order,
+            col_span: block.col_span,
+            row_span: block.row_span,
+            visible: block.visible,
+            ...cleanData
+          };
+        });
+
+        setProfile(prev => prev ? { ...prev, blocks } : null);
+      } catch (e) {
+        console.error('Error fetching site blocks:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Skip the very first fetch on mount because fetchProfile already does it for main site
+    if (selectedSubSiteId !== null) {
+      fetchBlocks();
+    } else if (profile?.blocks.length === 0 && !loading) {
+      // if main site was empty, maybe re-fetch or keep empty? 
+      // Better to let fetchProfile handle the first one.
+    }
+  }, [selectedSubSiteId]);
 
 
   const sensors = useSensors(
@@ -389,6 +438,7 @@ export default function DashboardPage() {
           rowSpan,
           data: blockSpecificData,
           visible: true,
+          sub_site_id: selectedSubSiteId,
         }),
       });
 
@@ -594,12 +644,56 @@ export default function DashboardPage() {
     }
   };
 
+  const handleUpdateDomain = async (domain: string) => {
+    try {
+      const resp = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ custom_domain: domain }),
+      });
+      if (resp.ok) {
+        setProfile(prev => prev ? { ...prev, customDomain: domain } : null);
+      }
+    } catch (e) {
+      console.error('Error updating domain:', e);
+    }
+  };
+
+  const handleAddSubSite = async (title: string, slug: string) => {
+    try {
+      const resp = await fetch('/api/sub-sites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, slug }),
+      });
+      if (resp.ok) {
+        const { subSite } = await resp.json();
+        setProfile(prev => prev ? { ...prev, subSites: [subSite, ...(prev.subSites || [])] } : null);
+      } else {
+        const err = await resp.json();
+        alert(err.error || 'No se pudo crear el sub-site');
+      }
+    } catch (e) {
+      console.error('Error adding sub-site:', e);
+    }
+  };
+
+  const handleDeleteSubSite = async (id: string) => {
+    if (!confirm('¿Seguro que querés borrar este sub-site?')) return;
+    try {
+      const resp = await fetch(`/api/sub-sites/${id}`, { method: 'DELETE' });
+      if (resp.ok) {
+        setProfile(prev => prev ? { ...prev, subSites: prev.subSites.filter(s => s.id !== id) } : null);
+      }
+    } catch (e) {
+      console.error('Error deleting sub-site:', e);
+    }
+  };
+
   // Autosave with debounce (only if enabled)
   useEffect(() => {
     if (!profile || loading || !autoSaveEnabled) return;
 
-    // Evitar loop infinito: comparar contenido actual con la última versión guardada
-    // Ignoramos el builderScore ya que lo devuelve el servidor
     const { builderScore, ...content } = profile;
     const currentVersion = JSON.stringify(content);
 
@@ -859,6 +953,21 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {profile.subscriptionTier === 'pro' && (
+          <div className="mt-4 md:mt-6 space-y-2">
+            <div className="section-label !text-[9px] mb-2 px-1 hidden md:block text-[var(--accent)] tracking-widest uppercase">// pro features</div>
+            <div className="grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-1.5">
+              <button
+                onClick={() => setIsProSettingsOpen(true)}
+                className="flex items-center gap-3 w-full p-3 rounded-xl bg-[var(--accent)]/10 text-sm font-bold text-[var(--accent)] hover:bg-[var(--accent)]/20 transition-all group"
+              >
+                <Globe size={18} className="shrink-0 group-hover:scale-110 transition-transform" />
+                <span className="whitespace-nowrap">PRO Settings</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="mt-4 md:mt-6 space-y-2">
           <div className="section-label !text-[9px] mb-2 px-1 hidden md:block text-[var(--text-muted)] tracking-widest uppercase">// configuración</div>
           <div className="grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-1.5">
@@ -907,11 +1016,29 @@ export default function DashboardPage() {
               <div className="section-label hidden md:block">// editor de huevsite</div>
             </div>
             <div className="flex items-center gap-3">
-              <h2 className="text-3xl md:text-4xl font-extrabold tracking-tighter">Armá tu huevsite.</h2>
+              <h2 className="text-3xl md:text-4xl font-extrabold tracking-tighter">
+                Armá tu <span style={{ color: profile.accentColor }}>{selectedSubSiteId ? (profile.subSites.find(s => s.id === selectedSubSiteId)?.title || "Sub-site") : "huevsite"}</span>.
+              </h2>
               {profile?.subscriptionTier === "pro" && (
-                <div className="flex items-center gap-1 bg-[var(--accent)]/10 border border-[var(--accent)]/30 px-2.5 py-1 rounded-full mt-1">
-                  <BadgeCheck size={16} style={{ color: profile.accentColor }} />
-                  <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: profile.accentColor }}>PRO</span>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 bg-[var(--accent)]/10 border border-[var(--accent)]/30 px-2.5 py-1 rounded-full mt-1">
+                    <BadgeCheck size={16} style={{ color: profile.accentColor }} />
+                    <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: profile.accentColor }}>PRO</span>
+                  </div>
+                  {profile.subSites.length > 0 && (
+                    <select
+                      value={selectedSubSiteId || ""}
+                      onChange={(e) => setSelectedSubSiteId(e.target.value || null)}
+                      className="mt-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1 text-[10px] font-bold text-[var(--accent)] outline-none focus:border-[var(--accent)]/50 transition-all cursor-pointer hover:bg-white/10"
+                    >
+                      <option value="" className="bg-black text-white">Sitio Principal</option>
+                      {profile.subSites.map(site => (
+                        <option key={site.id} value={site.id} className="bg-black text-white">
+                          {site.title}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               )}
             </div>
@@ -1233,7 +1360,26 @@ export default function DashboardPage() {
         )}
       </AnimatePresence>
 
-      <ScoreInfoModal isOpen={isScoreInfoOpen} onClose={() => setIsScoreInfoOpen(false)} accentColor={profile.accentColor} />
-    </div >
+      <ScoreInfoModal
+        isOpen={isScoreInfoOpen}
+        onClose={() => setIsScoreInfoOpen(false)}
+        accentColor={profile.accentColor}
+        profileId={profile.id}
+      />
+
+      {isProSettingsOpen && (
+        <ProSettingsModal
+          isOpen={isProSettingsOpen}
+          onClose={() => setIsProSettingsOpen(false)}
+          accentColor={profile.accentColor}
+          subSites={profile.subSites}
+          customDomain={profile.customDomain}
+          onUpdateDomain={handleUpdateDomain}
+          onAddSubSite={handleAddSubSite}
+          onDeleteSubSite={handleDeleteSubSite}
+          username={profile.username}
+        />
+      )}
+    </div>
   );
 }

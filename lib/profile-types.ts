@@ -225,6 +225,14 @@ export type BlockData =
   | CollabBlockData
   | CustomBlockData;
 
+export interface SubSite {
+  id: string;
+  slug: string;
+  title: string;
+  description?: string;
+  created_at: string;
+}
+
 export interface ProfileData {
   id?: string;
   username: string;
@@ -238,5 +246,7 @@ export interface ProfileData {
   extraBlocksFromShare: number;
   hasSeenUpdateFeb25?: boolean;
   builderScore?: number;
+  customDomain?: string;
+  subSites: SubSite[];
   blocks: BlockData[];
 }

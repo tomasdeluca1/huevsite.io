@@ -36,29 +36,49 @@ export async function GET(request: NextRequest) {
     const providerToken = session.provider_token
     const githubHandle = session.user.user_metadata.user_name
 
-    if (!providerToken) {
+    if (!githubHandle) {
       return NextResponse.json(
-        { error: 'No se encontró token de GitHub. Volvé a autenticarte.' },
-        { status: 401 }
+        { error: 'No se encontró handle de GitHub en la sesión.' },
+        { status: 400 }
       )
     }
 
-    const headers = {
-      'Authorization': `Bearer ${providerToken}`,
+    const headers: Record<string, string> = {
       'Accept': 'application/vnd.github.v3+json',
     }
 
-    // 1. Obtener repos públicos
-    const reposResponse = await fetch(
-      'https://api.github.com/user/repos?type=owner&sort=updated&per_page=100',
-      { headers }
-    )
-
-    if (!reposResponse.ok) {
-      throw new Error('Error fetching GitHub repos')
+    if (providerToken) {
+      headers['Authorization'] = `Bearer ${providerToken}`
+    } else {
+      console.warn('// Importando GitHub sin token (fallback a data pública)');
     }
 
-    const repos: GitHubRepo[] = await reposResponse.json()
+    // 1. Obtener repos públicos (del usuario directamente si no hay token, o del /user/repos si lo hay)
+    const reposUrl = providerToken
+      ? 'https://api.github.com/user/repos?type=owner&sort=updated&per_page=100'
+      : `https://api.github.com/users/${githubHandle}/repos?type=owner&sort=updated&per_page=100`;
+
+    let repos: GitHubRepo[] = [];
+    const reposResponse = await fetch(reposUrl, { headers })
+
+    if (!reposResponse.ok) {
+      // Si falla, intentamos una vez más sin headers por si el token estaba vencido
+      if (providerToken) {
+        const retryResponse = await fetch(`https://api.github.com/users/${githubHandle}/repos?type=owner&sort=updated&per_page=100`, {
+          headers: { 'Accept': 'application/vnd.github.v3+json' }
+        });
+        if (retryResponse.ok) {
+          repos = await retryResponse.json();
+        } else {
+          throw new Error(`Error fetching GitHub repos after retry: ${retryResponse.statusText}`)
+        }
+      } else {
+        throw new Error(`Error fetching GitHub repos: ${reposResponse.statusText}`)
+      }
+    } else {
+      repos = await reposResponse.json()
+    }
+
     const publicRepos = repos.filter(r => !r.private)
 
     // Top repos por estrellas

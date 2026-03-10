@@ -105,6 +105,7 @@ export default function DashboardPage() {
         const data = await response.json();
 
         const transformedProfile: ProfileData = {
+          id: data.profile.id,
           username: data.profile.username,
           displayName: data.profile.name || data.profile.username,
           accentColor: data.profile.accent_color,

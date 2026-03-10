@@ -593,6 +593,39 @@ nav {
   padding-bottom: 50px;
 }
 
+/* Winner showcase: force 4-col layout matching the user's actual board */
+.winner-showcase-grid .huevsite-grid {
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 16px;
+}
+
+/* Critical: prevent grid items from overflowing their 1fr allocation */
+.winner-showcase-grid .huevsite-grid>* {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.winner-showcase-grid .col-span-1,
+.winner-showcase-grid .bento-col-1 {
+  grid-column: span 1 !important;
+}
+
+.winner-showcase-grid .col-span-2,
+.winner-showcase-grid .bento-col-2 {
+  grid-column: span 2 !important;
+}
+
+.winner-showcase-grid .col-span-3,
+.winner-showcase-grid .bento-col-3 {
+  grid-column: span 3 !important;
+}
+
+.winner-showcase-grid .col-span-4,
+.winner-showcase-grid .bento-col-4 {
+  grid-column: span 4 !important;
+}
+
 /* Block Specifics from HTML */
 .block-hero {
   background: linear-gradient(145deg, #131313 0%, #0d0d0d 100%);

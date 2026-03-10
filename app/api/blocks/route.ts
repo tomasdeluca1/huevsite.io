@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     const newOrder = lastBlock ? lastBlock.order + 1 : 0
     console.log('POST - New order:', newOrder)
 
-    const insertData = {
+    const insertData: any = {
       user_id: user.id,
       type: body.type,
       order: body.order !== undefined ? body.order : newOrder,
@@ -77,6 +77,42 @@ export async function POST(request: NextRequest) {
       visible: body.visible !== undefined ? body.visible : true,
       sub_site_id: body.sub_site_id || null,
     }
+
+    // Auto-sync GitHub stats if missing or empty
+    if (insertData.type === 'github' && insertData.data?.username) {
+      const gData = insertData.data;
+      const stats = gData.stats || { stars: 0, repos: 0, followers: 0 };
+
+      if (stats.stars === 0 && stats.repos === 0) {
+        try {
+          const githubHandle = gData.username;
+          console.log(`// Syncing GitHub stats for new block: ${githubHandle}`);
+          const reposRes = await fetch(`https://api.github.com/users/${githubHandle}/repos?type=owner&per_page=100`, {
+            headers: { 'Accept': 'application/vnd.github.v3+json' }
+          });
+
+          if (reposRes.ok) {
+            const repos = await reposRes.json();
+            const userDataRes = await fetch(`https://api.github.com/users/${githubHandle}`, {
+              headers: { 'Accept': 'application/vnd.github.v3+json' }
+            });
+            const userData = userDataRes.ok ? await userDataRes.json() : {};
+
+            insertData.data.stats = {
+              stars: repos.reduce((acc: number, r: any) => acc + (r.stargazers_count || 0), 0) || 0,
+              repos: repos.length || 0,
+              followers: userData.followers || 0,
+              topLanguages: Array.from(new Set(repos.map((r: any) => r.language).filter(Boolean)))
+                .slice(0, 3)
+                .map(l => ({ name: l, percent: 33 }))
+            };
+          }
+        } catch (e) {
+          console.error('// GitHub block sync error:', e);
+        }
+      }
+    }
+
     console.log('POST - Insert data:', insertData)
 
     // Crear bloque

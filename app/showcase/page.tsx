@@ -71,76 +71,78 @@ export default function ShowcasePage() {
           <p className="text-center text-[var(--text-dim)] font-mono">Error cargando datos.</p>
         ) : (
           <>
-            {/* Winner */}
-            {data.winners && data.winners.length > 0 ? (() => {
-              const winner = data.winners[0];
-              return (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="relative mb-16 p-8 rounded-[2.5rem] border-2 overflow-hidden"
-                  style={{ borderColor: winner.user.accent_color }}
-                >
-                  {/* Glow */}
-                  <div
-                    className="absolute inset-0 opacity-5 pointer-events-none"
-                    style={{ background: `radial-gradient(circle at 30% 50%, ${winner.user.accent_color}, transparent 70%)` }}
-                  />
+            {/* Winners */}
+            {data.winners && data.winners.length > 0 ? (
+              <div className="space-y-8 mb-16">
+                {data.winners.map((winner, idx) => (
+                  <motion.div
+                    key={`${winner.user.id}-${idx}`}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="relative p-8 rounded-[2.5rem] border-2 overflow-hidden"
+                    style={{ borderColor: winner.user.accent_color }}
+                  >
+                    {/* Glow */}
+                    <div
+                      className="absolute inset-0 opacity-5 pointer-events-none"
+                      style={{ background: `radial-gradient(circle at 30% 50%, ${winner.user.accent_color}, transparent 70%)` }}
+                    />
 
-                  <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-8">
-                    {/* Avatar */}
-                    <div className="shrink-0 relative">
-                      {winner.user.image ? (
-                        <img
-                          src={winner.user.image}
-                          alt={winner.user.username}
-                          className="w-28 h-28 rounded-3xl object-cover"
-                          style={{ border: `3px solid ${winner.user.accent_color}` }}
-                        />
-                      ) : (
+                    <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-8">
+                      {/* Avatar */}
+                      <div className="shrink-0 relative">
+                        {winner.user.image ? (
+                          <img
+                            src={winner.user.image}
+                            alt={winner.user.username}
+                            className="w-28 h-28 rounded-3xl object-cover"
+                            style={{ border: `3px solid ${winner.user.accent_color}` }}
+                          />
+                        ) : (
+                          <div
+                            className="w-28 h-28 rounded-3xl flex items-center justify-center text-4xl font-black text-black"
+                            style={{ backgroundColor: winner.user.accent_color }}
+                          >
+                            {(winner.user.name ?? winner.user.username)[0]?.toUpperCase()}
+                          </div>
+                        )}
                         <div
-                          className="w-28 h-28 rounded-3xl flex items-center justify-center text-4xl font-black text-black"
+                          className="absolute -top-3 -right-3 w-10 h-10 rounded-xl flex items-center justify-center text-black"
                           style={{ backgroundColor: winner.user.accent_color }}
                         >
-                          {(winner.user.name ?? winner.user.username)[0]?.toUpperCase()}
+                          <Trophy size={20} />
                         </div>
-                      )}
-                      <div
-                        className="absolute -top-3 -right-3 w-10 h-10 rounded-xl flex items-center justify-center text-black"
-                        style={{ backgroundColor: winner.user.accent_color }}
-                      >
-                        <Trophy size={20} />
                       </div>
-                    </div>
 
-                    <div className="flex-1 text-center md:text-left">
-                      <div
-                        className="inline-block text-xs font-bold px-3 py-1 rounded-lg mb-4 text-black"
-                        style={{ backgroundColor: winner.user.accent_color }}
-                      >
-                        🏆 Winner — {winner.week}
+                      <div className="flex-1 text-center md:text-left">
+                        <div
+                          className="inline-block text-xs font-bold px-3 py-1 rounded-lg mb-4 text-black"
+                          style={{ backgroundColor: winner.user.accent_color }}
+                        >
+                          🏆 Winner — {winner.week}
+                        </div>
+                        <h2 className="text-4xl font-extrabold tracking-tight mb-2">
+                          {winner.user.name ?? winner.user.username}
+                        </h2>
+                        <p className="text-[var(--text-dim)] text-sm mb-4 font-mono">@{winner.user.username}</p>
+                        {winner.user.tagline && (
+                          <p className="text-base text-[var(--text-dim)] leading-relaxed mb-6 max-w-md">
+                            {winner.user.tagline}
+                          </p>
+                        )}
+                        <Link
+                          href={`/${winner.user.username}`}
+                          className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-black transition-all hover:opacity-90"
+                          style={{ backgroundColor: winner.user.accent_color }}
+                        >
+                          Ver su huevsite →
+                        </Link>
                       </div>
-                      <h2 className="text-4xl font-extrabold tracking-tight mb-2">
-                        {winner.user.name ?? winner.user.username}
-                      </h2>
-                      <p className="text-[var(--text-dim)] text-sm mb-4 font-mono">@{winner.user.username}</p>
-                      {winner.user.tagline && (
-                        <p className="text-base text-[var(--text-dim)] leading-relaxed mb-6 max-w-md">
-                          {winner.user.tagline}
-                        </p>
-                      )}
-                      <Link
-                        href={`/${winner.user.username}`}
-                        className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-black transition-all hover:opacity-90"
-                        style={{ backgroundColor: winner.user.accent_color }}
-                      >
-                        Ver su huevsite →
-                      </Link>
                     </div>
-                  </div>
-                </motion.div>
-              );
-            })() : (
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
               <div className="mb-16 p-12 rounded-[2.5rem] border border-dashed border-[var(--border-bright)] text-center">
                 <Trophy size={48} className="mx-auto mb-4 text-[var(--text-muted)]" />
                 <p className="text-[var(--text-dim)] font-mono text-sm">

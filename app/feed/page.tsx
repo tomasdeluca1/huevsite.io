@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { notFound } from "next/navigation";
+import { useEffect, useState, Suspense, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
-import { ChevronUp, Activity, Compass, User, BadgeCheck } from "lucide-react";
-import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { ChevronUp, BadgeCheck, Loader2, X, Compass, Activity as ActivityIcon } from "lucide-react";
 
 interface ActivityUser {
   id: string;
@@ -44,10 +42,120 @@ function timeAgo(date: string): string {
   const diff = Date.now() - new Date(date).getTime();
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return "ahora";
-  if (mins < 60) return `hace ${mins}m`;
+  if (mins < 60) return `${mins}m`;
   const hs = Math.floor(mins / 60);
-  if (hs < 24) return `hace ${hs}h`;
-  return `hace ${Math.floor(hs / 24)}d`;
+  if (hs < 24) return `${hs}hs`;
+  return `${Math.floor(hs / 24)}d`;
+}
+
+function ActivityGroup({ group, index }: { group: Activity[]; index: number }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const main = group[0];
+  const user = main.user;
+  const isMultiple = group.length > 1;
+
+  const getLabel = (activity: Activity) => {
+    const label = ACTIVITY_LABELS[activity.type]?.(activity.data, user.name ?? user.username) ?? `${user.username} hizo algo nuevo`;
+    return label.replace(user.name ?? user.username, "").trim();
+  };
+
+  return (
+    <div className="relative group/group-item">
+      {isMultiple && !isExpanded && (
+        <>
+          <div className="absolute inset-x-2 -bottom-1 h-4 bg-[var(--surface)] border border-[var(--border)] rounded-2xl opacity-40 z-0" />
+          <div className="absolute inset-x-4 -bottom-2 h-4 bg-[var(--surface)] border border-[var(--border)] rounded-2xl opacity-20 z-0" />
+        </>
+      )}
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.05 }}
+        className={`relative z-10 p-4 rounded-2xl bg-[var(--surface)] border transition-all cursor-pointer ${
+          isExpanded ? 'border-[var(--accent)]/30 ring-1 ring-[var(--accent)]/10 shadow-2xl' : 'border-[var(--border)] hover:border-[var(--border-bright)]'
+        }`}
+        onMouseEnter={() => setIsExpanded(true)}
+        onMouseLeave={() => setIsExpanded(false)}
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <div className="flex items-start gap-4">
+          <Link href={`/${user.username}`} onClick={(e) => e.stopPropagation()} className="shrink-0">
+            {user.image ? (
+              <img
+                src={user.image}
+                alt={user.username}
+                className="w-10 h-10 rounded-full object-cover"
+                style={{ borderColor: user.accent_color, borderWidth: 2, borderStyle: "solid" }}
+              />
+            ) : (
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-black"
+                style={{ backgroundColor: user.accent_color }}
+              >
+                {(user.name ?? user.username)[0]?.toUpperCase()}
+              </div>
+            )}
+          </Link>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Link
+                  href={`/${user.username}`}
+                  className="font-bold hover:underline truncate"
+                  style={{ color: user.accent_color }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {user.name ?? user.username}
+                </Link>
+                {(user.subscription_tier === 'pro' || !!user.pro_since) && (
+                  <BadgeCheck size={14} className="shrink-0 text-[var(--accent)]" />
+                )}
+                {isMultiple && !isExpanded && (
+                  <span className="px-1.5 py-0.5 rounded-md bg-[var(--accent)]/10 text-[var(--accent)] text-[8px] font-black uppercase tracking-tighter border border-[var(--accent)]/20 whitespace-nowrap">
+                    +{group.length - 1} updates
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] text-[var(--text-muted)] font-mono shrink-0">
+                {timeAgo(main.created_at)}
+              </span>
+            </div>
+            
+            <p className="text-sm text-[var(--text-dim)] leading-snug">
+              {getLabel(main)}
+            </p>
+
+            <AnimatePresence>
+              {isExpanded && isMultiple && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-4 pt-4 border-t border-[var(--border)] space-y-3">
+                    {group.slice(1).map((activity) => (
+                      <div key={activity.id} className="flex items-center justify-between gap-4 group/sub">
+                        <p className="text-xs text-[var(--text-muted)] group-hover/sub:text-[var(--text-dim)] transition-colors">
+                          <span className="opacity-30 mr-2">•</span>
+                          {getLabel(activity)}
+                        </p>
+                        <span className="text-[9px] text-[var(--text-muted)] font-mono opacity-40">
+                          {timeAgo(activity.created_at)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
 }
 
 function FeedContent() {
@@ -64,7 +172,6 @@ function FeedContent() {
   const fromDashboard = searchParams.get("from") === "dashboard";
   const supabase = createClient();
 
-  // Reset page when tab or filter changes
   useEffect(() => {
     setPage(1);
     setActivities([]);
@@ -81,19 +188,13 @@ function FeedContent() {
       if (tab === "launches") {
         const { data, error } = await supabase
           .from("launches")
-          .select(`
-            *,
-            profiles (username, name, image)
-          `)
+          .select(`*, profiles (username, name, image)`)
           .order("created_at", { ascending: false })
-          .limit(50);
+          .limit(20);
 
         if (data && !error) {
           if (authData.user) {
-            const { data: upvotes } = await supabase
-              .from("launch_upvotes")
-              .select("launch_id")
-              .eq("user_id", authData.user.id);
+            const { data: upvotes } = await supabase.from("launch_upvotes").select("launch_id").eq("user_id", authData.user.id);
             const upvotedIds = new Set(upvotes?.map(u => u.launch_id) || []);
             setLaunches(data.map((l: any) => ({ ...l, hasUpvoted: upvotedIds.has(l.id) })));
           } else {
@@ -104,14 +205,13 @@ function FeedContent() {
         setLoadingMore(false);
       } else {
         const typeParam = filterType !== "all" ? `&type=${filterType}` : "";
-        fetch(`/api/social/feed?tab=${tab}&page=${page}&limit=20${typeParam}`)
+        // Fetch more items to ensure we can group them into at least 5 users
+        fetch(`/api/social/feed?tab=${tab}&page=${page}&limit=25${typeParam}`)
           .then(r => r.json())
           .then(data => {
-            if (page === 1) {
-              setActivities(data.activities ?? []);
-            } else {
-              setActivities(prev => [...prev, ...(data.activities ?? [])]);
-            }
+            const newActivities = data.activities ?? [];
+            if (page === 1) setActivities(newActivities);
+            else setActivities(prev => [...prev, ...newActivities]);
             setTotalPages(data.totalPages ?? 1);
           })
           .catch(console.error)
@@ -124,21 +224,30 @@ function FeedContent() {
     loadData();
   }, [tab, page, filterType, supabase]);
 
-  const handleUpvote = async (launch: any) => {
-    if (!currentUserId) {
-      alert("Iniciá sesión para votar");
-      return;
-    }
+  // Infinite scroll observer
+  useEffect(() => {
+    if (loading || loadingMore || page >= totalPages) return;
 
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setPage(p => p + 1);
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    const target = document.querySelector("#feed-end-marker");
+    if (target) observer.observe(target);
+
+    return () => observer.disconnect();
+  }, [loading, loadingMore, page, totalPages]);
+
+  const handleUpvote = async (launch: any) => {
+    if (!currentUserId) return alert("Iniciá sesión para votar");
     const newHasUpvoted = !launch.hasUpvoted;
     const change = newHasUpvoted ? 1 : -1;
-
-    setLaunches(launches.map(l =>
-      l.id === launch.id
-        ? { ...l, hasUpvoted: newHasUpvoted, upvotes: l.upvotes + change }
-        : l
-    ));
-
+    setLaunches(launches.map(l => l.id === launch.id ? { ...l, hasUpvoted: newHasUpvoted, upvotes: l.upvotes + change } : l));
     if (newHasUpvoted) {
       await supabase.from('launch_upvotes').insert({ launch_id: launch.id, user_id: currentUserId });
       await supabase.from('launches').update({ upvotes: launch.upvotes + 1 }).eq('id', launch.id);
@@ -148,203 +257,108 @@ function FeedContent() {
     }
   };
 
+  const activityGroups = useMemo(() => {
+    const groups: Activity[][] = [];
+    activities.forEach(acc => {
+      const last = groups[groups.length - 1];
+      if (last && last[0].user.id === acc.user.id) last.push(acc);
+      else groups.push([acc]);
+    });
+    return groups;
+  }, [activities]);
+
   return (
     <div className="min-h-screen bg-[var(--bg)] font-display py-12 px-4 max-w-2xl mx-auto">
       <header className="mb-12">
         <div className="flex items-center justify-between mb-8">
           <Link href={fromDashboard ? "/dashboard" : "/"} className="logo">huev<span>site</span>.io</Link>
           <div className="flex items-center gap-3">
-            <Link
-              href="/explore"
-              className="hidden sm:flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors pr-2"
-            >
-              ← Explorar
-            </Link>
-            <Link
-              href={currentUserId ? "/dashboard" : "/login"}
-              className="btn btn-accent !text-[10px] !py-2 !px-4 !rounded-xl shadow-lg shadow-[var(--accent)]/10"
-            >
-              {currentUserId ? "Mi huevsite" : "Crear mi huevsite"}
-            </Link>
+             <Link href="/explore" className="hidden sm:block text-[10px] font-mono uppercase tracking-widest text-[var(--text-muted)] hover:text-white transition-colors">← Explorar</Link>
+             <Link href={currentUserId ? "/dashboard" : "/login"} className="btn btn-accent !text-[10px] !py-2 !px-4 !rounded-xl">{currentUserId ? "Mi huevsite" : "Crear mi huevsite"}</Link>
           </div>
         </div>
-        <div className="section-label mb-2">// actividad reciente</div>
-        <h1 className="text-4xl font-extrabold tracking-tighter">Comunidad</h1>
-        <p className="section-sub mt-2">Lo que está pasando ahora mismo.</p>
-
-        <div className="flex gap-4 mt-8 bg-black/20 p-1.5 rounded-2xl border border-[var(--border)] w-full max-w-sm">
-          <button
-            onClick={() => setTab("launches")}
-            className={`flex-1 py-3 px-2 text-center rounded-xl text-xs font-bold font-mono uppercase tracking-widest transition-all ${tab === 'launches' ? 'bg-[var(--surface2)] text-white' : 'text-[var(--text-muted)] hover:text-white'}`}
-          >
-            Lanzamientos
-          </button>
-          <button
-            onClick={() => setTab("global")}
-            className={`flex-1 py-3 px-2 text-center rounded-xl text-xs font-bold font-mono uppercase tracking-widest transition-all ${tab === 'global' ? 'bg-[#C8FF00] text-black shadow-lg shadow-[#C8FF00]/20' : 'text-[var(--text-muted)] hover:text-white'}`}
-          >
-            Actividad
-          </button>
+        <div className="section-label mb-2">// comunidad</div>
+        <h1 className="text-4xl font-extrabold tracking-tighter">Qué está pasando?</h1>
+        
+        <div className="flex gap-2 mt-8 bg-black/20 p-1 rounded-2xl border border-[var(--border)] overflow-hidden">
+          {["launches", "global"].map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t as any)}
+              className={`flex-1 py-3 px-2 text-center rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${tab === t ? 'bg-[var(--surface2)] text-white' : 'text-[var(--text-muted)] hover:text-white'}`}
+            >
+              {t === "launches" ? "Lanzamientos" : "Actividad"}
+            </button>
+          ))}
         </div>
-
-        {tab === "global" && (
-          <div className="flex gap-2 mt-6 overflow-x-auto pb-2 scrollbar-hide">
-            {[
-              { id: 'all', label: 'Todos' },
-              { id: 'new_builder', label: 'Nuevos' },
-              { id: 'block_update', label: 'Bloques' },
-              { id: 'new_project', label: 'Proyectos' }
-            ].map(f => (
-              <button
-                key={f.id}
-                onClick={() => setFilterType(f.id)}
-                className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all whitespace-nowrap ${filterType === f.id ? 'bg-white/10 border-white/20 text-white' : 'bg-transparent border-white/5 text-[var(--text-muted)] hover:border-white/10'}`}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
-        )}
       </header>
 
       {loading ? (
         <div className="space-y-4">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-20 rounded-2xl bg-[var(--surface)] border border-[var(--border)] animate-pulse" />
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-24 rounded-2xl bg-[var(--surface)] border border-[var(--border)] animate-pulse" />
           ))}
         </div>
       ) : tab === "launches" ? (
         launches.length === 0 ? (
-          <div className="text-center py-32 border border-dashed border-[var(--border)] rounded-3xl">
-            <p className="text-[var(--text-dim)] font-mono text-sm leading-relaxed mb-4">
-              Aún no hay lanzamientos de la comunidad.<br />
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-24 px-8 border border-dashed border-[var(--border)] rounded-[2.5rem] bg-black/10"
+          >
+            <div className="w-16 h-16 bg-[var(--surface2)] rounded-2xl flex items-center justify-center mx-auto mb-6 text-[var(--accent)] shadow-xl shadow-[var(--accent)]/5">
+              <ActivityIcon size={32} />
+            </div>
+            <h3 className="text-xl font-bold mb-2 text-white">No hay lanzamientos activos</h3>
+            <p className="text-sm text-[var(--text-dim)] font-mono leading-relaxed mb-8 max-w-xs mx-auto">
+              Sé el primero en mostrarle a la comunidad lo que estás buildeando.
             </p>
-            <button onClick={() => alert("Próximamente: Panel de lanzamientos PRO")} className="btn btn-accent inline-flex">
-              Ser el primero en lanzar 🚀
-            </button>
-          </div>
+            <Link href="/dashboard" className="btn btn-accent inline-flex !rounded-2xl shadow-lg shadow-[var(--accent)]/20">
+              Lanzar mi proyecto 🚀
+            </Link>
+          </motion.div>
         ) : (
           <div className="space-y-4">
             {launches.map(launch => (
-              <div key={launch.id} className="bg-[var(--surface)] hover:bg-[var(--surface-hover)] border border-[var(--border)] p-5 md:p-6 rounded-3xl transition-colors flex flex-col md:flex-row gap-6 md:items-center group">
-                <div className="flex-1 min-w-0">
-                  <Link href={`/${launch.profiles.username}`} target="_blank" className="flex items-center gap-2 mb-3 max-w-max">
-                    {launch.profiles.image ? (
-                      <img src={launch.profiles.image} alt={launch.profiles.username} className="w-6 h-6 rounded-full object-cover" />
-                    ) : (
-                      <div className="w-6 h-6 rounded-full bg-black/40 flex items-center justify-center font-bold text-[10px] text-[var(--accent)] border border-[var(--border)] shrink-0">
-                        {launch.profiles.username.substring(0, 2).toUpperCase()}
-                      </div>
-                    )}
-                    <span className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">@{launch.profiles.username}</span>
-                  </Link>
-
-                  <Link href={`/${launch.profiles.username}${launch.sub_site_id ? `/project/${launch.sub_site_id}` : ''}`} className="block">
-                    <h2 className="text-xl md:text-2xl font-bold tracking-tight mb-2 text-white truncate group-hover:text-[#C8FF00] transition-colors">{launch.title}</h2>
-                    <p className="text-sm md:text-base text-[var(--text-dim)] line-clamp-2 mb-4 leading-relaxed">{launch.tagline}</p>
-                  </Link>
-
-                  <div className="flex items-center gap-4 text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-widest">
-                    <span>Hace {timeAgo(launch.created_at)}</span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => handleUpvote(launch)}
-                  className={`shrink-0 flex flex-row md:flex-col items-center justify-center gap-2 md:gap-1 px-4 py-3 md:w-20 md:h-24 rounded-2xl border transition-all ${launch.hasUpvoted ? 'bg-[#C8FF00]/10 border-[#C8FF00] text-[#C8FF00] shadow-[0_0_20px_rgba(200,255,0,0.1)]' : 'bg-black/20 border-[var(--border-bright)] text-[var(--text-dim)] hover:border-white hover:text-white hover:bg-white/5'
-                    }`}
-                >
-                  <ChevronUp size={28} className={launch.hasUpvoted ? 'text-[#C8FF00]' : ''} />
-                  <span className="font-black font-mono text-lg">{launch.upvotes}</span>
-                </button>
+              <div key={launch.id} className="bg-[var(--surface)] border border-[var(--border)] p-6 rounded-3xl flex gap-6 items-center group">
+                 <div className="flex-1">
+                    <Link href={`/${launch.profiles.username}`} className="flex items-center gap-2 mb-2 text-xs text-[var(--text-muted)] uppercase tracking-widest font-mono">
+                      @{launch.profiles.username}
+                    </Link>
+                    <Link href={`/${launch.profiles.username}`}>
+                      <h2 className="text-xl font-bold group-hover:text-[var(--accent)] transition-colors">{launch.title}</h2>
+                      <p className="text-sm text-[var(--text-dim)] line-clamp-2 mt-1">{launch.tagline}</p>
+                    </Link>
+                 </div>
+                 <button onClick={() => handleUpvote(launch)} className={`flex flex-col items-center justify-center w-16 h-20 rounded-2xl border transition-all ${launch.hasUpvoted ? 'bg-[var(--accent)]/10 border-[var(--accent)] text-[var(--accent)]' : 'border-[var(--border)] text-[var(--text-dim)] hover:border-white hover:text-white'}`}>
+                    <ChevronUp size={24} />
+                    <span className="font-bold">{launch.upvotes}</span>
+                 </button>
               </div>
             ))}
           </div>
         )
-      ) : activities.length === 0 ? (
-        <div className="text-center py-32 border border-dashed border-[var(--border)] rounded-3xl">
-          <p className="text-[var(--text-dim)] font-mono text-sm leading-relaxed">
-            {filterType === 'all'
-              ? 'El feed de actividad está vacío.'
-              : `No hay actividad de tipo "${filterType.replace('_', ' ')}" por ahora.`}
-            <br />
-          </p>
-          {filterType !== 'all' && (
-            <button onClick={() => setFilterType('all')} className="mt-4 text-xs font-bold uppercase tracking-widest text-[var(--accent)] hover:underline">
-              Ver toda la actividad
-            </button>
-          )}
-        </div>
       ) : (
-        <div className="space-y-3">
-          {activities.map((activity, i) => {
-            const user = activity.user;
-            const label = ACTIVITY_LABELS[activity.type]?.(activity.data, user.name ?? user.username) ?? `${user.username} hizo algo nuevo`;
-
-            return (
-              <motion.div
-                key={activity.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.04 }}
-                className="flex items-start gap-4 p-4 rounded-2xl bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--border-bright)] transition-all"
-              >
-                {/* Avatar */}
-                <Link href={`/${user.username}`} className="shrink-0">
-                  {user.image ? (
-                    <img
-                      src={user.image}
-                      alt={user.username}
-                      className="w-10 h-10 rounded-full object-cover"
-                      style={{ borderColor: user.accent_color, borderWidth: 2, borderStyle: "solid" }}
-                    />
-                  ) : (
-                    <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-black"
-                      style={{ backgroundColor: user.accent_color }}
-                    >
-                      {(user.name ?? user.username)[0]?.toUpperCase()}
-                    </div>
-                  )}
-                </Link>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium leading-snug">
-                    <Link
-                      href={`/${user.username}`}
-                      className="font-bold hover:underline gap-1 inline-flex items-center"
-                      style={{ color: user.accent_color }}
-                    >
-                      {user.name ?? user.username}
-                      {(user.subscription_tier === 'pro' || !!user.pro_since) && (
-                        <BadgeCheck size={14} className="shrink-0" />
-                      )}
-                    </Link>
-                    {" "}
-                    <span className="text-[var(--text-dim)]">
-                      {label.replace(user.name ?? user.username, "").trim()}
-                    </span>
-                  </p>
-                  <p className="text-xs text-[var(--text-muted)] font-mono mt-1">
-                    {timeAgo(activity.created_at)}
-                  </p>
-                </div>
-              </motion.div>
-            );
-          })}
-
-          {page < totalPages && (
-            <div className="pt-8 pb-12 flex justify-center">
-              <button
-                onClick={() => setPage(p => p + 1)}
-                disabled={loadingMore}
-                className="btn btn-ghost !px-8 !py-3 !rounded-2xl !text-[11px] uppercase tracking-widest font-bold border-white/10 hover:bg-white/5 disabled:opacity-50"
-              >
-                {loadingMore ? 'Cargando...' : 'Cargar más actividad'}
-              </button>
-            </div>
+        <div className="space-y-6">
+          {activityGroups.map((group, i) => (
+            <ActivityGroup key={group[0].id} group={group} index={i} />
+          ))}
+          
+          {loadingMore && (
+             <div className="space-y-4">
+               {[...Array(2)].map((_, i) => (
+                 <div key={i} className="h-24 rounded-2xl bg-[var(--surface)] border border-[var(--border)] animate-pulse" />
+               ))}
+             </div>
           )}
+
+          <div id="feed-end-marker" className="h-20 flex items-center justify-center">
+            {page >= totalPages && activities.length > 0 && (
+              <span className="text-[10px] font-mono text-[var(--text-dim)] uppercase tracking-widest opacity-40">
+                — fin de la actividad —
+              </span>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -353,11 +367,7 @@ function FeedContent() {
 
 export default function FeedPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
-        <div className="animate-pulse text-[var(--text-muted)] font-mono">Cargando feed...</div>
-      </div>
-    }>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-mono text-[var(--text-dim)]">Cargando comunidad...</div>}>
       <FeedContent />
     </Suspense>
   );

@@ -17,18 +17,33 @@ function getPreviousWeek(): string {
   return getWeekString(prev);
 }
 
+async function isAdmin(request: NextRequest, secret: string | null) {
+  // 1. Check for Cron/Admin secrets first (for automated jobs)
+  const authHeader = request.headers.get("authorization");
+  if (authHeader === `Bearer ${process.env.CRON_SECRET}`) return true;
+  if (secret && secret === process.env.ADMIN_SECRET) return true;
+
+  // 2. Check for User session (for manual trigger)
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('username')
+    .eq('id', user.id)
+    .single();
+
+  return profile?.username === 'huevsite';
+}
+
 async function handlePickWinner(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const secret = searchParams.get("secret");
     const requestedWeek = searchParams.get("week");
 
-    // Check auth via Vercel CRON_SECRET or ADMIN_SECRET
-    const authHeader = request.headers.get("authorization");
-    const isValidCron = authHeader === `Bearer ${process.env.CRON_SECRET}`;
-    const isValidAdmin = secret && secret === process.env.ADMIN_SECRET;
-
-    if (!isValidCron && !isValidAdmin) {
+    if (!await isAdmin(request, secret)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -36,8 +51,11 @@ async function handlePickWinner(request: NextRequest) {
     // probablemente quiere cerrar la semana que pasó.
     const week = requestedWeek || getPreviousWeek();
 
-    // Use standard authenticated client
-    const supabase = createClient();
+    // Use service role client to bypass RLS
+    const supabase = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
     // 1. Verificar si ya hay ganador para esa semana
     const { data: existingWinner } = await supabase

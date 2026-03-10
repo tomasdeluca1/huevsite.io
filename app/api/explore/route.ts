@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "24", 10);
     const sort = searchParams.get("sort") || "score"; // 'score' | 'created_at' | 'updated_at' | ...
     const q = searchParams.get("q") || "";
+    const filter = searchParams.get("filter") || "score"; // 'score' | 'winners' | 'pro' | 'created_at'
 
     const startIndex = page * limit;
     const endIndex = startIndex + limit - 1;
@@ -24,6 +25,12 @@ export async function GET(request: NextRequest) {
     if (q) {
       // Basic text search over username or name
       query = query.or(`username.ilike.%${q}%,name.ilike.%${q}%`);
+    }
+
+    if (filter === 'winners') {
+      query = query.eq('is_winner', true);
+    } else if (filter === 'pro') {
+      query = query.not('pro_since', 'is', null);
     }
 
     // We might need the user object for certain filters
@@ -55,46 +62,47 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Debes estar logueado para ver a quién seguís." }, { status: 401 });
       }
 
-      // Fetch who the user follows
       const { data: followsData } = await supabase
         .from("follows")
         .select("following_id")
         .eq("follower_id", user.id);
 
       const followingIds = (followsData || []).map(f => f.following_id);
-
       if (followingIds.length === 0) {
         return NextResponse.json({ profiles: [], count: 0, hasMore: false }, { status: 200 });
       }
-
       query = query.in("id", followingIds);
-      query = query.order("pro_since", { ascending: false, nullsFirst: false });
-      query = query.order("created_at", { ascending: false });
     } else if (isFollowersMeFilter) {
       if (!user) {
         return NextResponse.json({ error: "Debes estar logueado para ver quién te sigue." }, { status: 401 });
       }
 
-      // Fetch who follows the user
       const { data: followersData } = await supabase
         .from("follows")
         .select("follower_id")
         .eq("following_id", user.id);
 
       const followerIds = (followersData || []).map(f => f.follower_id);
-
       if (followerIds.length === 0) {
         return NextResponse.json({ profiles: [], count: 0, hasMore: false }, { status: 200 });
       }
-
       query = query.in("id", followerIds);
-      query = query.order("is_winner", { ascending: false, nullsFirst: false });
-      query = query.order("pro_since", { ascending: false, nullsFirst: false });
-      query = query.order("created_at", { ascending: false });
-    } else {
+    }
+
+    // Final Ordering Logic (Universal)
+    const shouldPin = filter === 'score' || filter === 'winners';
+
+    if (shouldPin) {
+      // PIN WINNERS/PRO FIRST
       query = query.order("is_winner", { ascending: false, nullsFirst: false });
       query = query.order("pro_since", { ascending: false, nullsFirst: false });
       query = query.order(sortField, { ascending: false });
+    } else {
+      // ABSOLUTE SORT (Respect field above all)
+      query = query.order(sortField, { ascending: false });
+      query = query.order("is_winner", { ascending: false, nullsFirst: false });
+      query = query.order("pro_since", { ascending: false, nullsFirst: false });
+      query = query.order("created_at", { ascending: false });
     }
 
     query = query.range(startIndex, endIndex);

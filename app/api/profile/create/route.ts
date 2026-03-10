@@ -118,16 +118,48 @@ export async function POST(request: NextRequest) {
     const githubHandle = body.githubHandle || user.user_metadata.user_name;
 
     if (!hasGithubBlock && githubHandle) {
-      const stats = body.githubData ? {
-        stars: body.githubData.topRepos?.reduce((acc: number, r: any) => acc + (r.stars || 0), 0) || 0,
-        repos: body.githubData.publicRepos || 0,
-        followers: body.githubData.followers || 0,
-        topLanguages: body.githubData.topLanguages?.map((l: string) => ({ name: l, percent: 33 })) || [],
-      } : {
+      let stats = {
         stars: 0,
         repos: 0,
         followers: 0,
+        topLanguages: [] as any[]
       };
+
+      if (body.githubData) {
+        stats = {
+          stars: body.githubData.topRepos?.reduce((acc: number, r: any) => acc + (r.stars || 0), 0) || 0,
+          repos: body.githubData.publicRepos || 0,
+          followers: body.githubData.followers || 0,
+          topLanguages: body.githubData.topLanguages?.map((l: string) => ({ name: l, percent: 33 })) || [],
+        };
+      } else {
+        // Fallback: Intentar obtener stats reales del API si no vinieron en el body
+        try {
+          console.log(`// Fetching GitHub stats for ${githubHandle} (on-create fallback)`);
+          const reposRes = await fetch(`https://api.github.com/users/${githubHandle}/repos?type=owner&per_page=100`, {
+            headers: { 'Accept': 'application/vnd.github.v3+json' }
+          });
+
+          if (reposRes.ok) {
+            const repos = await reposRes.json();
+            const userDataRes = await fetch(`https://api.github.com/users/${githubHandle}`, {
+              headers: { 'Accept': 'application/vnd.github.v3+json' }
+            });
+            const userData = userDataRes.ok ? await userDataRes.json() : {};
+
+            stats = {
+              stars: repos.reduce((acc: number, r: any) => acc + (r.stargazers_count || 0), 0) || 0,
+              repos: repos.length || 0,
+              followers: userData.followers || 0,
+              topLanguages: Array.from(new Set(repos.map((r: any) => r.language).filter(Boolean)))
+                .slice(0, 3)
+                .map(l => ({ name: l, percent: 33 }))
+            };
+          }
+        } catch (e) {
+          console.error('// Fallback github sync error:', e);
+        }
+      }
 
       blocksToInsert.push({
         user_id: user.id,

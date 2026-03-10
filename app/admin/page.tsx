@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Trophy, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Trophy, Loader2, CheckCircle2, AlertCircle, Trash2, Archive, RotateCcw, X, LogIn } from "lucide-react";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
 
 interface NominatedUser {
   id: string;
@@ -21,7 +22,7 @@ interface Finalist {
 
 interface ShowcaseData {
   week: string;
-  winner: { week: string; user: NominatedUser } | null;
+  winners: Array<{ week: string; user: NominatedUser }>;
   finalists: Finalist[];
 }
 
@@ -30,12 +31,13 @@ interface Feedback {
   user_email: string;
   content: string;
   category: string;
+  status: string;
   created_at: string;
 }
 
 export default function AdminPage() {
-  const [secret, setSecret] = useState("");
   const [authed, setAuthed] = useState(false);
+  const [checking, setChecking] = useState(true);
   const [data, setData] = useState<ShowcaseData | null>(null);
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(false);
@@ -65,6 +67,33 @@ export default function AdminPage() {
     }
   };
 
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        setChecking(false);
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.username === 'huevsite') {
+        setAuthed(true);
+        fetchData();
+        fetchFeedbacks();
+      }
+      setChecking(false);
+    };
+
+    checkAdmin();
+  }, []);
+
   const setWinner = async (userId: string, week: string) => {
     setSettingWinner(userId);
     setFeedbackMsg(null);
@@ -73,7 +102,6 @@ export default function AdminPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-secret": secret,
         },
         body: JSON.stringify({ userId, week }),
       });
@@ -89,35 +117,64 @@ export default function AdminPage() {
     }
   };
 
-  const handleAuth = async () => {
-    setAuthed(true);
-    fetchData();
-    fetchFeedbacks();
+  const handleDeleteFeedback = async (id: string) => {
+    if (!confirm("¿Seguro que querés eliminar este feedback?")) return;
+    try {
+      const res = await fetch(`/api/feedback?id=${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) fetchFeedbacks();
+    } catch (e) {
+      console.error(e);
+    }
   };
+
+  const handleUpdateFeedbackStatus = async (id: string, status: string) => {
+    try {
+      const res = await fetch(`/api/feedback`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id, status }),
+      });
+      if (res.ok) fetchFeedbacks();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center font-display">
+        <Loader2 className="animate-spin text-[var(--accent)]" size={32} />
+      </div>
+    );
+  }
 
   if (!authed) {
     return (
       <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center p-4 font-display">
-        <div className="w-full max-w-sm space-y-6">
-          <div className="text-center">
-            <div className="section-label mb-2 justify-center">// acceso restringido</div>
-            <h1 className="text-3xl font-extrabold tracking-tight">Admin</h1>
+        <div className="w-full max-w-sm space-y-6 text-center">
+          <div className="section-label mb-2 justify-center">// acceso restringido</div>
+          <h1 className="text-3xl font-extrabold tracking-tight">Admin</h1>
+          <p className="text-[var(--text-muted)] text-sm">
+            Esta sección es solo para el administrador (@huevsite).
+          </p>
+          <div className="pt-4">
+            <Link
+              href="/auth/login"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-black bg-[var(--accent)] hover:opacity-90 transition-all"
+            >
+              <LogIn size={18} />
+              Iniciar Sesión
+            </Link>
           </div>
-          <input
-            type="password"
-            value={secret}
-            onChange={(e) => setSecret(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && secret && handleAuth()}
-            placeholder="Admin secret..."
-            className="w-full p-4 rounded-2xl bg-[var(--surface)] border border-[var(--border)] focus:border-[var(--accent)] outline-none font-mono text-sm"
-          />
-          <button
-            onClick={handleAuth}
-            disabled={!secret}
-            className="w-full py-4 rounded-2xl font-bold text-black bg-[var(--accent)]"
-          >
-            Entrar
-          </button>
+          <div>
+            <Link href="/" className="text-xs text-[var(--text-dim)] hover:underline">
+              Volver al inicio
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -137,11 +194,10 @@ export default function AdminPage() {
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`flex items-center gap-3 p-4 rounded-2xl mb-8 ${
-            feedbackMsg.type === "ok"
-              ? "bg-green-500/10 border border-green-500/30 text-green-400"
-              : "bg-red-500/10 border border-red-500/30 text-red-400"
-          }`}
+          className={`flex items-center gap-3 p-4 rounded-2xl mb-8 ${feedbackMsg.type === "ok"
+            ? "bg-green-500/10 border border-green-500/30 text-green-400"
+            : "bg-red-500/10 border border-red-500/30 text-red-400"
+            }`}
         >
           {feedbackMsg.type === "ok" ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
           <span className="text-sm font-medium">{feedbackMsg.msg}</span>
@@ -160,21 +216,41 @@ export default function AdminPage() {
             <div className="font-bold font-mono text-lg">{data.week}</div>
           </div>
 
-          {/* Winner actual */}
-          {data.winner && (
+          {/* Winner(s) actual(es) */}
+          {data.winners && data.winners.length > 0 && (
             <div>
-              <div className="section-label mb-4">// winner actual</div>
-              <div
-                className="flex items-center gap-4 p-5 rounded-2xl border-2"
-                style={{ borderColor: data.winner.user.accent_color }}
-              >
-                <Trophy size={24} style={{ color: data.winner.user.accent_color }} />
-                <div>
-                  <p className="font-bold" style={{ color: data.winner.user.accent_color }}>
-                    {data.winner.user.name ?? data.winner.user.username}
-                  </p>
-                  <p className="text-xs text-[var(--text-muted)] font-mono">@{data.winner.user.username}</p>
-                </div>
+              <div className="flex justify-between items-center mb-4">
+                <div className="section-label !mb-0">// winner(s) actual(es)</div>
+                <button
+                  onClick={async () => {
+                    if (confirm("¿Limpiar todos los winners de esta semana?")) {
+                      await fetch(`/api/admin/showcase-winner?week=${data.week}`, {
+                        method: "DELETE",
+                      });
+                      fetchData();
+                    }
+                  }}
+                  className="text-[10px] font-mono text-red-500 hover:underline flex items-center gap-1"
+                >
+                  <Trash2 size={10} /> Limpiar semana
+                </button>
+              </div>
+              <div className="grid gap-4">
+                {data.winners.map((winner) => (
+                  <div
+                    key={winner.user.id}
+                    className="flex items-center gap-4 p-5 rounded-2xl border-2"
+                    style={{ borderColor: winner.user.accent_color }}
+                  >
+                    <Trophy size={24} style={{ color: winner.user.accent_color }} />
+                    <div>
+                      <p className="font-bold" style={{ color: winner.user.accent_color }}>
+                        {winner.user.name ?? winner.user.username}
+                      </p>
+                      <p className="text-xs text-[var(--text-muted)] font-mono">@{winner.user.username}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -188,46 +264,56 @@ export default function AdminPage() {
               </p>
             ) : (
               <div className="space-y-3">
-                {data.finalists.map((finalist, i) => (
-                  <motion.div
-                    key={finalist.userId}
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="flex items-center gap-4 p-4 rounded-2xl bg-[var(--surface)] border border-[var(--border)]"
-                  >
-                    {finalist.user.image ? (
-                      <img src={finalist.user.image} alt={finalist.user.username} className="w-10 h-10 rounded-xl object-cover shrink-0" />
-                    ) : (
-                      <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-black shrink-0"
-                        style={{ backgroundColor: finalist.user.accent_color }}
-                      >
-                        {(finalist.user.name ?? finalist.user.username)[0]?.toUpperCase()}
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <p className="font-bold text-sm" style={{ color: finalist.user.accent_color }}>
-                        {finalist.user.name ?? finalist.user.username}
-                      </p>
-                      <p className="text-xs text-[var(--text-muted)] font-mono">
-                        {finalist.count} nominación{finalist.count !== 1 ? "es" : ""}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setWinner(finalist.userId, data.week)}
-                      disabled={settingWinner === finalist.userId}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-black transition-all"
-                      style={{ backgroundColor: finalist.user.accent_color, opacity: settingWinner === finalist.userId ? 0.7 : 1 }}
+                {data.finalists.map((finalist, i) => {
+                  const isWinner = data.winners?.some(w => w.user.id === finalist.userId);
+                  return (
+                    <motion.div
+                      key={finalist.userId}
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className="flex items-center gap-4 p-4 rounded-2xl bg-[var(--surface)] border border-[var(--border)]"
                     >
-                      {settingWinner === finalist.userId ? (
-                        <Loader2 size={14} className="animate-spin" />
+                      {finalist.user.image ? (
+                        <img src={finalist.user.image} alt={finalist.user.username} className="w-10 h-10 rounded-xl object-cover shrink-0" />
                       ) : (
-                        <><Trophy size={14} /> Elegir winner</>
+                        <div
+                          className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-black shrink-0"
+                          style={{ backgroundColor: finalist.user.accent_color }}
+                        >
+                          {(finalist.user.name ?? finalist.user.username)[0]?.toUpperCase()}
+                        </div>
                       )}
-                    </button>
-                  </motion.div>
-                ))}
+                      <div className="flex-1">
+                        <p className="font-bold text-sm" style={{ color: finalist.user.accent_color }}>
+                          {finalist.user.name ?? finalist.user.username}
+                        </p>
+                        <p className="text-xs text-[var(--text-muted)] font-mono">
+                          {finalist.count} nominación{finalist.count !== 1 ? "es" : ""}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setWinner(finalist.userId, data.week)}
+                        disabled={settingWinner === finalist.userId}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all"
+                        style={{
+                          backgroundColor: isWinner ? 'transparent' : finalist.user.accent_color,
+                          border: isWinner ? `1px solid ${finalist.user.accent_color}` : 'none',
+                          color: isWinner ? finalist.user.accent_color : 'black',
+                          opacity: settingWinner === finalist.userId ? 0.7 : 1
+                        }}
+                      >
+                        {settingWinner === finalist.userId ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : isWinner ? (
+                          <><X size={14} /> Quitar winner</>
+                        ) : (
+                          <><Trophy size={14} /> Elegir winner</>
+                        )}
+                      </button>
+                    </motion.div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -236,7 +322,7 @@ export default function AdminPage() {
           <div className="pt-10 border-t border-[var(--border)]">
             <div className="flex items-center justify-between mb-6">
               <div className="section-label !mb-0">// feedback de usuarios</div>
-              <button 
+              <button
                 onClick={fetchFeedbacks}
                 className="text-xs font-mono text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
                 disabled={loadingFeedbacks}
@@ -250,25 +336,75 @@ export default function AdminPage() {
                 <p className="text-sm text-[var(--text-muted)] font-mono">No hay feedback por ahora. 🧉</p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {feedbacks.map((fb) => (
-                  <div key={fb.id} className="p-5 bg-[var(--surface)] border border-[var(--border)] rounded-2xl space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono font-bold text-white/50">{fb.user_email}</span>
-                      <span className={`text-[9px] font-mono px-2 py-0.5 rounded-full uppercase tracking-tighter ${
-                        fb.category === 'bug' ? 'bg-red-500/20 text-red-400' : 
-                        fb.category === 'idea' ? 'bg-blue-500/20 text-blue-400' : 
-                        'bg-white/10 text-white/50'
-                      }`}>
-                        {fb.category}
-                      </span>
+              <div className="space-y-12">
+                {/* Pendientes */}
+                <div className="space-y-4">
+                  {feedbacks.filter(f => f.status !== 'completed').length > 0 && (
+                    <div className="text-[10px] font-mono text-[var(--text-dim)] uppercase tracking-widest pl-2">Pendientes</div>
+                  )}
+                  {feedbacks.filter(f => f.status !== 'completed').map((fb) => (
+                    <div key={fb.id} className="p-5 bg-[var(--surface)] border border-[var(--border)] rounded-2xl space-y-3 relative group">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-mono font-bold text-white/50">{fb.user_email}</span>
+                        <div className="flex items-center gap-3">
+                          <span className={`text-[9px] font-mono px-2 py-0.5 rounded-full uppercase tracking-tighter ${fb.category === 'bug' ? 'bg-red-500/20 text-red-400' :
+                            fb.category === 'idea' ? 'bg-blue-500/20 text-blue-400' :
+                              'bg-white/10 text-white/50'
+                            }`}>
+                            {fb.category}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-sm leading-relaxed text-white/90 whitespace-pre-wrap">{fb.content}</p>
+                      <div className="flex items-center justify-between mt-4">
+                        <div className="text-[10px] text-[var(--text-muted)] font-mono">
+                          {new Date(fb.created_at).toLocaleString()}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleUpdateFeedbackStatus(fb.id, 'completed')}
+                            className="p-2 rounded-xl bg-green-500/10 text-green-500 hover:bg-green-500/20 transition-all border border-green-500/20"
+                            title="Marcar como completado"
+                          >
+                            <Archive size={14} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteFeedback(fb.id)}
+                            className="p-2 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all border border-red-500/20"
+                            title="Eliminar"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-sm leading-relaxed text-white/90 whitespace-pre-wrap">{fb.content}</p>
-                    <div className="text-[10px] text-[var(--text-muted)] font-mono">
-                      {new Date(fb.created_at).toLocaleString()}
-                    </div>
+                  ))}
+                </div>
+
+                {/* Completados */}
+                {feedbacks.filter(f => f.status === 'completed').length > 0 && (
+                  <div className="space-y-4 pt-4 border-t border-dashed border-[var(--border)]">
+                    <div className="text-[10px] font-mono text-[var(--text-dim)] uppercase tracking-widest pl-2">Archivados / Completados</div>
+                    {feedbacks.filter(f => f.status === 'completed').map((fb) => (
+                      <div key={fb.id} className="p-5 bg-[var(--surface)]/50 border border-[var(--border)]/50 rounded-2xl space-y-3 opacity-60">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-mono font-bold text-white/30">{fb.user_email}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[9px] font-mono bg-white/5 text-white/30 px-2 py-0.5 rounded-full uppercase">Completado</span>
+                            <button
+                              onClick={() => handleUpdateFeedbackStatus(fb.id, 'pending')}
+                              className="p-1.5 rounded-lg hover:bg-white/5 text-[var(--text-muted)] hover:text-white transition-colors"
+                              title="Restaurar"
+                            >
+                              <RotateCcw size={12} />
+                            </button>
+                          </div>
+                        </div>
+                        <p className="text-sm leading-relaxed text-white/40 whitespace-pre-wrap">{fb.content}</p>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
             )}
           </div>

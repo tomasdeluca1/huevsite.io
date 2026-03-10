@@ -38,33 +38,43 @@ export function ScoreInfoModal({ isOpen, onClose, accentColor = "#C8FF00", profi
         {
             title: "Perfil Base (Max 100)",
             icon: <Target className="text-blue-400" size={18} />,
-            points: breakdown ? `+${breakdown.breakdown.base.score} pts` : "Fijo",
+            points: breakdown ? `+${breakdown.breakdown.base.score} pts` : "Hasta 100 pts",
             items: [
-                `Foto de perfil: ${breakdown?.breakdown.base.details.has_image ? '+33' : '0'} / 33`,
-                `Nombre completo: ${breakdown?.breakdown.base.details.has_name ? '+33' : '0'} / 33`,
-                `Tagline (+10 chars): ${breakdown?.breakdown.base.details.tagline_length > 10 ? '+34' : (breakdown?.breakdown.base.details.tagline_length > 0 ? '+10' : '0')} / 34`
+                `Foto de perfil: ${breakdown ? (breakdown.breakdown.base.details.has_image ? '+33' : '0') + ' / 33' : '+33 pts'}`,
+                `Nombre completo: ${breakdown ? (breakdown.breakdown.base.details.has_name ? '+33' : '0') + ' / 33' : '+33 pts'}`,
+                `Tagline (+10 chars): ${breakdown ? (breakdown.breakdown.base.details.tagline_length > 10 ? '+34' : (breakdown.breakdown.base.details.tagline_length > 0 ? '+10' : '0')) + ' / 34' : '+34 pts'}`
             ]
         },
         {
             title: "Contenido Builder",
             icon: <Zap className="text-yellow-400" size={18} />,
-            points: breakdown ? `+${breakdown.breakdown.content.score} pts` : "Acumulativo",
+            points: breakdown ? `+${breakdown.breakdown.content.score} pts` : "Puntos por carga",
             items: [
-                `GitHub conectado: ${breakdown?.breakdown.content.details.has_github ? '+150' : '0'} pts`,
-                `Proyectos: ${breakdown?.breakdown.content.details.project_count || 0} cargados`,
-                `Building (Status): ${breakdown?.breakdown.content.details.building_count || 0} cargados`,
-                `Escritura (Blog): ${breakdown?.breakdown.content.details.writing_count || 0} cargados`
+                `GitHub conectado: ${breakdown ? (breakdown.breakdown.content.details.has_github ? '+150' : '0') + ' pts' : '+150 pts'}`,
+                `Proyectos: ${breakdown ? breakdown.breakdown.content.details.project_count + ' cargados (' + (
+                    Math.min(breakdown.breakdown.content.details.project_count, 3) * 75 +
+                    Math.max(0, Math.min(breakdown.breakdown.content.details.project_count - 3, 3)) * 30 +
+                    Math.max(0, breakdown.breakdown.content.details.project_count - 6) * 5
+                ) + ' pts)' : 'Hasta 75 pts c/u'}`,
+                `Building (Status): ${breakdown ? breakdown.breakdown.content.details.building_count + ' cargados (' + (
+                    Math.min(breakdown.breakdown.content.details.building_count, 3) * 30 +
+                    Math.max(0, breakdown.breakdown.content.details.building_count - 3) * 10
+                ) + ' pts)' : 'Hasta 30 pts c/u'}`,
+                `Escritura (Blog): ${breakdown ? breakdown.breakdown.content.details.writing_count + ' cargados (' + (
+                    Math.min(breakdown.breakdown.content.details.writing_count, 3) * 20 +
+                    Math.max(0, breakdown.breakdown.content.details.writing_count - 5) * 5
+                ) + ' pts)' : 'Hasta 20 pts c/u'}`
             ]
         },
         {
             title: "Comunidad y Social",
             icon: <Users className="text-purple-400" size={18} />,
-            points: breakdown ? `+${breakdown.breakdown.social_received.score + breakdown.breakdown.social_given.score} pts` : "Dinámico",
+            points: breakdown ? `+${breakdown.breakdown.social_received.score + breakdown.breakdown.social_given.score} pts` : "Interacciones",
             items: [
-                `Endorsement recibido: ${breakdown?.breakdown.social_received.details.endorsements || 0} (+25 c/u)`,
-                `Nominación recibida: ${breakdown?.breakdown.social_received.details.nominations || 0} (+15 c/u)`,
-                `Seguidores: ${breakdown?.breakdown.social_received.details.followers || 0} (+10 c/u)`,
-                `Reciprocidad: ${breakdown?.breakdown.social_given.score || 0} pts (por dar feedback)`
+                `Endorsement recibido: ${breakdown ? breakdown.breakdown.social_received.details.endorsements + ' (+25 c/u)' : '+25 pts c/u'}`,
+                `Nominación recibida: ${breakdown ? breakdown.breakdown.social_received.details.nominations + ' (+15 c/u)' : '+15 pts c/u'}`,
+                `Seguidores: ${breakdown ? breakdown.breakdown.social_received.details.followers + ' (+10 c/u)' : '+10 pts c/u'}`,
+                `Reciprocidad: ${breakdown ? breakdown.breakdown.social_given.score + ' pts' : '+5 pts p/ feedback dado'}`
             ]
         },
         {
@@ -72,8 +82,8 @@ export function ScoreInfoModal({ isOpen, onClose, accentColor = "#C8FF00", profi
             icon: <Sparkles className="text-[var(--accent)]" size={18} />,
             points: breakdown ? `+${breakdown.breakdown.bonus.score} pts` : "Bonus",
             items: [
-                `Freshness (Últimos 30d): ${breakdown?.breakdown.bonus.details.is_fresh ? '+50' : '0'} pts`,
-                `Suscripción PRO activa: ${breakdown?.breakdown.bonus.details.is_pro ? '+100' : '0'} pts`,
+                `Freshness (Últimos 30d): ${breakdown ? (breakdown.breakdown.bonus.details.is_fresh ? '+50' : '0') + ' pts' : '+50 pts'}`,
+                `Suscripción PRO activa: ${breakdown ? (breakdown.breakdown.bonus.details.is_pro ? '+100' : '0') + ' pts' : '+100 pts'}`,
                 "Ganador semanal: Badge especial y visibilidad"
             ]
         }
@@ -112,6 +122,11 @@ export function ScoreInfoModal({ isOpen, onClose, accentColor = "#C8FF00", profi
                                 <div>
                                     <h2 className="text-2xl md:text-3xl font-black tracking-tighter flex items-center gap-2">
                                         Builder Score <span className="text-[var(--accent)]">🔥</span>
+                                        {breakdown && (
+                                            <span className="ml-2 text-white bg-white/10 px-3 py-1 rounded-2xl text-xl animate-in fade-in slide-in-from-left-4 duration-500">
+                                                {breakdown.total} <span className="text-[10px] uppercase font-mono text-[var(--accent)]">pts</span>
+                                            </span>
+                                        )}
                                     </h2>
                                     <p className="text-[var(--text-dim)] font-mono text-[9px] md:text-[10px] uppercase tracking-widest mt-1">
                                        // Gamificación y reputación de comunidad

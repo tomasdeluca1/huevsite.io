@@ -1,0 +1,143 @@
+import { Metadata } from "next";
+import { profileService } from "@/lib/profile-service";
+import { ProfileGrid } from "@/components/profile/ProfileGrid";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import { ProfileHeader } from "@/components/profile/ProfileHeader";
+import { MobileBottomNav, MobileStickyHeader } from "@/components/profile/MobileProfileUI";
+import { createClient } from "@/lib/supabase/server";
+
+interface Props {
+    params: { username: string; slug: string };
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+    const profile = await profileService.getSubSiteProfile(params.username, params.slug);
+
+    if (!profile) return { title: "Sub-site no encontrado | huevsite.io" };
+
+    return {
+        title: `${profile.displayName} | @${params.username} | huevsite.io`,
+        description: profile.tagline,
+    };
+}
+
+export default async function SubSitePage({ params }: Props) {
+    const profile = await profileService.getSubSiteProfile(params.username, params.slug);
+
+    if (!profile) {
+        notFound();
+    }
+
+    // En sub-sites por ahora no mostramos endorsements a menos que sea necesario
+    // Se renderiza el grid con los bloques asociados a este sub-site
+    let currentUserId: string | null = null;
+
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        currentUserId = user?.id ?? null;
+    } catch {
+        // ignore auth error
+    }
+
+    return (
+        <div className="landing min-h-screen font-display selection:bg-[var(--accent)] selection:text-black">
+            <div className="noise" />
+
+            <main className="min-h-screen pt-8 md:pt-12 pb-16 md:pb-24 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto relative">
+                <div
+                    className="fixed top-[-10%] left-[-10%] w-[80%] md:w-[50%] h-[50%] opacity-[0.08] blur-[120px] pointer-events-none transition-all duration-1000"
+                    style={{ backgroundColor: profile.accentColor }}
+                />
+
+                <style dangerouslySetInnerHTML={{
+                    __html: `
+          :root {
+            --accent: ${profile.accentColor};
+            --accent-dim: ${profile.accentColor}1f;
+            --accent-mid: ${profile.accentColor}4d;
+            --white: #F2F2F2;
+          }
+        `}} />
+
+                <MobileStickyHeader
+                    displayName={profile.displayName}
+                    avatarUrl={profile.avatarUrl}
+                    builderScore={profile.builderScore || 0}
+                    accentColor={profile.accentColor}
+                    username={profile.username}
+                />
+                <MobileBottomNav accentColor={profile.accentColor} currentUserId={currentUserId} />
+
+                <ProfileHeader
+                    profileId={profile.id}
+                    isFollowing={false}
+                    followersCount={0}
+                    followingCount={0}
+                    nominationsCount={0}
+                    builderScore={profile.builderScore || 0}
+                    accentColor={profile.accentColor}
+                    showFollowButton={false}
+                    currentUserId={currentUserId}
+                    isEnabledSocialNetwork={false}
+                    subscriptionTier={profile.subscriptionTier}
+                    username={profile.username}
+                />
+
+                {/* Parent Huevsite Reference - "Pie arriba del board" */}
+                {profile.parentProfile && (
+                    <div className="relative z-10 max-w-7xl mx-auto mb-8 md:mb-12 flex justify-center">
+                        <Link
+                            href={`/${profile.parentProfile.username}`}
+                            className="group flex flex-col sm:flex-row items-center gap-4 backdrop-blur-xl bg-white/[0.02] border border-white/[0.05] hover:border-[var(--accent)]/30 hover:shadow-[0_8px_32px_-12px_var(--accent-dim)] px-6 sm:px-8 py-4 rounded-[2rem] transition-all duration-300 relative overflow-hidden"
+                        >
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)]/10 blur-[40px] rounded-full translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                            
+                            <div className="text-[9px] font-mono text-[var(--accent)] uppercase tracking-[0.2em] font-bold text-center sm:text-left">
+                                // CREADOR <span className="hidden sm:inline">・</span>
+                            </div>
+                            
+                            <div className="flex items-center gap-3">
+                                {profile.parentProfile.avatarUrl ? (
+                                    <img src={profile.parentProfile.avatarUrl} alt={profile.parentProfile.displayName} className="w-8 h-8 md:w-10 md:h-10 rounded-full border border-white/10 shadow-sm object-cover bg-black" />
+                                ) : (
+                                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-black border border-white/10 flex items-center justify-center text-[10px] md:text-sm font-black uppercase text-white shadow-sm">
+                                        {profile.parentProfile.displayName.substring(0, 2)}
+                                    </div>
+                                )}
+                                <div className="flex flex-col min-w-0 text-center sm:text-left">
+                                    <span className="text-[13px] sm:text-sm font-black text-white group-hover:text-[var(--accent)] transition-colors leading-tight tracking-tight">
+                                        {profile.parentProfile.displayName} <span className="text-[11px] font-medium opacity-50 font-mono">(@{profile.parentProfile.username})</span>
+                                    </span>
+                                    {profile.parentProfile.tagline && (
+                                        <span className="text-[10px] sm:text-[11px] text-[var(--text-muted)] mt-0.5 truncate max-w-[200px] sm:max-w-[300px]">
+                                            {profile.parentProfile.tagline}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        </Link>
+                    </div>
+                )}
+
+                <div className="relative z-10">
+                    <ProfileGrid
+                        blocks={profile.blocks}
+                        accentColor={profile.accentColor}
+                        displayName={profile.displayName}
+                        tagline={profile.tagline}
+                        subscriptionTier={profile.subscriptionTier}
+                    />
+                </div>
+
+                <footer className="mt-20 md:mt-32 text-center relative z-10 border-t border-white/5 pt-12 pb-8">
+                    <Link href={`/${profile.username}`} className="text-[10px] font-mono text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors uppercase tracking-widest">
+                        ← Volver al perfil de {profile.username}
+                    </Link>
+                    <div className="logo mt-8 scale-75 opacity-10 filter grayscale select-none">huev<span>site</span>.io</div>
+                </footer>
+            </main>
+        </div>
+    );
+}

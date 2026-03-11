@@ -18,7 +18,7 @@ import {
 } from "@dnd-kit/sortable";
 import {
   Save, Eye, Layout as LayoutIcon, Settings, LogOut, Plus, Sparkles, MessageSquare,
-  Activity, Compass, Trash2, Copy, Check, Trophy, ArrowUpRight, BadgeCheck
+  Activity, Compass, Trash2, Copy, Check, Trophy, ArrowUpRight, BadgeCheck, ArrowLeft, Lock, Globe
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -38,9 +38,10 @@ import { ColorPicker } from "@/components/dashboard/ColorPicker";
 import { FeedbackModal } from "@/components/dashboard/FeedbackModal";
 import { OnboardingModal } from "@/components/dashboard/OnboardingModal";
 import Link from "next/link";
-
 import { createClient } from "@/lib/supabase/client";
 import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
+import { ProSettingsModal } from "@/components/dashboard/ProSettingsModal";
+import { UpgradeModal } from "@/components/dashboard/UpgradeModal";
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -53,6 +54,8 @@ export default function DashboardPage() {
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isScoreInfoOpen, setIsScoreInfoOpen] = useState(false);
+  const [isProSettingsOpen, setIsProSettingsOpen] = useState(false);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [tempProfileData, setTempProfileData] = useState({
     username: '',
     display_name: '',
@@ -61,6 +64,7 @@ export default function DashboardPage() {
     githubHandle: ''
   });
   const [copied, setCopied] = useState(false);
+  const [selectedSubSiteId, setSelectedSubSiteId] = useState<string | null>(null);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(() => (typeof window !== "undefined" ? localStorage.getItem("huevsite_autosave") === "true" : false));
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedVersionRef = useRef<string>("");
@@ -114,6 +118,8 @@ export default function DashboardPage() {
           avatarUrl: data.profile.image || "",
           githubHandle: data.profile.github_handle || "",
           builderScore: data.profile.builder_score || 0,
+          customDomain: data.profile.custom_domain || "",
+          subSites: data.subSites || [],
           blocks: data.blocks.map((block: any) => {
             const { id, type, order, col_span, row_span, visible, ...cleanData } = block.data || {};
             return {
@@ -151,6 +157,50 @@ export default function DashboardPage() {
 
     fetchProfile();
   }, []);
+
+  // Fetch blocks when switching sub-sites
+  useEffect(() => {
+    if (!profile) return;
+
+    const fetchBlocks = async () => {
+      setLoading(true);
+      try {
+        const url = selectedSubSiteId
+          ? `/api/sub-sites/${selectedSubSiteId}/blocks`
+          : '/api/profile'; // Get main profile blocks
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        const blocks = (data.blocks || []).map((block: any) => {
+          const { id, type, order, col_span, row_span, visible, ...cleanData } = block.data || {};
+          return {
+            id: block.id,
+            type: block.type as BlockType,
+            order: block.order,
+            col_span: block.col_span,
+            row_span: block.row_span,
+            visible: block.visible,
+            ...cleanData
+          };
+        });
+
+        setProfile(prev => prev ? { ...prev, blocks } : null);
+      } catch (e) {
+        console.error('Error fetching site blocks:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Skip the very first fetch on mount because fetchProfile already does it for main site
+    if (selectedSubSiteId !== null) {
+      fetchBlocks();
+    } else if (profile?.blocks.length === 0 && !loading) {
+      // if main site was empty, maybe re-fetch or keep empty? 
+      // Better to let fetchProfile handle the first one.
+    }
+  }, [selectedSubSiteId]);
 
 
   const sensors = useSensors(
@@ -390,6 +440,7 @@ export default function DashboardPage() {
           rowSpan,
           data: blockSpecificData,
           visible: true,
+          sub_site_id: selectedSubSiteId,
         }),
       });
 
@@ -595,12 +646,83 @@ export default function DashboardPage() {
     }
   };
 
+  const handleUpdateDomain = async (domain: string) => {
+    try {
+      const resp = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ custom_domain: domain }),
+      });
+      if (resp.ok) {
+        setProfile(prev => prev ? { ...prev, customDomain: domain } : null);
+      }
+    } catch (e) {
+      console.error('Error updating domain:', e);
+    }
+  };
+
+  const handleAddSubSite = async (title: string, slug: string) => {
+    try {
+      const resp = await fetch('/api/sub-sites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, slug }),
+      });
+      if (resp.ok) {
+        const { subSite } = await resp.json();
+        setProfile(prev => prev ? { ...prev, subSites: [subSite, ...(prev.subSites || [])] } : null);
+      } else {
+        const err = await resp.json();
+        alert(err.error || 'No se pudo crear el sub-site');
+      }
+    } catch (e) {
+      console.error('Error adding sub-site:', e);
+    }
+  };
+
+  const handleUpdateSubSite = async (id: string, updates: { title?: string, slug?: string, description?: string, avatarUrl?: string }) => {
+    try {
+      const resp = await fetch(`/api/sub-sites/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: updates.title,
+          slug: updates.slug,
+          description: updates.description,
+          avatar_url: updates.avatarUrl
+        }),
+      });
+      if (resp.ok) {
+        const { subSite } = await resp.json();
+        setProfile(prev => prev ? {
+          ...prev,
+          subSites: prev.subSites.map(s => s.id === id ? { ...s, ...subSite } : s)
+        } : null);
+      } else {
+        const err = await resp.json();
+        alert(err.error || 'No se pudo actualizar el sub-site');
+      }
+    } catch (e) {
+      console.error('Error updating sub-site:', e);
+    }
+  };
+
+  const handleDeleteSubSite = async (id: string) => {
+    if (!confirm('¿Seguro que querés borrar este sub-site?')) return;
+    try {
+      const resp = await fetch(`/api/sub-sites/${id}`, { method: 'DELETE' });
+      if (resp.ok) {
+        setProfile(prev => prev ? { ...prev, subSites: prev.subSites.filter(s => s.id !== id) } : null);
+      }
+    } catch (e) {
+      console.error('Error deleting sub-site:', e);
+    }
+  };
+
   // Autosave with debounce (only if enabled)
   useEffect(() => {
     if (!profile || loading || !autoSaveEnabled) return;
 
-    // Evitar loop infinito: comparar contenido actual con la última versión guardada
-    // Ignoramos el builderScore ya que lo devuelve el servidor
     const { builderScore, ...content } = profile;
     const currentVersion = JSON.stringify(content);
 
@@ -694,53 +816,118 @@ export default function DashboardPage() {
 
         <div className="flex flex-col gap-6">
           <div className="space-y-6">
-            <div
-              onClick={() => {
-                setTempProfileData({
-                  username: profile.username,
-                  display_name: profile.displayName,
-                  tagline: profile.tagline || '',
-                  avatarUrl: profile.avatarUrl || '',
-                  githubHandle: profile.githubHandle || ''
-                });
-                setIsProfileModalOpen(true);
-              }}
-              className="space-y-1.5 md:mb-4 bg-[var(--surface2)]/50 p-4 rounded-2xl border border-[var(--border)] relative group transition-all hover:border-[var(--border-bright)] cursor-pointer hover:bg-[var(--surface2)] shadow-sm"
-            >
-              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity text-[8px] font-mono text-[var(--accent)] tracking-widest uppercase pointer-events-none hidden md:block">
-                Editar
-              </div>
-              {!profile.blocks.some(b => b.type === 'hero') && (
-                <>
-                  <div className="text-xl font-black truncate text-white w-full p-0">
-                    {profile.displayName || "Tu Nombre"}
-                  </div>
-                  <div className="text-[11px] text-[var(--text-dim)] w-full p-0 block truncate font-mono uppercase tracking-tight opacity-70">
-                    {profile.tagline || "Sin tagline"}
-                  </div>
-                </>
-              )}
+            {selectedSubSiteId ? (
+              // SUB-SITE DISPLAY IN SIDEBAR
               <div
-                className={`flex items-center justify-between gap-2 p-2 px-3 rounded-xl bg-black/30 border border-white/5 group/url mt-3`}
+                className="space-y-1.5 md:mb-4 bg-[var(--surface2)]/50 p-4 rounded-2xl border border-[var(--border)] relative transition-all shadow-sm"
               >
-                <div className="flex items-center gap-1 min-w-0">
-                  <span className="text-[10px] text-[var(--text-muted)] font-mono shrink-0">huevsite.io/</span>
-                  <span className="text-xs font-black truncate text-[var(--accent)] font-mono">
-                    {profile.username}
-                  </span>
+                <div className="flex items-center gap-3 w-full p-0">
+                  {profile.subSites.find(s => s.id === selectedSubSiteId)?.avatarUrl ? (
+                    <img src={profile.subSites.find(s => s.id === selectedSubSiteId)?.avatarUrl} alt="Avatar" className="w-10 h-10 rounded-xl object-cover bg-black" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-xl bg-black border border-white/10 flex items-center justify-center text-[var(--accent)] font-bold uppercase">
+                      {profile.subSites.find(s => s.id === selectedSubSiteId)?.title.substring(0, 2)}
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xl font-black truncate text-[var(--accent)] w-full block">
+                      {profile.subSites.find(s => s.id === selectedSubSiteId)?.title || "Sub-site"}
+                    </div>
+                    <div className="text-[10px] uppercase font-mono tracking-widest text-[var(--text-muted)] mt-0.5">Ecosistema</div>
+                  </div>
                 </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCopyUrl();
-                  }}
-                  className="shrink-0 p-1.5 rounded-lg hover:bg-white/10 text-[var(--text-muted)] hover:text-white transition-all bg-white/5"
-                  title="Copiar URL"
+
+                <div
+                  className={`flex items-center justify-between gap-2 p-2 px-3 rounded-xl bg-black/30 border border-white/5 group/url mt-4`}
                 >
-                  {copied ? <Check size={12} className="text-[var(--accent)]" /> : <Copy size={12} />}
-                </button>
+                  <div className="flex items-center gap-1 min-w-0">
+                    <span className="text-[10px] text-[var(--text-muted)] font-mono shrink-0">/{profile.username}/</span>
+                    <span className="text-xs font-black truncate text-[var(--accent)] font-mono">
+                      {profile.subSites.find(s => s.id === selectedSubSiteId)?.slug}
+                    </span>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/${profile.username}/${profile.subSites.find(s => s.id === selectedSubSiteId)?.slug}`;
+                      navigator.clipboard.writeText(url);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    className="shrink-0 p-1.5 rounded-lg hover:bg-white/10 text-[var(--text-muted)] hover:text-white transition-all bg-white/5"
+                    title="Copiar URL del sub-site"
+                  >
+                    {copied ? <Check size={12} className="text-[var(--accent)]" /> : <Copy size={12} />}
+                  </button>
+                </div>
+
+                <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-white/5">
+                  <button
+                    onClick={() => setIsProSettingsOpen(true)}
+                    className="flex items-center gap-3 w-full p-2.5 rounded-xl bg-white/5 border border-white/5 text-[11px] font-bold text-white hover:bg-white/10 hover:border-white/10 transition-all group"
+                  >
+                    <Settings size={14} className="text-[var(--accent)] group-hover:rotate-45 transition-transform" />
+                    <span>Ajustes del Sitio</span>
+                  </button>
+                  <button
+                    onClick={() => setSelectedSubSiteId(null)}
+                    className="flex items-center gap-3 w-full p-2.5 rounded-xl bg-black/40 border border-white/5 text-[11px] font-bold text-[var(--text-dim)] hover:text-white hover:bg-white/5 transition-all group"
+                  >
+                    <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+                    <span>Volver al Principal</span>
+                  </button>
+                </div>
               </div>
-            </div>
+            ) : (
+              // MAIN PROFILE DISPLAY IN SIDEBAR
+              <div
+                onClick={() => {
+                  setTempProfileData({
+                    username: profile.username,
+                    display_name: profile.displayName,
+                    tagline: profile.tagline || '',
+                    avatarUrl: profile.avatarUrl || '',
+                    githubHandle: profile.githubHandle || ''
+                  });
+                  setIsProfileModalOpen(true);
+                }}
+                className="space-y-1.5 md:mb-4 bg-[var(--surface2)]/50 p-4 rounded-2xl border border-[var(--border)] relative group transition-all hover:border-[var(--border-bright)] cursor-pointer hover:bg-[var(--surface2)] shadow-sm"
+              >
+                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity text-[8px] font-mono text-[var(--accent)] tracking-widest uppercase pointer-events-none hidden md:block">
+                  Editar
+                </div>
+                {!profile.blocks.some(b => b.type === 'hero') && (
+                  <>
+                    <div className="text-xl font-black truncate text-white w-full p-0">
+                      {profile.displayName || "Tu Nombre"}
+                    </div>
+                    <div className="text-[11px] text-[var(--text-dim)] w-full p-0 block truncate font-mono uppercase tracking-tight opacity-70">
+                      {profile.tagline || "Sin tagline"}
+                    </div>
+                  </>
+                )}
+                <div
+                  className={`flex items-center justify-between gap-2 p-2 px-3 rounded-xl bg-black/30 border border-white/5 group/url mt-3`}
+                >
+                  <div className="flex items-center gap-1 min-w-0">
+                    <span className="text-[10px] text-[var(--text-muted)] font-mono shrink-0">huevsite.io/</span>
+                    <span className="text-xs font-black truncate text-[var(--accent)] font-mono">
+                      {profile.username}
+                    </span>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCopyUrl();
+                    }}
+                    className="shrink-0 p-1.5 rounded-lg hover:bg-white/10 text-[var(--text-muted)] hover:text-white transition-all bg-white/5"
+                    title="Copiar URL"
+                  >
+                    {copied ? <Check size={12} className="text-[var(--accent)]" /> : <Copy size={12} />}
+                  </button>
+                </div>
+              </div>
+            )}
 
             <ColorPicker
               value={profile.accentColor}
@@ -861,6 +1048,34 @@ export default function DashboardPage() {
         </div>
 
         <div className="mt-4 md:mt-6 space-y-2">
+          <div className="section-label !text-[9px] mb-2 px-1 hidden md:block text-[var(--accent)] tracking-widest uppercase">// pro features</div>
+          <div className="grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-1.5">
+            <button
+              onClick={() => {
+                if (profile.subscriptionTier === 'pro') {
+                  setIsProSettingsOpen(true);
+                } else {
+                  setIsUpgradeModalOpen(true);
+                }
+              }}
+              className={`flex items-center justify-between w-full p-3 rounded-xl transition-all group ${
+                profile.subscriptionTier === 'pro' 
+                ? 'bg-[var(--accent)]/10 text-[var(--accent)] hover:bg-[var(--accent)]/20 shadow-[0_0_15px_rgba(200,255,0,0.05)]' 
+                : 'bg-white/5 text-[var(--text-muted)] hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Globe size={18} className={`shrink-0 group-hover:scale-110 transition-transform ${profile.subscriptionTier === 'pro' ? 'text-[var(--accent)]' : ''}`} />
+                <span className="text-sm font-bold whitespace-nowrap">PRO Settings</span>
+              </div>
+              {profile.subscriptionTier !== 'pro' && (
+                <Lock size={12} className="opacity-40 group-hover:opacity-100 transition-opacity" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-4 md:mt-6 space-y-2">
           <div className="section-label !text-[9px] mb-2 px-1 hidden md:block text-[var(--text-muted)] tracking-widest uppercase">// configuración</div>
           <div className="grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-1.5">
             <div className="flex items-center justify-between gap-3 w-full p-3 rounded-xl bg-[var(--surface2)]/50 md:bg-transparent text-sm font-bold text-[var(--text-muted)] hover:text-white md:hover:bg-[var(--surface2)] transition-all group">
@@ -908,11 +1123,29 @@ export default function DashboardPage() {
               <div className="section-label hidden md:block">// editor de huevsite</div>
             </div>
             <div className="flex items-center gap-3">
-              <h2 className="text-3xl md:text-4xl font-extrabold tracking-tighter">Armá tu huevsite.</h2>
+              <h2 className="text-3xl md:text-4xl font-extrabold tracking-tighter">
+                Armá tu <span style={{ color: profile.accentColor }}>{selectedSubSiteId ? (profile.subSites.find(s => s.id === selectedSubSiteId)?.title || "Sub-site") : "huevsite"}</span>.
+              </h2>
               {profile?.subscriptionTier === "pro" && (
-                <div className="flex items-center gap-1 bg-[var(--accent)]/10 border border-[var(--accent)]/30 px-2.5 py-1 rounded-full mt-1">
-                  <BadgeCheck size={16} style={{ color: profile.accentColor }} />
-                  <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: profile.accentColor }}>PRO</span>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 bg-[var(--accent)]/10 border border-[var(--accent)]/30 px-2.5 py-1 rounded-full mt-1">
+                    <BadgeCheck size={16} style={{ color: profile.accentColor }} />
+                    <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: profile.accentColor }}>PRO</span>
+                  </div>
+                  {profile.subSites.length > 0 && (
+                    <select
+                      value={selectedSubSiteId || ""}
+                      onChange={(e) => setSelectedSubSiteId(e.target.value || null)}
+                      className="mt-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1 text-[10px] font-bold text-[var(--accent)] outline-none focus:border-[var(--accent)]/50 transition-all cursor-pointer hover:bg-white/10"
+                    >
+                      <option value="" className="bg-black text-white">Sitio Principal</option>
+                      {profile.subSites.map(site => (
+                        <option key={site.id} value={site.id} className="bg-black text-white">
+                          {site.title}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               )}
             </div>
@@ -1234,7 +1467,35 @@ export default function DashboardPage() {
         )}
       </AnimatePresence>
 
-      <ScoreInfoModal isOpen={isScoreInfoOpen} onClose={() => setIsScoreInfoOpen(false)} accentColor={profile.accentColor} />
-    </div >
+      <ScoreInfoModal
+        isOpen={isScoreInfoOpen}
+        onClose={() => setIsScoreInfoOpen(false)}
+        accentColor={profile.accentColor}
+        profileId={profile.id}
+      />
+
+      {isProSettingsOpen && (
+        <ProSettingsModal
+          isOpen={isProSettingsOpen}
+          onClose={() => setIsProSettingsOpen(false)}
+          accentColor={profile.accentColor}
+          subSites={profile.subSites}
+          customDomain={profile.customDomain}
+          onUpdateDomain={handleUpdateDomain}
+          onAddSubSite={handleAddSubSite}
+          onUpdateSubSite={handleUpdateSubSite}
+          onDeleteSubSite={handleDeleteSubSite}
+          username={profile.username}
+        />
+      )}
+
+      {isUpgradeModalOpen && (
+        <UpgradeModal 
+          isOpen={isUpgradeModalOpen} 
+          onClose={() => setIsUpgradeModalOpen(false)} 
+          accentColor={profile.accentColor} 
+        />
+      )}
+    </div>
   );
 }

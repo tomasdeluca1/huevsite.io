@@ -54,9 +54,9 @@ export function ProjectBlock({ data, accentColor }: Props) {
         )}
       </div>
 
-      <div className="project-info p-5 h-full flex flex-col">
+      <div className="project-info p-4 md:p-5 h-full flex flex-col">
         <div className="flex items-start justify-between gap-4 mb-2">
-          <h3 className="project-name text-2xl font-black text-white title-tracking">{title}</h3>
+          <h3 className="project-name text-xl md:text-2xl font-black text-white title-tracking leading-tight">{title}</h3>
           {link !== "#" && (
             <div
               className="w-2 h-2 rounded-full animate-pulse shadow-[0_0_10px_rgba(200,255,0,0.5)]"

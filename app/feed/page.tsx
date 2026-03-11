@@ -247,7 +247,7 @@ function FeedContent() {
     if (!currentUserId) return alert("Iniciá sesión para votar");
     const newHasUpvoted = !launch.hasUpvoted;
     const change = newHasUpvoted ? 1 : -1;
-    setLaunches(launches.map(l => l.id === launch.id ? { ...l, hasUpvoted: newHasUpvoted, upvotes: l.upvotes + change } : l));
+    setLaunches(launches.map((l: any) => l.id === launch.id ? { ...l, hasUpvoted: newHasUpvoted, upvotes: l.upvotes + change } : l));
     if (newHasUpvoted) {
       await supabase.from('launch_upvotes').insert({ launch_id: launch.id, user_id: currentUserId });
       await supabase.from('launches').update({ upvotes: launch.upvotes + 1 }).eq('id', launch.id);
@@ -259,7 +259,7 @@ function FeedContent() {
 
   const activityGroups = useMemo(() => {
     const groups: Activity[][] = [];
-    activities.forEach(acc => {
+    activities.forEach((acc: Activity) => {
       const last = groups[groups.length - 1];
       if (last && last[0].user.id === acc.user.id) last.push(acc);
       else groups.push([acc]);

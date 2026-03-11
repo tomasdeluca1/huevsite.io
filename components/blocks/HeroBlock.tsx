@@ -30,28 +30,28 @@ export function HeroBlock({ data, accentColor, subscriptionTier }: Props) {
     >
       <div className="flex flex-col h-full w-full">
         {/* ROW 1: Imagen y Nombre */}
-        <div className="flex items-start gap-5">
+        <div className="flex flex-col sm:flex-row items-start gap-4 md:gap-5">
           <div className="shrink-0 relative">
             <div
               className="absolute inset-0 rounded-full blur-xl opacity-30 transition-opacity group-hover:opacity-50"
               style={{ backgroundColor: accentColor }}
             />
             <div
-              className="hero-avatar w-16 h-16 md:w-20 md:h-20 border-2 border-white/10 shadow-xl rounded-full flex items-center justify-center font-black text-black overflow-hidden relative z-10"
+              className="hero-avatar w-14 h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 border-2 border-white/10 shadow-xl rounded-full flex items-center justify-center font-black text-black overflow-hidden relative z-10"
               style={{ background: avatarUrl ? 'transparent' : `linear-gradient(135deg, ${accentColor}, #00FF88)` }}
             >
               {avatarUrl ? (
                 <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
               ) : (
-                <span className="text-xl md:text-2xl">{name.charAt(0).toUpperCase()}</span>
+                <span className="text-lg md:text-xl lg:text-2xl">{name.charAt(0).toUpperCase()}</span>
               )}
             </div>
             {/* Status dot */}
-            <div className="absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-[#121212] bg-[#00FF88] z-20 shadow-lg" />
+            <div className="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full border-2 border-[#121212] bg-[#00FF88] z-20 shadow-lg" />
           </div>
 
-          <div className="flex flex-col min-w-0 pt-1 md:pt-2">
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-white leading-[1.1] break-words flex items-center gap-2">
+          <div className="flex flex-col min-w-0 pt-0 px-1">
+            <h1 className="text-xl md:text-2xl lg:text-3xl font-black tracking-tight text-white leading-tight break-all sm:break-words flex flex-wrap items-center gap-2">
               {name}
               {subscriptionTier === "pro" && (
                 <motion.span
@@ -60,12 +60,12 @@ export function HeroBlock({ data, accentColor, subscriptionTier }: Props) {
                   className="shrink-0"
                   title="Builder PRO"
                 >
-                  <BadgeCheck size={24} className="md:w-7 md:h-7" style={{ color: accentColor }} />
+                  <BadgeCheck size={20} className="md:w-6 md:h-6" style={{ color: accentColor }} />
                 </motion.span>
               )}
             </h1>
             {/* TAGLINE: Justo debajo del nombre */}
-            <p className="mt-1 text-sm md:text-base text-[var(--accent)] font-mono opacity-80 break-words">
+            <p className="mt-1 text-xs md:text-sm lg:text-base text-[var(--accent)] font-mono opacity-80 break-words leading-snug">
               {tagline}
             </p>
           </div>

@@ -44,11 +44,92 @@ export const profileService = {
       .from('blocks')
       .select('*')
       .eq('user_id', profile.id)
+      .is('sub_site_id', null)
       .eq('visible', true)
       .order('order', { ascending: true });
 
     if (blocksError) return null;
 
+    const { data: subSites, error: subSitesError } = await supabase
+      .from('sub_sites')
+      .select('*')
+      .eq('user_id', profile.id)
+      .order('created_at', { ascending: false });
+
+    let subSitesWithAvatar = subSites || [];
+    if (subSitesWithAvatar.length > 0) {
+      const subSiteIds = subSitesWithAvatar.map(s => s.id);
+      const { data: subSiteBlocks } = await supabase
+        .from('blocks')
+        .select('sub_site_id, data')
+        .in('sub_site_id', subSiteIds)
+        .eq('type', 'hero');
+        
+      if (subSiteBlocks) {
+        subSitesWithAvatar = subSitesWithAvatar.map(s => {
+          const hero = subSiteBlocks.find(b => b.sub_site_id === s.id);
+          return {
+            ...s,
+            avatarUrl: s.avatar_url || hero?.data?.avatarUrl || null
+          };
+        });
+      }
+    }
+
+    const transformed = this._transformProfile(profile, blocks || []);
+    transformed.subSites = subSitesWithAvatar;
+    
+    return transformed;
+  },
+
+  async getSubSiteProfile(username: string, slug: string): Promise<ProfileData | null> {
+    const supabase = await getServerClient();
+
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('username', username)
+      .single();
+
+    if (profileError || !profile) return null;
+
+    // Check if subsite exists
+    const { data: subSite, error: subSiteError } = await supabase
+      .from('sub_sites')
+      .select('*')
+      .eq('user_id', profile.id)
+      .eq('slug', slug)
+      .single();
+
+    if (subSiteError || !subSite) return null;
+
+    const { data: blocks, error: blocksError } = await supabase
+      .from('blocks')
+      .select('*')
+      .eq('user_id', profile.id)
+      .eq('sub_site_id', subSite.id)
+      .eq('visible', true)
+      .order('order', { ascending: true });
+
+    if (blocksError) return null;
+
+    const transformed = this._transformProfile(profile, blocks || []);
+    // Customization for subsite:
+    return {
+      ...transformed,
+      displayName: subSite.title,
+      tagline: subSite.description || transformed.tagline,
+      avatarUrl: subSite.avatar_url || transformed.avatarUrl,
+      parentProfile: {
+        username: profile.username,
+        displayName: profile.name || profile.username,
+        avatarUrl: profile.avatarUrl || null,
+        tagline: profile.tagline || null,
+      }
+    };
+  },
+
+  _transformProfile(profile: any, blocks: any[]): ProfileData {
     return {
       id: profile.id,
       username: profile.username,
@@ -59,8 +140,10 @@ export const profileService = {
       extraBlocksFromShare: profile.extra_blocks_from_share || 0,
       twitterShareUnlocked: profile.twitter_share_unlocked || false,
       builderScore: profile.builder_score || 0,
+      customDomain: profile.custom_domain || "",
+      subSites: [], // Initially empty, filled by API if needed
       blocks: (blocks || []).map(b => {
-        const { id, type, order, col_span, row_span, visible, ...cleanData } = b.data || {};
+        const { id, type, order, col_span, row_span, visible, ...data } = b.data || {};
         return {
           id: b.id,
           type: b.type,
@@ -68,7 +151,7 @@ export const profileService = {
           col_span: b.col_span,
           row_span: b.row_span,
           visible: b.visible,
-          ...cleanData
+          ...data
         };
       }) as BlockData[]
     };

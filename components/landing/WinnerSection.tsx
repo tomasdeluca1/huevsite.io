@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowRight, Trophy } from "lucide-react";
+import { ArrowLeft, ArrowRight, Trophy, Globe } from "lucide-react";
 import Link from "next/link";
 import { ProfileGrid } from "@/components/profile/ProfileGrid";
 
@@ -18,8 +18,6 @@ interface WinnerSectionProps {
   user?: any;
 }
 
-// Width of the showcase frame in px — matches max-w-5xl content width minus 48px padding (p-6 on each side)
-const FRAME_MEASURE_WIDTH = 920;
 
 export function WinnerSection({ initialData, user }: WinnerSectionProps) {
   const [data, setData] = useState<ShowcaseData | null>(null);
@@ -31,7 +29,9 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
   const [frameHeight, setFrameHeight] = useState<number>(700);
 
   // Refs for offscreen measurement
+  const containerRef = useRef<HTMLDivElement>(null);
   const measureRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [measureWidth, setMeasureWidth] = useState<number>(920);
 
   useEffect(() => {
     setMounted(true);
@@ -101,6 +101,11 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
     if (profilesToShow.length === 0) return;
 
     const measure = () => {
+      // Update measurement width to match actual container
+      if (containerRef.current) {
+        setMeasureWidth(containerRef.current.offsetWidth);
+      }
+
       const heights = measureRefs.current
         .filter(Boolean)
         .map((el) => el!.scrollHeight);
@@ -115,11 +120,15 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
 
     // Give one frame for the DOM to settle, then measure
     const raf = requestAnimationFrame(() => {
-      setTimeout(measure, 100);
+      setTimeout(measure, 200);
     });
 
-    return () => cancelAnimationFrame(raf);
-  }, [profilesToShow.length]);
+    window.addEventListener('resize', measure);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', measure);
+    };
+  }, [profilesToShow.length, mounted]);
 
   const isWinners = !!(data?.winners && data.winners.length > 0);
   const isMultiple = profilesToShow.length > 1;
@@ -189,7 +198,7 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
           position: "fixed",
           top: "-9999px",
           left: "-9999px",
-          width: `${FRAME_MEASURE_WIDTH}px`,
+          width: `${measureWidth}px`,
           visibility: "hidden",
           pointerEvents: "none",
           zIndex: -1,
@@ -202,13 +211,19 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
             className="winner-showcase-grid w-full"
             style={{ padding: "24px" }}
           >
-            <ProfileGrid
-              blocks={profile.blocks}
-              accentColor={profile.accent_color}
-              displayName={profile.name || profile.username}
-              tagline={profile.tagline || undefined}
-            />
-          </div>
+              <ProfileGrid
+                blocks={profile.blocks}
+                accentColor={profile.accent_color}
+                displayName={profile.name || profile.username}
+                tagline={profile.tagline || undefined}
+              />
+              {/* Medición oculta de ecosistema por si cambia el alto */}
+              {profile.sub_sites && profile.sub_sites.length > 0 && (
+                <div className="mt-8 md:mt-12 backdrop-blur-xl bg-white/[0.02] border border-white/[0.05] rounded-[2rem] p-5 sm:p-6 pb-20">
+                  <div className="h-10"></div>
+                </div>
+              )}
+            </div>
         ))}
       </div>
 
@@ -217,6 +232,7 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
 
         {/* Browser frame — height driven by the tallest board */}
         <div
+          ref={containerRef}
           className="demo-browser flex flex-col w-full !border-x-0 md:!border-x !rounded-none md:!rounded-[var(--radius-xl)] overflow-hidden"
           style={{ height: `${frameHeight}px`, minHeight: 480, maxHeight: 1400 }}
           onMouseEnter={() => setIsPaused(true)}
@@ -280,13 +296,64 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
                 transition={{ duration: 0.3, ease: "easeInOut" }}
                 className="w-full absolute inset-0 overflow-y-auto overflow-x-hidden scrollbar-hide"
               >
-                <div className="winner-showcase-grid w-full p-6 overflow-hidden">
+                <div className="winner-showcase-grid w-full p-4 md:p-6 overflow-hidden">
                   <ProfileGrid
                     blocks={currentProfile.blocks}
                     accentColor={currentProfile.accent_color}
                     displayName={currentProfile.name || currentProfile.username}
                     tagline={currentProfile.tagline || undefined}
                   />
+
+                  {currentProfile.sub_sites && currentProfile.sub_sites.length > 0 && (
+                    <div className="mt-8 md:mt-12 backdrop-blur-xl bg-white/[0.02] border border-white/[0.05] rounded-[2rem] p-5 sm:p-6 overflow-hidden relative group">
+                      <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent)]/10 via-transparent to-transparent opacity-0 group-hover:opacity-50 transition-opacity duration-700 pointer-events-none" />
+                      
+                      <div className="flex items-center justify-between mb-5 relative z-10">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
+                            <Globe size={14} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors" />
+                          </div>
+                          <h3 className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-[var(--text-muted)] group-hover:text-white transition-colors">Ecosistema</h3>
+                        </div>
+                        <div className="text-[9px] text-[var(--text-dim)] font-mono uppercase tracking-widest px-3 py-1 bg-white/5 rounded-full border border-white/5">
+                          {currentProfile.sub_sites.length} {currentProfile.sub_sites.length === 1 ? "Proyecto" : "Proyectos"}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 relative z-10 pb-6">
+                        {currentProfile.sub_sites.map((site: any) => (
+                          <Link
+                            key={site.id}
+                            href={`/${currentProfile.username}/${site.slug}`}
+                            target="_blank"
+                            className="group/item flex items-center gap-3.5 p-3.5 rounded-2xl bg-white/5 border border-white/[0.08] hover:border-[var(--accent)]/40 hover:bg-[var(--accent)]/10 hover:shadow-[0_8px_32px_-12px_var(--accent-dim)] transition-all duration-300 text-left relative overflow-hidden"
+                          >
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-[var(--accent)]/20 blur-[30px] rounded-full translate-x-1/2 -translate-y-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity duration-500" />
+                            
+                            {site.avatarUrl ? (
+                              <img src={site.avatarUrl} alt={site.title} className="w-10 h-10 rounded-xl object-cover flex-shrink-0 bg-black border border-white/10 shadow-sm relative z-10" />
+                            ) : (
+                              <div className="w-10 h-10 rounded-xl bg-black border border-white/10 flex items-center justify-center flex-shrink-0 text-[var(--text-muted)] text-[10px] font-black uppercase tracking-wider relative z-10 shadow-sm">
+                                {site.title.substring(0, 2)}
+                              </div>
+                            )}
+
+                            <div className="flex flex-col min-w-0 flex-1 relative z-10 justify-center h-full">
+                              <span className="text-[13px] font-bold text-white group-hover/item:text-[var(--accent)] transition-colors truncate w-full leading-tight mb-1">
+                                {site.title}
+                              </span>
+                              {site.description && (
+                                <span className="text-[10px] text-[var(--text-muted)] truncate w-full group-hover/item:text-[var(--text-dim)] transition-colors leading-tight block">
+                                  {site.description}
+                                </span>
+                              )}
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                 </div>
               </motion.div>
             </AnimatePresence>

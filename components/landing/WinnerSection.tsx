@@ -18,8 +18,6 @@ interface WinnerSectionProps {
   user?: any;
 }
 
-// Width of the showcase frame in px — matches max-w-5xl content width minus 48px padding (p-6 on each side)
-const FRAME_MEASURE_WIDTH = 920;
 
 export function WinnerSection({ initialData, user }: WinnerSectionProps) {
   const [data, setData] = useState<ShowcaseData | null>(null);
@@ -31,7 +29,9 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
   const [frameHeight, setFrameHeight] = useState<number>(700);
 
   // Refs for offscreen measurement
+  const containerRef = useRef<HTMLDivElement>(null);
   const measureRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [measureWidth, setMeasureWidth] = useState<number>(920);
 
   useEffect(() => {
     setMounted(true);
@@ -101,6 +101,11 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
     if (profilesToShow.length === 0) return;
 
     const measure = () => {
+      // Update measurement width to match actual container
+      if (containerRef.current) {
+        setMeasureWidth(containerRef.current.offsetWidth);
+      }
+
       const heights = measureRefs.current
         .filter(Boolean)
         .map((el) => el!.scrollHeight);
@@ -115,11 +120,15 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
 
     // Give one frame for the DOM to settle, then measure
     const raf = requestAnimationFrame(() => {
-      setTimeout(measure, 100);
+      setTimeout(measure, 200);
     });
 
-    return () => cancelAnimationFrame(raf);
-  }, [profilesToShow.length]);
+    window.addEventListener('resize', measure);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', measure);
+    };
+  }, [profilesToShow.length, mounted]);
 
   const isWinners = !!(data?.winners && data.winners.length > 0);
   const isMultiple = profilesToShow.length > 1;
@@ -189,7 +198,7 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
           position: "fixed",
           top: "-9999px",
           left: "-9999px",
-          width: `${FRAME_MEASURE_WIDTH}px`,
+          width: `${measureWidth}px`,
           visibility: "hidden",
           pointerEvents: "none",
           zIndex: -1,
@@ -223,6 +232,7 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
 
         {/* Browser frame — height driven by the tallest board */}
         <div
+          ref={containerRef}
           className="demo-browser flex flex-col w-full !border-x-0 md:!border-x !rounded-none md:!rounded-[var(--radius-xl)] overflow-hidden"
           style={{ height: `${frameHeight}px`, minHeight: 480, maxHeight: 1400 }}
           onMouseEnter={() => setIsPaused(true)}
@@ -286,7 +296,7 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
                 transition={{ duration: 0.3, ease: "easeInOut" }}
                 className="w-full absolute inset-0 overflow-y-auto overflow-x-hidden scrollbar-hide"
               >
-                <div className="winner-showcase-grid w-full p-6 overflow-hidden">
+                <div className="winner-showcase-grid w-full p-4 md:p-6 overflow-hidden">
                   <ProfileGrid
                     blocks={currentProfile.blocks}
                     accentColor={currentProfile.accent_color}

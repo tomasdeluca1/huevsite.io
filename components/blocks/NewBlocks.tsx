@@ -230,7 +230,7 @@ export function CertificationBlock({ data, accentColor }: { data: CertificationB
           )}
         </div>
 
-        <h3 className="text-xl font-bold text-white tracking-tight leading-tight mb-2 group-hover:text-[var(--accent)] transition-colors relative z-10" style={{ '--accent': accentColor } as any}>
+        <h3 className="text-lg md:text-xl font-bold text-white tracking-tight leading-tight mb-2 group-hover:text-[var(--accent)] transition-colors relative z-10" style={{ '--accent': accentColor } as any}>
           {data.name}
         </h3>
 
@@ -282,10 +282,10 @@ export function CustomBlock({ data, accentColor }: { data: CustomBlockData; acce
       </div>
 
       <div className="flex-1 relative z-10">
-        <h3 className="text-2xl font-black text-white tracking-tight mb-3">
+        <h3 className="text-xl md:text-2xl font-black text-white tracking-tight mb-2 leading-tight">
           {data.title}
         </h3>
-        <p className="text-sm text-[var(--text-dim)] leading-relaxed">
+        <p className="text-xs md:text-sm text-[var(--text-dim)] leading-relaxed">
           {data.description}
         </p>
       </div>

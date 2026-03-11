@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Globe, Plus, Link as LinkIcon, ExternalLink, Trash2, Globe2, Loader2, Check } from "lucide-react";
+import { X, Globe, Plus, Link as LinkIcon, ExternalLink, Trash2, Globe2, Loader2, Check, Settings } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SubSite } from "@/lib/profile-types";
 
@@ -13,6 +13,7 @@ interface Props {
     customDomain?: string;
     onUpdateDomain: (domain: string) => Promise<void>;
     onAddSubSite: (title: string, slug: string) => Promise<void>;
+    onUpdateSubSite: (id: string, updates: { title?: string, slug?: string, description?: string }) => Promise<void>;
     onDeleteSubSite: (id: string) => Promise<void>;
     username: string;
 }
@@ -25,6 +26,7 @@ export function ProSettingsModal({
     customDomain,
     onUpdateDomain,
     onAddSubSite,
+    onUpdateSubSite,
     onDeleteSubSite,
     username
 }: Props) {
@@ -36,6 +38,9 @@ export function ProSettingsModal({
     const [isGenerating, setIsGenerating] = useState(false);
     const [loadingMessage, setLoadingMessage] = useState("");
     const [success, setSuccess] = useState(false);
+
+    const [editingSiteId, setEditingSiteId] = useState<string | null>(null);
+    const [editValues, setEditValues] = useState({ title: "", slug: "", description: "", avatarUrl: "" });
 
     const handleDomainUpdate = async () => {
         setLoading(true);
@@ -94,6 +99,24 @@ export function ProSettingsModal({
         await onAddSubSite(newSubSite.title, newSubSite.slug);
         setLoading(false);
         setNewSubSite({ title: "", slug: "" });
+    };
+
+    const handleUpdateSubSite = async () => {
+        if (!editingSiteId) return;
+        setLoading(true);
+        await onUpdateSubSite(editingSiteId, editValues);
+        setLoading(false);
+        setEditingSiteId(null);
+    };
+
+    const startEditing = (site: SubSite) => {
+        setEditingSiteId(site.id);
+        setEditValues({
+            title: site.title,
+            slug: site.slug,
+            description: site.description || "",
+            avatarUrl: site.avatarUrl || ""
+        });
     };
 
     const tabs = [
@@ -159,112 +182,202 @@ export function ProSettingsModal({
                             <div className="flex-1 p-8 overflow-y-auto custom-scrollbar">
                                 {activeTab === "subsites" && (
                                     <div className="space-y-6">
-                                        <div>
-                                            <h3 className="text-sm font-bold text-white mb-2 underline decoration-[var(--accent)]" style={{ textDecorationColor: accentColor }}>Crear Nuevo Sub-site</h3>
-                                            <p className="text-xs text-[var(--text-dim)] mb-4">Crea una página dedicada de forma manual.</p>
-                                            <div className="space-y-3">
-                                                <input
-                                                    type="text"
-                                                    placeholder="Título del proyecto"
-                                                    value={newSubSite.title}
-                                                    onChange={(e) => setNewSubSite({ ...newSubSite, title: e.target.value })}
-                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[var(--accent)] transition-colors"
-                                                    style={{ "--accent": accentColor } as any}
-                                                />
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-xs font-mono text-[var(--text-muted)]">huevsite.io/username/</span>
-                                                    <input
-                                                        type="text"
-                                                        placeholder="url-amigable"
-                                                        value={newSubSite.slug}
-                                                        onChange={(e) => setNewSubSite({ ...newSubSite, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })}
-                                                        className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[var(--accent)] transition-colors font-mono"
-                                                    />
+                                        {editingSiteId ? (
+                                            <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
+                                                <div className="flex items-center justify-between">
+                                                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                                                        <Settings size={14} className="text-[var(--accent)]" style={{ color: accentColor }} />
+                                                        Editando: <span className="text-[var(--accent)]" style={{ color: accentColor }}>{editValues.title}</span>
+                                                    </h3>
+                                                    <button 
+                                                        onClick={() => setEditingSiteId(null)}
+                                                        className="text-[10px] font-mono uppercase tracking-widest text-[var(--text-muted)] hover:text-white transition-colors"
+                                                    >
+                                                        ← Cancelar
+                                                    </button>
                                                 </div>
-                                                <button
-                                                    onClick={handleAddSubSite}
-                                                    disabled={loading || isGenerating || !newSubSite.title || !newSubSite.slug}
-                                                    className="w-full btn btn-outline !border-white/10 hover:!border-white/30 !rounded-xl !py-2.5 text-xs font-bold text-white transition-all bg-white/5"
-                                                >
-                                                    {loading ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Crear Manualmente"}
-                                                </button>
-                                            </div>
-                                        </div>
 
-                                        <div className="pt-6 border-t border-white/5">
-                                             <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
-                                                 <span className="bg-[var(--accent)] text-black text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest animate-pulse" style={{ backgroundColor: accentColor }}>Magic</span>
-                                                 Generar desde URL
-                                             </h3>
-                                             <p className="text-xs text-[var(--text-dim)] mb-4">La IA leerá tu página (ej. un producto, un blog post, tu LinkedIn) y armará un sub-site completo por vos. 🪄</p>
-                                             
-                                             <div className="space-y-3 p-4 rounded-2xl border border-[var(--accent)]/30 bg-[var(--accent)]/5 relative overflow-hidden" style={{ "--accent": accentColor } as any}>
-                                                 <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)]/10 blur-[40px] rounded-full pointer-events-none" />
-                                                 
-                                                 <div className="relative z-10 flex gap-2 w-full">
-                                                    <div className="relative flex-1">
-                                                        <LinkIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] group-focus-within:text-[var(--accent)] transition-colors" />
+                                                <div className="space-y-4 bg-white/5 p-6 rounded-[2rem] border border-white/5">
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-widest ml-1">Título</label>
                                                         <input
                                                             type="text"
-                                                            placeholder="https://mi-proyecto.com"
-                                                            value={aiUrl}
-                                                            onChange={(e) => setAiUrl(e.target.value)}
-                                                            className="w-full bg-black/40 border border-white/10 rounded-xl pl-9 pr-4 py-3 text-sm focus:outline-none focus:border-[var(--accent)]/50 transition-all font-mono placeholder:text-[var(--text-muted)] text-white shadow-inner"
-                                                            disabled={isGenerating}
+                                                            value={editValues.title}
+                                                            onChange={(e) => setEditValues({ ...editValues, title: e.target.value })}
+                                                            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--accent)] transition-colors"
+                                                            style={{ "--accent": accentColor } as any}
                                                         />
                                                     </div>
-                                                 </div>
-                                                 <button
-                                                     onClick={handleGenerateFromUrl}
-                                                     disabled={isGenerating || !aiUrl}
-                                                     className="w-full relative z-10 btn btn-accent !rounded-xl !py-3 text-sm font-black text-black overflow-hidden group shadow-[0_0_15px_rgba(200,255,0,0.15)] flex justify-center items-center gap-2 transition-all hover:scale-[1.02]"
-                                                     style={{ backgroundColor: accentColor }}
-                                                 >
-                                                     {isGenerating ? (
-                                                         <>
-                                                            <Loader2 size={16} className="animate-spin text-black" />
-                                                            <span>{loadingMessage}</span>
-                                                         </>
-                                                     ) : (
-                                                         <>Generar Mágicamente ✨</>
-                                                     )}
-                                                 </button>
-                                             </div>
-                                        </div>
 
-                                        <div className="pt-4 border-t border-white/5">
-                                            <h3 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest mb-4">Tus Sub-sites</h3>
-                                            <div className="space-y-3">
-                                                {subSites.length === 0 ? (
-                                                    <div className="text-center py-8 border border-dashed border-white/5 rounded-2xl">
-                                                        <p className="text-xs text-[var(--text-dim)] font-mono italic">No tenés sub-sites todavía.</p>
-                                                    </div>
-                                                ) : (
-                                                    subSites.map((site) => (
-                                                        <div key={site.id} className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 group hover:border-white/10 transition-all">
-                                                            <div>
-                                                                <h4 className="text-sm font-bold text-white">{site.title}</h4>
-                                                                <p className="text-[10px] font-mono text-[var(--text-dim)] mt-0.5">/{site.slug}</p>
-                                                            </div>
-                                                            <div className="flex items-center gap-2">
-                                                                <button
-                                                                    className="p-2 rounded-xl border border-white/5 hover:bg-white/10 text-[var(--text-dim)] group-hover:text-white transition-all"
-                                                                    onClick={() => window.open(`/${username}/${site.slug}`, '_blank')}
-                                                                >
-                                                                    <ExternalLink size={14} />
-                                                                </button>
-                                                                <button
-                                                                    className="p-2 rounded-xl border border-white/5 hover:bg-red-500/10 text-red-400/50 hover:text-red-400 transition-all"
-                                                                    onClick={() => onDeleteSubSite(site.id)}
-                                                                >
-                                                                    <Trash2 size={14} />
-                                                                </button>
-                                                            </div>
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-widest ml-1">Slug (URL)</label>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-xs font-mono text-[var(--text-muted)]">/{username}/</span>
+                                                            <input
+                                                                type="text"
+                                                                value={editValues.slug}
+                                                                onChange={(e) => setEditValues({ ...editValues, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })}
+                                                                className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--accent)] transition-colors font-mono"
+                                                            />
                                                         </div>
-                                                    ))
-                                                )}
+                                                    </div>
+
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-widest ml-1">Icono / Avatar (URL)</label>
+                                                        <div className="flex items-center gap-3">
+                                                            {editValues.avatarUrl && (
+                                                                <img src={editValues.avatarUrl} alt="Preview" className="w-10 h-10 rounded-xl bg-black border border-white/10" />
+                                                            )}
+                                                            <input
+                                                                type="text"
+                                                                value={editValues.avatarUrl}
+                                                                onChange={(e) => setEditValues({ ...editValues, avatarUrl: e.target.value })}
+                                                                placeholder="https://google.com/favicon.ico"
+                                                                className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-[11px] focus:outline-none focus:border-[var(--accent)] transition-colors font-mono"
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-widest ml-1">Descripción (SEO)</label>
+                                                        <textarea
+                                                            value={editValues.description}
+                                                            onChange={(e) => setEditValues({ ...editValues, description: e.target.value })}
+                                                            rows={3}
+                                                            placeholder="De qué trata este sub-site..."
+                                                            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--accent)] transition-colors resize-none"
+                                                        />
+                                                    </div>
+
+                                                    <button
+                                                        onClick={handleUpdateSubSite}
+                                                        disabled={loading}
+                                                        className="w-full btn btn-accent !rounded-xl !py-3 text-sm font-black text-black shadow-lg"
+                                                        style={{ backgroundColor: accentColor }}
+                                                    >
+                                                        {loading ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Guardar Cambios"}
+                                                    </button>
+                                                </div>
                                             </div>
-                                        </div>
+                                        ) : (
+                                            <>
+                                                <div>
+                                                    <h3 className="text-sm font-bold text-white mb-2 underline decoration-[var(--accent)]" style={{ textDecorationColor: accentColor }}>Crear Nuevo Sub-site</h3>
+                                                    <p className="text-xs text-[var(--text-dim)] mb-4">Crea una página dedicada de forma manual.</p>
+                                                    <div className="space-y-3">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Título del proyecto"
+                                                            value={newSubSite.title}
+                                                            onChange={(e) => setNewSubSite({ ...newSubSite, title: e.target.value })}
+                                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[var(--accent)] transition-colors"
+                                                            style={{ "--accent": accentColor } as any}
+                                                        />
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-xs font-mono text-[var(--text-muted)]">/{username}/</span>
+                                                            <input
+                                                                type="text"
+                                                                placeholder="url-amigable"
+                                                                value={newSubSite.slug}
+                                                                onChange={(e) => setNewSubSite({ ...newSubSite, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })}
+                                                                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[var(--accent)] transition-colors font-mono"
+                                                            />
+                                                        </div>
+                                                        <button
+                                                            onClick={handleAddSubSite}
+                                                            disabled={loading || isGenerating || !newSubSite.title || !newSubSite.slug}
+                                                            className="w-full btn btn-outline !border-white/10 hover:!border-white/30 !rounded-xl !py-2.5 text-xs font-bold text-white transition-all bg-white/5"
+                                                        >
+                                                            {loading ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Crear Manualmente"}
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div className="pt-6 border-t border-white/5">
+                                                     <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
+                                                         <span className="bg-[var(--accent)] text-black text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest animate-pulse" style={{ backgroundColor: accentColor }}>Magic</span>
+                                                         Generar desde URL
+                                                     </h3>
+                                                     <p className="text-xs text-[var(--text-dim)] mb-4">La IA leerá tu página (ej. un producto, un blog post, tu LinkedIn) y armará un sub-site completo por vos. 🪄</p>
+                                                     
+                                                     <div className="space-y-3 p-4 rounded-2xl border border-[var(--accent)]/30 bg-[var(--accent)]/5 relative overflow-hidden" style={{ "--accent": accentColor } as any}>
+                                                         <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)]/10 blur-[40px] rounded-full pointer-events-none" />
+                                                         
+                                                         <div className="relative z-10 flex gap-2 w-full">
+                                                            <div className="relative flex-1">
+                                                                <LinkIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] group-focus-within:text-[var(--accent)] transition-colors" />
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="https://mi-proyecto.com"
+                                                                    value={aiUrl}
+                                                                    onChange={(e) => setAiUrl(e.target.value)}
+                                                                    className="w-full bg-black/40 border border-white/10 rounded-xl pl-9 pr-4 py-3 text-sm focus:outline-none focus:border-[var(--accent)]/50 transition-all font-mono placeholder:text-[var(--text-muted)] text-white shadow-inner"
+                                                                    disabled={isGenerating}
+                                                                />
+                                                            </div>
+                                                         </div>
+                                                         <button
+                                                             onClick={handleGenerateFromUrl}
+                                                             disabled={isGenerating || !aiUrl}
+                                                             className="w-full relative z-10 btn btn-accent !rounded-xl !py-3 text-sm font-black text-black overflow-hidden group shadow-[0_0_15px_rgba(200,255,0,0.15)] flex justify-center items-center gap-2 transition-all hover:scale-[1.02]"
+                                                             style={{ backgroundColor: accentColor }}
+                                                         >
+                                                             {isGenerating ? (
+                                                                 <>
+                                                                    <Loader2 size={16} className="animate-spin text-black" />
+                                                                    <span>{loadingMessage}</span>
+                                                                 </>
+                                                             ) : (
+                                                                 <>Generar Mágicamente ✨</>
+                                                             )}
+                                                         </button>
+                                                     </div>
+                                                </div>
+
+                                                <div className="pt-4 border-t border-white/5">
+                                                    <h3 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest mb-4">Tus Sub-sites</h3>
+                                                    <div className="space-y-3">
+                                                        {subSites.length === 0 ? (
+                                                            <div className="text-center py-8 border border-dashed border-white/5 rounded-2xl">
+                                                                <p className="text-xs text-[var(--text-dim)] font-mono italic">No tenés sub-sites todavía.</p>
+                                                            </div>
+                                                        ) : (
+                                                            subSites.map((site) => (
+                                                                <div key={site.id} className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 group hover:border-white/10 transition-all">
+                                                                    <div className="min-w-0 pr-4">
+                                                                        <h4 className="text-sm font-bold text-white truncate">{site.title}</h4>
+                                                                        <p className="text-[10px] font-mono text-[var(--text-dim)] mt-0.5">/{site.slug}</p>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-2 shrink-0">
+                                                                        <button
+                                                                            title="Editar ajustes"
+                                                                            className="p-2 rounded-xl border border-white/5 hover:bg-white/10 text-[var(--text-dim)] hover:text-white transition-all"
+                                                                            onClick={() => startEditing(site)}
+                                                                        >
+                                                                            <Settings size={14} />
+                                                                        </button>
+                                                                        <button
+                                                                            title="Ver sitio"
+                                                                            className="p-2 rounded-xl border border-white/5 hover:bg-white/10 text-[var(--text-dim)] hover:text-white transition-all"
+                                                                            onClick={() => window.open(`/${username}/${site.slug}`, '_blank')}
+                                                                        >
+                                                                            <ExternalLink size={14} />
+                                                                        </button>
+                                                                        <button
+                                                                            title="Borrar"
+                                                                            className="p-2 rounded-xl border border-white/5 hover:bg-red-500/10 text-red-400/50 hover:text-red-400 transition-all"
+                                                                            onClick={() => onDeleteSubSite(site.id)}
+                                                                        >
+                                                                            <Trash2 size={14} />
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            ))
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 )}
 

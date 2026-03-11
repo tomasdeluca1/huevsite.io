@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Necesitas ser PRO para crear sub-sites' }, { status: 403 })
         }
 
-        const { title, slug, description } = await request.json()
+        const { title, slug, description, avatar_url } = await request.json()
 
         if (!title || !slug) {
             return NextResponse.json({ error: 'Título y slug son requeridos' }, { status: 400 })
@@ -44,7 +44,8 @@ export async function POST(request: NextRequest) {
                 user_id: user.id,
                 title,
                 slug,
-                description
+                description,
+                avatar_url
             })
             .select()
             .single()

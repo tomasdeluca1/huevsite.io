@@ -85,6 +85,42 @@ export default async function SubSitePage({ params }: Props) {
                     username={profile.username}
                 />
 
+                {/* Parent Huevsite Reference - "Pie arriba del board" */}
+                {profile.parentProfile && (
+                    <div className="relative z-10 max-w-7xl mx-auto mb-8 md:mb-12 flex justify-center">
+                        <Link
+                            href={`/${profile.parentProfile.username}`}
+                            className="group flex flex-col sm:flex-row items-center gap-4 backdrop-blur-xl bg-white/[0.02] border border-white/[0.05] hover:border-[var(--accent)]/30 hover:shadow-[0_8px_32px_-12px_var(--accent-dim)] px-6 sm:px-8 py-4 rounded-[2rem] transition-all duration-300 relative overflow-hidden"
+                        >
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)]/10 blur-[40px] rounded-full translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                            
+                            <div className="text-[9px] font-mono text-[var(--accent)] uppercase tracking-[0.2em] font-bold text-center sm:text-left">
+                                // CREADOR <span className="hidden sm:inline">・</span>
+                            </div>
+                            
+                            <div className="flex items-center gap-3">
+                                {profile.parentProfile.avatarUrl ? (
+                                    <img src={profile.parentProfile.avatarUrl} alt={profile.parentProfile.displayName} className="w-8 h-8 md:w-10 md:h-10 rounded-full border border-white/10 shadow-sm object-cover bg-black" />
+                                ) : (
+                                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-black border border-white/10 flex items-center justify-center text-[10px] md:text-sm font-black uppercase text-white shadow-sm">
+                                        {profile.parentProfile.displayName.substring(0, 2)}
+                                    </div>
+                                )}
+                                <div className="flex flex-col min-w-0 text-center sm:text-left">
+                                    <span className="text-[13px] sm:text-sm font-black text-white group-hover:text-[var(--accent)] transition-colors leading-tight tracking-tight">
+                                        {profile.parentProfile.displayName} <span className="text-[11px] font-medium opacity-50 font-mono">(@{profile.parentProfile.username})</span>
+                                    </span>
+                                    {profile.parentProfile.tagline && (
+                                        <span className="text-[10px] sm:text-[11px] text-[var(--text-muted)] mt-0.5 truncate max-w-[200px] sm:max-w-[300px]">
+                                            {profile.parentProfile.tagline}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        </Link>
+                    </div>
+                )}
+
                 <div className="relative z-10">
                     <ProfileGrid
                         blocks={profile.blocks}

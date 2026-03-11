@@ -18,7 +18,7 @@ import {
 } from "@dnd-kit/sortable";
 import {
   Save, Eye, Layout as LayoutIcon, Settings, LogOut, Plus, Sparkles, MessageSquare,
-  Activity, Compass, Trash2, Copy, Check, Trophy, ArrowUpRight, BadgeCheck, ArrowLeft
+  Activity, Compass, Trash2, Copy, Check, Trophy, ArrowUpRight, BadgeCheck, ArrowLeft, Lock, Globe
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -41,7 +41,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
 import { ProSettingsModal } from "@/components/dashboard/ProSettingsModal";
-import { Globe } from "lucide-react";
+import { UpgradeModal } from "@/components/dashboard/UpgradeModal";
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -55,6 +55,7 @@ export default function DashboardPage() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isScoreInfoOpen, setIsScoreInfoOpen] = useState(false);
   const [isProSettingsOpen, setIsProSettingsOpen] = useState(false);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [tempProfileData, setTempProfileData] = useState({
     username: '',
     display_name: '',
@@ -1046,20 +1047,33 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {profile.subscriptionTier === 'pro' && (
-          <div className="mt-4 md:mt-6 space-y-2">
-            <div className="section-label !text-[9px] mb-2 px-1 hidden md:block text-[var(--accent)] tracking-widest uppercase">// pro features</div>
-            <div className="grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-1.5">
-              <button
-                onClick={() => setIsProSettingsOpen(true)}
-                className="flex items-center gap-3 w-full p-3 rounded-xl bg-[var(--accent)]/10 text-sm font-bold text-[var(--accent)] hover:bg-[var(--accent)]/20 transition-all group"
-              >
-                <Globe size={18} className="shrink-0 group-hover:scale-110 transition-transform" />
-                <span className="whitespace-nowrap">PRO Settings</span>
-              </button>
-            </div>
+        <div className="mt-4 md:mt-6 space-y-2">
+          <div className="section-label !text-[9px] mb-2 px-1 hidden md:block text-[var(--accent)] tracking-widest uppercase">// pro features</div>
+          <div className="grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-1.5">
+            <button
+              onClick={() => {
+                if (profile.subscriptionTier === 'pro') {
+                  setIsProSettingsOpen(true);
+                } else {
+                  setIsUpgradeModalOpen(true);
+                }
+              }}
+              className={`flex items-center justify-between w-full p-3 rounded-xl transition-all group ${
+                profile.subscriptionTier === 'pro' 
+                ? 'bg-[var(--accent)]/10 text-[var(--accent)] hover:bg-[var(--accent)]/20 shadow-[0_0_15px_rgba(200,255,0,0.05)]' 
+                : 'bg-white/5 text-[var(--text-muted)] hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Globe size={18} className={`shrink-0 group-hover:scale-110 transition-transform ${profile.subscriptionTier === 'pro' ? 'text-[var(--accent)]' : ''}`} />
+                <span className="text-sm font-bold whitespace-nowrap">PRO Settings</span>
+              </div>
+              {profile.subscriptionTier !== 'pro' && (
+                <Lock size={12} className="opacity-40 group-hover:opacity-100 transition-opacity" />
+              )}
+            </button>
           </div>
-        )}
+        </div>
 
         <div className="mt-4 md:mt-6 space-y-2">
           <div className="section-label !text-[9px] mb-2 px-1 hidden md:block text-[var(--text-muted)] tracking-widest uppercase">// configuración</div>
@@ -1472,6 +1486,14 @@ export default function DashboardPage() {
           onUpdateSubSite={handleUpdateSubSite}
           onDeleteSubSite={handleDeleteSubSite}
           username={profile.username}
+        />
+      )}
+
+      {isUpgradeModalOpen && (
+        <UpgradeModal 
+          isOpen={isUpgradeModalOpen} 
+          onClose={() => setIsUpgradeModalOpen(false)} 
+          accentColor={profile.accentColor} 
         />
       )}
     </div>

@@ -50,7 +50,36 @@ export const profileService = {
 
     if (blocksError) return null;
 
-    return this._transformProfile(profile, blocks || []);
+    const { data: subSites, error: subSitesError } = await supabase
+      .from('sub_sites')
+      .select('*')
+      .eq('user_id', profile.id)
+      .order('created_at', { ascending: false });
+
+    let subSitesWithAvatar = subSites || [];
+    if (subSitesWithAvatar.length > 0) {
+      const subSiteIds = subSitesWithAvatar.map(s => s.id);
+      const { data: subSiteBlocks } = await supabase
+        .from('blocks')
+        .select('sub_site_id, data')
+        .in('sub_site_id', subSiteIds)
+        .eq('type', 'hero');
+        
+      if (subSiteBlocks) {
+        subSitesWithAvatar = subSitesWithAvatar.map(s => {
+          const hero = subSiteBlocks.find(b => b.sub_site_id === s.id);
+          return {
+            ...s,
+            avatarUrl: hero?.data?.avatarUrl || null
+          };
+        });
+      }
+    }
+
+    const transformed = this._transformProfile(profile, blocks || []);
+    transformed.subSites = subSitesWithAvatar;
+    
+    return transformed;
   },
 
   async getSubSiteProfile(username: string, slug: string): Promise<ProfileData | null> {
@@ -90,6 +119,12 @@ export const profileService = {
       ...transformed,
       displayName: subSite.title,
       tagline: subSite.description || transformed.tagline,
+      parentProfile: {
+        username: profile.username,
+        displayName: profile.name || profile.username,
+        avatarUrl: profile.avatarUrl || null,
+        tagline: profile.tagline || null,
+      }
     };
   },
 

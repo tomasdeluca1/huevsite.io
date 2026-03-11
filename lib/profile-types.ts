@@ -231,6 +231,7 @@ export interface SubSite {
   title: string;
   description?: string;
   created_at: string;
+  avatarUrl?: string;
 }
 
 export interface ProfileData {
@@ -249,4 +250,10 @@ export interface ProfileData {
   customDomain?: string;
   subSites: SubSite[];
   blocks: BlockData[];
+  parentProfile?: { 
+    username: string; 
+    displayName: string; 
+    avatarUrl?: string; 
+    tagline?: string 
+  };
 }

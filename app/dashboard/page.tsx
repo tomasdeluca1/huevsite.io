@@ -788,53 +788,101 @@ export default function DashboardPage() {
 
         <div className="flex flex-col gap-6">
           <div className="space-y-6">
-            <div
-              onClick={() => {
-                setTempProfileData({
-                  username: profile.username,
-                  display_name: profile.displayName,
-                  tagline: profile.tagline || '',
-                  avatarUrl: profile.avatarUrl || '',
-                  githubHandle: profile.githubHandle || ''
-                });
-                setIsProfileModalOpen(true);
-              }}
-              className="space-y-1.5 md:mb-4 bg-[var(--surface2)]/50 p-4 rounded-2xl border border-[var(--border)] relative group transition-all hover:border-[var(--border-bright)] cursor-pointer hover:bg-[var(--surface2)] shadow-sm"
-            >
-              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity text-[8px] font-mono text-[var(--accent)] tracking-widest uppercase pointer-events-none hidden md:block">
-                Editar
-              </div>
-              {!profile.blocks.some(b => b.type === 'hero') && (
-                <>
-                  <div className="text-xl font-black truncate text-white w-full p-0">
-                    {profile.displayName || "Tu Nombre"}
-                  </div>
-                  <div className="text-[11px] text-[var(--text-dim)] w-full p-0 block truncate font-mono uppercase tracking-tight opacity-70">
-                    {profile.tagline || "Sin tagline"}
-                  </div>
-                </>
-              )}
+            {selectedSubSiteId ? (
+              // SUB-SITE DISPLAY IN SIDEBAR
               <div
-                className={`flex items-center justify-between gap-2 p-2 px-3 rounded-xl bg-black/30 border border-white/5 group/url mt-3`}
+                className="space-y-1.5 md:mb-4 bg-[var(--surface2)]/50 p-4 rounded-2xl border border-[var(--border)] relative transition-all shadow-sm"
               >
-                <div className="flex items-center gap-1 min-w-0">
-                  <span className="text-[10px] text-[var(--text-muted)] font-mono shrink-0">huevsite.io/</span>
-                  <span className="text-xs font-black truncate text-[var(--accent)] font-mono">
-                    {profile.username}
-                  </span>
+                <div className="flex items-center gap-3 w-full p-0">
+                  {profile.subSites.find(s => s.id === selectedSubSiteId)?.avatarUrl ? (
+                    <img src={profile.subSites.find(s => s.id === selectedSubSiteId)?.avatarUrl} alt="Avatar" className="w-10 h-10 rounded-xl object-cover bg-black" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-xl bg-black border border-white/10 flex items-center justify-center text-[var(--accent)] font-bold uppercase">
+                      {profile.subSites.find(s => s.id === selectedSubSiteId)?.title.substring(0, 2)}
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xl font-black truncate text-[var(--accent)] w-full block">
+                      {profile.subSites.find(s => s.id === selectedSubSiteId)?.title || "Sub-site"}
+                    </div>
+                    <div className="text-[10px] uppercase font-mono tracking-widest text-[var(--text-muted)] mt-0.5">Ecosistema</div>
+                  </div>
                 </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCopyUrl();
-                  }}
-                  className="shrink-0 p-1.5 rounded-lg hover:bg-white/10 text-[var(--text-muted)] hover:text-white transition-all bg-white/5"
-                  title="Copiar URL"
+
+                <div
+                  className={`flex items-center justify-between gap-2 p-2 px-3 rounded-xl bg-black/30 border border-white/5 group/url mt-4`}
                 >
-                  {copied ? <Check size={12} className="text-[var(--accent)]" /> : <Copy size={12} />}
-                </button>
+                  <div className="flex items-center gap-1 min-w-0">
+                    <span className="text-[10px] text-[var(--text-muted)] font-mono shrink-0">/{profile.username}/</span>
+                    <span className="text-xs font-black truncate text-[var(--accent)] font-mono">
+                      {profile.subSites.find(s => s.id === selectedSubSiteId)?.slug}
+                    </span>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/${profile.username}/${profile.subSites.find(s => s.id === selectedSubSiteId)?.slug}`;
+                      navigator.clipboard.writeText(url);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    className="shrink-0 p-1.5 rounded-lg hover:bg-white/10 text-[var(--text-muted)] hover:text-white transition-all bg-white/5"
+                    title="Copiar URL del sub-site"
+                  >
+                    {copied ? <Check size={12} className="text-[var(--accent)]" /> : <Copy size={12} />}
+                  </button>
+                </div>
               </div>
-            </div>
+            ) : (
+              // MAIN PROFILE DISPLAY IN SIDEBAR
+              <div
+                onClick={() => {
+                  setTempProfileData({
+                    username: profile.username,
+                    display_name: profile.displayName,
+                    tagline: profile.tagline || '',
+                    avatarUrl: profile.avatarUrl || '',
+                    githubHandle: profile.githubHandle || ''
+                  });
+                  setIsProfileModalOpen(true);
+                }}
+                className="space-y-1.5 md:mb-4 bg-[var(--surface2)]/50 p-4 rounded-2xl border border-[var(--border)] relative group transition-all hover:border-[var(--border-bright)] cursor-pointer hover:bg-[var(--surface2)] shadow-sm"
+              >
+                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity text-[8px] font-mono text-[var(--accent)] tracking-widest uppercase pointer-events-none hidden md:block">
+                  Editar
+                </div>
+                {!profile.blocks.some(b => b.type === 'hero') && (
+                  <>
+                    <div className="text-xl font-black truncate text-white w-full p-0">
+                      {profile.displayName || "Tu Nombre"}
+                    </div>
+                    <div className="text-[11px] text-[var(--text-dim)] w-full p-0 block truncate font-mono uppercase tracking-tight opacity-70">
+                      {profile.tagline || "Sin tagline"}
+                    </div>
+                  </>
+                )}
+                <div
+                  className={`flex items-center justify-between gap-2 p-2 px-3 rounded-xl bg-black/30 border border-white/5 group/url mt-3`}
+                >
+                  <div className="flex items-center gap-1 min-w-0">
+                    <span className="text-[10px] text-[var(--text-muted)] font-mono shrink-0">huevsite.io/</span>
+                    <span className="text-xs font-black truncate text-[var(--accent)] font-mono">
+                      {profile.username}
+                    </span>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCopyUrl();
+                    }}
+                    className="shrink-0 p-1.5 rounded-lg hover:bg-white/10 text-[var(--text-muted)] hover:text-white transition-all bg-white/5"
+                    title="Copiar URL"
+                  >
+                    {copied ? <Check size={12} className="text-[var(--accent)]" /> : <Copy size={12} />}
+                  </button>
+                </div>
+              </div>
+            )}
 
             <ColorPicker
               value={profile.accentColor}

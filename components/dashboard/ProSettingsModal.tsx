@@ -31,7 +31,10 @@ export function ProSettingsModal({
     const [activeTab, setActiveTab] = useState<"subsites" | "domain">("subsites");
     const [domain, setDomain] = useState(customDomain || "");
     const [newSubSite, setNewSubSite] = useState({ title: "", slug: "" });
+    const [aiUrl, setAiUrl] = useState("");
     const [loading, setLoading] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [loadingMessage, setLoadingMessage] = useState("");
     const [success, setSuccess] = useState(false);
 
     const handleDomainUpdate = async () => {
@@ -40,6 +43,49 @@ export function ProSettingsModal({
         setLoading(false);
         setSuccess(true);
         setTimeout(() => setSuccess(false), 2000);
+    };
+
+    const handleGenerateFromUrl = async () => {
+        if (!aiUrl) return;
+        setIsGenerating(true);
+        
+        const messages = [
+            "Analizando la URL 🧠...",
+            "Extrayendo contenido principal...",
+            "Diseñando bloques perfectos 🎨...",
+            "Casi listo! Ajustando detalles...",
+        ];
+        
+        let msgIndex = 0;
+        setLoadingMessage(messages[0]);
+        const msgInterval = setInterval(() => {
+            msgIndex = (msgIndex + 1) % messages.length;
+            setLoadingMessage(messages[msgIndex]);
+        }, 2500);
+
+        try {
+            const res = await fetch("/api/ai/generate-subsite", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ url: aiUrl })
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || "Falló la generación");
+            }
+            
+            // Si funciona, recargamos la página para que Next.js obtenga los nuevos sub-sites de la DB
+            // (La forma ideal sería llamar onSuccess y actualizar el state, pero reload asegura la re-hidratación de bloques).
+            window.location.reload();
+            
+        } catch (error: any) {
+            alert(error.message || "Hubo un error con la IA.");
+        } finally {
+            clearInterval(msgInterval);
+            setIsGenerating(false);
+            setAiUrl("");
+        }
     };
 
     const handleAddSubSite = async () => {
@@ -115,7 +161,7 @@ export function ProSettingsModal({
                                     <div className="space-y-6">
                                         <div>
                                             <h3 className="text-sm font-bold text-white mb-2 underline decoration-[var(--accent)]" style={{ textDecorationColor: accentColor }}>Crear Nuevo Sub-site</h3>
-                                            <p className="text-xs text-[var(--text-dim)] mb-4">Crea una página dedicada para un proyecto específico.</p>
+                                            <p className="text-xs text-[var(--text-dim)] mb-4">Crea una página dedicada de forma manual.</p>
                                             <div className="space-y-3">
                                                 <input
                                                     type="text"
@@ -137,13 +183,53 @@ export function ProSettingsModal({
                                                 </div>
                                                 <button
                                                     onClick={handleAddSubSite}
-                                                    disabled={loading || !newSubSite.title || !newSubSite.slug}
-                                                    className="w-full btn btn-accent !rounded-xl !py-2.5 text-xs font-bold"
-                                                    style={{ backgroundColor: accentColor }}
+                                                    disabled={loading || isGenerating || !newSubSite.title || !newSubSite.slug}
+                                                    className="w-full btn btn-outline !border-white/10 hover:!border-white/30 !rounded-xl !py-2.5 text-xs font-bold text-white transition-all bg-white/5"
                                                 >
-                                                    {loading ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Crear Sub-site"}
+                                                    {loading ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Crear Manualmente"}
                                                 </button>
                                             </div>
+                                        </div>
+
+                                        <div className="pt-6 border-t border-white/5">
+                                             <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
+                                                 <span className="bg-[var(--accent)] text-black text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest animate-pulse" style={{ backgroundColor: accentColor }}>Magic</span>
+                                                 Generar desde URL
+                                             </h3>
+                                             <p className="text-xs text-[var(--text-dim)] mb-4">La IA leerá tu página (ej. un producto, un blog post, tu LinkedIn) y armará un sub-site completo por vos. 🪄</p>
+                                             
+                                             <div className="space-y-3 p-4 rounded-2xl border border-[var(--accent)]/30 bg-[var(--accent)]/5 relative overflow-hidden" style={{ "--accent": accentColor } as any}>
+                                                 <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)]/10 blur-[40px] rounded-full pointer-events-none" />
+                                                 
+                                                 <div className="relative z-10 flex gap-2 w-full">
+                                                    <div className="relative flex-1">
+                                                        <LinkIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] group-focus-within:text-[var(--accent)] transition-colors" />
+                                                        <input
+                                                            type="text"
+                                                            placeholder="https://mi-proyecto.com"
+                                                            value={aiUrl}
+                                                            onChange={(e) => setAiUrl(e.target.value)}
+                                                            className="w-full bg-black/40 border border-white/10 rounded-xl pl-9 pr-4 py-3 text-sm focus:outline-none focus:border-[var(--accent)]/50 transition-all font-mono placeholder:text-[var(--text-muted)] text-white shadow-inner"
+                                                            disabled={isGenerating}
+                                                        />
+                                                    </div>
+                                                 </div>
+                                                 <button
+                                                     onClick={handleGenerateFromUrl}
+                                                     disabled={isGenerating || !aiUrl}
+                                                     className="w-full relative z-10 btn btn-accent !rounded-xl !py-3 text-sm font-black text-black overflow-hidden group shadow-[0_0_15px_rgba(200,255,0,0.15)] flex justify-center items-center gap-2 transition-all hover:scale-[1.02]"
+                                                     style={{ backgroundColor: accentColor }}
+                                                 >
+                                                     {isGenerating ? (
+                                                         <>
+                                                            <Loader2 size={16} className="animate-spin text-black" />
+                                                            <span>{loadingMessage}</span>
+                                                         </>
+                                                     ) : (
+                                                         <>Generar Mágicamente ✨</>
+                                                     )}
+                                                 </button>
+                                             </div>
                                         </div>
 
                                         <div className="pt-4 border-t border-white/5">

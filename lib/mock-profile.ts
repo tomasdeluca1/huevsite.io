@@ -7,6 +7,7 @@ export const MOCK_PROFILE: ProfileData = {
   accentColor: "#C8FF00",
   extraBlocksFromShare: 0,
   twitterShareUnlocked: false,
+  subSites: [],
   blocks: [
     {
       id: "hero-1",

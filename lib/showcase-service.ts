@@ -45,7 +45,8 @@ export async function getShowcaseData(requestedWeek?: string | null) {
           week,
           user:profiles!showcase_winners_user_id_fkey (
             id, username, name, image, accent_color, tagline,
-            blocks:blocks (*)
+            blocks:blocks (*),
+            sub_sites:sub_sites (*)
           )
         `)
         .eq("week", targetWeek);
@@ -53,7 +54,13 @@ export async function getShowcaseData(requestedWeek?: string | null) {
       if (winnerError) {
         console.error("Winner query error:", winnerError);
       } else if (winnerData) {
-        winners = winnerData;
+        // Parse blocks to exclude sub-site blocks for the main profile view
+        winners = winnerData.map((w: any) => {
+          if (w.user && w.user.blocks) {
+            w.user.blocks = w.user.blocks.filter((b: any) => b.sub_site_id === null);
+          }
+          return w;
+        });
       }
     }
 
@@ -90,15 +97,22 @@ export async function getShowcaseData(requestedWeek?: string | null) {
         .from("profiles")
         .select(`
           id, username, name, image, accent_color, tagline,
-          blocks:blocks (*)
+          blocks:blocks (*),
+          sub_sites:sub_sites (*)
         `)
         // No traemos el auth.uid, traemos cualquiera activo
         .order("updated_at", { ascending: false })
         .limit(20);
 
       if (randomData) {
-        // Filtrar los que tienen al menos un bloque para no mostrar vacios
-        const validProfiles = randomData.filter(p => p.blocks && p.blocks.length > 0);
+        // Filtrar los que tienen al menos un bloque (de su perfil principal)
+        const parsedProfiles = randomData.map((p: any) => {
+           if (p.blocks) {
+             p.blocks = p.blocks.filter((b: any) => b.sub_site_id === null);
+           }
+           return p;
+        });
+        const validProfiles = parsedProfiles.filter((p: any) => p.blocks && p.blocks.length > 0);
         // Shuffle them
         randoms = validProfiles.sort(() => 0.5 - Math.random()).slice(0, 5);
       }

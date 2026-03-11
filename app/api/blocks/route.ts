@@ -75,6 +75,7 @@ export async function POST(request: NextRequest) {
       row_span: body.rowSpan || 1,
       data: body.data,
       visible: body.visible !== undefined ? body.visible : true,
+      sub_site_id: body.sub_site_id || null,
     }
 
     // Auto-sync GitHub stats if missing or empty

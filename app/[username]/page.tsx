@@ -172,6 +172,8 @@ export default async function ProfilePage({ params }: Props) {
           currentUserId={currentUserId}
           isEnabledSocialNetwork={isEnabled("socialNetwork")}
           subscriptionTier={profile.subscriptionTier}
+          subSites={profile.subSites}
+          username={profile.username}
         />
 
         {/* Huevsite Grid (Client Component for animations) */}

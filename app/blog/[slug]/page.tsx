@@ -5,8 +5,13 @@ import { Metadata } from "next";
 import ReactMarkdown from "react-markdown";
 import Image from "next/image";
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const post = getPostBySlug(params.slug);
+export async function generateMetadata({ 
+  params 
+}: { 
+  params: Promise<{ slug: string }> 
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const post = getPostBySlug(slug);
   if (!post) {
     return { title: 'Post no encontrado' };
   }
@@ -21,7 +26,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       publishedTime: post.date,
       images: [
         {
-          url: `/blog/${params.slug}/opengraph-image`,
+          url: `/blog/${slug}/opengraph-image`,
           width: 1200,
           height: 630,
           alt: post.title,
@@ -32,13 +37,18 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       card: "summary_large_image",
       title: post.title,
       description: post.excerpt,
-      images: [`/blog/${params.slug}/opengraph-image`],
+      images: [`/blog/${slug}/opengraph-image`],
     }
   };
 }
 
-export default function BlogPostPage({ params }: { params: { slug: string } }) {
-  const post = getPostBySlug(params.slug);
+export default async function BlogPostPage({ 
+  params 
+}: { 
+  params: Promise<{ slug: string }> 
+}) {
+  const { slug } = await params;
+  const post = getPostBySlug(slug);
 
   if (!post) {
     notFound();

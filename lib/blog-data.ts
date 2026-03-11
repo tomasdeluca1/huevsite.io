@@ -81,5 +81,5 @@ Más allá del portfolio personal, buscamos crear una red. Queremos unificar a l
 ];
 
 export function getPostBySlug(slug: string): BlogPost | undefined {
-  return BLOG_POSTS.find((p) => p.slug === slug);
+  return BLOG_POSTS.find((p) => p.slug.toLowerCase() === slug.toLowerCase());
 }

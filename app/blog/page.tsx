@@ -9,11 +9,20 @@ export const metadata = {
     title: "Blog - huevsite.io",
     description: "Noticias, guías y casos de estudio de la comunidad de huevsite.io para empoderar a creadores y builders.",
     type: "website",
+    images: [
+      {
+        url: "/blog-og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "huevsite.io blog",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Blog - huevsite.io",
     description: "Noticias, guías y casos de estudio de la comunidad de huevsite.io.",
+    images: ["/blog-og-image.png"],
   }
 };
 

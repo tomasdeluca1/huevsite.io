@@ -19,11 +19,20 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       type: "article",
       authors: [post.author.name],
       publishedTime: post.date,
+      images: [
+        {
+          url: `/blog/${params.slug}/opengraph-image`,
+          width: 1200,
+          height: 630,
+          alt: post.title,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: post.title,
       description: post.excerpt,
+      images: [`/blog/${params.slug}/opengraph-image`],
     }
   };
 }

@@ -18,7 +18,7 @@ import {
 } from "@dnd-kit/sortable";
 import {
   Save, Eye, Layout as LayoutIcon, Settings, LogOut, Plus, Sparkles, MessageSquare,
-  Activity, Compass, Trash2, Copy, Check, Trophy, ArrowUpRight, BadgeCheck
+  Activity, Compass, Trash2, Copy, Check, Trophy, ArrowUpRight, BadgeCheck, ArrowLeft
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -679,6 +679,33 @@ export default function DashboardPage() {
     }
   };
 
+  const handleUpdateSubSite = async (id: string, updates: { title?: string, slug?: string, description?: string, avatarUrl?: string }) => {
+    try {
+      const resp = await fetch(`/api/sub-sites/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: updates.title,
+          slug: updates.slug,
+          description: updates.description,
+          avatar_url: updates.avatarUrl
+        }),
+      });
+      if (resp.ok) {
+        const { subSite } = await resp.json();
+        setProfile(prev => prev ? {
+          ...prev,
+          subSites: prev.subSites.map(s => s.id === id ? { ...s, ...subSite } : s)
+        } : null);
+      } else {
+        const err = await resp.json();
+        alert(err.error || 'No se pudo actualizar el sub-site');
+      }
+    } catch (e) {
+      console.error('Error updating sub-site:', e);
+    }
+  };
+
   const handleDeleteSubSite = async (id: string) => {
     if (!confirm('¿Seguro que querés borrar este sub-site?')) return;
     try {
@@ -830,6 +857,23 @@ export default function DashboardPage() {
                     title="Copiar URL del sub-site"
                   >
                     {copied ? <Check size={12} className="text-[var(--accent)]" /> : <Copy size={12} />}
+                  </button>
+                </div>
+
+                <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-white/5">
+                  <button
+                    onClick={() => setIsProSettingsOpen(true)}
+                    className="flex items-center gap-3 w-full p-2.5 rounded-xl bg-white/5 border border-white/5 text-[11px] font-bold text-white hover:bg-white/10 hover:border-white/10 transition-all group"
+                  >
+                    <Settings size={14} className="text-[var(--accent)] group-hover:rotate-45 transition-transform" />
+                    <span>Ajustes del Sitio</span>
+                  </button>
+                  <button
+                    onClick={() => setSelectedSubSiteId(null)}
+                    className="flex items-center gap-3 w-full p-2.5 rounded-xl bg-black/40 border border-white/5 text-[11px] font-bold text-[var(--text-dim)] hover:text-white hover:bg-white/5 transition-all group"
+                  >
+                    <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+                    <span>Volver al Principal</span>
                   </button>
                 </div>
               </div>
@@ -1425,6 +1469,7 @@ export default function DashboardPage() {
           customDomain={profile.customDomain}
           onUpdateDomain={handleUpdateDomain}
           onAddSubSite={handleAddSubSite}
+          onUpdateSubSite={handleUpdateSubSite}
           onDeleteSubSite={handleDeleteSubSite}
           username={profile.username}
         />

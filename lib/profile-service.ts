@@ -70,7 +70,7 @@ export const profileService = {
           const hero = subSiteBlocks.find(b => b.sub_site_id === s.id);
           return {
             ...s,
-            avatarUrl: hero?.data?.avatarUrl || null
+            avatarUrl: s.avatar_url || hero?.data?.avatarUrl || null
           };
         });
       }
@@ -119,6 +119,7 @@ export const profileService = {
       ...transformed,
       displayName: subSite.title,
       tagline: subSite.description || transformed.tagline,
+      avatarUrl: subSite.avatar_url || transformed.avatarUrl,
       parentProfile: {
         username: profile.username,
         displayName: profile.name || profile.username,

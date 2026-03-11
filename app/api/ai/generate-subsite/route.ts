@@ -166,6 +166,15 @@ Ningún bloque debe sobrepasar los 150 caracteres de descripción.
 
     const aiData = JSON.parse(aiResultText);
     
+    // Extract favicon from URL
+    let faviconUrl = "";
+    try {
+        const parsedUrl = new URL(url);
+        faviconUrl = `https://www.google.com/s2/favicons?domain=${parsedUrl.hostname}&sz=128`;
+    } catch (e) {
+        console.error("Error parsing URL for favicon:", e);
+    }
+
     // 3. Save to Database
     console.log("Saving sub-site to DB:", aiData.title);
     
@@ -200,6 +209,7 @@ Ningún bloque debe sobrepasar los 150 caracteres de descripción.
             user_id: user.id,
             title: aiData.title,
             slug: finalSlug,
+            avatar_url: faviconUrl,
         })
         .select()
         .single();
@@ -209,14 +219,6 @@ Ningún bloque debe sobrepasar los 150 caracteres de descripción.
         return NextResponse.json({ error: "No se pudo crear el sub-site." }, { status: 500 });
     }
 
-    // Extract favicon from URL
-    let faviconUrl = "";
-    try {
-        const parsedUrl = new URL(url);
-        faviconUrl = `https://www.google.com/s2/favicons?domain=${parsedUrl.hostname}&sz=128`;
-    } catch (e) {
-        console.error("Error parsing URL for favicon:", e);
-    }
 
     // Format blocks for DB
     const dbBlocks = aiData.blocks.map((b: any, index: number) => {

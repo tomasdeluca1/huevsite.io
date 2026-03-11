@@ -48,69 +48,70 @@ export default async function Image({ params }: { params: { slug: string } }) {
           justifyContent: 'flex-end',
           padding: '80px',
           backgroundColor: '#0A0A0A',
-          backgroundImage: 'radial-gradient(circle at 50% 120%, rgba(200, 255, 0, 0.15) 0%, transparent 60%)',
+          backgroundImage: 'radial-gradient(circle at 60% 0%, rgba(200, 255, 0, 0.08) 0%, transparent 50%), radial-gradient(circle at 50% 120%, rgba(200, 255, 0, 0.15) 0%, transparent 60%)',
           color: 'white',
           position: 'relative',
         }}
       >
-        {/* We use an absolute background element if you had a specific default OG image.
-            For now, we generate a highly aesthetic code-based background to ensure it always looks good. */}
+        {/* Aesthetic Frame */}
         <div 
           style={{
              position: 'absolute',
              top: 0, left: 0, right: 0, bottom: 0,
-             border: '4px solid rgba(255,255,255,0.05)',
-             margin: '20px',
-             borderRadius: '40px'
+             border: '2px solid rgba(255,255,255,0.03)',
+             margin: '40px',
+             borderRadius: '32px'
           }}
         />
 
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '40px', gap: '20px' }}>
-          <div style={{ display: 'flex', color: '#C8FF00', fontSize: 40, fontWeight: 900, letterSpacing: '-0.05em' }}>
+        {/* Brand Header */}
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '50px', gap: '20px' }}>
+          <div style={{ display: 'flex', color: '#C8FF00', fontSize: 36, fontWeight: 900, letterSpacing: '-0.05em' }}>
             huevsite.io
           </div>
-          <div style={{ width: '4px', height: '40px', background: 'rgba(255,255,255,0.2)' }} />
-          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 32, fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-            BLOG
+          <div style={{ width: '2px', height: '32px', background: 'rgba(255,255,255,0.1)' }} />
+          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 24, textTransform: 'uppercase', letterSpacing: '0.2em', fontWeight: 700 }}>
+            Blog
           </div>
         </div>
 
+        {/* Title */}
         <div
           style={{
             fontSize: 72,
             fontWeight: 900,
             lineHeight: 1.1,
-            letterSpacing: '-0.02em',
-            marginBottom: '30px',
+            letterSpacing: '-0.03em',
+            marginBottom: '40px',
             color: 'white',
-            maxWidth: '1000px'
+            maxWidth: '1000px',
+            textShadow: '0 10px 30px rgba(0,0,0,0.5)'
           }}
         >
           {post.title}
         </div>
 
+        {/* Excerpt */}
         <div
           style={{
             fontSize: 32,
-            color: 'rgba(255, 255, 255, 0.6)',
+            color: 'rgba(255, 255, 255, 0.5)',
             lineHeight: 1.4,
             maxWidth: '900px',
-            marginBottom: '60px',
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden'
+            marginBottom: '70px',
+            display: 'flex',
           }}
         >
-          {post.excerpt}
+          {post.excerpt.length > 140 ? post.excerpt.substring(0, 140) + '...' : post.excerpt}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+        {/* Author Footer */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px', background: 'rgba(255,255,255,0.03)', padding: '24px 32px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
           <div
             style={{
-              width: 80,
-              height: 80,
-              borderRadius: 40,
+              width: 72,
+              height: 72,
+              borderRadius: 36,
               background: '#C8FF00',
               display: 'flex',
               alignItems: 'center',
@@ -122,9 +123,9 @@ export default async function Image({ params }: { params: { slug: string } }) {
           >
              {post.author.name.charAt(0)}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-             <div style={{ fontSize: 32, fontWeight: 'bold', color: 'white' }}>{post.author.name}</div>
-             <div style={{ fontSize: 24, fontFamily: 'monospace', color: '#C8FF00' }}>@{post.author.username}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+             <div style={{ fontSize: 28, fontWeight: 900, color: 'white' }}>{post.author.name}</div>
+             <div style={{ fontSize: 20, color: '#C8FF00', fontWeight: 600 }}>@{post.author.username}</div>
           </div>
         </div>
       </div>

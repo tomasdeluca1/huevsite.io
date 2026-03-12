@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { X, Globe, Plus, Link as LinkIcon, ExternalLink, Trash2, Globe2, Loader2, Check, Settings } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, Globe, Plus, Link as LinkIcon, ExternalLink, Trash2, Globe2, Loader2, Check, Settings, Copy, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SubSite } from "@/lib/profile-types";
 
@@ -41,13 +41,48 @@ export function ProSettingsModal({
 
     const [editingSiteId, setEditingSiteId] = useState<string | null>(null);
     const [editValues, setEditValues] = useState({ title: "", slug: "", description: "", avatarUrl: "" });
+    const [copiedFeedback, setCopiedFeedback] = useState(false);
+    const [verifying, setVerifying] = useState(false);
+    const [verificationResult, setVerificationResult] = useState<{ isValid: boolean; message: string } | null>(null);
+
+    // Sync domain state if customDomain prop changes (important for first load or external updates)
+    useEffect(() => {
+        if (customDomain !== undefined) {
+            setDomain(customDomain);
+            // Si el dominio cambia externamente, reseteamos el resultado de verificación
+            setVerificationResult(null);
+        }
+    }, [customDomain]);
+
+    const handleVerify = async () => {
+        if (!domain) return;
+        setVerifying(true);
+        try {
+            const res = await fetch("/api/profile/verify-domain", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ domain })
+            });
+            const data = await res.json();
+            setVerificationResult({ isValid: data.isValid, message: data.message });
+        } catch (error) {
+            setVerificationResult({ isValid: false, message: "Error al verificar" });
+        } finally {
+            setVerifying(false);
+        }
+    };
 
     const handleDomainUpdate = async () => {
         setLoading(true);
-        await onUpdateDomain(domain);
-        setLoading(false);
-        setSuccess(true);
-        setTimeout(() => setSuccess(false), 2000);
+        try {
+            await onUpdateDomain(domain);
+            setSuccess(true);
+            setTimeout(() => setSuccess(false), 2000);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleGenerateFromUrl = async () => {
@@ -382,46 +417,182 @@ export function ProSettingsModal({
                                 )}
 
                                 {activeTab === "domain" && (
-                                    <div className="space-y-6">
-                                        <div>
-                                            <h3 className="text-sm font-bold text-white mb-2 underline decoration-[var(--accent)]" style={{ textDecorationColor: accentColor }}>Personalizar Dominio</h3>
-                                            <p className="text-xs text-[var(--text-dim)] mb-4">Conecta tu propio dominio (ej: builder.com) a tu huevsite.</p>
+                                    <div className="space-y-8 animate-in fade-in slide-in-from-right-4 pb-8">
+                                        <div className="space-y-2">
+                                            <h3 className="text-sm font-bold text-white underline decoration-[var(--accent)]" style={{ textDecorationColor: accentColor }}>Configurá tu dominio en 3 pasos</h3>
+                                            <p className="text-xs text-[var(--text-dim)]">Conectá tu marca personal al ecosistema huevsite.</p>
+                                        </div>
 
-                                            <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 mb-6">
-                                                <p className="text-[10px] leading-relaxed text-amber-200/80">
-                                                    <span className="font-bold text-amber-400">Nota:</span> Después de configurar el dominio acá, deberás apuntar un CNAME en tus ajustes de DNS hacia <code className="bg-black/40 px-1 rounded text-white">cname.huevsite.io</code>.
-                                                </p>
-                                            </div>
-
-                                            <div className="space-y-4">
-                                                <div className="relative">
-                                                    <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={16} />
-                                                    <input
-                                                        type="text"
-                                                        placeholder="midominio.com"
-                                                        value={domain}
-                                                        onChange={(e) => setDomain(e.target.value.toLowerCase().trim())}
-                                                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-sm focus:outline-none focus:border-[var(--accent)] transition-colors font-mono"
-                                                    />
+                                        <div className="space-y-6">
+                                            {/* Paso 1: Configurar el Dominio */}
+                                            <div className="p-6 rounded-[2rem] bg-white/5 border border-white/5 space-y-4">
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-black" style={{ color: accentColor }}>1</div>
+                                                    <h3 className="text-sm font-bold text-white">Ingresá tu dominio</h3>
                                                 </div>
+
+                                                <div className="flex gap-2">
+                                                    <div className="relative flex-1">
+                                                        <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={14} />
+                                                        <input
+                                                            type="text"
+                                                            placeholder="ej: milestoner.xyz"
+                                                            value={domain}
+                                                            onChange={(e) => {
+                                                                setDomain(e.target.value.toLowerCase().trim());
+                                                                setVerificationResult(null);
+                                                            }}
+                                                            className="w-full bg-black/40 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-[var(--accent)] transition-colors font-mono"
+                                                            style={{"--accent": accentColor} as any}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-3">
+                                                    <button
+                                                        onClick={handleDomainUpdate}
+                                                        disabled={loading || domain === customDomain || !domain}
+                                                        className="flex-1 btn btn-accent !rounded-xl !py-3 text-xs font-black uppercase tracking-widest shadow-lg"
+                                                        style={{ backgroundColor: accentColor }}
+                                                    >
+                                                        {loading ? <Loader2 size={16} className="animate-spin mx-auto text-black" /> : "Guardar Cambios"}
+                                                    </button>
+                                                    
+                                                    {customDomain && (
+                                                        <button
+                                                            onClick={() => onUpdateDomain("")}
+                                                            className="px-4 py-3 rounded-xl border border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all text-xs font-bold"
+                                                        >
+                                                            Quitar
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Paso 2: Instrucciones DNS */}
+                                            <div className="p-6 rounded-[2rem] bg-white/5 border border-white/5 space-y-4">
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-black" style={{ color: accentColor }}>2</div>
+                                                    <h3 className="text-sm font-bold text-white">Configurá tus DNS</h3>
+                                                </div>
+                                                
+                                                <p className="text-[11px] text-[var(--text-dim)] px-1">
+                                                    Entrá a tu registrador (Namecheap, GoDaddy, Cloudflare) y agregá estos registros:
+                                                </p>
+
+                                                <div className="space-y-3">
+                                                    {/* Opción A: Apex @ */}
+                                                    <div className="bg-black/30 border border-white/5 rounded-2xl p-4">
+                                                        <div className="flex justify-between items-start mb-3">
+                                                            <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">Opción A: Dominio Raíz (@)</span>
+                                                        </div>
+                                                        <div className="grid grid-cols-3 gap-2 text-[10px] font-mono">
+                                                            <div className="text-[var(--text-muted)]">Tipo: <span className="text-white">A Record</span></div>
+                                                            <div className="text-[var(--text-muted)]">Host: <span className="text-white">@</span></div>
+                                                            <div className="text-[var(--text-muted)] group/copy flex items-center gap-1">
+                                                                <span className="text-white">76.76.21.21</span>
+                                                                <button 
+                                                                    onClick={() => navigator.clipboard.writeText("76.76.21.21")}
+                                                                    className="opacity-0 group-hover/copy:opacity-100 transition-opacity hover:text-[var(--accent)]"
+                                                                    style={{ color: accentColor }}
+                                                                >
+                                                                    <Copy size={10} />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex items-center justify-center">
+                                                        <span className="text-[9px] font-mono text-white/20 uppercase tracking-[0.3em]">O TAMBIÉN</span>
+                                                    </div>
+
+                                                    {/* Opción B: WWW */}
+                                                    <div className="bg-black/30 border border-white/5 rounded-2xl p-4">
+                                                        <div className="flex justify-between items-start mb-3">
+                                                            <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">Opción B: Subdominio (www)</span>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-4 mb-3">
+                                                            <div className="text-[10px] font-mono text-[var(--text-muted)]">Tipo: <span className="text-white">CNAME</span></div>
+                                                            <div className="text-[10px] font-mono text-[var(--text-muted)]">Host: <span className="text-white">www</span></div>
+                                                        </div>
+                                                        <div className="bg-black/40 border border-white/10 rounded-xl px-3 py-2 flex items-center justify-between group/copy">
+                                                            <code className="text-[10px] font-mono text-[var(--accent)]" style={{ color: accentColor }}>cname.huevsite.io</code>
+                                                            <button 
+                                                                onClick={() => {
+                                                                    navigator.clipboard.writeText("cname.huevsite.io");
+                                                                    setCopiedFeedback(true);
+                                                                    setTimeout(() => setCopiedFeedback(false), 2000);
+                                                                }}
+                                                                className="text-white/30 hover:text-white transition-colors"
+                                                            >
+                                                                {copiedFeedback ? <Check size={12} className="text-green-400" /> : <Copy size={12} />}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Paso 3: Verificar */}
+                                            <div className="p-6 rounded-[2rem] bg-white/5 border border-white/5 space-y-4">
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-black" style={{ color: accentColor }}>3</div>
+                                                    <h3 className="text-sm font-bold text-white">Verificá la conexión</h3>
+                                                </div>
+
                                                 <button
-                                                    onClick={handleDomainUpdate}
-                                                    disabled={loading || domain === customDomain}
-                                                    className="w-full btn btn-accent !rounded-xl !py-3 text-xs font-bold"
-                                                    style={{ backgroundColor: accentColor }}
+                                                    onClick={handleVerify}
+                                                    disabled={verifying || !domain}
+                                                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-white/10 hover:bg-white/5 transition-all text-xs font-bold text-white shadow-inner"
                                                 >
-                                                    {loading ? <Loader2 size={16} className="animate-spin mx-auto" /> : success ? <Check size={16} className="mx-auto" /> : "Guardar Dominio"}
+                                                    {verifying ? (
+                                                        <Loader2 size={14} className="animate-spin" />
+                                                    ) : (
+                                                        <Check size={14} className="text-green-400" />
+                                                    )}
+                                                    {verifying ? "Consultando DNS..." : "Verificar Conexión"}
                                                 </button>
+
+                                                {verificationResult && (
+                                                    <motion.div 
+                                                        initial={{ opacity: 0, y: 10 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        className={`p-4 rounded-2xl border ${verificationResult.isValid ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-amber-500/10 border-amber-500/20 text-amber-200'} text-[11px] font-mono flex gap-3`}
+                                                    >
+                                                        <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${verificationResult.isValid ? 'bg-green-500 text-black' : 'bg-amber-500 text-black'}`}>
+                                                            {verificationResult.isValid ? <Check size={10} /> : "!"}
+                                                        </div>
+                                                        <p>{verificationResult.message}</p>
+                                                    </motion.div>
+                                                )}
+
+                                                <div className="flex justify-between items-center px-4">
+                                                    <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">Estado</span>
+                                                    <div className="flex items-center gap-2">
+                                                        {customDomain === domain && domain ? (
+                                                            <a 
+                                                                href={domain.startsWith('http') ? domain : `https://${domain}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-green-500/10 border border-green-500/20 group hover:bg-green-500/20 transition-all"
+                                                            >
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                                                                <span className="text-[9px] font-bold text-green-400">Puntaje PRO</span>
+                                                                <ExternalLink size={8} className="text-green-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                            </a>
+                                                        ) : (
+                                                            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-white/5 border border-white/10">
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
+                                                                <span className="text-[9px] font-bold text-white/30">Desconectado</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
 
-                                        <div className="pt-6 border-t border-white/5">
-                                            <h4 className="text-[10px] font-black uppercase text-[var(--text-muted)] tracking-[0.2em] mb-4">Estado del Dominio</h4>
-                                            <div className="flex items-center gap-3 p-4 rounded-2xl bg-white/5 border border-white/5 opacity-50">
-                                                <div className="w-2 h-2 rounded-full bg-[var(--text-muted)] animate-pulse" />
-                                                <span className="text-xs font-mono text-[var(--text-dim)]">Validación pendiente...</span>
-                                            </div>
-                                        </div>
+                                        <p className="text-[10px] text-[var(--text-dim)] leading-relaxed italic border-l-2 border-white/10 pl-4 py-1">
+                                            * Los cambios de DNS pueden tardar hasta 24 horas en propagarse. Si configuraste todo bien y no conecta, esperá un ratito.
+                                        </p>
                                     </div>
                                 )}
                             </div>

@@ -615,6 +615,7 @@ export default function DashboardPage() {
           username: profile.username,
           name: profile.displayName,
           tagline: profile.tagline,
+          custom_domain: profile.customDomain,
         }),
       });
 
@@ -653,11 +654,17 @@ export default function DashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ custom_domain: domain }),
       });
-      if (resp.ok) {
-        setProfile(prev => prev ? { ...prev, customDomain: domain } : null);
+
+      if (!resp.ok) {
+        const errorData = await resp.json();
+        throw new Error(errorData.error || 'Error al actualizar el dominio');
       }
-    } catch (e) {
+
+      setProfile(prev => prev ? { ...prev, customDomain: domain } : null);
+    } catch (e: any) {
       console.error('Error updating domain:', e);
+      alert(e.message || 'No se pudo guardar el dominio. Verificá que seas usuario PRO y que el dominio sea válido.');
+      throw e; // Relaunch to let modal know if needed
     }
   };
 

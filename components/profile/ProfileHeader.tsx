@@ -23,6 +23,7 @@ interface Props {
   subscriptionTier?: string;
   subSites?: { id: string; title: string; slug: string; description?: string; avatarUrl?: string }[];
   username: string;
+  isCustomDomain?: boolean;
 }
 
 export function ProfileHeader({
@@ -39,6 +40,7 @@ export function ProfileHeader({
   subscriptionTier,
   subSites = [],
   username,
+  isCustomDomain = false,
 }: Props) {
   const [modalType, setModalType] = useState<"followers" | "following" | null>(null);
   const [localFollowersCount, setLocalFollowersCount] = useState(followersCount);
@@ -235,7 +237,7 @@ export function ProfileHeader({
             {subSites.map((site, index) => (
               <Link
                 key={site.id}
-                href={`/${username}/${site.slug}`}
+                href={isCustomDomain ? `/${site.slug}` : `/${username}/${site.slug}`}
                 className="group/item flex items-center gap-3.5 p-3.5 rounded-2xl bg-white/5 border border-white/[0.08] hover:border-[var(--accent)]/40 hover:bg-[var(--accent)]/10 hover:shadow-[0_8px_32px_-12px_var(--accent-dim)] transition-all duration-300 text-left relative overflow-hidden"
               >
                 {/* Micro-gradient strictly inside the item */}

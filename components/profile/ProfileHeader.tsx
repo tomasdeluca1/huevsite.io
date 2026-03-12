@@ -78,51 +78,59 @@ export function ProfileHeader({
       {/* Upper bar: Logo + Explore Link + Main CTA */}
       <div className="flex items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-4">
-          <Link href="/" className="logo shrink-0 text-xl md:text-2xl">
-            huev<span>site</span>.io
-          </Link>
-          <Link
-            href="/explore"
-            className="hidden sm:flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
-          >
-            ← Explorar
-          </Link>
+          {!isCustomDomain && (
+            <>
+              <Link href="/" className="logo shrink-0 text-xl md:text-2xl">
+                huev<span>site</span>.io
+              </Link>
+              <Link
+                href="/explore"
+                className="hidden sm:flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
+              >
+                ← Explorar
+              </Link>
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
-          {currentUserId ? (
-            <Link
-              href="/dashboard"
-              className="btn btn-ghost !text-[10px] !py-2 !px-4 !rounded-xl border border-white/5 bg-white/5 md:hidden transition-all hover:bg-white/10"
-            >
-              Mi huevsite
-            </Link>
-          ) : (
-            <Link
-              href="/login"
-              className="btn btn-ghost !text-[10px] !py-2 !px-4 !rounded-xl border border-white/5 bg-white/5 md:hidden transition-all hover:bg-white/10"
-            >
-              Crear mi huevsite
-            </Link>
-          )}
+          {!isCustomDomain && (
+            <>
+              {currentUserId ? (
+                <Link
+                  href="/dashboard"
+                  className="btn btn-ghost !text-[10px] !py-2 !px-4 !rounded-xl border border-white/5 bg-white/5 md:hidden transition-all hover:bg-white/10"
+                >
+                  Mi huevsite
+                </Link>
+              ) : (
+                <Link
+                  href="/login"
+                  className="btn btn-ghost !text-[10px] !py-2 !px-4 !rounded-xl border border-white/5 bg-white/5 md:hidden transition-all hover:bg-white/10"
+                >
+                  Crear mi huevsite
+                </Link>
+              )}
 
-          <div className="hidden md:block">
-            {currentUserId ? (
-              <Link
-                href="/dashboard"
-                className="btn btn-ghost !px-5 !text-xs !py-3 !rounded-2xl hover:!border-[var(--accent)] transition-all bg-white/5 border border-white/5"
-              >
-                Mi huevsite
-              </Link>
-            ) : (
-              <Link
-                href="/login"
-                className="btn btn-ghost !px-5 !text-xs !py-3 !rounded-2xl hover:!border-[var(--accent)] transition-all bg-white/5 border border-white/5"
-              >
-                Crear mi huevsite
-              </Link>
-            )}
-          </div>
+              <div className="hidden md:block">
+                {currentUserId ? (
+                  <Link
+                    href="/dashboard"
+                    className="btn btn-ghost !px-5 !text-xs !py-3 !rounded-2xl hover:!border-[var(--accent)] transition-all bg-white/5 border border-white/5"
+                  >
+                    Mi huevsite
+                  </Link>
+                ) : (
+                  <Link
+                    href="/login"
+                    className="btn btn-ghost !px-5 !text-xs !py-3 !rounded-2xl hover:!border-[var(--accent)] transition-all bg-white/5 border border-white/5"
+                  >
+                    Crear mi huevsite
+                  </Link>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </div>
 

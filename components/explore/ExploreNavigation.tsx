@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
-export function ExploreNavigation({ currentUsername }: { currentUsername: string }) {
+export function ExploreNavigation({ currentUsername, isCustomDomain = false }: { currentUsername: string; isCustomDomain?: boolean }) {
     const router = useRouter();
     const [list, setList] = useState<string[]>([]);
     const [index, setIndex] = useState(-1);
@@ -21,8 +21,17 @@ export function ExploreNavigation({ currentUsername }: { currentUsername: string
                 const parsed = JSON.parse(savedList);
                 if (Array.isArray(parsed)) {
                     setList(parsed);
-                    setIndex(parsed.indexOf(currentUsername));
-                    setIsVisible(true);
+                    // Búsqueda case-insensitive para mayor robustez
+                    const normalizedUsername = currentUsername.toLowerCase();
+                    const foundIndex = parsed.findIndex((u: string) => u.toLowerCase() === normalizedUsername);
+                    
+                    setIndex(foundIndex);
+                    
+                    if (foundIndex !== -1) {
+                        setIsVisible(true);
+                    } else {
+                        setIsVisible(false);
+                    }
                 }
             } catch (e) {
                 console.error("Error parsing explore list", e);
@@ -45,7 +54,7 @@ export function ExploreNavigation({ currentUsername }: { currentUsername: string
         }
     };
 
-    if (!isVisible || index === -1) return null;
+    if (!isVisible || index === -1 || isCustomDomain) return null;
 
     const prev = index > 0 ? list[index - 1] : null;
     const next = index < list.length - 1 ? list[index + 1] : null;

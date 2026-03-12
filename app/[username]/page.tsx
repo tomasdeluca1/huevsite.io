@@ -130,7 +130,7 @@ export default async function ProfilePage({ params }: Props) {
       <div className="noise" />
 
       <main className="min-h-screen pt-8 md:pt-12 pb-16 md:pb-24 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto relative">
-        <ExploreNavigation currentUsername={params.username} />
+        <ExploreNavigation currentUsername={params.username} isCustomDomain={isCustomDomain} />
         {/* Dynamic Cinematic Backgrounds */}
         <div
           className="fixed top-[-10%] left-[-10%] w-[80%] md:w-[50%] h-[50%] opacity-[0.08] blur-[120px] pointer-events-none transition-all duration-1000"
@@ -162,8 +162,9 @@ export default async function ProfilePage({ params }: Props) {
           builderScore={profile.builderScore || 0}
           accentColor={profile.accentColor}
           username={profile.username}
+          isCustomDomain={isCustomDomain}
         />
-        <MobileBottomNav accentColor={profile.accentColor} currentUserId={currentUserId} />
+        <MobileBottomNav accentColor={profile.accentColor} currentUserId={currentUserId} isCustomDomain={isCustomDomain} />
 
         {/* Header / Nav */}
         <ProfileHeader

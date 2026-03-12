@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { scoreService } from '@/lib/score-service'
+import { vercelService } from '@/lib/vercel-service'
 
 export const dynamic = 'force-dynamic'
 
@@ -105,16 +106,38 @@ export async function PATCH(request: NextRequest) {
     if (body.custom_domain !== undefined) {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('subscription_tier, pro_since')
+        .select('subscription_tier, pro_since, custom_domain')
         .eq('id', user.id)
         .single();
       
       const isPro = profile && (profile.subscription_tier === 'pro' || !!profile.pro_since);
-      if (!isPro) {
+      if (!isPro && body.custom_domain !== "") {
         return NextResponse.json(
           { error: 'Para usar un dominio custom necesitás huevsite PRO.' },
           { status: 403 }
         );
+      }
+
+      // Sincronizar con Vercel si el dominio cambió
+      const oldDomain = profile?.custom_domain;
+      const newDomain = body.custom_domain;
+
+      if (newDomain !== oldDomain) {
+        // 1. Quitar el viejo si existía
+        if (oldDomain) {
+          await vercelService.removeDomain(oldDomain);
+        }
+
+        // 2. Agregar el nuevo si no es vacío
+        if (newDomain) {
+          const result = await vercelService.addDomain(newDomain);
+          if (!result.success) {
+            return NextResponse.json(
+              { error: `Error al registrar dominio en Vercel: ${result.error}` },
+              { status: 500 }
+            );
+          }
+        }
       }
     }
 

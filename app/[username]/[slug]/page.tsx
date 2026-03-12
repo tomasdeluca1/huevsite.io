@@ -7,6 +7,8 @@ import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { MobileBottomNav, MobileStickyHeader } from "@/components/profile/MobileProfileUI";
 import { createClient } from "@/lib/supabase/server";
 
+import { headers } from "next/headers";
+
 interface Props {
     params: { username: string; slug: string };
 }
@@ -28,6 +30,10 @@ export default async function SubSitePage({ params }: Props) {
     if (!profile) {
         notFound();
     }
+
+    const headersList = headers();
+    const host = headersList.get("host") || "";
+    const isCustomDomain = host === profile.customDomain && !!profile.customDomain;
 
     // En sub-sites por ahora no mostramos endorsements a menos que sea necesario
     // Se renderiza el grid con los bloques asociados a este sub-site
@@ -83,13 +89,14 @@ export default async function SubSitePage({ params }: Props) {
                     isEnabledSocialNetwork={false}
                     subscriptionTier={profile.subscriptionTier}
                     username={profile.username}
+                    isCustomDomain={isCustomDomain}
                 />
 
                 {/* Parent Huevsite Reference - "Pie arriba del board" */}
                 {profile.parentProfile && (
                     <div className="relative z-10 max-w-7xl mx-auto mb-8 md:mb-12 flex justify-center">
                         <Link
-                            href={`/${profile.parentProfile.username}`}
+                            href={isCustomDomain ? "/" : `/${profile.parentProfile.username}`}
                             className="group flex flex-col sm:flex-row items-center gap-4 backdrop-blur-xl bg-white/[0.02] border border-white/[0.05] hover:border-[var(--accent)]/30 hover:shadow-[0_8px_32px_-12px_var(--accent-dim)] px-6 sm:px-8 py-4 rounded-[2rem] transition-all duration-300 relative overflow-hidden"
                         >
                             <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)]/10 blur-[40px] rounded-full translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
@@ -132,7 +139,7 @@ export default async function SubSitePage({ params }: Props) {
                 </div>
 
                 <footer className="mt-20 md:mt-32 text-center relative z-10 border-t border-white/5 pt-12 pb-8">
-                    <Link href={`/${profile.username}`} className="text-[10px] font-mono text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors uppercase tracking-widest">
+                    <Link href={isCustomDomain ? "/" : `/${profile.username}`} className="text-[10px] font-mono text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors uppercase tracking-widest">
                         ← Volver al perfil de {profile.username}
                     </Link>
                     <div className="logo mt-8 scale-75 opacity-10 filter grayscale select-none">huev<span>site</span>.io</div>

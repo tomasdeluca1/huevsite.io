@@ -30,6 +30,21 @@ export function ExploreNavigation({ currentUsername }: { currentUsername: string
         }
     }, [currentUsername]);
 
+    const navigateToProfile = (username: string) => {
+        const isReserved = [
+            'huevsite.io',
+            'www.huevsite.io',
+            'localhost:3000',
+            'huevsite-io.vercel.app'
+        ].includes(window.location.hostname) || window.location.hostname.endsWith('.vercel.app');
+
+        if (isReserved) {
+            router.push(`/${username}`);
+        } else {
+            window.location.href = `https://huevsite.io/${username}`;
+        }
+    };
+
     if (!isVisible || index === -1) return null;
 
     const prev = index > 0 ? list[index - 1] : null;
@@ -42,7 +57,7 @@ export function ExploreNavigation({ currentUsername }: { currentUsername: string
                 <div className="relative group">
                     <button
                         disabled={!prev}
-                        onClick={() => prev && router.push(`/${prev}`)}
+                        onClick={() => prev && navigateToProfile(prev)}
                         className={`p-4 rounded-2xl transition-all flex items-center gap-2 ${prev
                             ? "hover:bg-white/10 text-white hover:text-[var(--accent)]"
                             : "opacity-20 translate-x-0 cursor-not-allowed"
@@ -63,8 +78,21 @@ export function ExploreNavigation({ currentUsername }: { currentUsername: string
                 <div className="h-8 w-px bg-white/10" />
 
                 {/* Explorer & Progress */}
-                <Link
-                    href="/explore"
+                <button
+                    onClick={() => {
+                        const isReserved = [
+                            'huevsite.io',
+                            'www.huevsite.io',
+                            'localhost:3000',
+                            'huevsite-io.vercel.app'
+                        ].includes(window.location.hostname) || window.location.hostname.endsWith('.vercel.app');
+                        
+                        if (isReserved) {
+                            router.push('/explore');
+                        } else {
+                            window.location.href = 'https://huevsite.io/explore';
+                        }
+                    }}
                     className="flex flex-col items-center px-4 hover:bg-white/5 py-2 rounded-2xl transition-colors group"
                 >
                     <Compass size={18} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:rotate-12 transition-all mb-1" />
@@ -74,7 +102,7 @@ export function ExploreNavigation({ currentUsername }: { currentUsername: string
                             {index + 1} <span className="opacity-40">/</span> {list.length}
                         </span>
                     </div>
-                </Link>
+                </button>
 
                 <div className="h-8 w-px bg-white/10" />
 
@@ -82,7 +110,7 @@ export function ExploreNavigation({ currentUsername }: { currentUsername: string
                 <div className="relative group">
                     <button
                         disabled={!next}
-                        onClick={() => next && router.push(`/${next}`)}
+                        onClick={() => next && navigateToProfile(next)}
                         className={`p-4 rounded-2xl transition-all flex items-center gap-2 ${next
                             ? "hover:bg-white/10 text-white hover:text-[var(--accent)]"
                             : "opacity-20 cursor-not-allowed"
@@ -102,7 +130,7 @@ export function ExploreNavigation({ currentUsername }: { currentUsername: string
             </div>
 
             {/* Keyboard navigation helper */}
-            <KeyboardNav prev={prev} next={next} />
+            <KeyboardNav prev={prev} next={next} onNavigate={navigateToProfile} />
 
             {/* Side floating arrows (Visual only, for mouse users) */}
             <div className="fixed top-1/2 -translate-y-1/2 left-8 hidden xl:block pointer-events-none">
@@ -112,7 +140,7 @@ export function ExploreNavigation({ currentUsername }: { currentUsername: string
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 0.3, x: 0 }}
                             whileHover={{ opacity: 1, x: 2 }}
-                            onClick={() => router.push(`/${prev}`)}
+                            onClick={() => navigateToProfile(prev)}
                             className="p-3 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm pointer-events-auto transition-all text-white"
                         >
                             <ChevronLeft size={32} />
@@ -128,7 +156,7 @@ export function ExploreNavigation({ currentUsername }: { currentUsername: string
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 0.3, x: 0 }}
                             whileHover={{ opacity: 1, x: -2 }}
-                            onClick={() => router.push(`/${next}`)}
+                            onClick={() => navigateToProfile(next)}
                             className="p-3 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm pointer-events-auto transition-all text-white"
                         >
                             <ChevronRight size={32} />
@@ -140,23 +168,21 @@ export function ExploreNavigation({ currentUsername }: { currentUsername: string
     );
 }
 
-function KeyboardNav({ prev, next }: { prev: string | null; next: string | null }) {
-    const router = useRouter();
-
+function KeyboardNav({ prev, next, onNavigate }: { prev: string | null; next: string | null; onNavigate: (username: string) => void }) {
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
             if (e.key === "ArrowLeft" && prev) {
-                router.push(`/${prev}`);
+                onNavigate(prev);
             } else if (e.key === "ArrowRight" && next) {
-                router.push(`/${next}`);
+                onNavigate(next);
             }
         };
 
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [prev, next, router]);
+    }, [prev, next, onNavigate]);
 
     return null;
 }

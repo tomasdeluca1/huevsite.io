@@ -10,6 +10,8 @@ import { MobileBottomNav, MobileStickyHeader } from "@/components/profile/Mobile
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWeek } from "@/lib/showcase-service";
 import { ExploreNavigation } from "@/components/explore/ExploreNavigation";
+import { headers } from "next/headers";
+
 interface Props {
   params: { username: string };
 }
@@ -66,6 +68,10 @@ export default async function ProfilePage({ params }: Props) {
   if (!profile) {
     notFound();
   }
+
+  const headersList = headers();
+  const host = headersList.get("host") || "";
+  const isCustomDomain = host === profile.customDomain && !!profile.customDomain;
 
   // Social: verificar si el usuario actual ya sigue este perfil
   let currentUserId: string | null = null;
@@ -174,6 +180,7 @@ export default async function ProfilePage({ params }: Props) {
           subscriptionTier={profile.subscriptionTier}
           subSites={profile.subSites}
           username={profile.username}
+          isCustomDomain={isCustomDomain}
         />
 
         {/* Huevsite Grid (Client Component for animations) */}

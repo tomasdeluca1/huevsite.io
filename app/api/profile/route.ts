@@ -101,6 +101,23 @@ export async function PATCH(request: NextRequest) {
       'custom_domain',
     ]
 
+    // Segurizar: Solo usuarios PRO pueden configurar custom_domain
+    if (body.custom_domain !== undefined) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_tier, pro_since')
+        .eq('id', user.id)
+        .single();
+      
+      const isPro = profile && (profile.subscription_tier === 'pro' || !!profile.pro_since);
+      if (!isPro) {
+        return NextResponse.json(
+          { error: 'Para usar un dominio custom necesitás huevsite PRO.' },
+          { status: 403 }
+        );
+      }
+    }
+
     const updateData: any = {}
     allowedFields.forEach(field => {
       if (body[field] !== undefined) {

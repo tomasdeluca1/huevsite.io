@@ -3,6 +3,10 @@ import dns from 'dns/promises';
 
 export const dynamic = 'force-dynamic';
 
+const VERCEL_TOKEN = process.env.VERCEL_TOKEN;
+const PROJECT_ID = process.env.VERCEL_PROJECT_ID;
+const TEAM_ID = process.env.VERCEL_TEAM_ID;
+
 export async function POST(req: NextRequest) {
     try {
         const { domain } = await req.json();
@@ -11,43 +15,50 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Dominio requerido' }, { status: 400 });
         }
 
-        // 1. Limpiar el dominio (quitar http:// etc)
         const cleanDomain = domain.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").split('/')[0];
-        const wwwDomain = domain.startsWith('www.') ? domain : `www.${cleanDomain}`;
         
-        // Resultados
+        // 1. Verificar primero con Vercel API (más preciso)
+        if (VERCEL_TOKEN && PROJECT_ID) {
+            try {
+                const url = `https://api.vercel.com/v9/projects/${PROJECT_ID}/domains/${cleanDomain}${TEAM_ID ? `?teamId=${TEAM_ID}` : ''}`;
+                const res = await fetch(url, {
+                    headers: { Authorization: `Bearer ${VERCEL_TOKEN}` }
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    
+                    if (data.verified && data.configuredBy) {
+                        return NextResponse.json({
+                            isValid: true,
+                            method: 'Vercel API',
+                            message: '¡Dominio correctamente configurado y verificado en Vercel!'
+                        });
+                    }
+                }
+            } catch (e) {
+                console.error('Error fetching Vercel domain status:', e);
+            }
+        }
+
+        // 2. Fallback a DNS manual (si Vercel aún no lo ve o no hay tokens)
         let resolved = false;
         let method = '';
-        let records: string[] = [];
-
-        // 2. Intentar verificar CNAME (típico para www o subdominios)
+        
+        // Intento CNAME
         try {
             const cnameRecords = await dns.resolveCname(cleanDomain);
-            records = [...records, ...cnameRecords];
-            if (cnameRecords.some(r => r.includes('huevsite.io'))) {
+            if (cnameRecords.some(r => r.includes('huevsite.io') || r.includes('vercel.pub'))) {
                 resolved = true;
                 method = 'CNAME';
             }
         } catch (e) {}
 
-        if (!resolved) {
-            try {
-                const cnameWww = await dns.resolveCname(wwwDomain);
-                records = [...records, ...cnameWww];
-                if (cnameWww.some(r => r.includes('huevsite.io'))) {
-                    resolved = true;
-                    method = 'CNAME (www)';
-                }
-            } catch (e) {}
-        }
-
-        // 3. Intentar verificar A Record (típico para Apex @)
+        // Intento A Record
         if (!resolved) {
             try {
                 const aRecords = await dns.resolve4(cleanDomain);
-                records = [...records, ...aRecords];
-                // IP de Vercel (común para apps configuradas allí)
-                if (aRecords.includes('76.76.21.21')) {
+                if (aRecords.includes('76.76.21.21')) { // IP estándar de Vercel
                     resolved = true;
                     method = 'A Record';
                 }
@@ -57,11 +68,10 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({
             isValid: resolved,
             method,
-            records,
             domain: cleanDomain,
             message: resolved 
-                ? `¡Conexión exitosa vía ${method}!` 
-                : 'No se detectaron los registros DNS correctos todavía.'
+                ? `Los registros DNS parecen estar bien (${method}), pero Vercel aún está procesando el SSL. Esperá unos minutos.` 
+                : 'No se detectaron los registros DNS. Asegurate de haber configurado el CNAME o el registro A correctamente.'
         });
 
     } catch (error) {

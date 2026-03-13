@@ -26,7 +26,8 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Necesitas ser PRO para crear sub-sites' }, { status: 403 })
         }
 
-        const { title, slug, description, avatar_url } = await request.json()
+        const body = await request.json()
+        const { title, slug, description, avatar_url } = body
 
         if (!title || !slug) {
             return NextResponse.json({ error: 'Título y slug son requeridos' }, { status: 400 })
@@ -38,17 +39,35 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Slug inválido (solo minúsculas, números y guiones)' }, { status: 400 })
         }
 
-        const { data: subSite, error: insertError } = await supabase
+        let insertData: any = {
+            user_id: user.id,
+            title,
+            slug
+        }
+
+        if (description !== undefined) insertData.description = description
+        
+        // Primera tentativa: con avatar_url
+        let payload = { ...insertData }
+        if (avatar_url !== undefined) payload.avatar_url = avatar_url
+
+        let { data: subSite, error: insertError } = await supabase
             .from('sub_sites')
-            .insert({
-                user_id: user.id,
-                title,
-                slug,
-                description,
-                avatar_url
-            })
+            .insert(payload)
             .select()
             .single()
+
+        // Fallback si la columna no existe en el schema cache (PGRST204)
+        if (insertError && (insertError as any).code === 'PGRST204') {
+            const { data: secondAttempt, error: secondError } = await supabase
+                .from('sub_sites')
+                .insert(insertData)
+                .select()
+                .single()
+            
+            subSite = secondAttempt
+            insertError = secondError
+        }
 
         if (insertError) {
             if (insertError.code === '23505') {

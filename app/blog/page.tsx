@@ -37,7 +37,7 @@ export default function BlogIndexPage() {
           </div>
         </div>
         <div className="section-label mb-2">// blog y novedades</div>
-        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tighter text-white">Detrás del producto</h1>
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tighter text-white">Detrás del producto</h1>
         <p className="text-[var(--text-dim)] mt-4 max-w-lg text-lg">
           Noticias, lanzamientos de features y mejores prácticas para armar el portfolio perfecto y destacarte en internet.
         </p>

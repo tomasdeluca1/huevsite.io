@@ -13,6 +13,51 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "dominios-custom-tu-nombre-punto-com",
+    title: "Tu marca personal en serio: Lanzamos Dominios Custom para PROs",
+    excerpt: "Ya no dependas de huevsite.io/tu-usuario. Ahora podés conectar tu propio dominio (ej: builder.com) y llevar tu portfolio al siguiente nivel.",
+    date: "2026-03-12",
+    author: {
+      name: "Tomas Deluca",
+      username: "huevsite",
+      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+    },
+    content: `
+Si sos un builder serio, tu URL importa. huevsite.io/tu-nombre está buenísimo para arrancar, pero cuando querés cerrar ese cliente premium o aplicar a una startup top de US, tener **tu-nombre.com** o **tu-startup.io** apuntando directo a tu portfolio bento-box no tiene comparación.
+
+Hoy liberamos la funcionalidad de **Custom Domains** para todos los usuarios PRO.
+
+## ¿Por qué usar un dominio propio?
+
+Tener un dominio custom no es solo una cuestión estética, es control total sobre tu marca personal:
+- **Profesionalismo instantáneo**: Un dominio propio genera una confianza que una URL compartida no logra alcanzar.
+- **Portabilidad**: Sos dueño de tu tráfico. Si decidís apuntar tu dominio a otro lado en el futuro, tus enlaces impresos en tarjetas o bios de Twitter nunca mueren.
+- **SEO Directo**: Toda la autoridad de búsqueda se acumula en *tu* dominio, no en el nuestro.
+
+## ¿Es difícil configurarlo?
+
+Lo hicimos para que lo haga mi abuela. Bueno, casi.
+Utilizamos la infraestructura de **Vercel Domains** para que la conexión sea rápida y segura:
+
+1. Entrás a **PRO Settings** en tu dashboard.
+2. Escribís tu dominio (ej: \`tomasdeluca.io\`).
+3. Te damos los registros DNS (\`A\` o \`CNAME\`).
+4. Lo pegás en tu registrador (GoDaddy, Namecheap, etc) y listo.
+
+En minutos, nuestro sistema genera un certificado SSL automático y tu sitio está online con HTTPS.
+
+## Bonus: Sub-sites en tu dominio
+
+Lo mejor es que tus sub-sites (los que creaste con nuestra IA o a mano) también cuelgan de tu dominio. Si conectás \`tomasdeluca.io\`, tu proyecto de la hackaton va a estar en \`tomasdeluca.io/mi-proyecto\`. 
+
+Es, literalmente, un constructor de sitios estáticos profesional disfrazado de red social de builders.
+
+**Subí de liga hoy conectando tu dominio.**
+
+¡A buildeaRRR!
+    `,
+  },
+  {
     slug: "agente-ia-generador-sub-sites",
     title: "Generá un sub-site completo en 10 segundos con IA",
     excerpt: "Lanzamos el Agente de Sub-sites para usuarios PRO. Pegá la URL de tu startup, producto o post y la IA estructurará un portfolio increíble en segundos.",

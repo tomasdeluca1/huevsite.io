@@ -49,21 +49,42 @@ export async function PATCH(
 
         const { id } = params
         const updates = await request.json()
+        
+        // Construir objeto de actualización dinámicamente
+        const updateData: any = {
+            updated_at: new Date().toISOString()
+        }
+
+        if (updates.title !== undefined) updateData.title = updates.title
+        if (updates.slug !== undefined) updateData.slug = updates.slug
+        if (updates.description !== undefined) updateData.description = updates.description
+        if (updates.avatar_url !== undefined) updateData.avatar_url = updates.avatar_url
 
         // Actualizar sub-site
-        const { data: subSite, error: updateError } = await supabase
+        let { data: subSite, error: updateError } = await supabase
             .from('sub_sites')
-            .update({
-                title: updates.title,
-                slug: updates.slug,
-                description: updates.description,
-                avatar_url: updates.avatar_url,
-                updated_at: new Date().toISOString()
-            })
+            .update(updateData)
             .eq('id', id)
             .eq('user_id', user.id)
             .select()
             .single()
+
+        // Fallback si la columna avatar_url falla por no estar en el cache
+        if (updateError && (updateError as any).code === 'PGRST204' && updateData.avatar_url !== undefined) {
+            const fallbackData = { ...updateData }
+            delete fallbackData.avatar_url
+            
+            const { data: secondAttempt, error: secondError } = await supabase
+                .from('sub_sites')
+                .update(fallbackData)
+                .eq('id', id)
+                .eq('user_id', user.id)
+                .select()
+                .single()
+            
+            subSite = secondAttempt
+            updateError = secondError
+        }
 
         if (updateError) throw updateError
 

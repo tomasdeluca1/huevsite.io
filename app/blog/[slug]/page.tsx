@@ -81,7 +81,7 @@ export default async function BlogPostPage({
           </div>
 
           <div className="flex flex-col gap-6 mt-16 mb-12">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-[-0.03em] text-white leading-[1.1]">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] text-white leading-[1.1]">
               {post.title}
             </h1>
             <p className="text-lg md:text-xl text-[var(--text-dim)] leading-relaxed max-w-2xl font-medium">

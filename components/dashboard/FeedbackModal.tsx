@@ -47,7 +47,7 @@ export function FeedbackModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -60,8 +60,10 @@ export function FeedbackModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-lg bg-[var(--surface)] border border-[var(--border-bright)] rounded-3xl overflow-hidden shadow-2xl"
+          className="relative w-full max-w-lg bg-[#0A0A0A] border border-white/10 rounded-[2.5rem] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] backdrop-blur-xl"
         >
+          {/* Glow top border */}
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[var(--accent)] to-transparent opacity-50" />
           {sent ? (
             <div className="p-12 text-center space-y-4">
               <div className="flex justify-center">
@@ -76,12 +78,12 @@ export function FeedbackModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
             <>
               <div className="p-6 border-b border-[var(--border)] flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[var(--surface2)] flex items-center justify-center text-[var(--accent)] border border-[var(--border-bright)]">
-                    <MessageSquare size={20} />
+                  <div className="w-12 h-12 rounded-2xl bg-white/[0.03] flex items-center justify-center text-[var(--accent)] border border-white/10 shadow-inner">
+                    <MessageSquare size={22} />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg">Enviar Feedback</h3>
-                    <div className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider">// línea directa con tomas</div>
+                    <h3 className="font-black text-xl tracking-tighter">Feedback</h3>
+                    <div className="text-[9px] font-mono text-white/30 uppercase tracking-[0.2em] mt-1">// línea directa con el equipo</div>
                   </div>
                 </div>
                 <button 
@@ -128,7 +130,7 @@ export function FeedbackModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
 
                 <button
                   disabled={loading || !content.trim()}
-                  className="w-full py-4 rounded-2xl bg-white text-black font-bold flex items-center justify-center gap-2 hover:bg-[var(--accent)] transition-all disabled:opacity-50 disabled:grayscale group"
+                  className="w-full py-5 rounded-2xl bg-white text-black font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:grayscale group"
                 >
                   {loading ? (
                     <Loader2 size={18} className="animate-spin" />

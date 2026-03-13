@@ -55,13 +55,21 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [isScoreInfoOpen, setIsScoreInfoOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Update activity timestamp and save filters
   useEffect(() => {
     if (typeof window === "undefined") return;
     // Clear the "from explore" flag on mount so navigation doesn't stick
     sessionStorage.removeItem("huevsite_from_explore");
-    
+
     localStorage.setItem("huevsite_explore_search", search);
     localStorage.setItem("huevsite_explore_sort", sort);
     localStorage.setItem("huevsite_explore_category", category);
@@ -149,7 +157,7 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
           >
             <Sparkles size={18} className="text-[var(--accent)] group-hover:scale-110 transition-transform" />
             <span className="hidden md:block text-[11px] font-black uppercase tracking-widest">Score System</span>
-            
+
             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0 pointer-events-none hidden md:block">
               <div className="bg-black/90 backdrop-blur-md border border-white/10 px-4 py-2 rounded-xl whitespace-nowrap shadow-2xl">
                 <span className="text-[10px] text-[var(--accent)] font-black uppercase tracking-widest block mb-0.5 text-center">Cómo sumás puntos?</span>
@@ -204,15 +212,21 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
         </div>
       ) : (
         <div className="flex flex-col gap-12">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10 pt-10">
             {profiles.map((profile, i) => {
               const showWinnerBadge = !!profile.is_winner;
               return (
                 <motion.div
                   key={profile.id}
-                  className={`relative h-full ${showWinnerBadge ? 'pt-8 z-10' : ''}`}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  className="relative group/wrapper h-full pt-10"
+                  initial="initial"
+                  animate="animate"
+                  whileHover="hover"
+                  variants={{
+                    initial: { opacity: 0, y: 15 },
+                    animate: { opacity: 1, y: 0 },
+                    hover: { zIndex: 50 },
+                  }}
                   transition={{
                     duration: 0.4,
                     delay: Math.min(i * 0.05, 0.5),
@@ -220,102 +234,130 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
                   }}
                 >
                   {showWinnerBadge && (
-                    <div className="absolute top-0 left-1 right-1 h-14 bg-[var(--accent)] rounded-t-[1.6rem] flex items-start justify-center pt-2.5 z-0 shadow-[0_-5px_20px_rgba(200,255,0,0.15)]">
-                      <span className="text-black font-black text-[10px] uppercase tracking-widest">
-                        🌟 Creador de la semana
-                      </span>
-                    </div>
+                    <motion.div
+                      className="absolute left-8 right-8 h-10 bg-[var(--accent)] rounded-t-xl flex items-start justify-center pt-2 pointer-events-none z-0 shadow-[0_-5px_20px_rgba(200,255,0,0.15)]"
+                      style={{ top: '40px' }} // Exactly at the card's top edge
+                      variants={{
+                        hover: { 
+                          y: -36, 
+                          transition: { type: "spring", stiffness: 400, damping: 25 } 
+                        },
+                        initial: { y: 0 },
+                        animate: {
+                          y: [-3, -10, -3],
+                          transition: {
+                            y: {
+                              repeat: Infinity,
+                              duration: 2.5,
+                              ease: "easeInOut"
+                            }
+                          }
+                        },
+                        mobile: { y: -36 }
+                      }}
+                      animate={isMobile ? "mobile" : "animate"}
+                    >
+                      <div className="flex items-center gap-1.5 px-3">
+                        <Sparkles size={11} className="text-black fill-black" />
+                        <span className="text-black font-black text-[10px] uppercase tracking-[0.1em] whitespace-nowrap">
+                          Creador de la semana
+                        </span>
+                      </div>
+                    </motion.div>
                   )}
-                  <Link
-                    href={`/${profile.username}`}
-                    onClick={() => {
-                      if (typeof window !== "undefined") {
-                        sessionStorage.setItem("huevsite_from_explore", "true");
-                      }
-                    }}
-                    className="group h-full relative z-10 bg-[var(--surface)] border border-[var(--border)] rounded-[1.5rem] p-8 hover:border-[var(--border-bright)] transition-all overflow-hidden flex flex-col min-h-[220px]"
-                  >
-                    {/* Accent glow on hover */}
-                    <div
-                      className="absolute inset-0 opacity-0 group-hover:opacity-[0.03] transition-opacity duration-500 pointer-events-none"
-                      style={{ backgroundColor: profile.accent_color || 'var(--accent)' }}
-                    />
 
-                    {/* Pro Badge */}
-                    {profile.pro_since && !profile.is_winner && (
-                      <div className="absolute top-4 right-4 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-500 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1.5 shadow-[0_0_15px_rgba(245,158,11,0.2)] z-20 backdrop-blur-sm">
-                        <Sparkles size={12} className="text-amber-400 animate-pulse" />
-                        PRO
-                      </div>
-                    )}
+                  <motion.div className="h-full relative z-10 bg-[var(--bg)] rounded-[1.5rem]">
+                    <Link
+                      href={`/${profile.username}`}
+                      onClick={() => {
+                        if (typeof window !== "undefined") {
+                          sessionStorage.setItem("huevsite_from_explore", "true");
+                        }
+                      }}
+                      className="group h-full relative border border-[var(--border)] bg-[var(--surface)] rounded-[1.5rem] p-8 hover:border-[var(--border-bright)] transition-all overflow-hidden flex flex-col min-h-[220px] shadow-2xl"
+                    >
+                      {/* Accent glow on hover */}
+                      <div
+                        className="absolute inset-0 opacity-0 group-hover:opacity-[0.03] transition-opacity duration-500 pointer-events-none"
+                        style={{ backgroundColor: profile.accent_color || 'var(--accent)' }}
+                      />
 
-                    <div className="flex flex-col h-full relative z-10">
-                      <div className="mb-auto">
-                        <div className="flex items-start gap-4 mb-4">
-                          <div className="w-12 h-12 shrink-0 rounded-full flex items-center justify-center text-lg font-black text-black shadow-sm" style={{ background: profile.image ? 'transparent' : `linear-gradient(135deg, ${profile.accent_color || 'var(--accent)'}, #00FF88)` }}>
-                            {profile.image ? (
-                              <img src={profile.image} alt={profile.name || profile.username} className="w-full h-full object-cover rounded-full border border-[var(--border)] bg-[var(--surface2)]" />
-                            ) : (
-                              (profile.name || profile.username).charAt(0).toUpperCase()
-                            )}
+                      {/* Pro Badge */}
+                      {profile.pro_since && !profile.is_winner && (
+                        <div className="absolute top-4 right-4 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-500 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1.5 shadow-[0_0_15px_rgba(245,158,11,0.2)] z-20 backdrop-blur-sm">
+                          <Sparkles size={12} className="text-amber-400 animate-pulse" />
+                          PRO
+                        </div>
+                      )}
+
+                      <div className="flex flex-col h-full relative z-10">
+                        <div className="mb-auto">
+                          <div className="flex items-start gap-4 mb-4">
+                            <div className="w-12 h-12 shrink-0 rounded-full flex items-center justify-center text-lg font-black text-black shadow-sm" style={{ background: profile.image ? 'transparent' : `linear-gradient(135deg, ${profile.accent_color || 'var(--accent)'}, #00FF88)` }}>
+                              {profile.image ? (
+                                <img src={profile.image} alt={profile.name || profile.username} className="w-full h-full object-cover rounded-full border border-[var(--border)] bg-[var(--surface2)]" />
+                              ) : (
+                                (profile.name || profile.username).charAt(0).toUpperCase()
+                              )}
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+                              <h2 className="text-xl font-bold tracking-tight mb-1 group-hover:text-white transition-colors truncate pr-8">
+                                {profile.name || profile.username}
+                              </h2>
+                              <p className="text-[13px] text-[var(--text-dim)] font-mono line-clamp-2 leading-relaxed">
+                                {profile.tagline || "Creator"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between mt-8 mb-6 p-3 bg-white/[0.03] border border-white/[0.05] rounded-2xl">
+                          <div className="flex flex-col items-center flex-1 px-1 border-r border-white/5">
+                            <span className="text-white font-black text-sm leading-none mb-1">{profile.followers_count || 0}</span>
+                            <span className="text-[7px] text-[var(--text-muted)] uppercase tracking-[0.1em] font-mono">Seguidores</span>
                           </div>
 
-                          <div className="flex-1 min-w-0">
-                            <h2 className="text-xl font-bold tracking-tight mb-1 group-hover:text-white transition-colors truncate pr-8">
-                              {profile.name || profile.username}
-                            </h2>
-                            <p className="text-[13px] text-[var(--text-dim)] font-mono line-clamp-2 leading-relaxed">
-                              {profile.tagline || "Creator"}
-                            </p>
+                          <div className="flex flex-col items-center flex-1 px-1 border-r border-white/5">
+                            <span className="text-white font-black text-sm leading-none mb-1">{profile.nominations_count || 0}</span>
+                            <span className="text-[7px] text-[var(--text-muted)] uppercase tracking-[0.1em] font-mono">Votos</span>
+                          </div>
+
+                          <div className="flex flex-col items-center flex-1 px-1 border-r border-white/5">
+                            <span className="text-white font-black text-sm leading-none mb-1">{profile.endorsements_count || 0}</span>
+                            <span className="text-[7px] text-[var(--text-muted)] uppercase tracking-[0.1em] font-mono">Comentarios</span>
+                          </div>
+
+                          <div className="flex flex-col items-center flex-1 px-1">
+                            <span className="text-[var(--accent)] font-black text-sm leading-none mb-1">{profile.builder_score || 0}</span>
+                            <span className="text-[7px] text-[var(--accent)]/60 uppercase tracking-[0.1em] font-mono">Score</span>
+                          </div>
+                        </div>
+
+                        <div className="pt-8 mt-auto flex items-center justify-between border-t border-[var(--border-bright)]/30 group-hover:border-[var(--border-bright)] transition-colors">
+                          <div className="font-mono text-xs text-[var(--text-muted)] flex items-center gap-2">
+                            <span
+                              className="w-2 h-2 rounded-full inline-block shadow-sm"
+                              style={{ backgroundColor: profile.accent_color || 'var(--accent)', boxShadow: `0 0 8px ${profile.accent_color || 'var(--accent)'}40` }}
+                            />
+                            @{profile.username}
+                          </div>
+                          <div
+                            className="w-8 h-8 rounded-full bg-[var(--surface2)] flex items-center justify-center opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all border border-[var(--border-bright)]"
+                            style={{ color: profile.accent_color || 'var(--accent)' }}
+                          >
+                            <ArrowRight size={14} />
                           </div>
                         </div>
                       </div>
-
-                      <div className="flex items-center justify-between mt-8 mb-6 p-3 bg-white/[0.03] border border-white/[0.05] rounded-2xl">
-                        <div className="flex flex-col items-center flex-1 px-1 border-r border-white/5">
-                          <span className="text-white font-black text-sm leading-none mb-1">{profile.followers_count || 0}</span>
-                          <span className="text-[7px] text-[var(--text-muted)] uppercase tracking-[0.1em] font-mono">Seguidores</span>
-                        </div>
-
-                        <div className="flex flex-col items-center flex-1 px-1 border-r border-white/5">
-                          <span className="text-white font-black text-sm leading-none mb-1">{profile.nominations_count || 0}</span>
-                          <span className="text-[7px] text-[var(--text-muted)] uppercase tracking-[0.1em] font-mono">Votos</span>
-                        </div>
-
-                        <div className="flex flex-col items-center flex-1 px-1 border-r border-white/5">
-                          <span className="text-white font-black text-sm leading-none mb-1">{profile.endorsements_count || 0}</span>
-                          <span className="text-[7px] text-[var(--text-muted)] uppercase tracking-[0.1em] font-mono">Comentarios</span>
-                        </div>
-
-                        <div className="flex flex-col items-center flex-1 px-1">
-                          <span className="text-[var(--accent)] font-black text-sm leading-none mb-1">{profile.builder_score || 0}</span>
-                          <span className="text-[7px] text-[var(--accent)]/60 uppercase tracking-[0.1em] font-mono">Score</span>
-                        </div>
-                      </div>
-
-                      <div className="pt-8 mt-auto flex items-center justify-between border-t border-[var(--border-bright)]/30 group-hover:border-[var(--border-bright)] transition-colors">
-                        <div className="font-mono text-xs text-[var(--text-muted)] flex items-center gap-2">
-                          <span
-                            className="w-2 h-2 rounded-full inline-block shadow-sm"
-                            style={{ backgroundColor: profile.accent_color || 'var(--accent)', boxShadow: `0 0 8px ${profile.accent_color || 'var(--accent)'}40` }}
-                          />
-                          @{profile.username}
-                        </div>
-                        <div
-                          className="w-8 h-8 rounded-full bg-[var(--surface2)] flex items-center justify-center opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all border border-[var(--border-bright)]"
-                          style={{ color: profile.accent_color || 'var(--accent)' }}
-                        >
-                          <ArrowRight size={14} />
-                        </div>
-                      </div>
-                    </div>
-                    {/* Special border for Winner or PRO */}
-                    {profile.is_winner ? (
-                      <div className="absolute inset-0 border-2 border-[var(--accent)]/30 rounded-[1.5rem] pointer-events-none transition-colors shadow-[inset_0_0_20px_rgba(200,255,0,0.05)]" />
-                    ) : profile.pro_since ? (
-                      <div className="absolute inset-0 border border-amber-500/20 rounded-[1.5rem] pointer-events-none group-hover:border-amber-500/50 transition-colors shadow-[inset_0_0_15px_rgba(245,158,11,0.05)]" />
-                    ) : null}
-                  </Link>
+                      {/* Special border for Winner or PRO */}
+                      {profile.is_winner ? (
+                        <div className="absolute inset-0 border-2 border-[var(--accent)]/30 rounded-[1.5rem] pointer-events-none transition-colors shadow-[inset_0_0_20px_rgba(200,255,0,0.05)]" />
+                      ) : profile.pro_since ? (
+                        <div className="absolute inset-0 border border-amber-500/20 rounded-[1.5rem] pointer-events-none group-hover:border-amber-500/50 transition-colors shadow-[inset_0_0_15px_rgba(245,158,11,0.05)]" />
+                      ) : null}
+                    </Link>
+                  </motion.div>
                 </motion.div>
               );
             })}

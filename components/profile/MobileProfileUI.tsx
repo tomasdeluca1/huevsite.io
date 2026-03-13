@@ -62,6 +62,16 @@ export function MobileStickyHeader({ displayName, avatarUrl, builderScore, accen
 }
 
 export function MobileBottomNav({ accentColor, currentUserId, isCustomDomain = false }: { accentColor: string; currentUserId?: string | null; isCustomDomain?: boolean }) {
+    const [shouldHide, setShouldHide] = useState(false);
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const fromExplore = sessionStorage.getItem("huevsite_from_explore") === "true";
+            setShouldHide(fromExplore);
+        }
+    }, []);
+
+    if (shouldHide) return null;
     return (
         <div className="fixed bottom-6 left-0 right-0 z-[1000] md:hidden px-4">
             <div className="mx-auto max-w-[280px] h-16 bg-black/40 backdrop-blur-2xl border border-white/10 rounded-[2rem] flex items-center justify-around px-2 shadow-2xl">

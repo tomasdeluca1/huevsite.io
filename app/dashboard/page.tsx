@@ -18,7 +18,7 @@ import {
 } from "@dnd-kit/sortable";
 import {
   Save, Eye, Layout as LayoutIcon, Settings, LogOut, Plus, Sparkles, MessageSquare,
-  Activity, Compass, Trash2, Copy, Check, Trophy, ArrowUpRight, BadgeCheck, ArrowLeft, Lock, Globe
+  Activity, Compass, Trash2, Copy, Check, Trophy, ArrowUpRight, BadgeCheck, ArrowLeft, Lock, Globe, ChevronRight
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -42,6 +42,7 @@ import { createClient } from "@/lib/supabase/client";
 import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
 import { ProSettingsModal } from "@/components/dashboard/ProSettingsModal";
 import { UpgradeModal } from "@/components/dashboard/UpgradeModal";
+import { DashboardSidebar } from "@/components/dashboard/Sidebar";
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -781,7 +782,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-[var(--bg)] font-display overflow-x-hidden">
+    <div className="h-screen flex flex-col md:flex-row bg-[var(--bg)] font-display overflow-hidden">
       {/* MOBILE HEADER */}
       <div className="md:hidden flex items-center justify-between p-4 bg-[var(--surface)] border-b border-[var(--border)] sticky top-0 z-[100] backdrop-blur-md">
         <Link href="/" className="logo block text-lg font-extrabold tracking-tight">huev<span>site</span>.io</Link>
@@ -810,310 +811,37 @@ export default function DashboardPage() {
         )}
       </AnimatePresence>
 
-      {/* SIDEBAR / DRAWER */}
-      <aside className={`
-        fixed inset-y-0 left-0 w-[280px] shrink-0 border-r border-[var(--border)] bg-[var(--surface)] p-6 
-        flex flex-col gap-6 z-[110] transition-transform duration-300 ease-in-out custom-scrollbar overflow-y-auto
-        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-        md:fixed md:inset-y-0 md:left-0
-      `}>
-        <div className="hidden md:flex justify-between items-center mb-6">
-          <Link href="/" className="logo block text-2xl font-extrabold tracking-tight">huev<span>site</span>.io</Link>
-        </div>
-
-        <div className="flex flex-col gap-6">
-          <div className="space-y-6">
-            {selectedSubSiteId ? (
-              // SUB-SITE DISPLAY IN SIDEBAR
-              <div
-                className="space-y-1.5 md:mb-4 bg-[var(--surface2)]/50 p-4 rounded-2xl border border-[var(--border)] relative transition-all shadow-sm"
-              >
-                <div className="flex items-center gap-3 w-full p-0">
-                  {profile.subSites.find(s => s.id === selectedSubSiteId)?.avatarUrl ? (
-                    <img src={profile.subSites.find(s => s.id === selectedSubSiteId)?.avatarUrl} alt="Avatar" className="w-10 h-10 rounded-xl object-cover bg-black" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-xl bg-black border border-white/10 flex items-center justify-center text-[var(--accent)] font-bold uppercase">
-                      {profile.subSites.find(s => s.id === selectedSubSiteId)?.title.substring(0, 2)}
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xl font-black truncate text-[var(--accent)] w-full block">
-                      {profile.subSites.find(s => s.id === selectedSubSiteId)?.title || "Sub-site"}
-                    </div>
-                    <div className="text-[10px] uppercase font-mono tracking-widest text-[var(--text-muted)] mt-0.5">Ecosistema</div>
-                  </div>
-                </div>
-
-                <div
-                  className={`flex items-center justify-between gap-2 p-2 px-3 rounded-xl bg-black/30 border border-white/5 group/url mt-4`}
-                >
-                  <div className="flex items-center gap-1 min-w-0">
-                    <span className="text-[10px] text-[var(--text-muted)] font-mono shrink-0">/{profile.username}/</span>
-                    <span className="text-xs font-black truncate text-[var(--accent)] font-mono">
-                      {profile.subSites.find(s => s.id === selectedSubSiteId)?.slug}
-                    </span>
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/${profile.username}/${profile.subSites.find(s => s.id === selectedSubSiteId)?.slug}`;
-                      navigator.clipboard.writeText(url);
-                      setCopied(true);
-                      setTimeout(() => setCopied(false), 2000);
-                    }}
-                    className="shrink-0 p-1.5 rounded-lg hover:bg-white/10 text-[var(--text-muted)] hover:text-white transition-all bg-white/5"
-                    title="Copiar URL del sub-site"
-                  >
-                    {copied ? <Check size={12} className="text-[var(--accent)]" /> : <Copy size={12} />}
-                  </button>
-                </div>
-
-                <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-white/5">
-                  <button
-                    onClick={() => setIsProSettingsOpen(true)}
-                    className="flex items-center gap-3 w-full p-2.5 rounded-xl bg-white/5 border border-white/5 text-[11px] font-bold text-white hover:bg-white/10 hover:border-white/10 transition-all group"
-                  >
-                    <Settings size={14} className="text-[var(--accent)] group-hover:rotate-45 transition-transform" />
-                    <span>Ajustes del Sitio</span>
-                  </button>
-                  <button
-                    onClick={() => setSelectedSubSiteId(null)}
-                    className="flex items-center gap-3 w-full p-2.5 rounded-xl bg-black/40 border border-white/5 text-[11px] font-bold text-[var(--text-dim)] hover:text-white hover:bg-white/5 transition-all group"
-                  >
-                    <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
-                    <span>Volver al Principal</span>
-                  </button>
-                </div>
-              </div>
-            ) : (
-              // MAIN PROFILE DISPLAY IN SIDEBAR
-              <div
-                onClick={() => {
-                  setTempProfileData({
-                    username: profile.username,
-                    display_name: profile.displayName,
-                    tagline: profile.tagline || '',
-                    avatarUrl: profile.avatarUrl || '',
-                    githubHandle: profile.githubHandle || ''
-                  });
-                  setIsProfileModalOpen(true);
-                }}
-                className="space-y-1.5 md:mb-4 bg-[var(--surface2)]/50 p-4 rounded-2xl border border-[var(--border)] relative group transition-all hover:border-[var(--border-bright)] cursor-pointer hover:bg-[var(--surface2)] shadow-sm"
-              >
-                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity text-[8px] font-mono text-[var(--accent)] tracking-widest uppercase pointer-events-none hidden md:block">
-                  Editar
-                </div>
-                {!profile.blocks.some(b => b.type === 'hero') && (
-                  <>
-                    <div className="text-xl font-black truncate text-white w-full p-0">
-                      {profile.displayName || "Tu Nombre"}
-                    </div>
-                    <div className="text-[11px] text-[var(--text-dim)] w-full p-0 block truncate font-mono uppercase tracking-tight opacity-70">
-                      {profile.tagline || "Sin tagline"}
-                    </div>
-                  </>
-                )}
-                <div
-                  className={`flex items-center justify-between gap-2 p-2 px-3 rounded-xl bg-black/30 border border-white/5 group/url mt-3`}
-                >
-                  <div className="flex items-center gap-1 min-w-0">
-                    <span className="text-[10px] text-[var(--text-muted)] font-mono shrink-0">huevsite.io/</span>
-                    <span className="text-xs font-black truncate text-[var(--accent)] font-mono">
-                      {profile.username}
-                    </span>
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleCopyUrl();
-                    }}
-                    className="shrink-0 p-1.5 rounded-lg hover:bg-white/10 text-[var(--text-muted)] hover:text-white transition-all bg-white/5"
-                    title="Copiar URL"
-                  >
-                    {copied ? <Check size={12} className="text-[var(--accent)]" /> : <Copy size={12} />}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <ColorPicker
-              value={profile.accentColor}
-              onChange={handleColorChange}
-              subscriptionTier={profile.subscriptionTier}
-            />
-
-            <div className="h-px bg-[var(--border)] hidden md:block" />
-
-            {/* Builder Score */}
-            <motion.button
-              whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setIsScoreInfoOpen(true)}
-              className="w-full text-left bg-gradient-to-br from-[var(--surface2)]/50 to-black/30 rounded-2xl p-5 border border-white/5 relative overflow-hidden group/score hover:border-[var(--accent)]/40 transition-all shadow-xl"
-            >
-              {/* Dynamic Glow Accent */}
-              <div
-                className="absolute -top-12 -right-12 w-24 h-24 blur-[40px] rounded-full group-hover/score:w-32 group-hover/score:h-32 transition-all duration-700 opacity-20 group-hover/score:opacity-40"
-                style={{ backgroundColor: profile.accentColor }}
-              />
-
-              <div className="flex justify-between items-start mb-4 relative z-10">
-                <div className="flex flex-col">
-                  <span className="text-[9px] font-black font-mono text-[var(--text-muted)] uppercase tracking-widest flex items-center gap-2">
-                    Builder Status
-                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse shadow-[0_0_8px_var(--accent)]" />
-                  </span>
-                  <div className="flex items-baseline gap-1 mt-1">
-                    <span className="text-3xl font-black font-mono text-white tracking-tighter group-hover/score:text-[var(--accent)] transition-colors">
-                      {profile.builderScore || 0}
-                    </span>
-                    <span className="text-[10px] font-bold text-[var(--text-dim)] uppercase tracking-wider">pts</span>
-                  </div>
-                </div>
-                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-[var(--accent)] shadow-inner group-hover/score:bg-[var(--accent)] group-hover/score:text-black transition-all duration-300">
-                  <Trophy size={18} />
-                </div>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="space-y-2 relative z-10 mb-4">
-                <div className="flex justify-between text-[8px] font-mono text-[var(--text-muted)] uppercase font-bold px-0.5">
-                  <span className="group-hover/score:text-[var(--text-dim)] transition-colors">Progreso de Ranking</span>
-                  <span className="text-[var(--accent)]">
-                    {Math.round(((profile.builderScore || 0) / 1000) * 100)}%
-                  </span>
-                </div>
-                <div className="w-full bg-black/40 h-2 rounded-full overflow-hidden border border-white/5 p-0.5 shadow-inner">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${Math.min(((profile.builderScore || 0) / 1000) * 100, 100)}%` }}
-                    transition={{ duration: 1, ease: "easeOut" }}
-                    className="h-full rounded-full shadow-[0_0_10px_var(--accent)]"
-                    style={{ backgroundColor: profile.accentColor }}
-                  />
-                </div>
-              </div>
-
-              {/* Next Steps / Tip */}
-              <div className="relative z-10 pt-3 border-t border-white/5 mt-1">
-                <div className="flex items-center gap-1.5 mb-2">
-                  <span className="text-[8px] font-black font-mono text-[var(--accent)] uppercase tracking-widest">Siguiente Nivel</span>
-                  <ArrowUpRight size={10} className="text-[var(--accent)] opacity-50 group-hover/score:translate-x-0.5 group-hover/score:-translate-y-0.5 transition-transform" />
-                </div>
-                <p className="text-[11px] text-[var(--text-dim)] leading-tight italic bg-white/5 p-2.5 px-3 rounded-xl border border-white/5 group-hover/score:bg-white/[0.08] transition-colors group-hover/score:text-[var(--text-muted)]">
-                  {(profile.builderScore || 0) < 50 || (!profile.avatarUrl || profile.displayName === profile.username) ? (
-                    "Validá tu identidad con nombre y foto."
-                  ) : !profile.blocks.some(b => (b.type === 'project' || b.type === 'building')) ? (
-                    "Agregá al menos un proyecto real."
-                  ) : !(profile.githubHandle || profile.blocks.some(b => b.type === 'github')) ? (
-                    "Conectá tu GitHub para sumar fuerte."
-                  ) : (profile.builderScore || 0) < 400 ? (
-                    "Pedí recomendaciones para subir al top."
-                  ) : (
-                    "¡Perfil de Elite! Seguí buildeando."
-                  )}
-                </p>
-              </div>
-
-              {/* Interactive Tooltip Badge */}
-              <div className="absolute bottom-2 right-4 text-[8px] font-black uppercase tracking-widest text-[var(--accent)] opacity-0 group-hover/score:opacity-100 translate-y-1 group-hover/score:translate-y-0 transition-all pointer-events-none">
-                ¿Cómo subir mi score?
-              </div>
-            </motion.button>
-
-            <BlockSelector
-              onAdd={addBlock}
-              accentColor={profile.accentColor}
-              currentBlockCount={profile.blocks.length}
-              subscriptionTier={profile.subscriptionTier}
-              username={profile.username}
-              twitterShareUnlocked={profile.twitterShareUnlocked}
-              extraBlocksFromShare={profile.extraBlocksFromShare}
-              onShareUnlocked={() => {
-                setProfile(prev => prev ? {
-                  ...prev,
-                  twitterShareUnlocked: true,
-                  extraBlocksFromShare: (prev.extraBlocksFromShare || 0) + 3,
-                } : null);
-              }}
-            />
-          </div>
-        </div>
-
-        <div className="mt-4 md:mt-6 space-y-2">
-          <div className="section-label !text-[9px] mb-2 px-1 hidden md:block text-[var(--text-muted)] tracking-widest uppercase">// comunidad</div>
-          <div className="grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-1.5">
-            <Link href="/feed?from=dashboard" className="flex items-center gap-3 w-full p-3 rounded-xl bg-[var(--surface2)]/50 md:bg-transparent text-sm font-bold text-[var(--text-muted)] hover:text-white md:hover:bg-[var(--surface2)] transition-all group">
-              <Activity size={18} className="shrink-0 group-hover:scale-110 transition-transform opacity-70" />
-              <span className="whitespace-nowrap">Feed</span>
-            </Link>
-            <Link href="/explore?from=dashboard" className="flex items-center gap-3 w-full p-3 rounded-xl bg-[var(--surface2)]/50 md:bg-transparent text-sm font-bold text-[var(--text-muted)] hover:text-white md:hover:bg-[var(--surface2)] transition-all group">
-              <Compass size={18} className="shrink-0 group-hover:scale-110 transition-transform opacity-70" />
-              <span className="whitespace-nowrap">Explorar</span>
-            </Link>
-          </div>
-        </div>
-
-        <div className="mt-4 md:mt-6 space-y-2">
-          <div className="section-label !text-[9px] mb-2 px-1 hidden md:block text-[var(--accent)] tracking-widest uppercase">// pro features</div>
-          <div className="grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-1.5">
-            <button
-              onClick={() => {
-                if (profile.subscriptionTier === 'pro') {
-                  setIsProSettingsOpen(true);
-                } else {
-                  setIsUpgradeModalOpen(true);
-                }
-              }}
-              className={`flex items-center justify-between w-full p-3 rounded-xl transition-all group ${
-                profile.subscriptionTier === 'pro' 
-                ? 'bg-[var(--accent)]/10 text-[var(--accent)] hover:bg-[var(--accent)]/20 shadow-[0_0_15px_rgba(200,255,0,0.05)]' 
-                : 'bg-white/5 text-[var(--text-muted)] hover:text-white hover:bg-white/10'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <Globe size={18} className={`shrink-0 group-hover:scale-110 transition-transform ${profile.subscriptionTier === 'pro' ? 'text-[var(--accent)]' : ''}`} />
-                <span className="text-sm font-bold whitespace-nowrap">PRO Settings</span>
-              </div>
-              {profile.subscriptionTier !== 'pro' && (
-                <Lock size={12} className="opacity-40 group-hover:opacity-100 transition-opacity" />
-              )}
-            </button>
-          </div>
-        </div>
-
-        <div className="mt-4 md:mt-6 space-y-2">
-          <div className="section-label !text-[9px] mb-2 px-1 hidden md:block text-[var(--text-muted)] tracking-widest uppercase">// configuración</div>
-          <div className="grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-1.5">
-            <div className="flex items-center justify-between gap-3 w-full p-3 rounded-xl bg-[var(--surface2)]/50 md:bg-transparent text-sm font-bold text-[var(--text-muted)] hover:text-white md:hover:bg-[var(--surface2)] transition-all group">
-              <div className="flex items-center gap-3">
-                <Save size={18} className="shrink-0 opacity-70" />
-                <span className="whitespace-nowrap">Auto</span>
-              </div>
-              <button
-                onClick={toggleAutoSave}
-                className={`w-8 h-4.5 rounded-full relative transition-colors ${autoSaveEnabled ? 'bg-[var(--accent)]' : 'bg-white/10'}`}
-              >
-                <div className={`absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white transition-all ${autoSaveEnabled ? 'right-0.5' : 'left-0.5'}`} />
-              </button>
-            </div>
-            <button onClick={() => setIsFeedbackOpen(true)} className="flex items-center gap-3 w-full p-3 rounded-xl bg-[var(--surface2)]/50 md:bg-transparent text-sm font-bold text-[var(--accent)] hover:bg-[var(--accent-dim)] transition-all">
-              <MessageSquare size={18} className="shrink-0 opacity-70" />
-              <span className="whitespace-nowrap">Feedback</span>
-            </button>
-          </div>
-        </div>
-
-        <div className="hidden md:block mt-auto pt-4 border-t border-[var(--border)]">
-          <button onClick={handleLogout} className="flex items-center gap-2.5 w-full p-2.5 rounded-xl text-red-400/60 hover:text-red-400 text-[13px] font-medium hover:bg-red-500/10 transition-colors group shrink-0">
-            <LogOut size={16} className="shrink-0 group-hover:-translate-x-1 transition-transform" />
-            <span className="truncate">Cerrar sesión</span>
-          </button>
-        </div>
-      </aside>
+      <DashboardSidebar
+        profile={profile}
+        selectedSubSiteId={selectedSubSiteId}
+        setSelectedSubSiteId={setSelectedSubSiteId}
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
+        isSaving={isSaving}
+        copied={copied}
+        handleCopyUrl={handleCopyUrl}
+        handleLogout={handleLogout}
+        setIsProfileModalOpen={setIsProfileModalOpen}
+        setIsScoreInfoOpen={setIsScoreInfoOpen}
+        setIsProSettingsOpen={setIsProSettingsOpen}
+        setIsUpgradeModalOpen={setIsUpgradeModalOpen}
+        setIsFeedbackOpen={setIsFeedbackOpen}
+        setTempProfileData={setTempProfileData}
+        addBlock={addBlock}
+        handleColorChange={handleColorChange}
+        toggleAutoSave={toggleAutoSave}
+        autoSaveEnabled={autoSaveEnabled}
+        onShareUnlocked={() => {
+          setProfile(prev => prev ? {
+            ...prev,
+            twitterShareUnlocked: true,
+            extraBlocksFromShare: (prev.extraBlocksFromShare || 0) + 3,
+          } : null);
+        }}
+      />
 
       {/* CANVAS */}
-      <main className="p-4 md:p-8 lg:p-10 lg:px-14 overflow-y-auto relative z-0 md:ml-[280px]">
+      <main className="flex-1 min-w-0 h-full overflow-y-auto p-4 md:p-8 lg:p-10 relative z-0 custom-scrollbar">
         <style dangerouslySetInnerHTML={{
           __html: `
           :root {
@@ -1124,79 +852,78 @@ export default function DashboardPage() {
         `}} />
         <div className="absolute top-0 right-0 w-full lg:w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(200,255,0,0.03)_0%,transparent_70%)] pointer-events-none" />
 
-        <header className="flex flex-col md:flex-row md:justify-between md:items-end gap-6 mb-8 md:mb-14 max-w-7xl mx-auto items-center text-center md:text-left pt-2 md:pt-0">
+        <header className="flex flex-col md:flex-row md:justify-between md:items-end gap-8 mb-10 md:mb-16 max-w-[1600px] mx-auto items-center text-center md:text-left pt-6 md:pt-0 px-2 md:px-0">
           <div className="w-full md:w-auto">
-            <div className="mb-2">
-              <div className="section-label hidden md:block">// editor de huevsite</div>
+            <div className="mb-3 hidden md:block">
+              <div className="section-label">// editor de huevsite</div>
             </div>
-            <div className="flex items-center gap-3">
-              <h2 className="text-3xl md:text-4xl font-extrabold tracking-tighter">
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
+              <h2 className="text-3xl md:text-5xl font-[950] tracking-tighter leading-none">
                 Armá tu <span style={{ color: profile.accentColor }}>{selectedSubSiteId ? (profile.subSites.find(s => s.id === selectedSubSiteId)?.title || "Sub-site") : "huevsite"}</span>.
               </h2>
               {profile?.subscriptionTier === "pro" && (
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1 bg-[var(--accent)]/10 border border-[var(--accent)]/30 px-2.5 py-1 rounded-full mt-1">
-                    <BadgeCheck size={16} style={{ color: profile.accentColor }} />
-                    <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: profile.accentColor }}>PRO</span>
+                <div className="flex items-center gap-2 bg-white/[0.03] p-1.5 px-2 rounded-2xl border border-white/[0.05] shadow-inner backdrop-blur-sm">
+                  <div className="flex items-center gap-1.5 bg-[var(--accent)]/10 border border-[var(--accent)]/30 px-3 py-1.5 rounded-xl">
+                    <BadgeCheck size={14} style={{ color: profile.accentColor }} />
+                    <span className="text-[10px] font-black uppercase tracking-[0.1em]" style={{ color: profile.accentColor }}>PRO</span>
                   </div>
                   {profile.subSites.length > 0 && (
-                    <select
-                      value={selectedSubSiteId || ""}
-                      onChange={(e) => setSelectedSubSiteId(e.target.value || null)}
-                      className="mt-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1 text-[10px] font-bold text-[var(--accent)] outline-none focus:border-[var(--accent)]/50 transition-all cursor-pointer hover:bg-white/10"
-                    >
-                      <option value="" className="bg-black text-white">Sitio Principal</option>
-                      {profile.subSites.map(site => (
-                        <option key={site.id} value={site.id} className="bg-black text-white">
-                          {site.title}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="relative group/select">
+                      <select
+                        value={selectedSubSiteId || ""}
+                        onChange={(e) => setSelectedSubSiteId(e.target.value || null)}
+                        className="bg-black/40 border border-white/10 rounded-xl px-4 py-1.5 text-[11px] font-bold text-white/80 outline-none focus:border-[var(--accent)]/50 transition-all cursor-pointer hover:bg-white/5 appearance-none pr-8"
+                      >
+                        <option value="" className="bg-neutral-900 text-white">Sitio Principal</option>
+                        {profile.subSites.map(site => (
+                          <option key={site.id} value={site.id} className="bg-neutral-900 text-white">
+                            {site.title}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronRight size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none opacity-40 group-hover/select:opacity-100 transition-opacity" />
+                    </div>
                   )}
                 </div>
               )}
             </div>
-            <p className="section-sub !text-sm mt-2 hidden md:block">
-              Arrastrá para reordenar. Click en el rayito <Sparkles size={14} className="inline text-[var(--accent)]" /> para editar.
+            <p className="text-[11px] md:text-[13px] text-white/30 font-medium mt-4 hidden md:flex items-center gap-2 uppercase tracking-widest pl-1">
+              <Sparkles size={14} className="text-[var(--accent)] opacity-50" />
+              <span>Arrastrá para reordenar bloques • Click para editar</span>
             </p>
           </div>
 
           <div className="flex flex-col md:flex-row gap-4 items-center w-full md:w-auto">
-            {lastSaved && !isSaving && (
-              <span className="text-[10px] text-[var(--text-muted)] font-mono hidden md:inline uppercase tracking-widest">
-                Guardado hace {Math.floor((Date.now() - lastSaved.getTime()) / 1000)}s
-              </span>
-            )}
-            {isSaving && (
-              <span className="text-[10px] text-[var(--accent)] font-mono animate-pulse hidden md:inline uppercase tracking-widest">
-                Guardando cambios...
-              </span>
-            )}
-            <div className="flex gap-2 w-full md:w-auto">
+            <div className="flex items-center gap-3 w-full md:w-auto">
               <Link
                 href={`/${profile.username}`}
                 target="_blank"
-                className="btn btn-ghost !px-6 flex-1 md:flex-none justify-center !py-3 md:!py-2"
+                className="btn-premium flex-1 md:flex-none flex items-center justify-center gap-2 py-3 px-6 rounded-2xl bg-white/[0.03] border border-white/10 text-white font-bold text-sm transition-all hover:bg-white/5 hover:border-white/20"
               >
-                <Eye size={16} className="mr-2" /> <span className="">Ver perfil</span>
+                <Eye size={18} className="text-white/40" />
+                <span>Ver huevsite</span>
               </Link>
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="btn btn-accent !px-8 shadow-xl flex-1 md:flex-none justify-center whitespace-nowrap border !py-3 md:!py-2"
+                className="btn-premium flex-1 md:flex-none flex items-center justify-center gap-2 py-3 px-10 rounded-2xl text-black font-[900] text-sm transition-all shadow-[0_10px_30px_rgba(var(--accent-rgb),0.2)]"
                 style={{
                   backgroundColor: profile.accentColor,
                   color: getContrastColor(profile.accentColor),
-                  borderColor: 'var(--btn-border)'
                 }}
               >
-                <Save size={16} className="mr-2" /> <span className="">{isSaving ? 'Guardando' : 'Guardar'}</span>
+                {isSaving ? (
+                  <Sparkles size={18} className="animate-spin" />
+                ) : (
+                  <Save size={18} />
+                )}
+                <span>{isSaving ? 'Guardando' : 'Guardar'}</span>
               </button>
             </div>
           </div>
         </header>
 
-        <div className="max-w-7xl mx-auto pb-32">
+        <div className="max-w-[1600px] mx-auto pb-32">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -1284,7 +1011,7 @@ export default function DashboardPage() {
       {/* Delete Confirmation Modal */}
       <AnimatePresence>
         {isDeletingId && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -1330,7 +1057,7 @@ export default function DashboardPage() {
       {/* Profile / URL Editing Modal */}
       <AnimatePresence>
         {isProfileModalOpen && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

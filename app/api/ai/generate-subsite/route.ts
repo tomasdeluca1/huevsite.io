@@ -113,41 +113,43 @@ export async function POST(request: NextRequest) {
     
     // Import guidelines for better parsing
     const AI_BLOCK_GUIDELINES = `
-Huevsite no es un currículum aburrido. Es una grilla estilo bento, dinámica y accionable. Menos texto, más impacto.
+Huevsite es una grilla estilo bento box, vibrante y accionable (estilo hacker "build in public").
+Escribe textos ultra-cortos y contundentes ("menos es más"). Utiliza emojis inteligentemente para darle vida.
 
-1. hero: Portada obligatoria (order: 0). 'title'=Nombre producto, 'description'=Tagline brutal de 2 líneas máx.
-2. metric: KPIs clave. 'label'=MAYÚSCULAS breve (ej. "USERS"), 'value'=Número impactante (ej. "40k+"). No texto largo.
-3. custom: Features principales. 'label'=MAYÚSCULAS, 'title'=Gancho, 'description'=Directo al punto.
-4. building: Stack o Roadmap. 'title'="Tech Stack", 'description'=Info, 'stack'=[tecnologías].
-5. project: Acción visual. 'title'=Nombre, 'description'=Logro, 'imageUrl'=URL ABSOLUTA extraída del MD originial ![alt](url), 'link'=Demo.
+TIPOS DE BLOQUES DISPONIBLES:
+1. hero: (Obligatorio, order: 0, col_span: 2, row_span: 2). Portada principal. 'title'=Nombre producto, 'description'=Tagline brutal (max. 80 chars).
+2. project: Muestra visual de un producto o feature. 'title'=Nombre, 'description'=Logro/Info (max. 60 chars).
+   -> CRÍTICO PARA PROJECT: 'imageUrl' DEBE ser la URL absoluta de una imagen del contenido (busca markdown ![alt](url)). Si NO encuentras una imagen válida en el texto, usa OBLIGATORIAMENTE este fallback para generar una captura: "https://image.thum.io/get/width/1200/crop/800/${url}"
+3. metric: KPIs, descargas o hitos. 'label'=MAYÚSCULAS breve (ej. "USERS", "MRR"). 'value'=Número ("40k+", "$5k"). 'title'/'description' cortísimos.
+4. custom: Ventaja única o update. 'label'=MAYÚSCULAS, 'title'=Gancho corto, 'description'=Directo al grano.
+5. building: Stack tecnológico o status "En construcción". 'title'="Tech Stack", 'stack'=[array de 3-4 techs].
 
-COMPOSICIÓN GANADORA (Max 6 bloques):
-1. hero (col_span: 2, row_span: 2)
-2. project (CRÍTICO extraer imageUrl de Jina)
-3. metric (x2)
-4. custom (Feature estrella)
-5. building (Stack)
-Ningún bloque debe sobrepasar los 150 caracteres de descripción.
+COMPOSICIÓN GANADORA (Genera exactamente 5 o 6 bloques, ni más ni menos):
+- 1x hero (col_span: 2) -> Fija la identidad.
+- 1x project (col_span: 2) -> Aporta atractivo visual MASIVO (nunca olvides la imageUrl).
+- 2x metric -> Demuestra autoridad de un vistazo.
+- 1x building o custom -> Completa la grilla con contexto técnico o propuesta de valor.
+
+REGLA DE OPTIMIZACIÓN DE TOKENS: Sintetiza TODO al extremo. Ninguna 'description' debe superar los 100 caracteres. Las descripciones largas arruinarán el diseño de la grilla. Absté de inventar información técnica falsa; si no hay datos técnicos, enfócate en la visión del proyecto.
     `;
 
     const prompt = `
     sos un experto diseñador y copywriter de landing pages para portfolios de creadores (indie hackers, developers, designers).
-    Tu tarea es analizar el siguiente texto extraído de una URL y estructurar una "sub-site" (página de producto) para huevsite.io.
+    Tu tarea es analizar el siguiente texto extraído de la web (${url}) y estructurar la información en "bloques" para huevsite.io.
     
-    SIGUE ESTAS REGLAS ESTRICTAMENTE:
+    REGLA ESTRICTA DE FORMATO:
     """
     ${AI_BLOCK_GUIDELINES}
     """
     
-    El texto extraído de la web es el siguiente:
+    El texto parseado de la URL es:
     """
     ${truncatedContent}
     """
     
-    Instrucciones adicionales:
-    - Escribid en español rioplatense (argentino) pero muy sutil y super profesional, "hacker vibes".
-    - El título de la sub-site ('title') debe ser el nombre exacto del producto, marca o empresa extraído de la web (Ej: "Huevsite Studio" si es una agencia).
-    - Identifica si el contenido pertenece a una Startup, un SaaS, un Proyecto open-source, o una Agencia Web. Adapta el tono, los bloques y el hero ('description') para reflejar su identidad real. Si es una Agencia, destaca sus servicios, filosofía y trabajos en los bloques.
+    Instrucciones adicionales de Tono:
+    - Escribid en español rioplatense (argentino) muy sutil, con un feeling altamente profesional y tecnológico ("hacker vibes").
+    - Adapta la narrativa según el target que percibas: si es un SaaS, enfócate en el problema que resuelve; si es Open Source, en la comunidad y el stack.
     `;
 
     const response = await ai.models.generateContent({
@@ -203,16 +205,33 @@ Ningún bloque debe sobrepasar los 150 caracteres de descripción.
     }
     
     // Insert sub-site
-    const { data: newSubSite, error: subSiteError } = await supabase
+    const insertData: any = {
+        user_id: user.id,
+        title: aiData.title,
+        slug: finalSlug,
+    };
+    
+    // Primera tentativa: con avatar_url
+    let payload = { ...insertData };
+    if (faviconUrl) payload.avatar_url = faviconUrl;
+
+    let { data: newSubSite, error: subSiteError } = await supabase
         .from('sub_sites')
-        .insert({
-            user_id: user.id,
-            title: aiData.title,
-            slug: finalSlug,
-            avatar_url: faviconUrl,
-        })
+        .insert(payload)
         .select()
         .single();
+        
+    // Fallback si la columna no existe en el schema cache (PGRST204)
+    if (subSiteError && (subSiteError as any).code === 'PGRST204') {
+        const { data: secondAttempt, error: secondError } = await supabase
+            .from('sub_sites')
+            .insert(insertData)
+            .select()
+            .single();
+        
+        newSubSite = secondAttempt;
+        subSiteError = secondError;
+    }
         
     if (subSiteError) {
         console.error("Error creating subsite:", subSiteError);

@@ -16,7 +16,7 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
   const [heatmap, setHeatmap] = useState<string[]>([]);
   const [selectedRoles, setSelectedRoles] = useState<string[]>(['Developer', 'Founder']);
   const [user, setUser] = useState<User | null>(null);
-  const [showMobileNav, setShowMobileNav] = useState(true);
+  const [showMobileNav, setShowMobileNav] = useState(false);
 
   const toggleRole = (role: string) => {
     if (selectedRoles.includes(role)) {
@@ -59,15 +59,21 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
     }
     setHeatmap(cells);
 
-    // Scroll stop detection
+    // Scroll stop detection - simplified to show for everyone
     let scrollTimeout: NodeJS.Timeout;
     const handleScroll = () => {
+      // Siempre lo ocultamos al movernos para evitar ruido
       setShowMobileNav(false);
       clearTimeout(scrollTimeout);
+      
+      // Lo mostramos al frenar el scroll
       scrollTimeout = setTimeout(() => {
         setShowMobileNav(true);
-      }, 500); // 500ms stop detection
+      }, 400); 
     };
+
+    // Mostrarlo inicialmente si estamos quietos
+    setShowMobileNav(true);
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
@@ -103,6 +109,13 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
                 <span>Crear mi huevsite →</span>
               </>
             )}
+          </Link>
+        </div>
+
+        {/* Mobile Mini Nav (just Login/Dashboard for space) */}
+        <div className="md:hidden">
+          <Link href={user ? "/dashboard" : "/login"} className="btn btn-accent !py-1.5 !px-4 !text-[11px] !font-bold">
+            {user ? "Dashboard" : "Entrar"}
           </Link>
         </div>
       </nav>

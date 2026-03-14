@@ -26,17 +26,32 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const heroBlock = profile.blocks.find(b => b.type === 'hero');
   const tagline = (heroBlock as any)?.tagline || 'Builder en huevsite.io';
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.huevsite.io';
+  // Note: we can safely bypass standard Next metadata cache parameter using a bust cache hash
+  // if required, but default Next app-router already suffixes ?hash. 
+  // We'll explicitly define the absolute OG image URL since Next sometimes fails to resolve absolute paths automatically.
+  const ogImageUrl = `${baseUrl}/${profile.username}/opengraph-image`;
+
   return {
     title: `${profile.displayName} (@${profile.username}) | huevsite.io`,
     description: tagline,
     openGraph: {
       title: `${profile.displayName} (@${profile.username})`,
       description: tagline,
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: `${profile.displayName} profile cover on huevsite.io`,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: `${profile.displayName} (@${profile.username})`,
       description: tagline,
+      images: [ogImageUrl],
     },
   };
 }

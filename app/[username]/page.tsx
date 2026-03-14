@@ -26,38 +26,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const heroBlock = profile.blocks.find(b => b.type === 'hero');
   const tagline = (heroBlock as any)?.tagline || 'Builder en huevsite.io';
 
-  const cacheBuster = Date.now();
-  const searchParams = new URLSearchParams({
-    username: params.username,
-    title: profile.displayName || params.username,
-    tagline: tagline,
-    color: profile.accentColor || '#C8FF00',
-    v: cacheBuster.toString()
-  });
-
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://huevsite.io';
-  const ogImageUrl = `${baseUrl}/api/og?${searchParams.toString()}`;
-
   return {
     title: `${profile.displayName} (@${profile.username}) | huevsite.io`,
     description: tagline,
     openGraph: {
       title: `${profile.displayName} (@${profile.username})`,
       description: tagline,
-      images: [
-        {
-          url: ogImageUrl,
-          width: 1200,
-          height: 630,
-          alt: profile.displayName,
-        },
-      ],
     },
     twitter: {
       card: "summary_large_image",
       title: `${profile.displayName} (@${profile.username})`,
       description: tagline,
-      images: [ogImageUrl],
     },
   };
 }

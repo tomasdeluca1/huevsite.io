@@ -21,6 +21,11 @@ export const metadata: Metadata = {
   title: "huevsite.io | Mostrá lo que buildeás",
   description: "Red social y portfolio para builders de Argentina y LATAM.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://localhost:3000'),
+  alternates: {
+    types: {
+      'application/rss+xml': '/blog/feed.xml',
+    },
+  },
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },

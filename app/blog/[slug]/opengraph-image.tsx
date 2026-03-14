@@ -24,14 +24,16 @@ export default async function Image({
       (
         <div
           style={{
-            background: 'black',
+            background: '#080808',
             width: '100%',
             height: '100%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'white',
-            fontSize: 60,
+            color: '#C8FF00',
+            fontSize: 52,
+            fontWeight: 900,
+            letterSpacing: '-0.04em',
           }}
         >
           huevsite.io
@@ -49,48 +51,130 @@ export default async function Image({
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'flex-start',
-          justifyContent: 'flex-end',
-          padding: '80px',
-          backgroundColor: '#0A0A0A',
-          backgroundImage: 'radial-gradient(circle at 60% 0%, rgba(200, 255, 0, 0.08) 0%, transparent 50%), radial-gradient(circle at 50% 120%, rgba(200, 255, 0, 0.15) 0%, transparent 60%)',
+          padding: '52px 64px',
+          backgroundColor: '#080808',
           color: 'white',
           position: 'relative',
         }}
       >
-        {/* Aesthetic Frame */}
-        <div 
+
+
+        {/* Glow — top right */}
+        <div
           style={{
-             position: 'absolute',
-             top: 0, left: 0, right: 0, bottom: 0,
-             border: '2px solid rgba(255,255,255,0.03)',
-             margin: '40px',
-             borderRadius: '32px'
+            position: 'absolute',
+            top: -80,
+            right: -80,
+            width: 480,
+            height: 480,
+            borderRadius: '50%',
+            background:
+              'radial-gradient(circle, rgba(200,255,0,0.13) 0%, transparent 70%)',
+            display: 'flex',
           }}
         />
 
-        {/* Brand Header */}
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '50px', gap: '20px' }}>
-          <div style={{ display: 'flex', color: '#C8FF00', fontSize: 36, fontWeight: 900, letterSpacing: '-0.05em' }}>
+        {/* Inner border frame */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 20,
+            left: 20,
+            right: 20,
+            bottom: 20,
+            border: '0.5px solid rgba(200,255,0,0.15)',
+            borderRadius: 12,
+            display: 'flex',
+          }}
+        />
+
+        {/* Top bar: brand + section label */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            marginBottom: 36,
+            zIndex: 10,
+          }}
+        >
+          <span
+            style={{
+              color: '#C8FF00',
+              fontSize: 22,
+              fontWeight: 900,
+              letterSpacing: '-0.04em',
+              display: 'flex',
+            }}
+          >
             huevsite.io
-          </div>
-          <div style={{ width: '2px', height: '32px', background: 'rgba(255,255,255,0.1)' }} />
-          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 24, textTransform: 'uppercase', letterSpacing: '0.2em', fontWeight: 700 }}>
-            Blog
-          </div>
+          </span>
+          <div
+            style={{
+              width: 1,
+              height: 22,
+              background: 'rgba(255,255,255,0.15)',
+              marginLeft: 18,
+              marginRight: 18,
+              display: 'flex',
+            }}
+          />
+          <span
+            style={{
+              color: 'rgba(255,255,255,0.35)',
+              fontSize: 13,
+              fontWeight: 700,
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              display: 'flex',
+            }}
+          >
+            Blog Post
+          </span>
+        </div>
+
+        {/* Tags */}
+        <div
+          style={{
+            display: 'flex',
+            gap: 8,
+            marginBottom: 28,
+            zIndex: 10,
+          }}
+        >
+          {post.tags.slice(0, 3).map((tag, i) => (
+            <div
+              key={tag}
+              style={{
+                display: 'flex',
+                padding: '6px 14px',
+                background: 'rgba(200,255,0,0.08)',
+                border: '0.5px solid rgba(200,255,0,0.3)',
+                color: '#C8FF00',
+                borderRadius: 100,
+                fontSize: 12,
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                letterSpacing: '0.12em',
+              }}
+            >
+              #{tag}
+            </div>
+          ))}
         </div>
 
         {/* Title */}
         <div
           style={{
-            fontSize: 72,
-            fontWeight: 900,
+            fontSize: 64,
+            fontWeight: 700,
             lineHeight: 1.1,
             letterSpacing: '-0.03em',
-            marginBottom: '40px',
             color: 'white',
-            maxWidth: '1000px',
-            textShadow: '0 10px 30px rgba(0,0,0,0.5)'
+            maxWidth: 860,
+            marginBottom: 20,
+            zIndex: 10,
+            display: 'flex',
+            flexWrap: 'wrap',
           }}
         >
           {post.title}
@@ -99,44 +183,109 @@ export default async function Image({
         {/* Excerpt */}
         <div
           style={{
-            fontSize: 32,
-            color: 'rgba(255, 255, 255, 0.5)',
-            lineHeight: 1.4,
-            maxWidth: '900px',
-            marginBottom: '70px',
+            fontSize: 22,
+            color: 'rgba(255,255,255,0.45)',
+            lineHeight: 1.55,
+            maxWidth: 760,
+            fontWeight: 400,
+            zIndex: 10,
             display: 'flex',
+            flex: 1,
+            flexWrap: 'wrap',
           }}
         >
-          {post.excerpt.length > 140 ? post.excerpt.substring(0, 140) + '...' : post.excerpt}
+          {post.excerpt.length > 200
+            ? post.excerpt.substring(0, 200) + '...'
+            : post.excerpt}
         </div>
 
-        {/* Author Footer */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '24px', background: 'rgba(255,255,255,0.03)', padding: '24px 32px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
-          <div
+        {/* Bottom row: author + date */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            width: '100%',
+            zIndex: 10,
+            paddingTop: 20,
+            borderTop: '0.5px solid rgba(255,255,255,0.07)',
+          }}
+        >
+          {/* Author */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            {post.author.avatarUrl ? (
+              <img
+                src={post.author.avatarUrl}
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 24,
+                  border: '1px solid rgba(200,255,0,0.3)'
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 24,
+                  background: 'linear-gradient(135deg, #C8FF00 0%, #7aaa00 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'black',
+                  fontSize: 20,
+                  fontWeight: 900,
+                }}
+              >
+                {post.author.name.charAt(0)}
+              </div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span
+                style={{
+                  fontSize: 20,
+                  fontWeight: 700,
+                  color: 'white',
+                  letterSpacing: '-0.02em',
+                  display: 'flex',
+                }}
+              >
+                {post.author.name}
+              </span>
+              <span
+                style={{
+                  fontSize: 14,
+                  color: '#C8FF00',
+                  fontWeight: 600,
+                  opacity: 0.8,
+                  display: 'flex',
+                }}
+              >
+                @{post.author.username}
+              </span>
+            </div>
+          </div>
+
+          {/* Date */}
+          <span
             style={{
-              width: 72,
-              height: 72,
-              borderRadius: 36,
-              background: '#C8FF00',
+              fontSize: 16,
+              color: 'rgba(255,255,255,0.3)',
+              fontWeight: 500,
+              letterSpacing: '0.04em',
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'black',
-              fontSize: 32,
-              fontWeight: 900
             }}
           >
-             {post.author.name.charAt(0)}
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-             <div style={{ fontSize: 28, fontWeight: 900, color: 'white' }}>{post.author.name}</div>
-             <div style={{ fontSize: 20, color: '#C8FF00', fontWeight: 600 }}>@{post.author.username}</div>
-          </div>
+            {new Date(post.date).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            })}
+          </span>
         </div>
       </div>
     ),
-    {
-      ...size,
-    }
+    { ...size }
   );
 }

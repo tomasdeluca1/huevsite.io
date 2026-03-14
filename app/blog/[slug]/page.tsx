@@ -1,8 +1,13 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getPostBySlug } from "@/lib/blog-data";
+import { ShareButtons } from "@/components/blog/ShareButtons";
+import { RelatedPosts } from "@/components/blog/RelatedPosts";
+import { getPostBySlug, BLOG_POSTS } from "@/lib/blog-data";
 import { Metadata } from "next";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight";
+import "highlight.js/styles/github-dark.css";
 import Image from "next/image";
 
 export async function generateMetadata({ 
@@ -54,6 +59,16 @@ export default async function BlogPostPage({
     notFound();
   }
 
+  // Find related posts (same tags, excluding current post)
+  const relatedPosts = BLOG_POSTS.filter(
+    (p) =>
+      p.slug !== post.slug &&
+      p.tags.some((tag) => post.tags.includes(tag))
+  ).slice(0, 2);
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://huevsite.io';
+  const postUrl = `${siteUrl}/blog/${post.slug}`;
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
@@ -89,18 +104,26 @@ export default async function BlogPostPage({
             </p>
           </div>
 
-          <div className="flex items-center gap-4 mb-10 pb-10 border-b border-[var(--border)]">
-            <Image src={post.author.avatarUrl} alt={post.author.name} width={40} height={40} className="rounded-full" />
-            <div>
-              <div className="text-sm font-bold text-white tracking-tight">{post.author.name}</div>
-              <div className="flex items-center gap-2 text-[11px] font-mono text-[var(--text-muted)] mt-0.5">
-                <time dateTime={post.date}>
-                  {new Date(post.date).toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' })}
-                </time>
-                <span>•</span>
-                <span>5 min read</span>
+          <div className="flex flex-col sm:flex-row gap-6 sm:items-center justify-between mb-10 pb-10 border-b border-[var(--border)]">
+            <div className="flex items-center gap-4">
+              <Link href={`/${post.author.username}`} className="shrink-0 hover:opacity-80 transition-opacity">
+                <Image src={post.author.avatarUrl} alt={post.author.name} width={40} height={40} className="rounded-full" />
+              </Link>
+              <div>
+                <Link href={`/${post.author.username}`} className="text-sm font-bold text-white tracking-tight hover:underline">
+                  {post.author.name}
+                </Link>
+                <div className="flex items-center gap-2 text-[11px] font-mono text-[var(--text-muted)] mt-0.5">
+                  <time dateTime={post.date}>
+                    {new Date(post.date).toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </time>
+                  <span>•</span>
+                  <span>{post.readingTime} min read</span>
+                </div>
               </div>
             </div>
+            
+            <ShareButtons url={postUrl} title={post.title} />
           </div>
         </header>
 
@@ -115,10 +138,15 @@ export default async function BlogPostPage({
           prose-code:text-[var(--accent)] prose-code:bg-[var(--surface2)] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-lg prose-code:before:content-none prose-code:after:content-none
           prose-blockquote:border-l-[var(--accent)] prose-blockquote:bg-[var(--surface)] prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:rounded-r-2xl prose-blockquote:not-italic prose-blockquote:text-white
         ">
-          <ReactMarkdown>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeHighlight]}
+          >
             {post.content}
           </ReactMarkdown>
         </article>
+
+        <RelatedPosts posts={relatedPosts} />
 
         <footer className="mt-24 pt-12 border-t border-[var(--border)] text-center pb-24">
           <div className="bg-gradient-to-br from-[var(--surface2)] to-black/40 border border-[var(--border-bright)] p-10 rounded-[2.5rem] relative overflow-hidden group">

@@ -1,9 +1,13 @@
+import { calculateReadingTime } from "./utils";
+
 export interface BlogPost {
   slug: string;
   title: string;
   excerpt: string;
   content: string; // Markdown or HTML
   date: string;
+  tags: string[];
+  readingTime?: number;
   author: {
     name: string;
     username: string;
@@ -11,12 +15,13 @@ export interface BlogPost {
   };
 }
 
-export const BLOG_POSTS: BlogPost[] = [
+const RAW_BLOG_POSTS: Omit<BlogPost, 'readingTime'>[] = [
   {
     slug: "dominios-custom-tu-nombre-punto-com",
     title: "Tu marca personal en serio: Lanzamos Dominios Custom para PROs",
     excerpt: "Ya no dependas de huevsite.io/tu-usuario. Ahora podés conectar tu propio dominio (ej: builder.com) y llevar tu portfolio al siguiente nivel.",
     date: "2026-03-12",
+    tags: ["feature", "pro", "portfolio"],
     author: {
       name: "Tomas Deluca",
       username: "huevsite",
@@ -62,6 +67,7 @@ Es, literalmente, un constructor de sitios estáticos profesional disfrazado de 
     title: "Generá un sub-site completo en 10 segundos con IA",
     excerpt: "Lanzamos el Agente de Sub-sites para usuarios PRO. Pegá la URL de tu startup, producto o post y la IA estructurará un portfolio increíble en segundos.",
     date: "2026-03-11", // Using roughly current date
+    tags: ["ai", "pro", "feature"],
     author: {
       name: "Tomas Deluca",
       username: "huevsite",
@@ -98,6 +104,7 @@ Siendo usuario PRO ya podés entrar a tus ajustes (PRO Settings -> Sub-sites) y 
     title: "Por qué creamos huevsite.io: El portfolio definitivo para la comunidad tech",
     excerpt: "Unificando a los builders, developers y creadores de LATAM bajo una misma red orientada a la acción y a construir impacto real.",
     date: "2026-03-04",
+    tags: ["comunidad", "vision", "startup"],
     author: {
       name: "Tomas Deluca",
       username: "huevsite",
@@ -124,6 +131,12 @@ Más allá del portfolio personal, buscamos crear una red. Queremos unificar a l
   }
 
 ];
+
+// Pre-calculate reading time for all posts
+export const BLOG_POSTS: BlogPost[] = RAW_BLOG_POSTS.map(post => ({
+  ...post,
+  readingTime: calculateReadingTime(post.content)
+}));
 
 export function getPostBySlug(slug: string): BlogPost | undefined {
   return BLOG_POSTS.find((p) => p.slug.toLowerCase() === slug.toLowerCase());

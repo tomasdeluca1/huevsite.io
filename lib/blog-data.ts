@@ -17,6 +17,44 @@ export interface BlogPost {
 
 const RAW_BLOG_POSTS: Omit<BlogPost, 'readingTime'>[] = [
   {
+    slug: "tu-carta-de-presentacion-ahora-viaja-con-vos-nuevas-imagenes-al-compartir",
+    title: "Tu carta de presentación ahora viaja con vos: Mejoramos cómo te ves al compartir tu link",
+    excerpt: "Cuando pegás tu link en WhatsApp, X o Slack, ya no se ve un recuadro genérico. Ahora tu portfolio genera una tarjeta con tu cara, tus colores y tu propia descripción.",
+    date: "2026-03-14",
+    tags: ["feature", "perfil", "update"],
+    author: {
+      name: "Tomas Deluca",
+      username: "huevsite",
+      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+    },
+    content: `
+Si alguna vez compartiste el enlace a tu portfolio en un chat o en tus redes sociales, habrás notado que a veces la imagen que acompaña al enlace no es exactamente tuya. O peor: a veces ni siquiera carga tu foto de perfil.
+
+¡Eso acaba de cambiar! 
+
+Esta semana reescribimos desde cero el motor que genera esas "tarjetitas" (técnicamente conocidas como imágenes Open Graph).
+
+## ¿Qué cambió exactamente?
+
+A partir de hoy, cada vez que alguien pegue tu link de **huevsite.io/tu-usuario** en plataformas como WhatsApp, Slack, LinkedIn, X o Discord, el sistema va a leer **tu perfil en tiempo real** y va a fabricar una imagen de portada única y exclusivamente para vos.
+
+Esta nueva imagen ahora incluye:
+- **Tu foto de perfil (Avatar)** en el centro de atención.
+- **Tu propio color de acento** decorando la tarjeta.
+- **Tu nombre y título exactos**, para que sepan quién sos antes de hacer clic.
+
+Si por algún motivo no habías subido todavía una foto de perfil, ¡no te preocupes! El sistema es suficientemente inteligente como para dibujarte un ícono redondo y elegante con la **letra inicial de tu nombre** bañado en tus colores de marca, para que tu portfolio nunca deje de verse profesional.
+
+## ¿Por qué esto es importante?
+
+*La primera impresión cuenta.* Cuando aplicás a un trabajo o cuando le pasás tu portfolio a un potencial socio, la miniatura de la conversación es lo primero que van a ver. Ahora tenés el control visual completo sobre tu marca antes siquiera de que entren a tu huevsite.
+
+**Probá vos mismo el cambio:** copialo desde tu navegador y pegalo por WhatsApp a un amigo o familiar. 
+
+¡A buildeaRRR!
+    `,
+  },
+  {
     slug: "dominios-custom-tu-nombre-punto-com",
     title: "Tu marca personal en serio: Lanzamos Dominios Custom para PROs",
     excerpt: "Ya no dependas de huevsite.io/tu-usuario. Ahora podés conectar tu propio dominio (ej: builder.com) y llevar tu portfolio al siguiente nivel.",

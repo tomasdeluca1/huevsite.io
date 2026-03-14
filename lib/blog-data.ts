@@ -18,7 +18,7 @@ export interface BlogPost {
 const RAW_BLOG_POSTS: Omit<BlogPost, 'readingTime'>[] = [
   {
     slug: "tu-carta-de-presentacion-ahora-viaja-con-vos-nuevas-imagenes-al-compartir",
-    title: "Tu carta de presentación ahora viaja con vos: Mejoramos cómo te ves al compartir tu link",
+    title: "Tu imagen viaja con vos: Nuevas OpenGraph cards",
     excerpt: "Cuando pegás tu link en WhatsApp, X o Slack, ya no se ve un recuadro genérico. Ahora tu portfolio genera una tarjeta con tu cara, tus colores y tu propia descripción.",
     date: "2026-03-14",
     tags: ["feature", "perfil", "update"],
@@ -56,7 +56,7 @@ Si por algún motivo no habías subido todavía una foto de perfil, ¡no te preo
   },
   {
     slug: "dominios-custom-tu-nombre-punto-com",
-    title: "Tu marca personal en serio: Lanzamos Dominios Custom para PROs",
+    title: "Lanzamos Dominios Custom para usuarios PROs",
     excerpt: "Ya no dependas de huevsite.io/tu-usuario. Ahora podés conectar tu propio dominio (ej: builder.com) y llevar tu portfolio al siguiente nivel.",
     date: "2026-03-12",
     tags: ["feature", "pro", "portfolio"],
@@ -102,7 +102,7 @@ Es, literalmente, un constructor de sitios estáticos profesional disfrazado de 
   },
   {
     slug: "agente-ia-generador-sub-sites",
-    title: "Generá un sub-site completo en 10 segundos con IA",
+    title: "Generá sub-sites en 10s con nuestra nueva IA",
     excerpt: "Lanzamos el Agente de Sub-sites para usuarios PRO. Pegá la URL de tu startup, producto o post y la IA estructurará un portfolio increíble en segundos.",
     date: "2026-03-11", // Using roughly current date
     tags: ["ai", "pro", "feature"],
@@ -139,7 +139,7 @@ Siendo usuario PRO ya podés entrar a tus ajustes (PRO Settings -> Sub-sites) y 
     `,
   }, {
     slug: "el-fin-de-huevsite",
-    title: "Por qué creamos huevsite.io: El portfolio definitivo para la comunidad tech",
+    title: "Por qué creamos huevsite: El portfolio definitivo",
     excerpt: "Unificando a los builders, developers y creadores de LATAM bajo una misma red orientada a la acción y a construir impacto real.",
     date: "2026-03-04",
     tags: ["comunidad", "vision", "startup"],

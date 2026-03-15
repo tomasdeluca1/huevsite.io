@@ -3,18 +3,19 @@ import { profileService } from "@/lib/profile-service";
 import { ProfileGrid } from "@/components/profile/ProfileGrid";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { MobileBottomNav, MobileStickyHeader } from "@/components/profile/MobileProfileUI";
 import { createClient } from "@/lib/supabase/server";
 
 import { headers } from "next/headers";
+import { AnalyticsTracker } from "@/components/analytics/AnalyticsTracker";
 
 interface Props {
     params: { username: string; slug: string };
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-    const profile = await profileService.getSubSiteProfile(params.username, params.slug);
+    const { username, slug } = await params;
+    const profile = await profileService.getSubSiteProfile(username, slug);
 
     if (!profile) return { title: "Sub-site no encontrado | huevsite.io" };
 
@@ -25,7 +26,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function SubSitePage({ params }: Props) {
-    const profile = await profileService.getSubSiteProfile(params.username, params.slug);
+    const { username, slug } = await params;
+    const profile = await profileService.getSubSiteProfile(username, slug);
 
     if (!profile) {
         notFound();
@@ -50,6 +52,8 @@ export default async function SubSitePage({ params }: Props) {
     return (
         <div className="landing min-h-screen font-display selection:bg-[var(--accent)] selection:text-black">
             <div className="noise" />
+            
+            <AnalyticsTracker userId={profile.id!} subSiteId={profile.subSiteId} />
 
             <main className="min-h-screen pt-8 md:pt-12 pb-16 md:pb-24 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto relative">
                 <div
@@ -76,21 +80,7 @@ export default async function SubSitePage({ params }: Props) {
                 />
                 <MobileBottomNav accentColor={profile.accentColor} currentUserId={currentUserId} />
 
-                <ProfileHeader
-                    profileId={profile.id}
-                    isFollowing={false}
-                    followersCount={0}
-                    followingCount={0}
-                    nominationsCount={0}
-                    builderScore={profile.builderScore || 0}
-                    accentColor={profile.accentColor}
-                    showFollowButton={false}
-                    currentUserId={currentUserId}
-                    isEnabledSocialNetwork={false}
-                    subscriptionTier={profile.subscriptionTier}
-                    username={profile.username}
-                    isCustomDomain={isCustomDomain}
-                />
+                {/* Perfil identity bar removed for a cleaner sub-site view as requested */}
 
                 {/* Parent Huevsite Reference - "Pie arriba del board" */}
                 {profile.parentProfile && (
@@ -135,12 +125,14 @@ export default async function SubSitePage({ params }: Props) {
                         displayName={profile.displayName}
                         tagline={profile.tagline}
                         subscriptionTier={profile.subscriptionTier}
+                        userId={profile.id}
+                        subSiteId={profile.subSiteId}
                     />
                 </div>
 
                 <footer className="mt-20 md:mt-32 text-center relative z-10 border-t border-white/5 pt-12 pb-8">
-                    <Link href={isCustomDomain ? "/" : `/${profile.username}`} className="text-[10px] font-mono text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors uppercase tracking-widest">
-                        ← Volver al perfil de {profile.username}
+                    <Link href={isCustomDomain ? "/" : `/${username}`} className="text-[10px] font-mono text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors uppercase tracking-widest">
+                        ← Volver al perfil de {username}
                     </Link>
                     <div className="logo mt-8 scale-75 opacity-10 filter grayscale select-none">huev<span>site</span>.io</div>
                 </footer>

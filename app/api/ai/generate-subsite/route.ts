@@ -1,68 +1,75 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { GoogleGenAI, Type, Schema } from "@google/genai";
+import OpenAI from "openai";
+import { scoreService } from "@/lib/score-service";
 
 export const maxDuration = 60; // Set max duration to 60s for Vercel
 export const dynamic = "force-dynamic";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-const subSiteSchema: Schema = {
-  type: Type.OBJECT,
+const subSiteJsonSchema = {
+  type: "object",
   properties: {
     title: {
-      type: Type.STRING,
+      type: "string",
       description: "A short, catchy title for the sub-site (e.g., the product name).",
     },
+    tagline: {
+      type: "string",
+      description: "A one-liner tagline that describes the sub-site (max 80 chars). Used as the sub-site profile description.",
+    },
     slug: {
-      type: Type.STRING,
+      type: "string",
       description: "A URL-friendly slug based on the title (lowercase, hyphens only).",
     },
     blocks: {
-      type: Type.ARRAY,
+      type: "array",
       description: "An array of blocks that make up the sub-site content.",
       items: {
-        type: Type.OBJECT,
+        type: "object",
         properties: {
           type: {
-            type: Type.STRING,
-            description: "The type of block. Allowed values: 'hero', 'metric', 'custom', 'building', 'writing', 'project'.",
+            type: "string",
+            description: "The type of block. Allowed values: 'hero', 'metric', 'custom', 'building', 'writing', 'project', 'media'.",
           },
           label: {
-            type: Type.STRING,
-            description: "A small uppercase label for the block (e.g., 'FEATURES', 'STATS', 'ROADMAP'). Used mostly for 'custom' or 'metric' blocks.",
+            type: ["string", "null"],
+            description: "A small uppercase label. For type 'media', this is the caption.",
           },
           title: {
-            type: Type.STRING,
-            description: "The main heading of the block.",
+            type: "string",
+            description: "Main heading.",
           },
           description: {
-            type: Type.STRING,
-            description: "A short description or body text for the block.",
+            type: "string",
+            description: "Body text. For type 'media', keep it very short or null.",
           },
           value: {
-            type: Type.STRING,
-            description: "The main numeric or text value if the block type is 'metric' (e.g., '10k', '$5k MRR').",
+            type: ["string", "null"],
+            description: "For 'metric' blocks (e.g., '10k').",
           },
           link: {
-            type: Type.STRING,
-            description: "An optional URL if the block should link somewhere.",
+            type: ["string", "null"],
+            description: "External URL.",
           },
           imageUrl: {
-            type: Type.STRING,
-            description: "CRITICAL: If the block type is 'project' and the source text contains markdown images like `![alt](url)`, extract the absolute URL and put it here.",
+            type: ["string", "null"],
+            description: "IMAGE URL. Crucial for 'project' and 'media' types.",
           },
           stack: {
-             type: Type.ARRAY,
-             description: "An optional list of technologies if the block type is 'building'.",
-             items: { type: Type.STRING }
-          }
+            type: ["array", "null"],
+            description: "Tech stack for 'building' blocks.",
+            items: { type: "string" },
+          },
         },
-        required: ["type", "title", "description"],
+        required: ["type", "title", "description", "label", "value", "link", "imageUrl", "stack"],
+        additionalProperties: false,
       },
     },
   },
-  required: ["title", "slug", "blocks"],
+  required: ["title", "tagline", "slug", "blocks"],
+  additionalProperties: false,
 };
 
 export async function POST(request: NextRequest) {
@@ -82,7 +89,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (profile?.subscription_tier !== "pro" && !profile?.pro_since) {
-      return NextResponse.json({ error: "Esta función es exclusiva para usuarios PRO." }, { status: 403 });
+      return NextResponse.json({ error: "Esta función es exclusiva para usuarios PRO." }, { status: 403 });
     }
 
     const { url } = await request.json();
@@ -104,199 +111,195 @@ export async function POST(request: NextRequest) {
     }
 
     const pageContent = await jinaResponse.text();
-    
-    // Safety truncate if page is huge to avoid token limits (taking first 15k chars is usually enough for a landing page)
-    const truncatedContent = pageContent.slice(0, 15000); 
+    const truncatedContent = pageContent.slice(0, 15000);
 
-    // 2. Generate with Gemini
-    console.log("Generating blocks with Gemini...");
-    
-    // Import guidelines for better parsing
-    const AI_BLOCK_GUIDELINES = `
-Huevsite es una grilla estilo bento box, vibrante y accionable (estilo hacker "build in public").
-Escribe textos ultra-cortos y contundentes ("menos es más"). Utiliza emojis inteligentemente para darle vida.
+    // Extract OG/Twitter image
+    let ogImageUrl = "";
+    try {
+      const metaMatches = {
+        ogImage: pageContent.match(/og:image:?\s*(https?:\/\/[^\s\n\r"'>]+)/i),
+        twitterImage: pageContent.match(/twitter:image:?\s*(https?:\/\/[^\s\n\r"'>]+)/i),
+        firstMarkdownImage: pageContent.match(/!\[.*?\]\((https?:\/\/[^)]+)\)/),
+      };
+      ogImageUrl = metaMatches.ogImage?.[1] || metaMatches.twitterImage?.[1] || metaMatches.firstMarkdownImage?.[1] || "";
+    } catch (e) {
+      console.error("Error extracting OG image:", e);
+    }
 
-TIPOS DE BLOQUES DISPONIBLES:
-1. hero: (Obligatorio, order: 0, col_span: 2, row_span: 2). Portada principal. 'title'=Nombre producto, 'description'=Tagline brutal (max. 80 chars).
-2. project: Muestra visual de un producto o feature. 'title'=Nombre, 'description'=Logro/Info (max. 60 chars).
-   -> CRÍTICO PARA PROJECT: 'imageUrl' DEBE ser la URL absoluta de una imagen del contenido (busca markdown ![alt](url)). Si NO encuentras una imagen válida en el texto, usa OBLIGATORIAMENTE este fallback para generar una captura: "https://image.thum.io/get/width/1200/crop/800/${url}"
-3. metric: KPIs, descargas o hitos. 'label'=MAYÚSCULAS breve (ej. "USERS", "MRR"). 'value'=Número ("40k+", "$5k"). 'title'/'description' cortísimos.
-4. custom: Ventaja única o update. 'label'=MAYÚSCULAS, 'title'=Gancho corto, 'description'=Directo al grano.
-5. building: Stack tecnológico o status "En construcción". 'title'="Tech Stack", 'stack'=[array de 3-4 techs].
+    const screenshotFallback = `https://s0.wp.com/mshots/v1/${encodeURIComponent(url)}?w=1200&h=800`;
 
-COMPOSICIÓN GANADORA (Genera exactamente 5 o 6 bloques, ni más ni menos):
-- 1x hero (col_span: 2) -> Fija la identidad.
-- 1x project (col_span: 2) -> Aporta atractivo visual MASIVO (nunca olvides la imageUrl).
-- 2x metric -> Demuestra autoridad de un vistazo.
-- 1x building o custom -> Completa la grilla con contexto técnico o propuesta de valor.
+    // 2. Generate with OpenAI
+    const systemPrompt = `Sos un Senior Product Marketer y Designer.
+Tu misión: Transformar un sitio web en un Board de huevsite.io (Bento Box style) visualmente impactante, uniforme y extremadamente vendedor.
 
-REGLA DE OPTIMIZACIÓN DE TOKENS: Sintetiza TODO al extremo. Ninguna 'description' debe superar los 100 caracteres. Las descripciones largas arruinarán el diseño de la grilla. Absté de inventar información técnica falsa; si no hay datos técnicos, enfócate en la visión del proyecto.
-    `;
+FILOSOFÍA: "Punk Marketing". Directo, sin rellenos corporativos, usando el "voseo" rioplatense (argentino) de forma sutil. 🚀
+ESTRUCTURA: Generarás EXACTAMENTE 8 BLOQUES para un grid de 4x3 (12 celdas).
 
-    const prompt = `
-    sos un experto diseñador y copywriter de landing pages para portfolios de creadores (indie hackers, developers, designers).
-    Tu tarea es analizar el siguiente texto extraído de la web (${url}) y estructurar la información en "bloques" para huevsite.io.
-    
-    REGLA ESTRICTA DE FORMATO:
-    """
-    ${AI_BLOCK_GUIDELINES}
-    """
-    
-    El texto parseado de la URL es:
-    """
-    ${truncatedContent}
-    """
-    
-    Instrucciones adicionales de Tono:
-    - Escribid en español rioplatense (argentino) muy sutil, con un feeling altamente profesional y tecnológico ("hacker vibes").
-    - Adapta la narrativa según el target que percibas: si es un SaaS, enfócate en el problema que resuelve; si es Open Source, en la comunidad y el stack.
-    `;
+DISTRIBUCIÓN DEL GRID (Total 12 celdas):
+- 1x HERO (2x2) = 4 celdas. "Pitch demoledor".
+- 1x PROJECT (2x1) = 2 celdas. "Wow factor visual".
+- 1x MEDIA (1x1) = 1 celda. "Social proof visual (OG Image)".
+- 2x METRIC (1x1 each) = 2 celdas. "Data-driven trust".
+- 1x BUILDING (1x1) = 1 celda. "Under the hood / Stack".
+- 1x CUSTOM (1x1) = 1 celda. "USP (Unique Selling Proposition)".
+- 1x CUSTOM (1x1) = 1 celda. "CTA / Final impact".
 
-    const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-        config: {
-            responseMimeType: "application/json",
-            responseSchema: subSiteSchema as any,
-        }
+REGLAS:
+1. No inventes números. Usá métricas de velocidad/fricción si no hay stats reales.
+2. HERO: El tagline debe ser una bofetada de claridad. "[Qué es] + [Propósito] + [Resultado]".
+3. IMÁGENES: Prioridad absoluta a la OG Image detectada.
+
+Respondés SIEMPRE con JSON válido según el schema.`;
+
+    const userPrompt = `Analizá este producto/sitio y creá un board de 12 celdas (4x3):
+URL: ${url}
+OG Image detectada: ${ogImageUrl}
+Screenshot fallback: ${screenshotFallback}
+
+ESTRUCTURA REQUERIDA (8 bloques en orden exacto):
+1. Hero (2x2)
+2. Project (2x1)
+3. Media (1x1) - Usar ${ogImageUrl || screenshotFallback}
+4. Metric (1x1)
+5. Metric (1x1)
+6. Building (1x1)
+7. Custom (1x1)
+8. Custom (1x1)
+
+═══════════════════════════════════════
+CONTENIDO DEL SITIO:
+═══════════════════════════════════════
+${truncatedContent.substring(0, 10000)}`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "subsite_content",
+          strict: true,
+          schema: subSiteJsonSchema,
+        },
+      },
     });
 
-    const aiResultText = response.text;
-    if (!aiResultText) {
-        throw new Error("Empty response from AI");
-    }
+    const aiData = JSON.parse(completion.choices[0]?.message?.content || "{}");
 
-    const aiData = JSON.parse(aiResultText);
-    
-    // Extract favicon from URL
+    // Process Favicon
     let faviconUrl = "";
     try {
-        const parsedUrl = new URL(url);
-        faviconUrl = `https://www.google.com/s2/favicons?domain=${parsedUrl.hostname}&sz=128`;
+      const parsedUrl = new URL(url);
+      const googleFaviconUrl = `https://www.google.com/s2/favicons?domain=${parsedUrl.hostname}&sz=128`;
+      const faviconRes = await fetch(googleFaviconUrl);
+      if (faviconRes.ok) {
+        const faviconBuffer = await faviconRes.arrayBuffer();
+        const contentType = faviconRes.headers.get("content-type") || "image/png";
+        const slugForPath = (aiData.slug || parsedUrl.hostname).replace(/[^a-z0-9-]/g, "-");
+        const storagePath = `${user.id}/subsites/${slugForPath}-favicon.png`;
+
+        await supabase.storage.from("assets").upload(storagePath, faviconBuffer, { contentType, upsert: true });
+        const { data: { publicUrl } } = supabase.storage.from("assets").getPublicUrl(storagePath);
+        faviconUrl = publicUrl;
+      }
     } catch (e) {
-        console.error("Error parsing URL for favicon:", e);
+      console.error("Favicon error:", e);
     }
 
-    // 3. Save to Database
-    console.log("Saving sub-site to DB:", aiData.title);
-    
+    // 3. Save Sub-site
     let baseSlug = aiData.slug || aiData.title.toLowerCase().replace(/[^a-z0-9-]/g, "");
-    if (!baseSlug) baseSlug = "sub-site";
-    
     let finalSlug = baseSlug;
     let isUnique = false;
     let counter = 1;
 
-    // Check slug uniqueness for the user
     while (!isUnique) {
-        const { data: existingSite } = await supabase
-            .from('sub_sites')
-            .select('id')
-            .eq('user_id', user.id)
-            .eq('slug', finalSlug)
-            .single();
-            
-        if (!existingSite) {
-            isUnique = true;
-        } else {
-            finalSlug = `${baseSlug}-${counter}`;
-            counter++;
-        }
+      const { data: existingSite } = await supabase.from('sub_sites').select('id').eq('user_id', user.id).eq('slug', finalSlug).maybeSingle();
+      if (!existingSite) { isUnique = true; } else { finalSlug = `${baseSlug}-${counter}`; counter++; }
     }
-    
-    // Insert sub-site
-    const insertData: any = {
+
+    // Insert sub-site with robust fallback for missing columns
+    const fullPayload = {
+      user_id: user.id,
+      title: aiData.title,
+      slug: finalSlug,
+      description: aiData.tagline || "",
+      source_url: url,
+      avatar_url: faviconUrl
+    };
+
+    let { data: newSubSite, error: subSiteError } = await supabase
+      .from('sub_sites')
+      .insert(fullPayload)
+      .select()
+      .single();
+
+    // If PGRST204 or missing column error, retry with minimal columns
+    if (subSiteError && (subSiteError.code === 'PGRST204' || subSiteError.message?.includes('column'))) {
+      console.warn("Retrying sub-site insert without optional columns due to DB cache error");
+      const minimalPayload = {
         user_id: user.id,
         title: aiData.title,
         slug: finalSlug,
-    };
-    
-    // Primera tentativa: con avatar_url
-    let payload = { ...insertData };
-    if (faviconUrl) payload.avatar_url = faviconUrl;
-
-    let { data: newSubSite, error: subSiteError } = await supabase
+        description: aiData.tagline || "",
+      };
+      
+      const { data: retryData, error: retryError } = await supabase
         .from('sub_sites')
-        .insert(payload)
+        .insert(minimalPayload)
         .select()
         .single();
         
-    // Fallback si la columna no existe en el schema cache (PGRST204)
-    if (subSiteError && (subSiteError as any).code === 'PGRST204') {
-        const { data: secondAttempt, error: secondError } = await supabase
-            .from('sub_sites')
-            .insert(insertData)
-            .select()
-            .single();
-        
-        newSubSite = secondAttempt;
-        subSiteError = secondError;
-    }
-        
-    if (subSiteError) {
-        console.error("Error creating subsite:", subSiteError);
-        return NextResponse.json({ error: "No se pudo crear el sub-site." }, { status: 500 });
+      if (retryError) throw retryError;
+      newSubSite = retryData;
+    } else if (subSiteError) {
+      throw subSiteError;
     }
 
-
-    // Format blocks for DB
+    // 4. Save Blocks
     const dbBlocks = aiData.blocks.map((b: any, index: number) => {
-        const colSpan = b.type === "hero" ? 2 : (b.type === "custom" || b.type === "building" ? 2 : 1);
-        const rowSpan = b.type === "hero" ? 2 : (b.type === "custom" ? 1 : 1);
-        
-        let blockData: any = {};
-        
-        if (b.type === "hero") {
-            blockData = { name: b.title, tagline: b.description, description: "", status: "Live", location: "Internet", avatarUrl: faviconUrl };
-        } else if (b.type === "metric") {
-            blockData = { label: b.label || b.title || "STAT", value: b.value || "0" };
-        } else if (b.type === "custom") {
-            blockData = { label: b.label || "INFO", title: b.title, description: b.description, link: b.link || "" };
-        } else if (b.type === "building") {
-            blockData = { project: b.title, description: b.description, stack: b.stack || [], link: b.link || "" };
-        } else if (b.type === "project") {
-            blockData = { title: b.title, description: b.description, link: b.link || "", stack: [], imageUrl: b.imageUrl || "", metrics: "" };
-        } else {
-            blockData = { title: b.title, description: b.description }; // fallback
-        }
+      let colSpan = 1; let rowSpan = 1;
+      if (b.type === "hero") { colSpan = 2; rowSpan = 2; }
+      else if (b.type === "project") { colSpan = 2; rowSpan = 1; }
 
-        return {
-            user_id: user.id,
-            sub_site_id: newSubSite.id,
-            type: b.type === "project" && !["hero", "metric", "custom", "building"].includes(b.type) ? "project" : b.type,
-            order: index,
-            col_span: colSpan,
-            row_span: rowSpan,
-            visible: true,
-            data: blockData
-        };
+      let blockData: any = {};
+      if (b.type === "hero") {
+        blockData = { name: b.title, tagline: b.description, status: "Live", location: "Internet", avatarUrl: faviconUrl };
+      } else if (b.type === "metric") {
+        blockData = { label: b.label || "STAT", value: b.value || "0", title: b.title, description: b.description };
+      } else if (b.type === "project") {
+        blockData = { title: b.title, description: b.description, link: b.link || url, imageUrl: b.imageUrl || ogImageUrl || screenshotFallback, stack: [] };
+      } else if (b.type === "media") {
+        blockData = { url: b.imageUrl || ogImageUrl || screenshotFallback, title: b.title, description: b.description };
+      } else if (b.type === "building") {
+        blockData = { project: b.title, description: b.description, stack: b.stack || [], link: b.link || "" };
+      } else {
+        blockData = { label: b.label || "INFO", title: b.title, description: b.description, link: b.link || "" };
+      }
+
+      return {
+        user_id: user.id,
+        sub_site_id: newSubSite.id,
+        type: b.type === "media" ? "media" : (b.type === "hero" ? "hero" : (b.type === "metric" ? "metric" : (b.type === "project" ? "project" : (b.type === "building" ? "building" : "custom")))),
+        order: index,
+        col_span: colSpan,
+        row_span: rowSpan,
+        visible: true,
+        data: blockData
+      };
     });
 
-    // We only insert recognized types to prevent DB errors
-    const validTypes = ["hero", "building", "github", "project", "stack", "metric", "social", "community", "writing", "cv", "media", "certification", "achievement", "collab", "custom"];
-    const validDbBlocks = dbBlocks.filter((b: any) => validTypes.includes(b.type));
+    await supabase.from('blocks').insert(dbBlocks);
 
-    if (validDbBlocks.length > 0) {
-        const { error: blocksError } = await supabase
-            .from('blocks')
-            .insert(validDbBlocks);
-            
-        if (blocksError) {
-            console.error("Error inserting blocks:", blocksError);
-            // We return the subsite anyway, it'll just be empty
-        }
-    }
+    // 5. Recompute Score
+    try { await scoreService.recomputeScore(user.id); } catch(e) { console.error("Score recompute error:", e); }
 
-    return NextResponse.json({ 
-        success: true, 
-        subSite: newSubSite 
-    });
+    return NextResponse.json({ success: true, subSite: newSubSite });
 
   } catch (error: any) {
     console.error("Generate subsite error:", error);
-    return NextResponse.json(
-      { error: "Falló la magia de la IA.", details: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Falló la magia de la IA.", details: error.message }, { status: 500 });
   }
 }

@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { useEffect, useState } from "react";
-import { Compass, Layout, Plus, Share2, Flame, Star } from "lucide-react";
+import { Compass, Layout, Plus, Share2, Flame, Star, Trophy } from "lucide-react";
 import Link from "next/link";
 
 interface MobileHeaderProps {
@@ -12,9 +12,10 @@ interface MobileHeaderProps {
     accentColor: string;
     username: string;
     isCustomDomain?: boolean;
+    isWinner?: boolean;
 }
 
-export function MobileStickyHeader({ displayName, avatarUrl, builderScore, accentColor, username, isCustomDomain = false }: MobileHeaderProps) {
+export function MobileStickyHeader({ displayName, avatarUrl, builderScore, accentColor, username, isCustomDomain = false, isWinner = false }: MobileHeaderProps) {
     const { scrollY } = useScroll();
     // Aparece después de scroll significativo (después de pasar el header original)
     const headerOpacity = useTransform(scrollY, [150, 250], [0, 1]);
@@ -40,7 +41,10 @@ export function MobileStickyHeader({ displayName, avatarUrl, builderScore, accen
                         )}
                     </div>
                     <div className="flex flex-col min-w-0">
-                        <span className="text-xs font-bold text-white truncate leading-none mb-1">{displayName}</span>
+                        <div className="flex items-center gap-1 min-w-0">
+                            <span className="text-xs font-bold text-white truncate leading-none mb-1">{displayName}</span>
+                            {isWinner && <Trophy size={10} className="text-[var(--accent)] shrink-0 mb-1" style={{ color: accentColor }} />}
+                        </div>
                         <span className="text-[9px] font-mono text-[var(--accent)] flex items-center gap-1" style={{ color: accentColor }}>
                             <Flame size={10} /> {builderScore} score
                         </span>

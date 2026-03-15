@@ -9,6 +9,7 @@ import { MetricBlock, SocialBlock, CVBlock } from "@/components/blocks/Widgets"
 import { StackBlock, CommunityBlock, WritingBlock } from "@/components/blocks/ExtraBlocks"
 import { MediaBlock, CertificationBlock, AchievementBlock, CustomBlock, CollabBlock } from "@/components/blocks/NewBlocks"
 import type { BlockData } from "@/lib/profile-types"
+import { trackClick } from "@/components/analytics/AnalyticsTracker"
 
 interface ProfileGridProps {
   blocks: BlockData[]
@@ -16,15 +17,24 @@ interface ProfileGridProps {
   displayName?: string
   tagline?: string
   subscriptionTier?: "free" | "pro"
+  userId?: string
+  subSiteId?: string
+  isWinner?: boolean
 }
 
-export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscriptionTier }: ProfileGridProps) {
+export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscriptionTier, userId, subSiteId, isWinner = false }: ProfileGridProps) {
   // Filtrar solo bloques visibles y ordenar
   const visibleBlocks = blocks
     .filter(block => block.visible)
     .sort((a, b) => a.order - b.order)
 
   const hasHero = visibleBlocks.some(b => b.type === 'hero');
+  
+  const handleBlockClick = (blockId: string) => {
+    if (userId) {
+      trackClick(userId, blockId, subSiteId);
+    }
+  };
 
   // Mapear tipo de bloque a componente
   const renderBlock = (block: BlockData) => {
@@ -36,7 +46,7 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscri
 
     switch (block.type) {
       case "hero":
-        return <HeroBlock {...props} subscriptionTier={subscriptionTier} />
+        return <HeroBlock {...props} subscriptionTier={subscriptionTier} isWinner={isWinner} />
       case "building":
         return <BuildingBlock {...props} />
       case "github":
@@ -103,6 +113,7 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscri
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.05, duration: 0.4 }}
           className={getGridClasses(block)}
+          onClickCapture={() => handleBlockClick(block.id)}
         >
           {renderBlock(block)}
         </motion.div>

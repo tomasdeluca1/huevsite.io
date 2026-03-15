@@ -78,13 +78,31 @@ export function ScoreInfoModal({ isOpen, onClose, accentColor = "#C8FF00", profi
             ]
         },
         {
+            title: "Gaming y PRO Features",
+            icon: <Star className="text-amber-400" size={18} />,
+            points: breakdown?.breakdown?.pro_gaming ? `+${breakdown.breakdown.pro_gaming.score} pts` : "+80 pts c/u",
+            items: [
+                `Sub-sites publicados: ${breakdown?.breakdown?.pro_gaming ? breakdown.breakdown.pro_gaming.details.sub_sites_count : '0'} (+80 el 1ro, +40 extras)`,
+                `Dominio Custom: ${breakdown?.breakdown?.pro_gaming?.details.has_custom_domain ? '+150 pts' : 'Sin vincular (0 pts)'}`,
+            ]
+        },
+        {
+            title: "Visibilidad y Reach",
+            icon: <TrendingUp className="text-emerald-400" size={18} />,
+            points: breakdown?.breakdown?.visibility ? `+${breakdown.breakdown.visibility.score} pts` : "Por visitas",
+            items: [
+                `Visitas únicas (30d): ${breakdown?.breakdown?.visibility ? breakdown.breakdown.visibility.details.unique_visitors_30d : '0'} (+10 cada 10 visitas)`,
+                `Diversidad de contenido: ${breakdown?.breakdown?.content?.details?.content_diversity_bonus ? '+100 pts' : '0 / 100'} (Project + Building + Writing)`
+            ]
+        },
+        {
             title: "Premios y Freshness",
             icon: <Sparkles className="text-[var(--accent)]" size={18} />,
             points: breakdown ? `+${breakdown.breakdown.bonus.score} pts` : "Bonus",
             items: [
                 `Freshness (Últimos 30d): ${breakdown ? (breakdown.breakdown.bonus.details.is_fresh ? '+50' : '0') + ' pts' : '+50 pts'}`,
                 `Suscripción PRO activa: ${breakdown ? (breakdown.breakdown.bonus.details.is_pro ? '+100' : '0') + ' pts' : '+100 pts'}`,
-                "Ganador semanal: Badge especial y visibilidad"
+                "Ganador semanal: Badge especial (+1000 pts)"
             ]
         }
     ];

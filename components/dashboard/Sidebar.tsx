@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Trophy, Settings, ArrowLeft, Copy, Check, Globe, Activity, 
@@ -24,6 +25,7 @@ interface SidebarProps {
   setIsProfileModalOpen: (open: boolean) => void;
   setIsScoreInfoOpen: (open: boolean) => void;
   setIsProSettingsOpen: (open: boolean) => void;
+  setIsCreateSubSiteOpen: (open: boolean) => void;
   setIsUpgradeModalOpen: (open: boolean) => void;
   setIsFeedbackOpen: (open: boolean) => void;
   setTempProfileData: (data: any) => void;
@@ -31,6 +33,8 @@ interface SidebarProps {
   handleColorChange: (color: string, confirmed: boolean) => void;
   toggleAutoSave: () => void;
   autoSaveEnabled: boolean;
+  activeTab: 'board' | 'insights' | 'subsites' | 'domain' | 'transfer';
+  setActiveTab: (tab: 'board' | 'insights' | 'subsites' | 'domain' | 'transfer') => void;
   onShareUnlocked: () => void;
 }
 
@@ -47,6 +51,7 @@ export function DashboardSidebar({
   setIsProfileModalOpen,
   setIsScoreInfoOpen,
   setIsProSettingsOpen,
+  setIsCreateSubSiteOpen,
   setIsUpgradeModalOpen,
   setIsFeedbackOpen,
   setTempProfileData,
@@ -54,9 +59,12 @@ export function DashboardSidebar({
   handleColorChange,
   toggleAutoSave,
   autoSaveEnabled,
+  activeTab,
+  setActiveTab,
   onShareUnlocked
 }: SidebarProps) {
   
+  const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
   const currentSubSite = profile.subSites.find(s => s.id === selectedSubSiteId);
 
   const openModal = (modalFn: (open: boolean) => void) => {
@@ -64,118 +72,144 @@ export function DashboardSidebar({
     modalFn(true);
   };
 
+  const tabs = [
+    { id: 'board', label: 'Editor', icon: LayoutIcon },
+    { id: 'insights', label: 'Estadísticas', icon: Activity },
+    { id: 'subsites', label: 'Sub-sites', icon: Compass },
+    { id: 'domain', label: 'Dominio', icon: Globe },
+    { id: 'transfer', label: 'Transferir', icon: ArrowUpRight },
+  ];
+
+  const currentBoardTitle = selectedSubSiteId ? currentSubSite?.title : "Perfil Principal";
+  const currentBoardSlug = selectedSubSiteId ? `/${profile.username}/${currentSubSite?.slug}` : `/${profile.username}`;
+  const currentBoardAvatar = selectedSubSiteId ? currentSubSite?.avatarUrl : profile.avatarUrl;
+
   return (
     <>
-      {/* Mobile Backdrop */}
       <AnimatePresence>
         {isSidebarOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[105] md:hidden"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] md:hidden"
             onClick={() => setIsSidebarOpen(false)}
           />
         )}
       </AnimatePresence>
 
       <aside className={`
-        fixed inset-y-0 left-0 w-[300px] shrink-0 border-r border-white/5 bg-[#09090b]/80 
-        backdrop-blur-xl z-[110] transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]
+        fixed inset-y-0 left-0 w-[300px] shrink-0 border-r border-white/5 bg-[#09090b]/95
+        backdrop-blur-xl z-[210] transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         md:sticky md:top-0 md:h-full md:translate-x-0 flex flex-col shadow-[20px_0_50px_rgba(0,0,0,0.5)]
         scrollbar-none
       `}>
-        {/* Glow Effects */}
         <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-[var(--accent)]/5 to-transparent pointer-events-none" />
         
-        {/* Header Section */}
         <div className="p-6 pb-2 relative z-10">
           <div className="flex items-center justify-between mb-8">
             <Link href="/" className="group flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center rotate-3 group-hover:rotate-12 transition-transform shadow-[0_0_15px_var(--accent)]/40">
+              <div className="w-8 h-8 rounded-xl bg-[var(--accent)] flex items-center justify-center rotate-3 group-hover:rotate-12 transition-transform shadow-[0_0_15px_var(--accent)]/40">
                 <Sparkles size={18} className="text-black" />
               </div>
               <span className="text-xl font-[900] tracking-tighter text-white">huev<span className="text-[var(--accent)]">site</span></span>
             </Link>
           </div>
 
-          {/* Site Identity Card */}
-          <div className="relative group/identity mb-6">
-            <motion.div 
-              layout
-              className="p-4 rounded-3xl bg-white/[0.03] border border-white/[0.05] hover:border-[var(--accent)]/20 transition-all hover:bg-white/[0.05] relative overflow-hidden"
-              onClick={() => {
-                if (!selectedSubSiteId) {
-                  setTempProfileData({
-                    username: profile.username,
-                    display_name: profile.displayName,
-                    tagline: profile.tagline || '',
-                    avatarUrl: profile.avatarUrl || '',
-                    githubHandle: profile.githubHandle || ''
-                  });
-                  openModal(setIsProfileModalOpen);
-                }
-              }}
-            >
-              <div className="flex items-center gap-3 relative z-10">
-                <div className="relative shrink-0">
-                  {selectedSubSiteId && currentSubSite?.avatarUrl ? (
-                    <img src={currentSubSite.avatarUrl} alt="Avatar" className="w-10 h-10 rounded-2xl object-cover ring-2 ring-white/10" />
-                  ) : profile.avatarUrl ? (
-                    <img src={profile.avatarUrl} alt="Avatar" className="w-10 h-10 rounded-2xl object-cover ring-2 ring-white/10" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-neutral-800 to-neutral-900 flex items-center justify-center font-bold text-[var(--accent)] ring-2 ring-white/10">
-                      {(selectedSubSiteId ? currentSubSite?.title : profile.displayName)?.substring(0, 1).toUpperCase()}
-                    </div>
-                  )}
-                  <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[var(--accent)] flex items-center justify-center text-[8px] text-black font-black border-2 border-[#09090b]">
-                    {selectedSubSiteId ? "S" : "P"}
-                  </div>
+          {/* Board Switcher Popover */}
+          <div className="relative mb-6">
+             <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] px-2 mb-2 block">Board Activo</span>
+             <button
+               onClick={() => setIsSwitcherOpen(!isSwitcherOpen)}
+               className="w-full group p-3 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-white/20 hover:bg-white/[0.05] transition-all flex items-center gap-3 text-left relative"
+             >
+                <div className="shrink-0 relative">
+                   {currentBoardAvatar ? (
+                     <img src={currentBoardAvatar} alt="" className="w-9 h-9 rounded-xl object-cover shadow-lg" />
+                   ) : (
+                     <div className="w-9 h-9 rounded-xl bg-neutral-800 flex items-center justify-center font-bold text-[var(--accent)]">
+                       {currentBoardTitle?.charAt(0)}
+                     </div>
+                   )}
+                   <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-blue-500 border-2 border-[#09090b] flex items-center justify-center shadow-lg">
+                     {selectedSubSiteId ? <Globe size={8} className="text-white" /> : <User size={8} className="text-white" />}
+                   </div>
                 </div>
-
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-bold text-white truncate flex items-center gap-1">
-                    {selectedSubSiteId ? currentSubSite?.title : (profile.displayName || profile.username)}
-                    {!selectedSubSiteId && <ChevronRight size={12} className="opacity-40 group-hover/identity:translate-x-0.5 transition-transform" />}
-                  </h3>
-                  <div className="flex items-center gap-1 opacity-50 font-mono text-[10px] tracking-tight truncate">
-                    <span>huev.io/</span>
-                    <span className="text-[var(--accent)] font-bold">
-                      {selectedSubSiteId ? `${profile.username}/${currentSubSite?.slug}` : profile.username}
-                    </span>
-                  </div>
+                  <h4 className="text-xs font-black text-white truncate">{currentBoardTitle}</h4>
+                  <p className="text-[10px] font-mono opacity-30 truncate">{currentBoardSlug}</p>
                 </div>
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCopyUrl();
-                  }}
-                  className="p-2 rounded-xl hover:bg-white/10 text-white/40 hover:text-[var(--accent)] transition-all"
-                >
-                  {copied ? <Check size={14} /> : <Copy size={14} />}
-                </button>
-              </div>
-
-              {/* Subsite Action Hint */}
-              {selectedSubSiteId && (
-                <div className="mt-3 pt-3 border-t border-white/[0.05] flex items-center gap-2">
-                  <button 
-                    onClick={() => openModal(setIsProSettingsOpen)}
-                    className="flex-1 py-1.5 rounded-lg bg-white/5 text-[9px] font-black uppercase tracking-widest hover:bg-[var(--accent)] hover:text-black transition-all"
-                  >
-                    Ajustes
-                  </button>
-                  <button 
-                    onClick={() => setSelectedSubSiteId(null)}
-                    className="flex-1 py-1.5 rounded-lg bg-black/40 text-[9px] font-black uppercase tracking-widest hover:bg-white/10 transition-all text-white/40"
-                  >
-                    Cerrar
-                  </button>
+                <div className={`transition-transform duration-300 ${isSwitcherOpen ? 'rotate-180' : ''}`}>
+                  <ChevronRight size={14} className="text-white/20 group-hover:text-white/40" />
                 </div>
-              )}
-            </motion.div>
+             </button>
+
+             <AnimatePresence>
+               {isSwitcherOpen && (
+                 <>
+                   <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setIsSwitcherOpen(false)} />
+                   <motion.div
+                     initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                     animate={{ opacity: 1, scale: 1, y: 0 }}
+                     exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                     className="absolute top-full left-0 right-0 mt-2 p-2 bg-[#121214] border border-white/10 rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 overflow-hidden backdrop-blur-xl"
+                   >
+                      <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                        <button 
+                          onClick={() => { setSelectedSubSiteId(null); setIsSwitcherOpen(false); }}
+                          className={`w-full p-3 rounded-xl flex items-center gap-3 text-left transition-all ${!selectedSubSiteId ? 'bg-[var(--accent)]/10 text-white' : 'hover:bg-white/5 text-white/40'}`}
+                        >
+                           <div className="shrink-0">
+                             {profile.avatarUrl ? (
+                               <img src={profile.avatarUrl} alt={profile.displayName} className="w-8 h-8 rounded-lg object-cover border border-white/10" />
+                             ) : (
+                               <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black ${!selectedSubSiteId ? 'bg-[var(--accent)]/20 text-[var(--accent)]' : 'bg-white/5 text-white/40'}`}>
+                                 {profile.displayName?.charAt(0).toUpperCase() || '?'}
+                               </div>
+                             )}
+                           </div>
+                           <div className="flex-1 min-w-0">
+                             <p className="text-[11px] font-black">{profile.displayName || 'Perfil Principal'}</p>
+                             <p className="text-[9px] font-mono opacity-40">/{profile.username}</p>
+                           </div>
+                           {!selectedSubSiteId && <Check size={12} className="text-[var(--accent)]" />}
+                        </button>
+
+                        {profile.subSites.length > 0 && (
+                          <div className="mt-2 pt-2 border-t border-white/5">
+                             {profile.subSites.map(site => (
+                               <button
+                                 key={site.id}
+                                 onClick={() => { setSelectedSubSiteId(site.id); setIsSwitcherOpen(false); }}
+                                 className={`w-full p-3 rounded-xl flex items-center gap-3 text-left transition-all ${selectedSubSiteId === site.id ? 'bg-[var(--accent)]/10 text-white' : 'hover:bg-white/5 text-white/40'}`}
+                               >
+                                  <div className="shrink-0">
+                                     {site.avatarUrl ? <img src={site.avatarUrl} className="w-8 h-8 rounded-lg object-cover" /> : <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center"><Globe size={14} /></div>}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                     <p className="text-[11px] font-black">{site.title}</p>
+                                     <p className="text-[9px] font-mono opacity-40">/{site.slug}</p>
+                                  </div>
+                                  {selectedSubSiteId === site.id && <Check size={12} className="text-[var(--accent)]" />}
+                               </button>
+                             ))}
+                          </div>
+                        )}
+
+                        {profile.subscriptionTier === 'pro' && (
+                          <button 
+                            onClick={() => { openModal(setIsCreateSubSiteOpen); setIsSwitcherOpen(false); }}
+                            className="w-full mt-2 p-3 rounded-xl border border-dashed border-white/10 hover:border-[var(--accent)]/30 transition-all flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[var(--accent)]"
+                          >
+                            <PlusCircle size={14} /> Crear Nuevo Sub-site
+                          </button>
+                        )}
+                      </div>
+                   </motion.div>
+                 </>
+               )}
+             </AnimatePresence>
           </div>
         </div>
 
@@ -220,7 +254,7 @@ export function DashboardSidebar({
                   <span className="text-xs font-bold text-[var(--accent)]">pts</span>
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-2xl bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)] group-hover/score:scale-110 transition-transform shadow-[0_0_15px_rgba(var(--accent-rgb),0.15)]">
+              <div className="w-10 h-10 rounded-2xl bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)] group-hover/score:scale-110 transition-transform shadow-[0_0_15px_rgba(200,255,0,0.15)]">
                 <Trophy size={18} />
               </div>
             </div>
@@ -237,6 +271,27 @@ export function DashboardSidebar({
               {(profile.builderScore || 0) < 100 ? "Validá tu perfil para aparecer en el ranking." : "¡Vas por buen camino! Agregá más proyectos."}
             </p>
           </motion.div>
+          
+          {/* AI Credits Card */}
+          <div className="p-4 rounded-3xl bg-white/[0.02] border border-white/[0.05] flex items-center justify-between group">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 group-hover:bg-purple-500/20 transition-all">
+                <Sparkles size={14} />
+              </div>
+              <div>
+                <span className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] block">Créditos IA</span>
+                <span className="text-xs font-bold text-white/60">{profile.aiCredits ?? 0} disponibles</span>
+              </div>
+            </div>
+            {profile.subscriptionTier !== 'pro' && (
+               <button 
+                  onClick={() => openModal(setIsUpgradeModalOpen)}
+                  className="text-[8px] font-black text-purple-400 uppercase tracking-widest bg-purple-400/10 px-2 py-1 rounded-md hover:bg-purple-400/20 transition-all border border-purple-400/20"
+               >
+                 + PRO
+               </button>
+            )}
+          </div>
 
           {/* Navigation Links */}
           <div className="space-y-1">
@@ -251,16 +306,15 @@ export function DashboardSidebar({
             <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] pl-1 mb-3">Plataforma</div>
             
             <button 
-              onClick={() => profile.subscriptionTier === 'pro' ? openModal(setIsProSettingsOpen) : openModal(setIsUpgradeModalOpen)}
+              onClick={() => openModal(setIsProfileModalOpen)}
               className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-white/5 transition-all group"
             >
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${profile.subscriptionTier === 'pro' ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'bg-white/5 text-white/40'}`}>
-                  <Globe size={18} />
+                <div className="p-2 rounded-lg bg-white/5 text-white/40">
+                  <User size={18} />
                 </div>
-                <span className={`text-sm font-bold ${profile.subscriptionTier === 'pro' ? 'text-white' : 'text-white/40'}`}>Dominio & Pro</span>
+                <span className="text-sm font-bold text-white/70">Editar {selectedSubSiteId ? 'Sub-site' : 'Perfil'}</span>
               </div>
-              {profile.subscriptionTier !== 'pro' && <Lock size={12} className="text-white/20" />}
             </button>
 
             <div className="flex items-center justify-between p-3 rounded-2xl hover:bg-white/5 transition-all group">

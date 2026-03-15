@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowRight, Search, Loader2, Sparkles, X } from "lucide-react";
+import { ArrowRight, Search, Loader2, Sparkles, X, Trophy } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
@@ -128,8 +128,13 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
 
   return (
     <div className="flex flex-col gap-10 font-display">
-      {/* Refined Toolbar */}
-      <div className="flex flex-col lg:flex-row gap-6 items-center justify-between w-full">
+      {/* Refined Toolbar - Slide down entrance */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex flex-col lg:flex-row gap-6 items-center justify-between w-full"
+      >
         {/* Search Bar Group */}
         <div className="flex items-center gap-3 flex-1 w-full max-w-2xl">
           <div className="relative flex-1 group">
@@ -198,7 +203,7 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       <ScoreInfoModal isOpen={isScoreInfoOpen} onClose={() => setIsScoreInfoOpen(false)} />
 
@@ -213,154 +218,14 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
       ) : (
         <div className="flex flex-col gap-12">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10 pt-10">
-            {profiles.map((profile, i) => {
-              const showWinnerBadge = !!profile.is_winner;
-              return (
-                <motion.div
-                  key={profile.id}
-                  className="relative group/wrapper h-full pt-10"
-                  initial="initial"
-                  animate="animate"
-                  whileHover="hover"
-                  variants={{
-                    initial: { opacity: 0, y: 15 },
-                    animate: { opacity: 1, y: 0 },
-                    hover: { zIndex: 50 },
-                  }}
-                  transition={{
-                    duration: 0.4,
-                    delay: Math.min(i * 0.05, 0.5),
-                    ease: "easeOut"
-                  }}
-                >
-                  {showWinnerBadge && (
-                    <motion.div
-                      className="absolute left-8 right-8 h-10 bg-[var(--accent)] rounded-t-xl flex items-start justify-center pt-2 pointer-events-none z-0 shadow-[0_-5px_20px_rgba(200,255,0,0.15)]"
-                      style={{ top: '40px' }} // Exactly at the card's top edge
-                      variants={{
-                        hover: { 
-                          y: -36, 
-                          transition: { type: "spring", stiffness: 400, damping: 25 } 
-                        },
-                        initial: { y: 0 },
-                        animate: {
-                          y: [-3, -10, -3],
-                          transition: {
-                            y: {
-                              repeat: Infinity,
-                              duration: 2.5,
-                              ease: "easeInOut"
-                            }
-                          }
-                        },
-                        mobile: { y: -36 }
-                      }}
-                      animate={isMobile ? "mobile" : "animate"}
-                    >
-                      <div className="flex items-center gap-1.5 px-3">
-                        <Sparkles size={11} className="text-black fill-black" />
-                        <span className="text-black font-black text-[10px] uppercase tracking-[0.1em] whitespace-nowrap">
-                          Creador de la semana
-                        </span>
-                      </div>
-                    </motion.div>
-                  )}
-
-                  <motion.div className="h-full relative z-10 bg-[var(--bg)] rounded-[1.5rem]">
-                    <Link
-                      href={`/${profile.username}`}
-                      onClick={() => {
-                        if (typeof window !== "undefined") {
-                          sessionStorage.setItem("huevsite_from_explore", "true");
-                        }
-                      }}
-                      className="group h-full relative border border-[var(--border)] bg-[var(--surface)] rounded-[1.5rem] p-8 hover:border-[var(--border-bright)] transition-all overflow-hidden flex flex-col min-h-[220px] shadow-2xl"
-                    >
-                      {/* Accent glow on hover */}
-                      <div
-                        className="absolute inset-0 opacity-0 group-hover:opacity-[0.03] transition-opacity duration-500 pointer-events-none"
-                        style={{ backgroundColor: profile.accent_color || 'var(--accent)' }}
-                      />
-
-                      {/* Pro Badge */}
-                      {profile.pro_since && !profile.is_winner && (
-                        <div className="absolute top-4 right-4 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-500 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1.5 shadow-[0_0_15px_rgba(245,158,11,0.2)] z-20 backdrop-blur-sm">
-                          <Sparkles size={12} className="text-amber-400 animate-pulse" />
-                          PRO
-                        </div>
-                      )}
-
-                      <div className="flex flex-col h-full relative z-10">
-                        <div className="mb-auto">
-                          <div className="flex items-start gap-4 mb-4">
-                            <div className="w-12 h-12 shrink-0 rounded-full flex items-center justify-center text-lg font-black text-black shadow-sm" style={{ background: profile.image ? 'transparent' : `linear-gradient(135deg, ${profile.accent_color || 'var(--accent)'}, #00FF88)` }}>
-                              {profile.image ? (
-                                <img src={profile.image} alt={profile.name || profile.username} className="w-full h-full object-cover rounded-full border border-[var(--border)] bg-[var(--surface2)]" />
-                              ) : (
-                                (profile.name || profile.username).charAt(0).toUpperCase()
-                              )}
-                            </div>
-
-                            <div className="flex-1 min-w-0">
-                              <h2 className="text-xl font-bold tracking-tight mb-1 group-hover:text-white transition-colors truncate pr-8">
-                                {profile.name || profile.username}
-                              </h2>
-                              <p className="text-[13px] text-[var(--text-dim)] font-mono line-clamp-2 leading-relaxed">
-                                {profile.tagline || "Creator"}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between mt-8 mb-6 p-3 bg-white/[0.03] border border-white/[0.05] rounded-2xl">
-                          <div className="flex flex-col items-center flex-1 px-1 border-r border-white/5">
-                            <span className="text-white font-black text-sm leading-none mb-1">{profile.followers_count || 0}</span>
-                            <span className="text-[7px] text-[var(--text-muted)] uppercase tracking-[0.1em] font-mono">Seguidores</span>
-                          </div>
-
-                          <div className="flex flex-col items-center flex-1 px-1 border-r border-white/5">
-                            <span className="text-white font-black text-sm leading-none mb-1">{profile.nominations_count || 0}</span>
-                            <span className="text-[7px] text-[var(--text-muted)] uppercase tracking-[0.1em] font-mono">Votos</span>
-                          </div>
-
-                          <div className="flex flex-col items-center flex-1 px-1 border-r border-white/5">
-                            <span className="text-white font-black text-sm leading-none mb-1">{profile.endorsements_count || 0}</span>
-                            <span className="text-[7px] text-[var(--text-muted)] uppercase tracking-[0.1em] font-mono">Comentarios</span>
-                          </div>
-
-                          <div className="flex flex-col items-center flex-1 px-1">
-                            <span className="text-[var(--accent)] font-black text-sm leading-none mb-1">{profile.builder_score || 0}</span>
-                            <span className="text-[7px] text-[var(--accent)]/60 uppercase tracking-[0.1em] font-mono">Score</span>
-                          </div>
-                        </div>
-
-                        <div className="pt-8 mt-auto flex items-center justify-between border-t border-[var(--border-bright)]/30 group-hover:border-[var(--border-bright)] transition-colors">
-                          <div className="font-mono text-xs text-[var(--text-muted)] flex items-center gap-2">
-                            <span
-                              className="w-2 h-2 rounded-full inline-block shadow-sm"
-                              style={{ backgroundColor: profile.accent_color || 'var(--accent)', boxShadow: `0 0 8px ${profile.accent_color || 'var(--accent)'}40` }}
-                            />
-                            @{profile.username}
-                          </div>
-                          <div
-                            className="w-8 h-8 rounded-full bg-[var(--surface2)] flex items-center justify-center opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all border border-[var(--border-bright)]"
-                            style={{ color: profile.accent_color || 'var(--accent)' }}
-                          >
-                            <ArrowRight size={14} />
-                          </div>
-                        </div>
-                      </div>
-                      {/* Special border for Winner or PRO */}
-                      {profile.is_winner ? (
-                        <div className="absolute inset-0 border-2 border-[var(--accent)]/30 rounded-[1.5rem] pointer-events-none transition-colors shadow-[inset_0_0_20px_rgba(200,255,0,0.05)]" />
-                      ) : profile.pro_since ? (
-                        <div className="absolute inset-0 border border-amber-500/20 rounded-[1.5rem] pointer-events-none group-hover:border-amber-500/50 transition-colors shadow-[inset_0_0_15px_rgba(245,158,11,0.05)]" />
-                      ) : null}
-                    </Link>
-                  </motion.div>
-                </motion.div>
-              );
-            })}
+            {profiles.map((profile, i) => (
+              <ProfileCard 
+                key={profile.id} 
+                profile={profile} 
+                index={i} 
+                isMobile={isMobile} 
+              />
+            ))}
           </div>
 
           {hasMore && (
@@ -380,6 +245,189 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function ProfileCard({ profile, index, isMobile }: { profile: ExploreProfile; index: number; isMobile: boolean }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const showWinnerBadge = !!profile.is_winner;
+  const accentColor = profile.accent_color || 'var(--accent)';
+
+  return (
+    <motion.div
+      className="relative h-full"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      transition={{
+        duration: 0.6,
+        delay: Math.min(index * 0.05, 0.4),
+        ease: [0.23, 1, 0.32, 1]
+      }}
+      style={{ zIndex: isHovered ? 50 : 1 }}
+    >
+      {/* Premium Winner Badge */}
+      {showWinnerBadge && (
+        <motion.div
+          className="absolute left-1/2 h-7 bg-gradient-to-r from-[var(--accent)] to-[#00FF88] rounded-full flex items-center justify-center pointer-events-none shadow-[0_4px_20px_rgba(200,255,0,0.3)] border border-white/20 z-30"
+          initial={{ y: 10, x: "-50%", opacity: 0, scale: 0.8, width: '40px' }}
+          animate={isHovered || isMobile 
+            ? { y: -14, x: "-50%", opacity: 1, scale: 1, width: '180px' } 
+            : { y: -4, x: "-50%", opacity: 0.8, scale: 0.9, width: '120px' } 
+          }
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
+          <div className="flex items-center gap-1.5 px-4 overflow-hidden">
+            <Sparkles size={11} className="text-black fill-black shrink-0" />
+            <span className="text-black font-black text-[9px] uppercase tracking-[0.15em] whitespace-nowrap">
+              {(isHovered || isMobile) ? "Builder del mes" : "Destacado"}
+            </span>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Main Card Container */}
+      <motion.div 
+        className={`h-full relative z-10 rounded-[2rem] transition-all duration-500 overflow-hidden ${
+          showWinnerBadge && !isHovered 
+            ? 'shadow-[0_0_30px_rgba(200,255,0,0.08)]' 
+            : 'shadow-2xl'
+        }`}
+        animate={{
+          scale: isHovered ? 1.02 : 1,
+        }}
+      >
+        <Link
+          href={`/${profile.username}`}
+          onClick={() => {
+            if (typeof window !== "undefined") {
+              sessionStorage.setItem("huevsite_from_explore", "true");
+            }
+          }}
+          className={`group h-full relative border-2 rounded-[2rem] p-8 transition-all duration-500 flex flex-col min-h-[240px] ${
+            showWinnerBadge 
+              ? 'border-[var(--accent)]/30 bg-gradient-to-b from-[var(--surface)] to-[var(--bg)]' 
+              : 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border-bright)]'
+          }`}
+        >
+          {/* Winner Aura */}
+          {showWinnerBadge && (
+            <div 
+              className="absolute inset-x-0 -top-24 h-48 opacity-[0.07] pointer-events-none blur-3xl rounded-full"
+              style={{ background: `radial-gradient(circle, ${accentColor} 0%, transparent 70%)` }}
+            />
+          )}
+
+          {/* Background Interactive Glow */}
+          <div
+            className="absolute inset-0 opacity-0 group-hover:opacity-[0.03] transition-opacity duration-700 pointer-events-none"
+            style={{ background: `radial-gradient(circle at center, ${accentColor}, transparent 70%)` }}
+          />
+
+          {/* Pro Badge - More minimalist */}
+          {profile.pro_since && !profile.is_winner && (
+            <div className="absolute top-6 right-6 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
+              <span className="text-[9px] font-black tracking-widest text-white/50">PRO</span>
+            </div>
+          )}
+
+          <div className="flex flex-col h-full relative z-10">
+            <div className="mb-auto">
+              <div className="flex items-center gap-5 mb-6">
+                {/* Avatar with dynamic border */}
+                <div className="relative shrink-0">
+                  <div 
+                    className="w-16 h-16 rounded-[1.5rem] flex items-center justify-center text-xl font-black text-black overflow-hidden relative z-10 border-2" 
+                    style={{ 
+                      borderColor: isHovered ? accentColor : 'transparent',
+                      background: profile.image ? 'var(--surface2)' : `linear-gradient(135deg, ${accentColor}, #00FF88)`,
+                      transition: 'border-color 0.4s ease'
+                    }}
+                  >
+                    {profile.image ? (
+                      <img 
+                        src={profile.image} 
+                        alt={profile.name || profile.username} 
+                        className="w-full h-full object-cover" 
+                      />
+                    ) : (
+                      (profile.name || profile.username).charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  {showWinnerBadge && (
+                    <div className="absolute -inset-1 bg-[var(--accent)]/20 blur-md rounded-[1.5rem] -z-10 animate-pulse" />
+                  )}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <h2 className="text-xl font-bold tracking-tight text-white group-hover:text-[var(--accent)] transition-colors truncate">
+                      {profile.name || profile.username}
+                    </h2>
+                    {showWinnerBadge && (
+                      <motion.div
+                        animate={{ rotate: [0, 10, -10, 0] }}
+                        transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                      >
+                        <Trophy size={16} className="text-[var(--accent)] drop-shadow-[0_0_8px_rgba(200,255,0,0.5)]" />
+                      </motion.div>
+                    )}
+                  </div>
+                  <p className="text-[13px] text-[var(--text-dim)] font-mono line-clamp-2 leading-tight">
+                    {profile.tagline || "Creator"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Stats - More refined grid */}
+            <div className="grid grid-cols-4 gap-2 mb-8 bg-black/20 backdrop-blur-sm border border-white/5 rounded-2xl p-4">
+              <StatItem label="Seguidores" value={profile.followers_count || 0} />
+              <StatItem label="Votos" value={profile.nominations_count || 0} />
+              <StatItem label="Coment." value={profile.endorsements_count || 0} />
+              <StatItem label="Score" value={profile.builder_score || 0} isAccent />
+            </div>
+
+            {/* Footer */}
+            <div className="pt-6 mt-auto flex items-center justify-between border-t border-white/5 transition-colors">
+              <div className="font-mono text-[11px] text-[var(--text-muted)] flex items-center gap-2.5">
+                <span
+                  className="w-2 h-2 rounded-full inline-block"
+                  style={{ 
+                    backgroundColor: accentColor, 
+                    boxShadow: `0 0 10px ${accentColor}80` 
+                  }}
+                />
+                <span className="group-hover:text-white transition-colors">@{profile.username}</span>
+              </div>
+              
+              <div
+                className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 border border-white/10"
+                style={{ color: accentColor }}
+              >
+                <ArrowRight size={16} />
+              </div>
+            </div>
+          </div>
+        </Link>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function StatItem({ label, value, isAccent = false }: { label: string; value: number; isAccent?: boolean }) {
+  return (
+    <div className={`flex flex-col items-center flex-1 ${!isAccent ? 'border-r border-white/5' : ''}`}>
+      <span className={`text-[15px] font-black leading-none mb-1.5 ${isAccent ? 'text-[var(--accent)]' : 'text-white'}`}>
+        {value}
+      </span>
+      <span className="text-[7px] text-[var(--text-muted)] uppercase tracking-[0.15em] font-black text-center">
+        {label}
+      </span>
     </div>
   );
 }

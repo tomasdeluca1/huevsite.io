@@ -59,6 +59,11 @@ export default async function BlogPostPage({
     notFound();
   }
 
+  // Find index for navigation
+  const currentIndex = BLOG_POSTS.findIndex(p => p.slug === post.slug);
+  const prevPost = currentIndex < BLOG_POSTS.length - 1 ? BLOG_POSTS[currentIndex + 1] : null; // Older
+  const nextPost = currentIndex > 0 ? BLOG_POSTS[currentIndex - 1] : null; // Newer
+
   // Find related posts (same tags, excluding current post)
   const relatedPosts = BLOG_POSTS.filter(
     (p) =>
@@ -145,6 +150,27 @@ export default async function BlogPostPage({
             {post.content}
           </ReactMarkdown>
         </article>
+
+        {/* Post Navigation */}
+        <div className="mt-16 pt-10 border-t border-[var(--border)] flex items-center justify-between">
+          <div className="flex-1">
+            {prevPost ? (
+              <Link href={`/blog/${prevPost.slug}`} className="group flex flex-col gap-2 max-w-[240px]">
+                <span className="text-[10px] uppercase font-mono tracking-widest text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors">← Anterior</span>
+                <span className="text-sm font-bold text-white group-hover:text-[var(--accent)] transition-colors line-clamp-1">{prevPost.title}</span>
+              </Link>
+            ) : <div />}
+          </div>
+          
+          <div className="flex-1 flex justify-end text-right">
+            {nextPost ? (
+              <Link href={`/blog/${nextPost.slug}`} className="group flex flex-col gap-2 max-w-[240px]">
+                <span className="text-[10px] uppercase font-mono tracking-widest text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors">Siguiente →</span>
+                <span className="text-sm font-bold text-white group-hover:text-[var(--accent)] transition-colors line-clamp-1">{nextPost.title}</span>
+              </Link>
+            ) : <div />}
+          </div>
+        </div>
 
         <RelatedPosts posts={relatedPosts} />
 

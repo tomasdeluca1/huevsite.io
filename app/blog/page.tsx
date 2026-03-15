@@ -44,7 +44,6 @@ export default function BlogIndexPage({
         <div className="flex items-center justify-between mb-8">
           <Link href="/" className="logo">huev<span>site</span>.io</Link>
           <div className="flex items-center gap-3">
-            <Link href="/explore" className="text-[10px] font-mono uppercase tracking-widest text-[var(--accent)] hover:text-white transition-colors">← Explorar</Link>
           </div>
         </div>
         <div className="section-label mb-2">// blog y novedades</div>
@@ -60,8 +59,8 @@ export default function BlogIndexPage({
           href="/blog"
           className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
             !activeTag
-              ? "bg-[var(--text-strong)] text-[var(--bg)]"
-              : "bg-[var(--surface)] text-[var(--text-dim)] hover:bg-[var(--surface2)] hover:text-white border border-[var(--border)]"
+              ? "bg-[var(--accent)] text-black shadow-[0_0_20px_var(--accent-dim)]"
+              : "bg-white/5 text-[var(--text-muted)] hover:bg-white/10 hover:text-white border border-white/10"
           }`}
         >
           Todos
@@ -72,8 +71,8 @@ export default function BlogIndexPage({
             href={`/blog?tag=${tag}`}
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
               activeTag === tag
-                ? "bg-[var(--text-strong)] text-[var(--bg)]"
-                : "bg-[var(--surface)] text-[var(--text-dim)] hover:bg-[var(--surface2)] hover:text-white border border-[var(--border)]"
+                ? "bg-[var(--accent)] text-black shadow-[0_0_20px_var(--accent-dim)]"
+                : "bg-white/5 text-[var(--text-muted)] hover:bg-white/10 hover:text-white border border-white/10"
             }`}
           >
             #{tag}

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { MetricBlockData, SocialBlockData, CVBlockData } from "@/lib/profile-types";
+import { MetricBlockData, SocialBlockData, CVBlockData, getContrastColor } from "@/lib/profile-types";
 import { SOCIAL_PLATFORMS, SocialPlatformKey } from "@/lib/social-platforms";
 import { Download } from "lucide-react";
 
@@ -79,7 +79,7 @@ export function SocialBlock({ data, accentColor }: SocialProps) {
           >
             <span className="text-lg md:text-xl grayscale group-hover/item:grayscale-0 transition-all">{getIcon(l.platform)}</span>
             <div className="flex flex-col overflow-hidden">
-              <span className="font-bold text-xs md:text-sm text-white group-hover/item:text-[var(--accent)] transition-colors line-clamp-1">{getLabel(l)}</span>
+              <span className="font-bold text-xs md:text-sm text-white group-hover/item:text-[var(--accent)] transition-colors line-clamp-1" style={{ color: getContrastColor(accentColor) === "#000000" ? undefined : "#ffffff" }}>{getLabel(l)}</span>
               <span className="text-[9px] md:text-[10px] text-[var(--text-muted)] truncate opacity-50">{l.url.replace('https://', '')}</span>
             </div>
           </a>
@@ -110,7 +110,7 @@ export function CVBlock({ data, accentColor }: CVProps) {
         borderColor: "var(--border)",
       }}
     >
-      <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 transition-transform group-hover:scale-110 shadow-lg" style={{ backgroundColor: accentColor, color: "black" }}>
+      <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 transition-transform group-hover:scale-110 shadow-lg" style={{ backgroundColor: accentColor, color: getContrastColor(accentColor) }}>
         <Download size={28} />
       </div>
       <h3 className="font-bold text-lg text-white mb-1 group-hover:text-[var(--accent)] transition-colors" style={{ "--accent": accentColor } as any}>

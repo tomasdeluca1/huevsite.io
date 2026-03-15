@@ -4,6 +4,7 @@ import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion"
 import { useEffect, useState } from "react";
 import { Compass, Layout, Plus, Share2, Flame, Star, Trophy } from "lucide-react";
 import Link from "next/link";
+import { getContrastColor } from "@/lib/profile-types";
 
 interface MobileHeaderProps {
     displayName: string;
@@ -31,8 +32,11 @@ export function MobileStickyHeader({ displayName, avatarUrl, builderScore, accen
             >
                 <div className="flex items-center gap-3 min-w-0">
                     <div
-                        className="w-8 h-8 rounded-full border border-white/10 shrink-0 flex items-center justify-center text-xs font-black text-black"
-                        style={{ background: avatarUrl ? 'transparent' : `linear-gradient(135deg, ${accentColor}, #00FF88)` }}
+                        className="w-8 h-8 rounded-full border border-white/10 shrink-0 flex items-center justify-center text-xs font-black"
+                        style={{ 
+                            background: avatarUrl ? 'transparent' : `linear-gradient(135deg, ${accentColor}, #00FF88)`,
+                            color: avatarUrl ? 'transparent' : getContrastColor(accentColor)
+                        }}
                     >
                         {avatarUrl ? (
                             <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover rounded-full" />
@@ -98,9 +102,9 @@ export function MobileBottomNav({ accentColor, currentUserId, isCustomDomain = f
                     >
                         <div
                             className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-[var(--accent)]/20 transition-transform active:scale-95"
-                            style={{ backgroundColor: accentColor }}
+                            style={{ backgroundColor: accentColor, color: getContrastColor(accentColor) }}
                         >
-                            <Plus size={28} strokeWidth={3} className="text-black" />
+                            <Plus size={28} strokeWidth={3} />
                         </div>
                         <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[8px] font-black uppercase tracking-widest text-[var(--accent)]" style={{ color: accentColor }}>Post</span>
                     </Link>

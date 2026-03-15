@@ -48,9 +48,9 @@ export function isDarkColor(hexColor: string): boolean {
 
 export function getAdjustedAccentColor(hexColor: string): string {
   if (isDarkColor(hexColor)) {
-    // If it's too dark for a black background, return something slightly more visible
-    // but keep it as dark as possible to respect user's choice.
-    return "#1a1a1a";
+    // Si es demasiado oscuro para fondo negro, devolvemos un color que sea legible
+    // pero que mantenga la esencia del color elegido (en este caso un gris claro/blanco)
+    return "#A1A1AA"; // zinc-400 (visible sobre negro)
   }
   return hexColor;
 }

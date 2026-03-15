@@ -232,6 +232,7 @@ export interface SubSite {
   description?: string;
   created_at: string;
   avatarUrl?: string;
+  sourceUrl?: string;
 }
 
 export interface ProfileData {
@@ -247,9 +248,13 @@ export interface ProfileData {
   extraBlocksFromShare: number;
   hasSeenUpdateFeb25?: boolean;
   builderScore?: number;
+  aiCredits?: number;
   customDomain?: string;
+  subSiteId?: string;
+  isWinner?: boolean;
   subSites: SubSite[];
   blocks: BlockData[];
+  sourceUrl?: string;
   parentProfile?: { 
     username: string; 
     displayName: string; 

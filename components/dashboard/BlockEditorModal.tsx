@@ -8,6 +8,7 @@ import { createPortal } from "react-dom";
 import { ImageUpload } from "@/components/dashboard/ImageUpload";
 import { FileUpload } from "@/components/dashboard/FileUpload";
 import { SOCIAL_PLATFORMS, SocialPlatformKey, buildSocialUrl, getUrlPreview } from "@/lib/social-platforms";
+import { AIRewriteButton } from "@/components/dashboard/AIRewriteButton";
 
 interface Props {
   block: BlockData;
@@ -140,8 +141,15 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                   placeholder="Tu nombre real"
                 />
               </div>
-              <div className="space-y-2">
-                <div className="section-label !text-[9px] px-1">// rol / tagline corto</div>
+               <div className="space-y-2">
+                <div className="flex items-center justify-between section-label !text-[9px] px-1">
+                  <span>// rol / tagline corto</span>
+                  <AIRewriteButton 
+                    text={formData.tagline || ""} 
+                    onSelect={(val) => handleChange("tagline", val)} 
+                    accentColor={accentColor} 
+                  />
+                </div>
                 <input
                   value={formData.tagline || ""}
                   onChange={(e) => handleChange("tagline", e.target.value)}
@@ -151,7 +159,14 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
               </div>
             </div>
             <div className="space-y-2">
-              <div className="section-label !text-[9px] px-1">// descripción (bio)</div>
+              <div className="flex items-center justify-between section-label !text-[9px] px-1">
+                <span>// descripción (bio)</span>
+                <AIRewriteButton 
+                  text={formData.description || ""} 
+                  onSelect={(val) => handleChange("description", val)} 
+                  accentColor={accentColor} 
+                />
+              </div>
               <textarea
                 value={formData.description || ""}
                 onChange={(e) => handleChange("description", e.target.value)}
@@ -194,7 +209,14 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
               />
             )}
             <div className="space-y-2">
-              <div className="section-label !text-[9px] px-1">// título</div>
+              <div className="flex items-center justify-between section-label !text-[9px] px-1">
+                <span>// título</span>
+                <AIRewriteButton 
+                  text={formData.project || formData.title || ""} 
+                  onSelect={(val) => handleChange(block.type === "building" ? "project" : "title", val)} 
+                  accentColor={accentColor} 
+                />
+              </div>
               <input
                 value={formData.project || formData.title || ""}
                 onChange={(e) => handleChange(block.type === "building" ? "project" : "title", e.target.value)}
@@ -202,7 +224,14 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
               />
             </div>
             <div className="space-y-2">
-              <div className="section-label !text-[9px] px-1">// descripción</div>
+              <div className="flex items-center justify-between section-label !text-[9px] px-1">
+                <span>// descripción</span>
+                <AIRewriteButton 
+                  text={formData.description || ""} 
+                  onSelect={(val) => handleChange("description", val)} 
+                  accentColor={accentColor} 
+                />
+              </div>
               <textarea
                 value={formData.description || ""}
                 onChange={(e) => handleChange("description", e.target.value)}

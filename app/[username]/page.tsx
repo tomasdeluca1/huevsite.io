@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentWeek } from "@/lib/showcase-service";
 import { ExploreNavigation } from "@/components/explore/ExploreNavigation";
 import { headers } from "next/headers";
+import { AnalyticsTracker } from "@/components/analytics/AnalyticsTracker";
 
 interface Props {
   params: { username: string };
@@ -19,7 +20,8 @@ interface Props {
 
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const profile = await profileService.getProfile(params.username);
+  const { username } = await params;
+  const profile = await profileService.getProfile(username);
 
   if (!profile) return { title: "Usuario no encontrado | huevsite.io" };
 
@@ -30,7 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // Note: we can safely bypass standard Next metadata cache parameter using a bust cache hash
   // if required, but default Next app-router already suffixes ?hash. 
   // We'll explicitly define the absolute OG image URL since Next sometimes fails to resolve absolute paths automatically.
-  const ogImageUrl = `${baseUrl}/${profile.username}/opengraph-image`;
+  const ogImageUrl = `${baseUrl}/${username}/opengraph-image`;
 
   return {
     title: `${profile.displayName} (@${profile.username}) | huevsite.io`,
@@ -57,7 +59,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ProfilePage({ params }: Props) {
-  const profile = await profileService.getProfile(params.username);
+  const { username } = await params;
+  const profile = await profileService.getProfile(username);
 
   if (!profile) {
     notFound();
@@ -70,6 +73,7 @@ export default async function ProfilePage({ params }: Props) {
   // Social: verificar si el usuario actual ya sigue este perfil
   let currentUserId: string | null = null;
   let isFollowing = false;
+  let visitorUserInfo: { user_id: string; username: string; name: string | null; avatar: string | null } | null = null;
 
   let followersCount = 0;
   let followingCount = 0;
@@ -78,7 +82,34 @@ export default async function ProfilePage({ params }: Props) {
 
   const currentWeek = getCurrentWeek();
 
-  if (isEnabled("socialNetwork") && profile.id) {
+  // Always try to get the logged-in visitor's identity for analytics tracking
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    currentUserId = user?.id ?? null;
+
+    // If a different logged-in user is visiting, fetch their profile for the visitors list
+    if (currentUserId && currentUserId !== profile.id) {
+      const { data: visitorProfile } = await supabase
+        .from("profiles")
+        .select("id, username, name, image")
+        .eq("id", currentUserId)
+        .maybeSingle();
+
+      if (visitorProfile) {
+        visitorUserInfo = {
+          user_id: visitorProfile.id,
+          username: visitorProfile.username,
+          name: visitorProfile.name || null,
+          avatar: visitorProfile.image || null,
+        };
+      }
+    }
+  } catch {
+    // ignorar errores de auth en perfil público
+  }
+
+  if (isEnabled("socialNetwork") && profile.id && currentUserId) {
     try {
       const supabase = await createClient();
 
@@ -97,10 +128,7 @@ export default async function ProfilePage({ params }: Props) {
       followingCount = fing || 0;
       nominationsCount = noms || 0;
 
-      const { data: { user } } = await supabase.auth.getUser();
-      currentUserId = user?.id ?? null;
-
-      if (currentUserId && currentUserId !== profile.id) {
+      if (currentUserId !== profile.id) {
         const [{ data: follow }, { data: nomination }] = await Promise.all([
           supabase.from("follows").select("id").eq("follower_id", currentUserId).eq("following_id", profile.id).maybeSingle(),
           supabase.from("showcase_nominations").select("id").eq("nominated_by", currentUserId).eq("user_id", profile.id).eq("week", currentWeek).maybeSingle()
@@ -109,8 +137,21 @@ export default async function ProfilePage({ params }: Props) {
         hasNominated = !!nomination;
       }
     } catch {
-      // ignorar errores de auth en perfil público
+      // ignorar errores de social queries
     }
+  } else if (isEnabled("socialNetwork") && profile.id) {
+    // Still fetch public counts even for anonymous visitors
+    try {
+      const supabase = await createClient();
+      const [{ count: fers }, { count: fing }, { count: noms }] = await Promise.all([
+        supabase.from("follows").select("*", { count: "exact", head: true }).eq("following_id", profile.id),
+        supabase.from("follows").select("*", { count: "exact", head: true }).eq("follower_id", profile.id),
+        supabase.from("showcase_nominations").select("*", { count: "exact", head: true }).eq("user_id", profile.id).eq("week", currentWeek)
+      ]);
+      followersCount = fers || 0;
+      followingCount = fing || 0;
+      nominationsCount = noms || 0;
+    } catch {}
   }
 
   const showFollowButton =
@@ -122,9 +163,11 @@ export default async function ProfilePage({ params }: Props) {
     <div className="landing min-h-screen font-display selection:bg-[var(--accent)] selection:text-black">
       {/* Noise Texture Overlay */}
       <div className="noise" />
+      
+      <AnalyticsTracker userId={profile.id!} visitorUserInfo={visitorUserInfo} />
 
       <main className="min-h-screen pt-8 md:pt-12 pb-16 md:pb-24 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto relative">
-        <ExploreNavigation currentUsername={params.username} isCustomDomain={isCustomDomain} />
+        <ExploreNavigation currentUsername={username} isCustomDomain={isCustomDomain} />
         {/* Dynamic Cinematic Backgrounds */}
         <div
           className="fixed top-[-10%] left-[-10%] w-[80%] md:w-[50%] h-[50%] opacity-[0.08] blur-[120px] pointer-events-none transition-all duration-1000"
@@ -157,6 +200,7 @@ export default async function ProfilePage({ params }: Props) {
           accentColor={profile.accentColor}
           username={profile.username}
           isCustomDomain={isCustomDomain}
+          isWinner={profile.isWinner}
         />
         <MobileBottomNav accentColor={profile.accentColor} currentUserId={currentUserId} isCustomDomain={isCustomDomain} />
 
@@ -176,6 +220,7 @@ export default async function ProfilePage({ params }: Props) {
           subSites={profile.subSites}
           username={profile.username}
           isCustomDomain={isCustomDomain}
+          isWinner={profile.isWinner}
         />
 
         {/* Huevsite Grid (Client Component for animations) */}
@@ -186,6 +231,8 @@ export default async function ProfilePage({ params }: Props) {
             displayName={profile.displayName}
             tagline={profile.tagline}
             subscriptionTier={profile.subscriptionTier}
+            userId={profile.id}
+            isWinner={profile.isWinner}
           />
         </div>
 

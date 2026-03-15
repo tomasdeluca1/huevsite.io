@@ -1,20 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Globe, Plus, Link as LinkIcon, ExternalLink, Trash2, Globe2, Loader2, Check, Settings, Copy, ArrowRight, Sparkles, Lock } from "lucide-react";
+import { X, Globe, Plus, Link as LinkIcon, ExternalLink, Trash2, Globe2, Loader2, Check, Settings, Copy, ArrowRight, Sparkles, Lock, BarChart3, SendHorizontal, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { SubSite } from "@/lib/profile-types";
+import { SubSite, BlockData } from "@/lib/profile-types";
+import { InsightsTab } from "./InsightsTab";
 
 interface Props {
     isOpen: boolean;
     onClose: () => void;
     accentColor: string;
     subSites: SubSite[];
+    blocks: BlockData[];
     customDomain?: string;
     onUpdateDomain: (domain: string) => Promise<void>;
     onAddSubSite: (title: string, slug: string) => Promise<void>;
-    onUpdateSubSite: (id: string, updates: { title?: string, slug?: string, description?: string }) => Promise<void>;
+    onUpdateSubSite: (id: string, updates: { title?: string, slug?: string, description?: string, avatarUrl?: string }) => Promise<void>;
     onDeleteSubSite: (id: string) => Promise<void>;
+    onTransferProject?: (email: string) => Promise<void>;
     username: string;
 }
 
@@ -23,15 +26,18 @@ export function ProSettingsModal({
     onClose,
     accentColor,
     subSites,
+    blocks,
     customDomain,
     onUpdateDomain,
     onAddSubSite,
     onUpdateSubSite,
     onDeleteSubSite,
+    onTransferProject,
     username
 }: Props) {
-    const [activeTab, setActiveTab] = useState<"subsites" | "domain">("subsites");
+    const [activeTab, setActiveTab] = useState<"subsites" | "domain" | "insights" | "transfer">("subsites");
     const [domain, setDomain] = useState(customDomain || "");
+    const [transferEmail, setTransferEmail] = useState("");
     const [newSubSite, setNewSubSite] = useState({ title: "", slug: "" });
     const [aiUrl, setAiUrl] = useState("");
     const [loading, setLoading] = useState(false);
@@ -148,6 +154,21 @@ export function ProSettingsModal({
         setEditingSiteId(null);
     };
 
+    const handleTransfer = async () => {
+        if (!transferEmail || !onTransferProject) return;
+        setLoading(true);
+        try {
+            await onTransferProject(transferEmail);
+            setSuccess(true);
+            setTransferEmail("");
+            setTimeout(() => setSuccess(false), 2000);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const startEditing = (site: SubSite) => {
         setEditingSiteId(site.id);
         setEditValues({
@@ -160,7 +181,9 @@ export function ProSettingsModal({
 
     const tabs = [
         { id: "subsites", label: "Sub-sites", icon: Plus },
-        { id: "domain", label: "Custom Domain", icon: Globe2 },
+        { id: "domain", label: "Dominio", icon: Globe2 },
+        { id: "insights", label: "Insights", icon: BarChart3 },
+        { id: "transfer", label: "Transferir", icon: SendHorizontal },
     ];
 
     return (
@@ -410,8 +433,8 @@ export function ProSettingsModal({
                                                             {creationMode === "magic" ? (
                                                                 <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300 relative z-10 max-w-xl mx-auto w-full text-center">
                                                                     <div className="space-y-4">
-                                                                        <h4 className="text-3xl lg:text-5xl font-black text-white leading-tight tracking-tight">Cloná cualquier sitio.</h4>
-                                                                        <p className="text-base lg:text-lg text-white/50 leading-relaxed">Nuestra IA analizará la URL y reconstruirá su contenido principal en un formato bento perfecto para vos.</p>
+                                                                        <h4 className="text-2xl lg:text-4xl font-black text-white leading-tight tracking-tighter">Cloná cualquier sitio.</h4>
+                                                                        <p className="text-sm lg:text-base text-white/50 leading-relaxed">Nuestra IA analizará la URL y reconstruirá su contenido principal en un formato bento perfecto para vos.</p>
                                                                     </div>
 
                                                                     <div className="space-y-4 bg-black/20 p-6 lg:p-8 rounded-[2rem] border border-white/5 backdrop-blur-md">
@@ -463,8 +486,8 @@ export function ProSettingsModal({
                                                             ) : (
                                                                 <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300 relative z-10 max-w-xl mx-auto w-full text-center">
                                                                     <div className="space-y-4">
-                                                                        <h4 className="text-3xl lg:text-5xl font-black text-white leading-tight tracking-tight">Empezá de cero.</h4>
-                                                                        <p className="text-base lg:text-lg text-white/50 leading-relaxed">Creá un sub-site vacío y personalizalo a tu gusto asignándole bloques desde el editor principal propio.</p>
+                                                                        <h4 className="text-2xl lg:text-4xl font-black text-white leading-tight tracking-tighter">Empezá de cero.</h4>
+                                                                        <p className="text-sm lg:text-base text-white/50 leading-relaxed">Creá un sub-site vacío y personalizalo a tu gusto asignándole bloques desde el editor principal propio.</p>
                                                                     </div>
 
                                                                     <div className="space-y-6 text-left bg-black/20 p-6 lg:p-8 rounded-[2rem] border border-white/5 backdrop-blur-md">
@@ -526,44 +549,37 @@ export function ProSettingsModal({
                                                 <p className="text-sm lg:text-base text-white/40 leading-relaxed max-w-md">Conectá un dominio propio para eliminar cualquier rastro de Huevsite en la URL.</p>
                                             </div>
 
-                                            <div className="flex flex-col gap-10 lg:gap-14 max-w-2xl mx-auto w-full">
-                                                {/* Domain Input & Status Section */}
-                                                <div className="space-y-6">
-                                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
-                                                        <span className="text-xs lg:text-sm font-black text-white/40 uppercase tracking-widest">Dominio Conectado</span>
-                                                        {customDomain === domain && domain ? (
-                                                            <span className="flex items-center justify-center sm:justify-end gap-2 text-green-400 font-bold text-xs uppercase bg-green-400/10 px-4 py-2 rounded-xl border border-green-400/20 w-fit">
-                                                                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse shadow-[0_0_10px_rgba(74,222,128,0.5)]" />
-                                                                Conexión Activa
-                                                            </span>
-                                                        ) : (
-                                                            <span className="text-xs font-black text-white/20 uppercase italic bg-white/5 px-4 py-2 rounded-xl border border-white/5 w-fit">Desconectado</span>
-                                                        )}
+                                            <div className="max-w-xl mx-auto w-full space-y-12 py-4">
+                                                {/* Header & Input */}
+                                                <div className="space-y-6 text-center">
+                                                    <div className="space-y-2">
+                                                        <h4 className="text-3xl lg:text-4xl font-[950] text-white tracking-tighter">Conectá tu propio dominio.</h4>
+                                                        <p className="text-sm lg:text-base text-white/40 leading-relaxed max-w-sm mx-auto">Dale un toque profesional a tu marca personal vinculando tu dominio .com o similar.</p>
                                                     </div>
 
-                                                    <div className="relative group">
-                                                        <Globe className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[var(--accent)] transition-colors" size={24} style={{ color: domain ? accentColor : undefined }} />
+                                                    <div className="relative group pt-4">
+                                                        <div className="absolute -inset-1 bg-gradient-to-r from-transparent via-white/5 to-transparent blur-sm rounded-3xl opacity-0 group-focus-within:opacity-100 transition-opacity" />
                                                         <input
                                                             type="text"
-                                                            placeholder="ej: tunombre.com"
+                                                            placeholder="tunombre.com"
                                                             value={domain}
                                                             onChange={(e) => {
                                                                 setDomain(e.target.value.toLowerCase().trim());
                                                                 setVerificationResult(null);
                                                             }}
-                                                            className="w-full bg-black/60 border border-white/10 rounded-[1.5rem] pl-16 pr-6 py-5 lg:py-6 text-base lg:text-lg focus:outline-none focus:border-[var(--accent)]/50 transition-all font-mono font-bold shadow-inner placeholder:text-white/20 text-white"
+                                                            className="w-full bg-transparent border-b-2 border-white/10 px-4 py-4 text-2xl lg:text-3xl font-black focus:outline-none focus:border-[var(--accent)] transition-all placeholder:text-white/5 text-white text-center"
                                                             style={{ "--accent": accentColor } as any}
                                                         />
                                                     </div>
 
-                                                    <div className="flex flex-col sm:flex-row gap-4">
+                                                    <div className="flex flex-col gap-4 items-center">
                                                         <button
                                                             onClick={handleDomainUpdate}
                                                             disabled={loading || domain === customDomain || !domain}
-                                                            className="flex-1 py-5 lg:py-6 rounded-[1.2rem] text-sm font-[900] uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl flex items-center justify-center gap-3 disabled:opacity-50"
+                                                            className="px-10 py-4 rounded-2xl text-[11px] font-[900] uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all shadow-xl flex items-center justify-center gap-3 disabled:opacity-30"
                                                             style={{ backgroundColor: accentColor, color: "#000" }}
                                                         >
-                                                            {loading ? <Loader2 size={24} className="animate-spin" /> : <>Vincular Dominio <Check size={20} /></>}
+                                                            {loading ? <Loader2 size={16} className="animate-spin" /> : <>Vincular Dominio <ArrowRight size={14} /></>}
                                                         </button>
                                                         
                                                         {customDomain && (
@@ -571,98 +587,131 @@ export function ProSettingsModal({
                                                                 onClick={() => {
                                                                     if(confirm("¿Seguro que quieres desvincular el dominio?")) onUpdateDomain("")
                                                                 }}
-                                                                className="py-5 lg:py-6 px-6 rounded-[1.2rem] border border-red-500/20 text-red-500/50 hover:text-red-500 hover:bg-red-500/10 transition-all text-xs font-black uppercase tracking-widest flex items-center justify-center gap-3"
+                                                                className="text-[10px] font-black uppercase tracking-widest text-red-500/40 hover:text-red-500 transition-colors"
                                                             >
-                                                                <Trash2 size={20} /> <span className="sm:hidden">Desvincular</span>
+                                                                Desvincular {customDomain}
                                                             </button>
                                                         )}
                                                     </div>
+                                                </div>
 
-                                                    {/* Verification Status Card */}
-                                                    {verificationResult && (
-                                                        <motion.div 
-                                                            initial={{ opacity: 0, y: 10 }}
-                                                            animate={{ opacity: 1, y: 0 }}
-                                                            className={`p-6 rounded-[1.5rem] border ${verificationResult.isValid ? 'bg-green-500/10 border-green-500/20 text-green-300' : 'bg-amber-500/10 border-amber-500/20 text-amber-200'} text-[11px] font-medium leading-relaxed mt-4`}
-                                                        >
-                                                            <div className="flex gap-4">
-                                                                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${verificationResult.isValid ? 'bg-green-500 text-black' : 'bg-amber-500 text-black'}`}>
-                                                                    {verificationResult.isValid ? <Check size={16} /> : <div className="font-black">!</div>}
-                                                                </div>
-                                                                <p>{verificationResult.message}</p>
+                                                {/* DNS natural flow */}
+                                                <div className="space-y-8 pt-6 border-t border-white/5">
+                                                    <div className="flex items-center gap-3 px-1">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" style={{ backgroundColor: accentColor }} />
+                                                        <h5 className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Configuración Requerida</h5>
+                                                    </div>
+
+                                                    <div className="space-y-10 pl-2">
+                                                        <div className="relative pl-8 before:absolute before:left-0 before:top-2 before:w-[1px] before:h-[calc(100%+2.5rem)] before:bg-white/10 last:before:hidden">
+                                                            <div className="absolute left-[-4px] top-2 w-2 h-2 rounded-full bg-white/20" />
+                                                            <div className="space-y-2">
+                                                                <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Paso 1</span>
+                                                                <h6 className="text-sm font-bold text-white/80">Configurá el Registro A</h6>
+                                                                <p className="text-xs text-white/40 leading-relaxed">Apuntá el host <code className="text-[var(--accent)] font-bold">@</code> a la IP <code className="bg-white/5 px-1.5 py-0.5 rounded cursor-pointer hover:bg-white/10" onClick={() => { navigator.clipboard.writeText("76.76.21.21"); setCopiedFeedback(true); setTimeout(() => setCopiedFeedback(false), 2000); }}>76.76.21.21</code></p>
                                                             </div>
+                                                        </div>
+
+                                                        <div className="relative pl-8">
+                                                            <div className="absolute left-[-4px] top-2 w-2 h-2 rounded-full bg-white/20" />
+                                                            <div className="space-y-2">
+                                                                <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Paso 2</span>
+                                                                <h6 className="text-sm font-bold text-white/80">Configurá el CNAME para WWW</h6>
+                                                                <p className="text-xs text-white/40 leading-relaxed">Apuntá el host <code className="text-blue-400 font-bold">www</code> a <code className="bg-white/5 px-1.5 py-0.5 rounded cursor-pointer hover:bg-white/10" onClick={() => { navigator.clipboard.writeText("cname.vercel-dns.com"); setCopiedFeedback(true); setTimeout(() => setCopiedFeedback(false), 2000); }}>cname.vercel-dns.com</code></p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {copiedFeedback && (
+                                                        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center text-[10px] font-black uppercase tracking-widest" style={{ color: accentColor }}>
+                                                            ¡Copiado al portapapeles!
                                                         </motion.div>
                                                     )}
                                                 </div>
 
-                                                {/* DNS Steps Section */}
-                                                <div className="pt-8 lg:pt-10 border-t border-white/5 space-y-8">
-                                                    <div className="flex items-center justify-between px-1">
-                                                        <h4 className="text-sm lg:text-base font-black text-white/60 uppercase tracking-widest flex items-center gap-3">
-                                                            <Globe2 className="w-5 h-5 text-white/30" />
-                                                            Configuración DNS
-                                                        </h4>
-                                                        <div className="text-[10px] font-bold text-white/30 italic px-3 py-1.5 bg-white/[0.03] rounded-full border border-white/5 hidden sm:block">Propagación: ~48hs</div>
-                                                    </div>
-
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-                                                        {/* Option 1: A Record */}
-                                                        <div className="space-y-4">
-                                                            <div className="flex justify-between items-center px-1">
-                                                                <div className="text-xs font-black text-white/40 uppercase tracking-widest">Root (@)</div>
-                                                                <span className="text-[10px] font-mono text-blue-400 bg-blue-400/10 border border-blue-400/20 px-3 py-1 rounded-lg shadow-inner">A RECORD</span>
-                                                            </div>
-                                                            <div 
-                                                                onClick={() => {
-                                                                    navigator.clipboard.writeText("76.76.21.21");
-                                                                    setCopiedFeedback(true);
-                                                                    setTimeout(() => setCopiedFeedback(false), 2000);
-                                                                }}
-                                                                className="group cursor-pointer bg-white/[0.02] rounded-2xl p-5 border border-white/5 hover:border-white/10 hover:bg-white/[0.04] transition-all active:scale-[0.99] flex items-center justify-between"
-                                                            >
-                                                                <div className="flex flex-col gap-1 font-mono text-xs">
-                                                                    <div className="text-white/30 uppercase font-black tracking-widest text-[10px]">Nombre / Host</div>
-                                                                    <div className="text-white text-sm">@ (vacio)</div>
-                                                                    <div className="text-white/30 uppercase font-black tracking-widest text-[10px] mt-3">Valor / IP</div>
-                                                                    <div className="text-white text-sm">76.76.21.21</div>
-                                                                </div>
-                                                                <Copy size={20} className="text-white/20 group-hover:text-white transition-colors self-start" />
-                                                            </div>
+                                                {/* Verification status if any */}
+                                                {verificationResult && (
+                                                    <div className={`p-6 rounded-3xl border ${verificationResult.isValid ? 'bg-green-500/5 border-green-500/10 text-green-400' : 'bg-amber-500/5 border-amber-500/10 text-amber-500/80'} text-xs font-medium`}>
+                                                        <div className="flex gap-4 items-start">
+                                                            <AlertCircle size={16} />
+                                                            <p className="leading-relaxed">{verificationResult.message}</p>
                                                         </div>
+                                                    </div>
+                                                )}
+                                                
+                                                <div className="text-center">
+                                                     <button 
+                                                        onClick={handleVerify}
+                                                        disabled={verifying || !domain}
+                                                        className="text-[10px] font-black text-white/20 hover:text-white uppercase tracking-[0.2em] transition-colors"
+                                                     >
+                                                         {verifying ? "Verificando..." : "Verificar estado de propagación"}
+                                                     </button>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                    {activeTab === "insights" && (
+                                        <motion.div 
+                                            key="insights"
+                                            initial={{ opacity: 0, scale: 0.98 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 0.98 }}
+                                            className="max-w-5xl mx-auto"
+                                        >
+                                            <InsightsTab accentColor={accentColor} blocks={blocks} />
+                                        </motion.div>
+                                    )}
 
-                                                        {/* Option 2: CNAME */}
-                                                        <div className="space-y-4">
-                                                            <div className="flex justify-between items-center px-1">
-                                                                <div className="text-xs font-black text-white/40 uppercase tracking-widest">Subdominio</div>
-                                                                <span className="text-[10px] font-mono text-purple-400 bg-purple-400/10 border border-purple-400/20 px-3 py-1 rounded-lg shadow-inner">CNAME</span>
-                                                            </div>
-                                                            <div 
-                                                                onClick={() => {
-                                                                    navigator.clipboard.writeText("cname.huevsite.io");
-                                                                    setCopiedFeedback(true);
-                                                                    setTimeout(() => setCopiedFeedback(false), 2000);
-                                                                }}
-                                                                className="group cursor-pointer bg-white/[0.02] rounded-2xl p-5 border border-white/5 hover:border-white/10 hover:bg-white/[0.04] transition-all active:scale-[0.99] flex items-center justify-between"
-                                                            >
-                                                                <div className="flex flex-col gap-1 font-mono text-xs">
-                                                                    <div className="text-white/30 uppercase font-black tracking-widest text-[10px]">Nombre / Host</div>
-                                                                    <div className="text-white text-sm">www</div>
-                                                                    <div className="text-white/30 uppercase font-black tracking-widest text-[10px] mt-3">Valor</div>
-                                                                    <div className="text-[var(--accent)] font-bold text-sm truncate max-w-[150px]" style={{ color: accentColor }}>cname.huevsite.io</div>
-                                                                </div>
-                                                                <Copy size={20} className="text-white/20 group-hover:text-white transition-colors self-start" />
-                                                            </div>
+                                    {activeTab === "transfer" && (
+                                        <motion.div 
+                                            key="transfer"
+                                            initial={{ opacity: 0, x: 10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            exit={{ opacity: 0, x: -10 }}
+                                            className="space-y-10 lg:space-y-16 max-w-5xl mx-auto"
+                                        >
+                                            <div className="space-y-3">
+                                                <div className="flex items-center gap-2 text-[var(--accent)] font-black text-[10px] lg:text-[11px] uppercase tracking-[0.3em]" style={{ color: accentColor }}>
+                                                    Project Transfer <SendHorizontal size={12} />
+                                                </div>
+                                                <h3 className="text-2xl lg:text-3xl font-[950] text-white tracking-tighter leading-none">Entregá el proyecto.</h3>
+                                                <p className="text-sm lg:text-base text-white/40 leading-relaxed max-w-md">Transferí la propiedad de este board a tu cliente. Una vez transferido, dejará de aparecer en tu dashboard.</p>
+                                            </div>
+
+                                            <div className="flex flex-col gap-10 lg:gap-14 max-w-2xl mx-auto w-full">
+                                                <div className="space-y-6">
+                                                    <div className="space-y-4">
+                                                        <label className="text-xs lg:text-sm font-black text-white/40 uppercase tracking-widest ml-1">Email del receptor</label>
+                                                        <div className="relative group">
+                                                            <div className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[var(--accent)] transition-colors">@</div>
+                                                            <input
+                                                                type="email"
+                                                                placeholder="cliente@empresa.com"
+                                                                value={transferEmail}
+                                                                onChange={(e) => setTransferEmail(e.target.value)}
+                                                                className="w-full bg-black/60 border border-white/10 rounded-[1.5rem] pl-16 pr-6 py-5 lg:py-6 text-base lg:text-lg focus:outline-none focus:border-[var(--accent)]/50 transition-all font-bold shadow-inner placeholder:text-white/20 text-white"
+                                                                style={{ "--accent": accentColor } as any}
+                                                            />
                                                         </div>
                                                     </div>
 
                                                     <button
-                                                        onClick={handleVerify}
-                                                        disabled={verifying || !domain}
-                                                        className="w-full py-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-xs font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 disabled:opacity-30 mt-4"
+                                                        onClick={handleTransfer}
+                                                        disabled={loading || !transferEmail}
+                                                        className="w-full py-5 lg:py-6 rounded-[1.2rem] text-sm font-black uppercase tracking-[0.2em] hover:bg-white/90 active:scale-[0.98] transition-all shadow-xl flex items-center justify-center gap-3 disabled:opacity-30"
+                                                        style={{ backgroundColor: accentColor, color: "#000" }}
                                                     >
-                                                        {verifying ? <Loader2 size={20} className="animate-spin" /> : <Globe2 size={20} style={{ color: accentColor }} />}
-                                                        {verifying ? "Propagando..." : "Validar Conexión"}
+                                                        {loading ? <Loader2 size={24} className="animate-spin" /> : <>Transferir Propiedad <SendHorizontal size={20} /></>}
                                                     </button>
+
+                                                    <div className="p-6 rounded-[2rem] bg-amber-500/5 border border-amber-500/10 flex gap-4">
+                                                        <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-1" />
+                                                        <p className="text-xs text-amber-500/60 leading-relaxed">
+                                                            <span className="font-black uppercase text-[10px] tracking-widest block mb-1">Atención</span>
+                                                            Esta acción es irreversible desde el editor. El nuevo dueño recibirá un email para aceptar el proyecto. Si no tiene cuenta en Huevsite, deberá crearse una para recibirlo.
+                                                        </p>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </motion.div>

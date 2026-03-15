@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Upload, X, Loader2, FileText } from "lucide-react";
+import { optimizeImage } from "@/lib/image-utils";
 
 interface Props {
   value?: string;
@@ -33,13 +34,27 @@ export function FileUpload({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+      let uploadData: Blob | File = file;
+      let finalName = file.name;
+      let contentType = file.type;
+
+      // Si es una imagen, la optimizamos
+      if (file.type.startsWith('image/') && !file.type.includes('gif')) {
+        uploadData = await optimizeImage(file);
+        const nameWithoutExt = file.name.split('.').slice(0, -1).join('.');
+        finalName = `${nameWithoutExt}-${Date.now()}.webp`;
+        contentType = 'image/webp';
+      }
+
+      const fileName = `${Math.random().toString(36).substring(2)}-${finalName}`;
       const filePath = `${user.id}/${folder}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from("assets")
-        .upload(filePath, file);
+        .upload(filePath, uploadData, {
+          contentType,
+          upsert: true
+        });
 
       if (uploadError) throw uploadError;
 

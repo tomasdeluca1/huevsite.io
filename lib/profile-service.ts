@@ -34,29 +34,44 @@ export const profileService = {
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('*')
+      .select('id, username, name, tagline, image, github_handle, accent_color, subscription_tier, pro_since, extra_blocks_from_share, twitter_share_unlocked, builder_score, ai_credits, custom_domain')
       .eq('username', username)
       .single();
 
     if (profileError || !profile) return null;
 
-    const { data: blocks, error: blocksError } = await supabase
-      .from('blocks')
-      .select('*')
-      .eq('user_id', profile.id)
-      .is('sub_site_id', null)
-      .eq('visible', true)
-      .order('order', { ascending: true });
+    // Run these in parallel for faster response
+    const [
+      { data: blocks, error: blocksError },
+      { data: winnerData },
+      { data: subSites, error: subSitesError }
+    ] = await Promise.all([
+      supabase
+        .from('blocks')
+        .select('id, type, order, col_span, row_span, visible, data')
+        .eq('user_id', profile.id)
+        .is('sub_site_id', null)
+        .eq('visible', true)
+        .order('order', { ascending: true }),
+      supabase
+        .from('showcase_winners')
+        .select('id')
+        .eq('user_id', profile.id)
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from('sub_sites')
+        .select('id, title, description, slug, avatar_url, source_url, created_at')
+        .eq('user_id', profile.id)
+        .order('created_at', { ascending: false })
+    ]);
 
-    if (blocksError) return null;
+    let subSitesWithAvatar = (subSites || []).map(s => ({
+      ...s,
+      avatarUrl: s.avatar_url || null,
+      sourceUrl: s.source_url || null
+    }));
 
-    const { data: subSites, error: subSitesError } = await supabase
-      .from('sub_sites')
-      .select('*')
-      .eq('user_id', profile.id)
-      .order('created_at', { ascending: false });
-
-    let subSitesWithAvatar = subSites || [];
     if (subSitesWithAvatar.length > 0) {
       const subSiteIds = subSitesWithAvatar.map(s => s.id);
       const { data: subSiteBlocks } = await supabase
@@ -70,7 +85,7 @@ export const profileService = {
           const hero = subSiteBlocks.find(b => b.sub_site_id === s.id);
           return {
             ...s,
-            avatarUrl: s.avatar_url || hero?.data?.avatarUrl || null
+            avatarUrl: s.avatarUrl || hero?.data?.avatarUrl || null
           };
         });
       }
@@ -78,6 +93,7 @@ export const profileService = {
 
     const transformed = this._transformProfile(profile, blocks || []);
     transformed.subSites = subSitesWithAvatar;
+    transformed.isWinner = !!winnerData;
     
     return transformed;
   },
@@ -87,7 +103,7 @@ export const profileService = {
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('*')
+      .select('id, username, name, tagline, image, github_handle, accent_color, subscription_tier, pro_since, extra_blocks_from_share, twitter_share_unlocked, builder_score, ai_credits, custom_domain')
       .eq('username', username)
       .single();
 
@@ -96,7 +112,7 @@ export const profileService = {
     // Check if subsite exists
     const { data: subSite, error: subSiteError } = await supabase
       .from('sub_sites')
-      .select('*')
+      .select('id, title, description, slug, avatar_url, source_url')
       .eq('user_id', profile.id)
       .eq('slug', slug)
       .single();
@@ -105,7 +121,7 @@ export const profileService = {
 
     const { data: blocks, error: blocksError } = await supabase
       .from('blocks')
-      .select('*')
+      .select('id, type, order, col_span, row_span, visible, data')
       .eq('user_id', profile.id)
       .eq('sub_site_id', subSite.id)
       .eq('visible', true)
@@ -120,11 +136,13 @@ export const profileService = {
       displayName: subSite.title,
       tagline: subSite.description || transformed.tagline,
       avatarUrl: subSite.avatar_url || transformed.avatarUrl,
+      subSiteId: subSite.id,
+      sourceUrl: subSite.source_url || null,
       parentProfile: {
         username: profile.username,
-        displayName: profile.name || profile.username,
-        avatarUrl: profile.avatarUrl || null,
-        tagline: profile.tagline || null,
+        displayName: (profile as any).name || profile.username,
+        avatarUrl: (profile as any).image || null,
+        tagline: (profile as any).tagline || null,
       }
     };
   },
@@ -135,11 +153,14 @@ export const profileService = {
       username: profile.username,
       displayName: profile.name || profile.username,
       tagline: profile.tagline || "",
+      avatarUrl: profile.image || "",
+      githubHandle: profile.github_handle || "",
       accentColor: profile.accent_color as any,
       subscriptionTier: (profile.subscription_tier === 'pro' || !!profile.pro_since) ? 'pro' : 'free',
       extraBlocksFromShare: profile.extra_blocks_from_share || 0,
       twitterShareUnlocked: profile.twitter_share_unlocked || false,
       builderScore: profile.builder_score || 0,
+      aiCredits: profile.ai_credits || 0,
       customDomain: profile.custom_domain || "",
       subSites: [], // Initially empty, filled by API if needed
       blocks: (blocks || []).map(b => {

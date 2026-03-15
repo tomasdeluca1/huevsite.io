@@ -18,7 +18,8 @@ import {
 } from "@dnd-kit/sortable";
 import {
   Save, Eye, Layout as LayoutIcon, Settings, LogOut, Plus, Sparkles, MessageSquare,
-  Activity, Compass, Trash2, Copy, Check, Trophy, ArrowUpRight, BadgeCheck, ArrowLeft, Lock, Globe, ChevronRight
+  Activity, Compass, Trash2, Copy, Check, Trophy, ArrowUpRight, BadgeCheck, ArrowLeft, Lock, Globe, ChevronRight,
+  Globe2, AlertCircle, SendHorizontal, ChevronDown
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -43,6 +44,8 @@ import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
 import { ProSettingsModal } from "@/components/dashboard/ProSettingsModal";
 import { UpgradeModal } from "@/components/dashboard/UpgradeModal";
 import { DashboardSidebar } from "@/components/dashboard/Sidebar";
+import { InsightsTab } from "@/components/dashboard/InsightsTab";
+import { CreateSubSiteModal } from "@/components/dashboard/CreateSubSiteModal";
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -57,6 +60,7 @@ export default function DashboardPage() {
   const [isScoreInfoOpen, setIsScoreInfoOpen] = useState(false);
   const [isProSettingsOpen, setIsProSettingsOpen] = useState(false);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [isCreateSubSiteOpen, setIsCreateSubSiteOpen] = useState(false);
   const [tempProfileData, setTempProfileData] = useState({
     username: '',
     display_name: '',
@@ -70,6 +74,12 @@ export default function DashboardPage() {
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedVersionRef = useRef<string>("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'board' | 'insights' | 'subsites' | 'domain' | 'transfer'>('board');
+  const [domain, setDomain] = useState("");
+  const [transferEmail, setTransferEmail] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [verificationResult, setVerificationResult] = useState<{ isValid: boolean; message: string } | null>(null);
+  const [isTabMenuOpen, setIsTabMenuOpen] = useState(false);
   const supabase = createClient();
 
   const handleLogout = async () => {
@@ -97,7 +107,6 @@ export default function DashboardPage() {
 
         if (!response.ok) {
           if (response.status === 404) {
-            // Usuario autenticado pero sin perfil (posiblemente borrado por el cambio de schema)
             window.location.href = '/welcome';
             return;
           }
@@ -136,8 +145,8 @@ export default function DashboardPage() {
         };
 
         setProfile(transformedProfile);
+        setDomain(transformedProfile.customDomain || "");
 
-        // Initializing last saved version to avoid immediate autosave on load
         const { builderScore, ...content } = transformedProfile;
         lastSavedVersionRef.current = JSON.stringify(content);
         if (transformedProfile.blocks.length === 0) {
@@ -148,8 +157,6 @@ export default function DashboardPage() {
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
-        // Quitamos el fallback al MOCK_PROFILE para que no muestre data "hardcodeada"
-        // Si no hay sesión o falla con 401, redirigimos al login
         window.location.href = '/login';
       } finally {
         setLoading(false);
@@ -161,14 +168,12 @@ export default function DashboardPage() {
 
   // Fetch blocks when switching sub-sites
   useEffect(() => {
-    if (!profile) return;
-
     const fetchBlocks = async () => {
       setLoading(true);
       try {
         const url = selectedSubSiteId
           ? `/api/sub-sites/${selectedSubSiteId}/blocks`
-          : '/api/profile'; // Get main profile blocks
+          : '/api/profile';
 
         const response = await fetch(url);
         const data = await response.json();
@@ -194,13 +199,7 @@ export default function DashboardPage() {
       }
     };
 
-    // Skip the very first fetch on mount because fetchProfile already does it for main site
-    if (selectedSubSiteId !== null) {
-      fetchBlocks();
-    } else if (profile?.blocks.length === 0 && !loading) {
-      // if main site was empty, maybe re-fetch or keep empty? 
-      // Better to let fetchProfile handle the first one.
-    }
+    fetchBlocks();
   }, [selectedSubSiteId]);
 
 
@@ -228,34 +227,21 @@ export default function DashboardPage() {
   };
 
   const removeBlock = async (id: string) => {
-    console.log('removeBlock called with id:', id);
-
-    // Eliminar del backend primero si no es temporal
     if (!id.startsWith('temp-')) {
       try {
-        const response = await fetch(`/api/blocks/${id}`, {
-          method: 'DELETE',
-        });
-
-        console.log('DELETE response status:', response.status);
-
+        const response = await fetch(`/api/blocks/${id}`, { method: 'DELETE' });
         if (!response.ok) {
           const errorData = await response.json();
-          console.error('DELETE failed:', errorData);
           alert(`Error al eliminar bloque: ${errorData.error || 'Error desconocido'}`);
-          return; // No eliminar localmente si falló en el backend
+          return;
         }
-
-        const result = await response.json();
-        console.log('DELETE success:', result);
       } catch (error) {
         console.error('Error deleting block:', error);
         alert('Error de red al eliminar bloque');
-        return; // No eliminar localmente si hay error de red
+        return;
       }
     }
 
-    // Eliminar localmente solo si el backend tuvo éxito (o es temporal)
     setProfile((prev) => {
       if (!prev) return prev;
       return {
@@ -267,12 +253,9 @@ export default function DashboardPage() {
 
   const addBlock = async (type: BlockType) => {
     const newId = `temp-${type}-${Date.now()}`;
-
-    // Determinar col_span y row_span según el tipo
     const colSpan = type === "hero" ? 2 : (type === "github" || type === "project" ? 1 : 1);
     const rowSpan = type === "hero" ? 2 : (type === "github" || type === "project" ? 2 : 1);
 
-    // Crear data inicial según el tipo
     let initialData: any = {
       id: newId,
       type: type,
@@ -307,11 +290,7 @@ export default function DashboardPage() {
         initialData = {
           ...initialData,
           username: profile?.githubHandle || "usuario",
-          stats: {
-            stars: 0,
-            repos: 0,
-            followers: 0,
-          },
+          stats: { stars: 0, repos: 0, followers: 0 },
         };
         break;
       case "project":
@@ -409,29 +388,15 @@ export default function DashboardPage() {
       case "collab":
         initialData = {
           ...initialData,
-          users: [
-            { username: "ejemplo", role: "Co-founder" }
-          ]
+          users: [{ username: "ejemplo", role: "Co-founder" }]
         };
         break;
     }
 
-    // Agregar el bloque localmente primero
-    setProfile((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        blocks: [...prev.blocks, initialData as BlockData]
-      };
-    });
+    setProfile((prev) => prev ? { ...prev, blocks: [...prev.blocks, initialData as BlockData] } : prev);
 
-    // Crear en el backend
     try {
-      // Separar metadata de data específica del bloque
       const { id, type: blockType, order, col_span, row_span, visible, ...blockSpecificData } = initialData;
-
-      console.log('POST block payload:', { type, colSpan, rowSpan, data: blockSpecificData });
-
       const response = await fetch('/api/blocks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -445,98 +410,39 @@ export default function DashboardPage() {
         }),
       });
 
-      console.log('POST response status:', response.status);
-
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('POST failed:', errorData);
-        alert(`Error al crear bloque: ${errorData.error || 'Error desconocido'}`);
-        // Remover el bloque temporal ya que falló
-        setProfile((prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            blocks: prev.blocks.filter(b => b.id !== newId)
-          };
-        });
+        setProfile((prev) => prev ? { ...prev, blocks: prev.blocks.filter(b => b.id !== newId) } : prev);
         return;
       }
 
       const { block } = await response.json();
-      console.log('POST success:', block);
-
-      // Actualizar con el ID real del backend
-      setProfile((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          blocks: prev.blocks.map(b =>
-            b.id === newId
-              ? { ...b, id: block.id }
-              : b
-          )
-        };
-      });
-
-      // Asignar el bloque al modal usando el ID real que nos dio Supabase
+      setProfile((prev) => prev ? {
+        ...prev,
+        blocks: prev.blocks.map(b => b.id === newId ? { ...b, id: block.id } : b)
+      } : prev);
       setEditingBlock({ ...initialData, id: block.id } as BlockData);
     } catch (error) {
       console.error('Error creating block:', error);
-      alert('Error de red al crear bloque');
-      // Remover el bloque temporal ya que falló
-      setProfile((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          blocks: prev.blocks.filter(b => b.id !== newId)
-        };
-      });
-      return;
+      setProfile((prev) => prev ? { ...prev, blocks: prev.blocks.filter(b => b.id !== newId) } : prev);
     }
   };
 
   const updateBlock = async (updatedBlock: BlockData) => {
-    console.log('updateBlock called:', updatedBlock);
+    setProfile((prev) => prev ? {
+      ...prev,
+      blocks: prev.blocks.map(b => b.id === updatedBlock.id ? updatedBlock : b)
+    } : prev);
 
-    // Actualizar localmente primero (para feedback inmediato)
-    setProfile((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        blocks: prev.blocks.map(b => b.id === updatedBlock.id ? updatedBlock : b)
-      };
-    });
-
-    // Actualizar en el backend si no es temporal
     if (!updatedBlock.id.startsWith('temp-')) {
       try {
-        // Separar campos de ID que no se deben enviar del resto
         const { id, ...updatePayload } = updatedBlock;
-
-        console.log('PATCH payload:', updatePayload);
-
-        // El endpoint /api/blocks/[id] se encarga de separar
-        // campos PG (type, order, col_span, etc) de campos del JSONB data
-        const response = await fetch(`/api/blocks/${updatedBlock.id}`, {
+        await fetch(`/api/blocks/${updatedBlock.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(updatePayload),
         });
-
-        console.log('PATCH response status:', response.status);
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error('PATCH failed:', errorData);
-          alert(`Error al actualizar bloque: ${errorData.error || 'Error desconocido'}`);
-          return;
-        }
-
-        const result = await response.json();
-        console.log('PATCH success:', result);
       } catch (error) {
         console.error('Error updating block:', error);
-        alert('Error de red al actualizar bloque');
       }
     }
   };
@@ -564,31 +470,21 @@ export default function DashboardPage() {
       case "custom": return <CustomBlock {...props} />;
       case "collab": return <CollabBlock {...props} />;
       default: return (
-        <div className="huevsite-block h-full flex items-center justify-center p-8 border-dashed border-[var(--border-bright)]">
-          <p className="text-xs text-[var(--text-dim)] font-mono text-center">Bloque fantasma 🇦🇷</p>
+        <div className="huevsite-block h-full flex items-center justify-center p-8 border-dashed border-[var(--border-bright)] text-white/20">
+          Bloque fantasma
         </div>
       );
     }
   };
 
   const handleColorChange = async (color: string, confirmed: boolean) => {
-    // Siempre aplicar preview en vivo (cambia el CSS var localmente en estado)
     setProfile(prev => prev ? { ...prev, accentColor: color } : null);
-
     if (confirmed) {
-      setProfile(prev => {
-        if (!prev) return null;
-        return { ...prev, accentColor: color };
-      });
-
-      // Persistir en backend
       try {
         await fetch('/api/profile', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            accent_color: color,
-          }),
+          body: JSON.stringify({ accent_color: color }),
         });
       } catch (e) {
         console.error('Error saving color:', e);
@@ -596,18 +492,10 @@ export default function DashboardPage() {
     }
   };
 
-  const handleProfileDetailChange = (field: 'username' | 'name' | 'tagline', value: string) => {
-    setProfile(prev => prev ? { ...prev, [field === 'name' ? 'displayName' : field]: value } : null);
-
-    // Auto-save logic handles persistence
-  };
-
   const handleSave = async () => {
     if (!profile) return;
-
     setIsSaving(true);
     try {
-      // Save profile metadata
       const response = await fetch('/api/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -627,7 +515,6 @@ export default function DashboardPage() {
         }
       }
 
-      // Save blocks order (ignoring temporary ones that haven't been created yet)
       const blockOrders = profile.blocks
         .map((block, index) => ({ id: block.id, order: index }))
         .filter(b => !b.id.startsWith('temp-'));
@@ -639,12 +526,37 @@ export default function DashboardPage() {
           body: JSON.stringify(blockOrders),
         });
       }
-
       setLastSaved(new Date());
     } catch (error) {
       console.error("Error al guardar:", error);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  useEffect(() => {
+    if (profile?.customDomain) {
+      setDomain(profile.customDomain);
+    }
+  }, [profile?.customDomain]);
+
+  const handleVerify = async () => {
+    if (!domain) return;
+    setVerifying(true);
+    try {
+      const res = await fetch("/api/profile/verify-domain", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ domain })
+      });
+      const data = await res.json();
+      setVerificationResult({ isValid: data.isValid, message: data.message });
+      if (data.isValid) alert("¡Dominio verificado!");
+      else alert(data.message || "Propagación pendiente.");
+    } catch (error) {
+      setVerificationResult({ isValid: false, message: "Error" });
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -655,21 +567,27 @@ export default function DashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ custom_domain: domain }),
       });
-
-      if (!resp.ok) {
-        const errorData = await resp.json();
-        throw new Error(errorData.error || 'Error al actualizar el dominio');
-      }
-
+      if (!resp.ok) throw new Error('Error domain update');
       setProfile(prev => prev ? { ...prev, customDomain: domain } : null);
     } catch (e: any) {
-      console.error('Error updating domain:', e);
-      alert(e.message || 'No se pudo guardar el dominio. Verificá que seas usuario PRO y que el dominio sea válido.');
-      throw e; // Relaunch to let modal know if needed
+      alert('Error guardando dominio.');
     }
   };
 
-  const handleAddSubSite = async (title: string, slug: string) => {
+  const handleAddSubSite = async (title: string, slug: string, description?: string, avatarUrl?: string) => {
+    // If description or avatarUrl are passed, the sub-site was already created by the AI API.
+    // We just push it into local state. Otherwise, POST to the API to create it.
+    if (description !== undefined || avatarUrl !== undefined) {
+      // Magic flow: API already created the row, just refresh the list from the API
+      try {
+        const resp = await fetch('/api/profile');
+        const data = await resp.json();
+        const freshSubSites = (data.subSites || []).map((s: any) => ({ ...s, avatarUrl: s.avatar_url }));
+        setProfile(prev => prev ? { ...prev, subSites: freshSubSites } : null);
+      } catch (e) { console.error(e); }
+      return;
+    }
+    // Manual flow: create sub-site via API
     try {
       const resp = await fetch('/api/sub-sites', {
         method: 'POST',
@@ -677,15 +595,14 @@ export default function DashboardPage() {
         body: JSON.stringify({ title, slug }),
       });
       if (resp.ok) {
-        const { subSite } = await resp.json();
-        setProfile(prev => prev ? { ...prev, subSites: [subSite, ...(prev.subSites || [])] } : null);
-      } else {
-        const err = await resp.json();
-        alert(err.error || 'No se pudo crear el sub-site');
+        const data = await resp.json();
+        const newSite = {
+          ...data.subSite,
+          avatarUrl: data.subSite.avatar_url
+        };
+        setProfile(prev => prev ? { ...prev, subSites: [newSite, ...(prev.subSites || [])] } : null);
       }
-    } catch (e) {
-      console.error('Error adding sub-site:', e);
-    }
+    } catch (e) { console.error(e); }
   };
 
   const handleUpdateSubSite = async (id: string, updates: { title?: string, slug?: string, description?: string, avatarUrl?: string }) => {
@@ -701,57 +618,84 @@ export default function DashboardPage() {
         }),
       });
       if (resp.ok) {
-        const { subSite } = await resp.json();
+        const data = await resp.json();
+        const updatedSite = data.subSite;
         setProfile(prev => prev ? {
           ...prev,
-          subSites: prev.subSites.map(s => s.id === id ? { ...s, ...subSite } : s)
+          subSites: prev.subSites.map(s => s.id === id ? { 
+            ...s, 
+            ...updatedSite,
+            avatarUrl: updatedSite.avatar_url // Map snake_case to camelCase
+          } : s)
         } : null);
-      } else {
-        const err = await resp.json();
-        alert(err.error || 'No se pudo actualizar el sub-site');
       }
-    } catch (e) {
-      console.error('Error updating sub-site:', e);
-    }
+    } catch (e) { console.error(e); }
   };
-
   const handleDeleteSubSite = async (id: string) => {
-    if (!confirm('¿Seguro que querés borrar este sub-site?')) return;
+    if (!confirm('¿Borrar board?')) return;
     try {
       const resp = await fetch(`/api/sub-sites/${id}`, { method: 'DELETE' });
-      if (resp.ok) {
-        setProfile(prev => prev ? { ...prev, subSites: prev.subSites.filter(s => s.id !== id) } : null);
-      }
-    } catch (e) {
-      console.error('Error deleting sub-site:', e);
-    }
+      if (resp.ok) setProfile(prev => prev ? { ...prev, subSites: prev.subSites.filter(s => s.id !== id) } : null);
+    } catch (e) { console.error(e); }
   };
 
-  // Autosave with debounce (only if enabled)
+
+  const handleTransferProject = async (email: string) => {
+    alert("Función inhabilitada temporalmente.");
+    return;
+    /*
+    if (!profile) return;
+    try {
+      const resp = await fetch('/api/profile/transfer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      if (!resp.ok) throw new Error('Error transferring');
+      alert('Transferido!');
+      window.location.reload();
+    } catch (e: any) { alert(e.message); }
+    */
+  };
+
+  // Sync temp profile data when opening modal
+  useEffect(() => {
+    if (isProfileModalOpen && profile) {
+      if (selectedSubSiteId) {
+        const site = profile.subSites.find(s => s.id === selectedSubSiteId);
+        if (site) {
+          setTempProfileData({
+            username: site.slug || '',
+            display_name: site.title || '',
+            tagline: site.description || '',
+            avatarUrl: site.avatarUrl || '',
+            githubHandle: ''
+          });
+          return;
+        }
+      }
+      
+      setTempProfileData({
+        username: profile.username || '',
+        display_name: profile.displayName || '',
+        tagline: profile.tagline || '',
+        avatarUrl: profile.avatarUrl || '',
+        githubHandle: profile.githubHandle || ''
+      });
+    }
+  }, [isProfileModalOpen, profile, selectedSubSiteId]);
+
   useEffect(() => {
     if (!profile || loading || !autoSaveEnabled) return;
-
     const { builderScore, ...content } = profile;
     const currentVersion = JSON.stringify(content);
-
-    if (currentVersion === lastSavedVersionRef.current) {
-      return;
-    }
-
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-
+    if (currentVersion === lastSavedVersionRef.current) return;
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
       lastSavedVersionRef.current = currentVersion;
       handleSave();
-    }, 2000); // Higher debounce for safety
-
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-    };
+    }, 2000);
+    return () => { if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current); };
   }, [profile, autoSaveEnabled, loading]);
 
   const toggleAutoSave = () => {
@@ -767,47 +711,25 @@ export default function DashboardPage() {
           <div className="w-16 h-16 rounded-full bg-[var(--surface2)] flex items-center justify-center mb-6 border border-[var(--border-bright)] animate-pulse mx-auto">
             <Sparkles size={32} className="text-[var(--accent)] animate-spin" />
           </div>
-          <p className="text-[var(--text-dim)] font-mono text-sm">Cargando tu huevsite...</p>
+          <p className="text-[var(--text-dim)] font-mono text-sm">Cargando...</p>
         </div>
       </div>
     );
   }
 
-  if (!profile) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] font-display">
-        <p className="text-[var(--text-dim)] font-mono text-sm">Error cargando perfil</p>
-      </div>
-    );
-  }
+  if (!profile) return null;
 
   return (
     <div className="h-screen flex flex-col md:flex-row bg-[var(--bg)] font-display overflow-hidden">
       {/* MOBILE HEADER */}
-      <div className="md:hidden flex items-center justify-between p-4 bg-[var(--surface)] border-b border-[var(--border)] sticky top-0 z-[100] backdrop-blur-md">
+      <div className="md:hidden flex items-center justify-between p-4 bg-[var(--surface)] border-b border-[var(--border)] sticky top-0 z-[200] backdrop-blur-md">
         <Link href="/" className="logo block text-lg font-extrabold tracking-tight">huev<span>site</span>.io</Link>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-2 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-[var(--accent)]"
-          >
-            <Settings size={20} />
-          </button>
-          <button onClick={handleLogout} className="p-2 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20">
-            <LogOut size={20} />
-          </button>
-        </div>
+        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-[var(--accent)]"><Settings size={20} /></button>
       </div>
 
       <AnimatePresence>
         {isSidebarOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-md z-[105] md:hidden"
-            onClick={() => setIsSidebarOpen(false)}
-          />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/80 backdrop-blur-md z-[200] md:hidden" onClick={() => setIsSidebarOpen(false)} />
         )}
       </AnimatePresence>
 
@@ -824,6 +746,7 @@ export default function DashboardPage() {
         setIsProfileModalOpen={setIsProfileModalOpen}
         setIsScoreInfoOpen={setIsScoreInfoOpen}
         setIsProSettingsOpen={setIsProSettingsOpen}
+        setIsCreateSubSiteOpen={setIsCreateSubSiteOpen}
         setIsUpgradeModalOpen={setIsUpgradeModalOpen}
         setIsFeedbackOpen={setIsFeedbackOpen}
         setTempProfileData={setTempProfileData}
@@ -831,405 +754,321 @@ export default function DashboardPage() {
         handleColorChange={handleColorChange}
         toggleAutoSave={toggleAutoSave}
         autoSaveEnabled={autoSaveEnabled}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
         onShareUnlocked={() => {
-          setProfile(prev => prev ? {
-            ...prev,
-            twitterShareUnlocked: true,
-            extraBlocksFromShare: (prev.extraBlocksFromShare || 0) + 3,
-          } : null);
+          setProfile(prev => prev ? { ...prev, twitterShareUnlocked: true, extraBlocksFromShare: (prev.extraBlocksFromShare || 0) + 3 } : null);
         }}
       />
 
-      {/* CANVAS */}
       <main className="flex-1 min-w-0 h-full overflow-y-auto p-4 md:p-8 lg:p-10 relative z-0 custom-scrollbar">
         <style dangerouslySetInnerHTML={{
-          __html: `
-          :root {
-            --accent: ${profile.accentColor};
-            --accent-dim: ${profile.accentColor}1f;
-            --btn-border: ${isDarkColor(profile.accentColor) ? 'rgba(255,255,255,0.15)' : 'transparent'};
-          }
-        `}} />
-        <div className="absolute top-0 right-0 w-full lg:w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(200,255,0,0.03)_0%,transparent_70%)] pointer-events-none" />
+          __html: `:root { --accent: ${profile.accentColor}; --accent-dim: ${profile.accentColor}1f; --btn-border: ${isDarkColor(profile.accentColor) ? 'rgba(255,255,255,0.15)' : 'transparent'}; }`
+        }} />
+        <div className="absolute top-0 right-0 w-full lg:w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(var(--accent-rgb),0.03)_0%,transparent_70%)] pointer-events-none" />
 
-        <header className="flex flex-col md:flex-row md:justify-between md:items-end gap-8 mb-10 md:mb-16 max-w-[1600px] mx-auto items-center text-center md:text-left pt-6 md:pt-0 px-2 md:px-0">
+        <header className="flex flex-col md:flex-row md:justify-between md:items-end gap-8 mb-10 md:mb-16 max-w-[1600px] mx-auto items-center text-center md:text-left pt-6 md:pt-0 px-2 md:px-0 relative z-10">
           <div className="w-full md:w-auto">
-            <div className="mb-3 hidden md:block">
-              <div className="section-label">// editor de huevsite</div>
-            </div>
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
-              <h2 className="text-3xl md:text-5xl font-[950] tracking-tighter leading-none">
-                Armá tu <span style={{ color: profile.accentColor }}>{selectedSubSiteId ? (profile.subSites.find(s => s.id === selectedSubSiteId)?.title || "Sub-site") : "huevsite"}</span>.
-              </h2>
-              {profile?.subscriptionTier === "pro" && (
-                <div className="flex items-center gap-2 bg-white/[0.03] p-1.5 px-2 rounded-2xl border border-white/[0.05] shadow-inner backdrop-blur-sm">
-                  <div className="flex items-center gap-1.5 bg-[var(--accent)]/10 border border-[var(--accent)]/30 px-3 py-1.5 rounded-xl">
-                    <BadgeCheck size={14} style={{ color: profile.accentColor }} />
-                    <span className="text-[10px] font-black uppercase tracking-[0.1em]" style={{ color: profile.accentColor }}>PRO</span>
-                  </div>
-                  {profile.subSites.length > 0 && (
-                    <div className="relative group/select">
-                      <select
-                        value={selectedSubSiteId || ""}
-                        onChange={(e) => setSelectedSubSiteId(e.target.value || null)}
-                        className="bg-black/40 border border-white/10 rounded-xl px-4 py-1.5 text-[11px] font-bold text-white/80 outline-none focus:border-[var(--accent)]/50 transition-all cursor-pointer hover:bg-white/5 appearance-none pr-8"
-                      >
-                        <option value="" className="bg-neutral-900 text-white">Sitio Principal</option>
-                        {profile.subSites.map(site => (
-                          <option key={site.id} value={site.id} className="bg-neutral-900 text-white">
-                            {site.title}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronRight size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none opacity-40 group-hover/select:opacity-100 transition-opacity" />
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-            <p className="text-[11px] md:text-[13px] text-white/30 font-medium mt-4 hidden md:flex items-center gap-2 uppercase tracking-widest pl-1">
-              <Sparkles size={14} className="text-[var(--accent)] opacity-50" />
-              <span>Arrastrá para reordenar bloques • Click para editar</span>
-            </p>
+            <div className="mb-3 hidden md:block"><div className="section-label">// dashboard / {activeTab}</div></div>
+            <h2 className="text-3xl md:text-5xl font-[950] tracking-tighter leading-none">
+              {activeTab === 'board' ? <>Armá tu <span style={{ color: profile.accentColor }}>{selectedSubSiteId ? (profile.subSites.find(s => s.id === selectedSubSiteId)?.title || "Board") : "huevsite"}</span>.</> :
+               activeTab === 'insights' ? <>Tus <span style={{ color: profile.accentColor }}>Insights</span>.</> :
+               activeTab === 'domain' ? <>Tu <span style={{ color: profile.accentColor }}>Dominio</span>.</> :
+               activeTab === 'subsites' ? <>Tus <span style={{ color: profile.accentColor }}>Sub-sites</span>.</> :
+               <>Transferí tu <span style={{ color: profile.accentColor }}>Proyecto</span>.</>}
+            </h2>
           </div>
-
-          <div className="flex flex-col md:flex-row gap-4 items-center w-full md:w-auto">
+          {activeTab === 'board' && (
             <div className="flex items-center gap-3 w-full md:w-auto">
-              <Link
-                href={`/${profile.username}`}
-                target="_blank"
-                className="btn-premium flex-1 md:flex-none flex items-center justify-center gap-2 py-3 px-6 rounded-2xl bg-white/[0.03] border border-white/10 text-white font-bold text-sm transition-all hover:bg-white/5 hover:border-white/20"
-              >
-                <Eye size={18} className="text-white/40" />
-                <span>Ver huevsite</span>
-              </Link>
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="btn-premium flex-1 md:flex-none flex items-center justify-center gap-2 py-3 px-10 rounded-2xl text-black font-[900] text-sm transition-all shadow-[0_10px_30px_rgba(var(--accent-rgb),0.2)]"
-                style={{
-                  backgroundColor: profile.accentColor,
-                  color: getContrastColor(profile.accentColor),
-                }}
-              >
-                {isSaving ? (
-                  <Sparkles size={18} className="animate-spin" />
-                ) : (
-                  <Save size={18} />
-                )}
-                <span>{isSaving ? 'Guardando' : 'Guardar'}</span>
+              <Link href={selectedSubSiteId ? `/${profile.username}/${profile.subSites.find(s => s.id === selectedSubSiteId)?.slug}` : `/${profile.username}`} target="_blank" className="btn-premium flex-1 md:flex-none flex items-center justify-center gap-2 py-3 px-6 rounded-2xl bg-white/[0.03] border border-white/10 text-white font-bold text-sm transition-all hover:bg-white/5 hover:border-white/20"><Eye size={18} className="text-white/40" /><span>Ver</span></Link>
+              <button onClick={handleSave} disabled={isSaving} className="btn-premium flex-1 md:flex-none flex items-center justify-center gap-2 py-3 px-10 rounded-2xl text-black font-[900] text-sm transition-all shadow-xl" style={{ backgroundColor: profile.accentColor, color: getContrastColor(profile.accentColor) }}>
+                {isSaving ? <Sparkles size={18} className="animate-spin" /> : <Save size={18} />}<span>{isSaving ? 'Guardando' : 'Guardar'}</span>
               </button>
             </div>
-          </div>
+          )}
         </header>
 
         <div className="max-w-[1600px] mx-auto pb-32">
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={profile.blocks.map(b => b.id)}
-              strategy={rectSortingStrategy}
-            >
-              <div className="huevsite-grid min-h-[600px] p-4 sm:p-8 desktop:p-12 rounded-[2.5rem] border border-dashed border-[var(--border-bright)] bg-white/[0.01] transition-all duration-500">
-                {profile.blocks.length === 0 ? (
-                  <div className="col-span-full flex flex-col items-center justify-center py-40 text-center">
-                    <div className="w-20 h-20 rounded-full bg-[var(--surface2)] flex items-center justify-center mb-8 border border-[var(--border-bright)] animate-pulse shadow-xl shadow-black/40">
-                      <Plus size={32} className="text-[var(--text-dim)]" />
-                    </div>
-                    <p className="text-[var(--text-dim)] font-mono text-base max-w-sm leading-relaxed font-medium">
-                      Tu huevsite está esperando tu magia. 🇦🇷 <br />
-                      <span className="text-[var(--accent)] mt-2 block">Agregá tu primer bloque para empezar.</span>
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    {/* Fallback Header Preview if no Hero block exists */}
-                    {!profile.blocks.some(b => b.type === 'hero') && profile.displayName && (
-                      <div className="col-span-2 row-span-1 opacity-50 grayscale-[0.8] scale-[0.98] pointer-events-none">
-                        <div className="huevsite-block flex flex-col justify-center p-8 bg-[var(--surface)] border border-dashed border-[var(--border)] rounded-[2rem]">
-                          <div className="flex justify-between items-start mb-2">
-                            <h1 className="text-3xl font-extrabold text-white mb-1">{profile.displayName}</h1>
-                            <span className="text-[9px] font-mono text-[var(--accent)] border border-[var(--accent)] px-2 py-0.5 rounded-full uppercase tracking-tighter">Vista Previa identity</span>
-                          </div>
-                          <p className="text-sm text-[var(--text-dim)] font-mono opacity-60">// {profile.tagline || 'builder'}</p>
-                        </div>
-                      </div>
-                    )}
-                    {profile.blocks.map((block) => (
-                      <SortableBlock
-                        key={block.id}
-                        id={block.id}
-                        block={block}
-                        onRemove={(id) => setIsDeletingId(id)}
-                        onEdit={(b) => setEditingBlock(b)}
-                        onResize={(id, colSpan, rowSpan) => updateBlock({ ...block, col_span: colSpan, row_span: rowSpan })}
+          {/* DESKTOP TABS */}
+          <div className="hidden md:flex relative mb-16 z-20 items-center justify-center">
+            <div className="flex items-center gap-1 bg-white/[0.03] p-1.5 rounded-[2.5rem] border border-white/5 backdrop-blur-md shadow-2xl overflow-x-auto scrollbar-none max-w-full w-fit">
+              {(['board', 'insights', 'subsites', 'domain', 'transfer'] as const).map((t) => (
+                <button 
+                  key={t} 
+                  onClick={() => setActiveTab(t)} 
+                  className={`px-8 py-3 rounded-[2rem] text-[10px] font-black uppercase tracking-widest transition-all relative shrink-0 ${activeTab === t ? 'text-black' : 'text-white/20 hover:text-white/60 hover:bg-white/[0.03]'}`}
+                >
+                  {activeTab === t && (
+                    <motion.div 
+                      layoutId="activeTabSel" 
+                      className="absolute inset-0 bg-[var(--accent)] rounded-[2rem] shadow-[0_0_20px_rgba(var(--accent-rgb),0.3)]" 
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }} 
+                    />
+                  )}
+                  <span className="relative z-10">{t === 'board' ? 'Editor' : t === 'insights' ? 'Insights' : t === 'subsites' ? 'Sub-sites' : t === 'domain' ? 'Dominio' : 'Transferir'}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* MOBILE DROPDOWN */}
+          <div className="md:hidden relative mb-10 z-30 px-4">
+             <button 
+                onClick={() => setIsTabMenuOpen(!isTabMenuOpen)}
+                className="w-full bg-white/[0.05] border border-white/10 p-5 rounded-[2rem] flex items-center justify-between text-white group active:scale-95 transition-all"
+             >
+                <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 rounded-xl bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)] border border-[var(--accent)]/20 shadow-[0_0_15px_rgba(var(--accent-rgb),0.2)]">
+                      {activeTab === 'board' ? <LayoutIcon size={18} /> : 
+                       activeTab === 'insights' ? <Activity size={18} /> :
+                       activeTab === 'subsites' ? <Compass size={18} /> :
+                       activeTab === 'domain' ? <Globe size={18} /> : <ArrowUpRight size={18} />}
+                   </div>
+                   <div className="text-left">
+                      <span className="text-[10px] block font-black text-white/20 uppercase tracking-[0.2em] mb-0.5">Vista Activa</span>
+                      <span className="text-sm font-black uppercase tracking-widest">
+                        {activeTab === 'board' ? 'Editor' : activeTab === 'insights' ? 'Insights' : activeTab === 'subsites' ? 'Sub-sites' : activeTab === 'domain' ? 'Dominio' : 'Transferir'}
+                      </span>
+                   </div>
+                </div>
+                <ChevronDown size={20} className={`text-white/20 transition-transform duration-300 ${isTabMenuOpen ? 'rotate-180' : ''}`} />
+             </button>
+
+             <AnimatePresence>
+                {isTabMenuOpen && (
+                   <div className="absolute top-full left-4 right-4 mt-2 z-50">
+                      <motion.div 
+                         initial={{ opacity: 0 }} 
+                         animate={{ opacity: 1 }} 
+                         exit={{ opacity: 0 }} 
+                         className="fixed inset-0 bg-black/60 backdrop-blur-sm shadow-2xl" 
+                         onClick={() => setIsTabMenuOpen(false)} 
+                      />
+                      <motion.div
+                         initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                         animate={{ opacity: 1, scale: 1, y: 0 }}
+                         exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                         className="relative bg-[#121214] border border-white/10 rounded-[2.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden backdrop-blur-xl p-3"
                       >
-                        {renderBlockContent(block)}
-                      </SortableBlock>
-                    ))}
-                  </>
+                         {(['board', 'insights', 'subsites', 'domain', 'transfer'] as const).map((t) => (
+                            <button
+                               key={t}
+                               onClick={() => { setActiveTab(t); setIsTabMenuOpen(false); }}
+                               className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${activeTab === t ? 'bg-[var(--accent)]/10 border border-[var(--accent)]/20' : 'hover:bg-white/5 border border-transparent'}`}
+                            >
+                               <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${activeTab === t ? 'bg-[var(--accent)] text-black' : 'bg-white/5 text-white/30'}`}>
+                                  {t === 'board' ? <LayoutIcon size={16} /> : 
+                                   t === 'insights' ? <Activity size={16} /> :
+                                   t === 'subsites' ? <Compass size={16} /> :
+                                   t === 'domain' ? <Globe size={16} /> : <ArrowUpRight size={16} />}
+                               </div>
+                               <span className={`text-xs font-black uppercase tracking-[0.1em] ${activeTab === t ? 'text-white' : 'text-white/40'}`}>
+                                  {t === 'board' ? 'Editor' : t === 'insights' ? 'Insights' : t === 'subsites' ? 'Sub-sites' : t === 'domain' ? 'Dominio' : 'Transferir'}
+                               </span>
+                               {activeTab === t && <Check size={14} className="ml-auto text-[var(--accent)]" />}
+                            </button>
+                         ))}
+                      </motion.div>
+                   </div>
                 )}
-              </div>
-            </SortableContext>
-          </DndContext>
+             </AnimatePresence>
+          </div>
+
+          <AnimatePresence mode="wait">
+            {activeTab === 'board' && (
+              <motion.div key="board" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }}>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={profile.blocks.map(b => b.id)} strategy={rectSortingStrategy}>
+                    <div className="huevsite-grid min-h-[600px] p-3 sm:p-8 md:p-12 rounded-[2rem] md:rounded-[2.5rem] border border-dashed border-white/10 bg-white/[0.01]">
+                      {profile.blocks.length === 0 ? (
+                        <div className="col-span-full flex flex-col items-center justify-center py-40 text-center text-white/20 font-bold uppercase tracking-widest text-sm">
+                          <Plus className="mb-4 opacity-30" size={40} />
+                          Agregá tu primer bloque
+                        </div>
+                      ) : (
+                        profile.blocks.map((block) => (
+                          <SortableBlock 
+                            key={block.id} 
+                            id={block.id} 
+                            block={block} 
+                            onRemove={(id) => setIsDeletingId(id)} 
+                            onEdit={(b) => setEditingBlock(b)} 
+                            onResize={(id, colSpan, rowSpan) => updateBlock({ ...block, col_span: colSpan, row_span: rowSpan })}
+                          >
+                            {renderBlockContent(block)}
+                          </SortableBlock>
+                        ))
+                      )}
+                    </div>
+                  </SortableContext>
+                </DndContext>
+              </motion.div>
+            )}
+
+            {activeTab === 'insights' && (
+              <motion.div key="insights" initial={{ opacity: 0, scale: 0.99 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.99 }} className="max-w-5xl mx-auto px-2">
+                <InsightsTab accentColor={profile.accentColor} blocks={profile.blocks} />
+              </motion.div>
+            )}
+
+            {activeTab === 'domain' && (
+              <motion.div key="domain" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="max-w-xl mx-auto space-y-8 md:space-y-12 px-4">
+                <div className="text-center space-y-4">
+                  <h3 className="text-2xl md:text-3xl font-[950] tracking-tighter text-white">Conectá tu Marca.</h3>
+                  <p className="text-white/40 text-xs md:text-sm">Usá tu dominio propio para una presencia 100% profesional.</p>
+                </div>
+                <div className="space-y-4 md:space-y-6">
+                  <div className="relative group">
+                    <Globe className="absolute left-5 md:left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[var(--accent)] transition-all size-5 md:size-6" />
+                    <input 
+                      value={domain} 
+                      onChange={(e) => setDomain(e.target.value)} 
+                      placeholder="tudominio.com" 
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-[1.5rem] md:rounded-[2rem] pl-14 md:pl-16 pr-6 md:pr-8 py-5 md:py-6 text-lg md:text-xl font-bold focus:outline-none focus:border-[var(--accent)] transition-all" 
+                    />
+                  </div>
+                  <button onClick={() => handleUpdateDomain(domain)} className="w-full py-5 md:py-6 rounded-[1.5rem] md:rounded-[2rem] bg-[var(--accent)] text-black font-black uppercase tracking-widest shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all text-xs md:text-sm">Vincular Dominio</button>
+                </div>
+                {profile.customDomain && (
+                  <div className="pt-8 md:pt-10 border-t border-white/5 space-y-6">
+                    <div className="flex justify-between items-center text-[9px] md:text-[10px] font-black uppercase tracking-widest px-2">
+                       <span className="text-white/20">DNS Records</span>
+                       <button onClick={handleVerify} disabled={verifying} className="text-[var(--accent)] hover:brightness-125 transition-all disabled:opacity-30">{verifying ? 'Verificando...' : 'Check Status'}</button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                       <div onClick={() => { navigator.clipboard.writeText("76.76.21.21"); alert("Copiado!"); }} className="p-5 md:p-6 rounded-2xl md:rounded-3xl bg-white/[0.02] border border-white/5 cursor-pointer hover:bg-white/5 transition-all">
+                          <p className="text-[8px] md:text-[9px] font-black text-white/20 mb-2 uppercase">Registro A</p>
+                          <code className="text-white font-mono text-xs md:text-sm">76.76.21.21</code>
+                       </div>
+                       <div onClick={() => { navigator.clipboard.writeText("nodes.huevsite.io"); alert("Copiado!"); }} className="p-5 md:p-6 rounded-2xl md:rounded-3xl bg-white/[0.02] border border-white/5 cursor-pointer hover:bg-white/5 transition-all">
+                          <p className="text-[8px] md:text-[9px] font-black text-white/20 mb-2 uppercase">CNAME</p>
+                          <code className="text-white font-mono text-xs md:text-sm uppercase truncate block">nodes.huevsite.io</code>
+                       </div>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {activeTab === 'subsites' && (
+              <motion.div key="subsites" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-4xl mx-auto space-y-8 md:space-y-12 px-4">
+                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                   <h3 className="text-2xl font-black text-white text-center sm:text-left">Tus Proyectos</h3>
+                   <button onClick={() => setIsCreateSubSiteOpen(true)} className="flex items-center justify-center gap-2 bg-[var(--accent)]/10 text-[var(--accent)] px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[var(--accent)] hover:text-black transition-all">
+                     <Plus size={16} /> Crear Sub-site
+                   </button>
+                 </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {profile.subSites.length === 0 ? (
+                      <div className="col-span-full py-20 text-center bg-white/[0.01] border border-dashed border-white/5 rounded-[2.5rem]">
+                        <p className="text-white/20 font-black uppercase text-[10px] tracking-[0.2em]">No tenés sub-sites creados aún.</p>
+                      </div>
+                    ) : (
+                      profile.subSites.map(site => (
+                        <div key={site.id} className="p-5 md:p-6 rounded-[2rem] md:rounded-[2.5rem] bg-white/[0.02] border border-white/5 flex items-center justify-between group">
+                          <div className="flex items-center gap-3 md:gap-4 min-w-0">
+                            <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center shrink-0 overflow-hidden">
+                              {site.avatarUrl ? <img src={site.avatarUrl} className="w-full h-full object-cover" /> : <Globe2 size={24} className="text-white/20" />}
+                            </div>
+                            <div className="min-w-0">
+                              <h4 className="text-sm font-black text-white truncate">{site.title}</h4>
+                              <p className="text-[10px] font-mono text-white/30 truncate">/{site.slug}</p>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 shrink-0">
+                             <button onClick={() => { setSelectedSubSiteId(site.id); setActiveTab('board'); }} className="p-2.5 md:p-3 rounded-xl bg-white/5 hover:bg-[var(--accent)] hover:text-black transition-all">
+                               <LayoutIcon size={16} />
+                             </button>
+                             <button onClick={() => handleDeleteSubSite(site.id)} className="p-2.5 md:p-3 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all">
+                               <Trash2 size={16} />
+                             </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                 </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'transfer' && (
+              <motion.div key="transfer" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="max-w-xl mx-auto space-y-12 text-center relative px-4 py-10">
+                <div className="absolute inset-0 bg-black/40 backdrop-blur-[4px] z-10 rounded-[2.5rem] md:rounded-[3.5rem] flex items-center justify-center border border-white/10">
+                   <div className="bg-[#09090b] p-8 md:p-12 rounded-[2.5rem] border border-white/5 shadow-2xl scale-100 md:scale-110">
+                      <Lock size={40} className="mx-auto mb-6 text-[var(--accent)] opacity-40" />
+                      <h4 className="text-xl md:text-2xl font-black text-white mb-2 uppercase tracking-tighter">Feature Inhabilitada</h4>
+                      <p className="text-white/40 text-[10px] font-bold font-mono uppercase tracking-widest">Próximamente disponible para PRO</p>
+                   </div>
+                </div>
+                <div className="space-y-4 filter blur-md pointer-events-none">
+                  <h3 className="text-3xl font-[950] tracking-tighter text-white">Transferir Proyecto.</h3>
+                  <p className="text-white/40 text-sm">Entregá la propiedad total de este board a otro usuario.</p>
+                </div>
+                <div className="space-y-6 filter blur-md pointer-events-none">
+                  <div className="relative">
+                    <SendHorizontal className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20" />
+                    <input disabled value={transferEmail} placeholder="email@receptor.com" className="w-full bg-white/[0.03] border border-white/10 rounded-[2.5rem] pl-16 pr-8 py-6 text-xl font-bold" />
+                  </div>
+                  <button disabled className="w-full py-6 rounded-[2rem] bg-white/10 text-white/20 font-black uppercase tracking-widest">Confirmar Transferencia</button>
+                </div>
+                <div className="p-6 rounded-3xl bg-amber-500/5 border border-amber-500/10 text-amber-500/60 text-[10px] font-bold italic flex items-center gap-3 filter blur-md pointer-events-none">
+                  <AlertCircle size={16} /> Esta acción es definitiva e irreversible.
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      </main >
+      </main>
 
-      {/* Editor Modal */}
-      <AnimatePresence>
-        {
-          editingBlock && (
-            <BlockEditorModal
-              block={editingBlock}
-              isOpen={!!editingBlock}
-              onClose={() => setEditingBlock(null)}
-              onSave={updateBlock}
-              accentColor={profile?.accentColor || "#C8FF00"}
-            />
-          )
+      {editingBlock && (
+        <BlockEditorModal 
+          block={editingBlock} 
+          isOpen={!!editingBlock} 
+          onClose={() => setEditingBlock(null)} 
+          onSave={updateBlock} 
+          accentColor={profile?.accentColor || "#C8FF00"} 
+        />
+      )}
+      <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
+      <OnboardingModal isOpen={isOnboardingOpen} onClose={() => { localStorage.setItem("huevsite_onboarding_seen", "true"); setIsOnboardingOpen(false); }} username={profile.username} />
+      <AnimatePresence>{isDeletingId && <div className="fixed inset-0 z-[500] flex items-center justify-center p-4"><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setIsDeletingId(null)} /><motion.div initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }} className="relative w-full max-w-sm bg-[var(--surface)] border border-red-500/30 rounded-[2rem] shadow-2xl p-8 z-[510] text-center"><div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-6 text-red-500"><Trash2 size={32} /></div><h3 className="text-2xl font-black mb-3 text-white">¿Borrar bloque?</h3><p className="text-[var(--text-dim)] mb-8 text-sm leading-relaxed">Esta acción no se puede deshacer.</p><div className="flex gap-3"><button onClick={() => setIsDeletingId(null)} className="flex-1 py-3.5 rounded-2xl bg-[var(--surface2)] font-bold text-sm text-white">Cancelar</button><button onClick={() => { removeBlock(isDeletingId); setIsDeletingId(null); }} className="flex-1 py-3.5 rounded-2xl bg-red-500 font-bold text-sm text-white transition-all">Eliminar</button></div></motion.div></div>}</AnimatePresence>
+      <AnimatePresence>{isProfileModalOpen && <div className="fixed inset-0 z-[500] flex items-center justify-center p-4"><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsProfileModalOpen(false)} className="absolute inset-0 bg-black/80 backdrop-blur-md" /><motion.div initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }} className="relative w-full max-w-md bg-[var(--surface)] border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden z-[510] p-8 pt-10"><div className="text-center mb-8"><div className="section-label mb-2 mx-auto w-fit">// identidad {selectedSubSiteId ? '(sub-site)' : ''}</div><h3 className="text-2xl font-black tracking-tighter">Editar {selectedSubSiteId ? 'Sub-site' : 'Perfil'}</h3></div><div className="space-y-6"><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1">URL del {selectedSubSiteId ? 'Sub-site' : 'Perfil'}</label><div className="flex items-center gap-2 p-4 rounded-2xl bg-black/40 border border-white/10 focus-within:border-[var(--accent)] transition-all font-mono"><span className="text-xs text-white/20">huevsite.io/{selectedSubSiteId ? `${profile.username}/` : ''}</span><input value={tempProfileData.username} onChange={(e) => setTempProfileData(p => ({ ...p, username: e.target.value.toLowerCase() }))} className="bg-transparent border-none outline-none text-sm font-black text-[var(--accent)] flex-1 p-0" /></div></div><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">Foto (URL)</label><input value={tempProfileData.avatarUrl} onChange={(e) => setTempProfileData(p => ({ ...p, avatarUrl: e.target.value }))} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-white/60 focus:border-[var(--accent)] transition-all font-mono" /></div><div className="space-y-4 pt-2"><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">Nombre</label><input value={tempProfileData.display_name} onChange={(e) => setTempProfileData(p => ({ ...p, display_name: e.target.value }))} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm font-black text-white focus:border-[var(--accent)] transition-all" /></div><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">{selectedSubSiteId ? 'Descripción' : 'Tagline'}</label><input value={tempProfileData.tagline} onChange={(e) => setTempProfileData(p => ({ ...p, tagline: e.target.value }))} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-white/60 focus:border-[var(--accent)] transition-all" /></div></div></div><div className="flex gap-4 mt-10"><button onClick={() => setIsProfileModalOpen(false)} className="flex-1 py-4 text-sm font-bold text-white/30 hover:text-white transition-colors">Cancelar</button><button onClick={async () => { 
+        if (selectedSubSiteId) {
+          await handleUpdateSubSite(selectedSubSiteId, {
+            title: tempProfileData.display_name,
+            slug: tempProfileData.username,
+            description: tempProfileData.tagline,
+            avatarUrl: tempProfileData.avatarUrl
+          });
+        } else {
+          setProfile(prev => prev ? { ...prev, username: tempProfileData.username, displayName: tempProfileData.display_name, tagline: tempProfileData.tagline, avatarUrl: tempProfileData.avatarUrl } : null); 
+          await fetch('/api/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: tempProfileData.username, name: tempProfileData.display_name, tagline: tempProfileData.tagline, image: tempProfileData.avatarUrl }) });
         }
-      </AnimatePresence >
-
-      <FeedbackModal
-        isOpen={isFeedbackOpen}
-        onClose={() => setIsFeedbackOpen(false)}
-      />
-
-
-      <OnboardingModal
-        isOpen={isOnboardingOpen}
-        onClose={() => {
-          localStorage.setItem("huevsite_onboarding_seen", "true");
-          setIsOnboardingOpen(false);
-        }}
+        setIsProfileModalOpen(false); 
+      }} className="flex-[2] py-4 rounded-2xl bg-[var(--accent)] text-black font-black text-sm shadow-xl" style={{ backgroundColor: profile.accentColor, color: getContrastColor(profile.accentColor) }}>Guardar</button></div></motion.div></div>}</AnimatePresence>
+      <ScoreInfoModal isOpen={isScoreInfoOpen} onClose={() => setIsScoreInfoOpen(false)} accentColor={profile.accentColor} profileId={profile.id} />
+      <ProSettingsModal
+        isOpen={isProSettingsOpen}
+        onClose={() => setIsProSettingsOpen(false)}
+        accentColor={profile.accentColor}
+        subSites={profile.subSites}
+        blocks={profile.blocks}
+        customDomain={profile.customDomain}
+        onUpdateDomain={handleUpdateDomain}
+        onAddSubSite={handleAddSubSite}
+        onUpdateSubSite={handleUpdateSubSite}
+        onDeleteSubSite={handleDeleteSubSite}
+        onTransferProject={handleTransferProject}
         username={profile.username}
       />
 
-      {/* Delete Confirmation Modal */}
-      <AnimatePresence>
-        {isDeletingId && (
-          <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/80 backdrop-blur-md"
-              onClick={() => setIsDeletingId(null)}
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 30 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 30 }}
-              className="relative w-full max-w-sm bg-[var(--surface)] border border-red-500/30 rounded-[2rem] shadow-2xl p-8 z-10 text-center"
-            >
-              <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-6 text-red-500">
-                <Trash2 size={32} />
-              </div>
-              <h3 className="text-2xl font-black mb-3 text-white">¿Eliminar bloque?</h3>
-              <p className="text-[var(--text-dim)] mb-8 text-sm leading-relaxed">
-                Esta acción es irreversible y se perderá todo el contenido del bloque. ¿Estás seguro?
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setIsDeletingId(null)}
-                  className="flex-1 py-3.5 rounded-2xl bg-[var(--surface2)] font-bold text-sm text-white hover:bg-[var(--border)] transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={() => {
-                    removeBlock(isDeletingId);
-                    setIsDeletingId(null);
-                  }}
-                  className="flex-1 py-3.5 rounded-2xl bg-red-500 font-bold text-sm text-white hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20"
-                >
-                  Eliminar
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Profile / URL Editing Modal */}
-      <AnimatePresence>
-        {isProfileModalOpen && (
-          <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsProfileModalOpen(false)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-md"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 30 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 30 }}
-              className="relative w-full max-w-md bg-[var(--surface)] border border-[var(--border-bright)] rounded-[2.5rem] shadow-2xl overflow-hidden z-10 p-8 pt-10"
-            >
-              <div className="text-center mb-8">
-                <div className="section-label mb-2 mx-auto w-fit">// ajustes de identidad</div>
-                <h3 className="text-2xl font-black tracking-tighter">Editar Perfil</h3>
-              </div>
-
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-mono tracking-widest text-[var(--text-muted)] px-1">Tu URL (Username)</label>
-                  <div className="flex items-center gap-2 p-4 rounded-2xl bg-black/40 border border-white/10 focus-within:border-[var(--accent)] transition-all">
-                    <span className="text-xs text-[var(--text-muted)] font-mono">huevsite.io/</span>
-                    <input
-                      value={tempProfileData.username}
-                      onChange={(e) => setTempProfileData(p => ({ ...p, username: e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '') }))}
-                      className="bg-transparent border-none outline-none text-sm font-black text-[var(--accent)] font-mono flex-1 p-0"
-                      placeholder="username"
-                    />
-                  </div>
-                  <p className="text-[10px] text-[var(--text-muted)] font-mono px-1">
-                    Solo letras, números, guiones y guiones bajos.
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-mono tracking-widest text-[var(--text-muted)] px-1 font-bold">Foto de Perfil (URL)</label>
-                  <input
-                    value={tempProfileData.avatarUrl}
-                    onChange={(e) => setTempProfileData(p => ({ ...p, avatarUrl: e.target.value }))}
-                    className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-[var(--text-dim)] focus:border-[var(--accent)] transition-all font-mono"
-                    placeholder="https://..."
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-mono tracking-widest text-[var(--text-muted)] px-1 font-bold">GitHub Username</label>
-                  <input
-                    value={tempProfileData.githubHandle}
-                    onChange={(e) => setTempProfileData(p => ({ ...p, githubHandle: e.target.value }))}
-                    className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-[var(--accent)] font-mono"
-                    placeholder="ej: tomasdeluca"
-                  />
-                  <p className="text-[9px] text-[var(--text-muted)] font-mono px-1">
-                    Esto habilita métricas avanzadas y bloques de repo.
-                  </p>
-                </div>
-
-                <div className="h-px bg-white/5 my-2" />
-
-                <div className="space-y-4 pt-2">
-                  <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-mono tracking-widest text-[var(--text-muted)] px-1 font-bold">Nombre Público</label>
-                    <input
-                      value={tempProfileData.display_name}
-                      onChange={(e) => setTempProfileData(p => ({ ...p, display_name: e.target.value }))}
-                      className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm font-bold text-white focus:border-[var(--accent)] transition-all"
-                      placeholder="Tu Nombre"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-mono tracking-widest text-[var(--text-muted)] px-1 font-bold">Tagline / Rol</label>
-                    <input
-                      value={tempProfileData.tagline}
-                      onChange={(e) => setTempProfileData(p => ({ ...p, tagline: e.target.value }))}
-                      className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-[var(--text-dim)] focus:border-[var(--accent)] transition-all"
-                      placeholder="p. ej. Product Designer"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-4 mt-10">
-                <button
-                  onClick={() => setIsProfileModalOpen(false)}
-                  className="flex-1 py-4 text-sm font-bold text-[var(--text-muted)] hover:text-white transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={async () => {
-                    const oldUsername = profile.username;
-                    const newUsername = tempProfileData.username;
-
-                    // Actualizar estado local
-                    setProfile(prev => {
-                      if (!prev) return null;
-                      return {
-                        ...prev,
-                        username: newUsername,
-                        displayName: tempProfileData.display_name,
-                        tagline: tempProfileData.tagline,
-                        avatarUrl: tempProfileData.avatarUrl,
-                        githubHandle: tempProfileData.githubHandle
-                      };
-                    });
-
-                    setIsProfileModalOpen(false);
-
-                    // Persistencia inmediata
-                    try {
-                      const response = await fetch('/api/profile', {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          username: newUsername,
-                          name: tempProfileData.display_name,
-                          tagline: tempProfileData.tagline,
-                          image: tempProfileData.avatarUrl,
-                          github_handle: tempProfileData.githubHandle
-                        }),
-                      });
-
-                      if (!response.ok) {
-                        const data = await response.json();
-                        alert(`Error: ${data.error || 'No se pudo actualizar'}`);
-                        // Revertir? Podríamos recargar si falla mucho.
-                      }
-                    } catch (e) {
-                      console.error(e);
-                    }
-                  }}
-                  className="flex-[2] py-4 rounded-2xl bg-[var(--accent)] text-black font-black text-sm shadow-lg shadow-[var(--accent)]/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                  style={{ backgroundColor: profile.accentColor, color: getContrastColor(profile.accentColor) }}
-                >
-                  Confirmar cambios
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      <ScoreInfoModal
-        isOpen={isScoreInfoOpen}
-        onClose={() => setIsScoreInfoOpen(false)}
+      <CreateSubSiteModal
+        isOpen={isCreateSubSiteOpen}
+        onClose={() => setIsCreateSubSiteOpen(false)}
         accentColor={profile.accentColor}
-        profileId={profile.id}
+        onAddSubSite={handleAddSubSite}
+        username={profile.username}
       />
-
-      {isProSettingsOpen && (
-        <ProSettingsModal
-          isOpen={isProSettingsOpen}
-          onClose={() => setIsProSettingsOpen(false)}
-          accentColor={profile.accentColor}
-          subSites={profile.subSites}
-          customDomain={profile.customDomain}
-          onUpdateDomain={handleUpdateDomain}
-          onAddSubSite={handleAddSubSite}
-          onUpdateSubSite={handleUpdateSubSite}
-          onDeleteSubSite={handleDeleteSubSite}
-          username={profile.username}
-        />
-      )}
-
-      {isUpgradeModalOpen && (
-        <UpgradeModal 
-          isOpen={isUpgradeModalOpen} 
-          onClose={() => setIsUpgradeModalOpen(false)} 
-          accentColor={profile.accentColor} 
-        />
-      )}
+      {isUpgradeModalOpen && <UpgradeModal isOpen={isUpgradeModalOpen} onClose={() => setIsUpgradeModalOpen(false)} accentColor={profile.accentColor} />}
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Upload, X, Loader2, Image as ImageIcon } from "lucide-react";
+import { optimizeImage } from "@/lib/image-utils";
 
 interface Props {
   value?: string;
@@ -26,13 +27,19 @@ export function ImageUpload({ value, onChange, label, folder = "general" }: Prop
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+      // Optimizar imagen antes de subir (max 1200px, quality 0.8)
+      const optimizedBlob = await optimizeImage(file);
+      
+      // Siempre usamos .webp para mejor compresión
+      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.webp`;
       const filePath = `${user.id}/${folder}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from("assets")
-        .upload(filePath, file);
+        .upload(filePath, optimizedBlob, {
+          contentType: 'image/webp',
+          upsert: true
+        });
 
       if (uploadError) throw uploadError;
 

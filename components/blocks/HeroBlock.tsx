@@ -1,16 +1,17 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { BadgeCheck } from "lucide-react";
+import { BadgeCheck, Trophy } from "lucide-react";
 import { HeroBlockData } from "@/lib/profile-types";
 
 interface Props {
   data: HeroBlockData;
   accentColor: string;
   subscriptionTier?: "free" | "pro";
+  isWinner?: boolean;
 }
 
-export function HeroBlock({ data, accentColor, subscriptionTier }: Props) {
+export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = false }: Props) {
   const roles = data.roles || [];
   const name = data.name || "Usuario";
   const tagline = data.tagline || "Builder en huevsite.io";
@@ -33,11 +34,11 @@ export function HeroBlock({ data, accentColor, subscriptionTier }: Props) {
         <div className="flex flex-col sm:flex-row items-start gap-4 md:gap-5">
           <div className="shrink-0 relative">
             <div
-              className="absolute inset-0 rounded-full blur-xl opacity-30 transition-opacity group-hover:opacity-50"
+              className={`absolute inset-0 rounded-full blur-xl transition-opacity ${isWinner ? 'opacity-40 animate-pulse' : 'opacity-30 group-hover:opacity-50'}`}
               style={{ backgroundColor: accentColor }}
             />
             <div
-              className="hero-avatar w-14 h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 border-2 border-white/10 shadow-xl rounded-full flex items-center justify-center font-black text-black overflow-hidden relative z-10"
+              className={`hero-avatar w-14 h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 border-2 shadow-xl rounded-full flex items-center justify-center font-black text-black overflow-hidden relative z-10 ${isWinner ? 'border-[var(--accent)]' : 'border-white/10'}`}
               style={{ background: avatarUrl ? 'transparent' : `linear-gradient(135deg, ${accentColor}, #00FF88)` }}
             >
               {avatarUrl ? (
@@ -53,6 +54,16 @@ export function HeroBlock({ data, accentColor, subscriptionTier }: Props) {
           <div className="flex flex-col min-w-0 pt-0 px-1">
             <h1 className="text-xl md:text-2xl lg:text-3xl font-black tracking-tight text-white leading-tight break-all sm:break-words flex flex-wrap items-center gap-2">
               {name}
+              {isWinner && (
+                <motion.div
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                  className="shrink-0"
+                  title="Builder del Mes"
+                >
+                  <Trophy size={18} className="text-[var(--accent)] drop-shadow-[0_0_8px_rgba(200,255,0,0.5)] md:w-6 md:h-6" />
+                </motion.div>
+              )}
               {subscriptionTier === "pro" && (
                 <motion.span
                   initial={{ scale: 0, rotate: -20 }}

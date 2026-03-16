@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Plus, X, Layout as LayoutIcon, MessageSquare, Rocket, Github, Star, Layers, Users, BookOpen, Sparkles, FileText, Image, Award, Trophy, PenTool } from "lucide-react";
+import { Plus, X, Layout as LayoutIcon, MessageSquare, Rocket, Github, Star, Layers, Users, BookOpen, Sparkles, FileText, Image, Award, Trophy, PenTool, Globe } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BlockType, MAX_FREE_BLOCKS, MAX_PRO_BLOCKS, isDarkColor } from "@/lib/profile-types";
 import { UpgradeModal } from "@/components/dashboard/UpgradeModal";
@@ -60,6 +60,7 @@ export function BlockSelector({
         { type: "building", icon: <Rocket size={18} />, label: "Building", desc: "¿Qué estás buildando ahora?" },
         { type: "achievement", icon: <Trophy size={18} />, label: "Logro", desc: "Hitos y victorias importantes" },
         { type: "certification", icon: <Award size={18} />, label: "Certificación", desc: "Cursos y certificados" },
+        { type: "ecosystem", icon: <Globe size={18} />, label: "Ecosistema", desc: "Tus sub-sites en un bloque" },
         { type: "stack", icon: <Layers size={18} />, label: "Tech Stack", desc: "Tus herramientas favoritas" },
       ],
     },

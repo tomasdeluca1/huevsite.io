@@ -31,7 +31,7 @@ import { GitHubBlock } from "@/components/blocks/GitHubBlock";
 import { ProjectBlock } from "@/components/blocks/ProjectBlock";
 import { MetricBlock, SocialBlock, CVBlock } from "@/components/blocks/Widgets";
 import { StackBlock, CommunityBlock, WritingBlock } from "@/components/blocks/ExtraBlocks";
-import { MediaBlock, CertificationBlock, AchievementBlock, CustomBlock, CollabBlock } from "@/components/blocks/NewBlocks";
+import { MediaBlock, CertificationBlock, AchievementBlock, CustomBlock, CollabBlock, EcosystemBlock } from "@/components/blocks/NewBlocks";
 import { SortableBlock } from "@/components/dashboard/SortableBlock";
 import { BlockSelector } from "@/components/dashboard/BlockSelector";
 import { BlockEditorModal } from "@/components/dashboard/BlockEditorModal";
@@ -253,8 +253,8 @@ export default function DashboardPage() {
 
   const addBlock = async (type: BlockType) => {
     const newId = `temp-${type}-${Date.now()}`;
-    const colSpan = type === "hero" ? 2 : (type === "github" || type === "project" ? 1 : 1);
-    const rowSpan = type === "hero" ? 2 : (type === "github" || type === "project" ? 2 : 1);
+    const colSpan = type === "hero" || type === "ecosystem" ? 2 : (type === "github" || type === "project" ? 1 : 1);
+    const rowSpan = type === "hero" || type === "ecosystem" ? 2 : (type === "github" || type === "project" ? 2 : 1);
 
     let initialData: any = {
       id: newId,
@@ -391,6 +391,13 @@ export default function DashboardPage() {
           users: [{ username: "ejemplo", role: "Co-founder" }]
         };
         break;
+      case "ecosystem":
+        initialData = {
+          ...initialData,
+          title: "Mis productos :)",
+          hideHeaderEcosystem: true,
+        };
+        break;
     }
 
     setProfile((prev) => prev ? { ...prev, blocks: [...prev.blocks, initialData as BlockData] } : prev);
@@ -469,6 +476,7 @@ export default function DashboardPage() {
       case "achievement": return <AchievementBlock {...props} />;
       case "custom": return <CustomBlock {...props} />;
       case "collab": return <CollabBlock {...props} />;
+      case "ecosystem": return <EcosystemBlock {...props} subSites={profile?.subSites || []} username={profile?.username} />;
       default: return (
         <div className="huevsite-block h-full flex items-center justify-center p-8 border-dashed border-[var(--border-bright)] text-white/20">
           Bloque fantasma

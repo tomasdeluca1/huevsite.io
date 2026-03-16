@@ -1,8 +1,8 @@
 "use client";
 
 import { motion, AnimatePresence, Reorder } from "framer-motion";
-import { X, Save, Sparkles, Search, Github, GripVertical } from "lucide-react";
-import { BlockData, getContrastColor } from "@/lib/profile-types";
+import { BlockData, EcosystemBlockData, getContrastColor } from "@/lib/profile-types";
+import { X, Save, Sparkles, Search, Github, GripVertical, Globe } from "lucide-react";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { ImageUpload } from "@/components/dashboard/ImageUpload";
@@ -938,6 +938,51 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
             </button>
           </div>
         );
+      case "ecosystem":
+        return (
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <div className="section-label !text-[9px] px-1">// título del bloque</div>
+              <input
+                value={formData.title || ""}
+                onChange={(e) => handleChange("title", e.target.value)}
+                className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-bold"
+                placeholder="Mi Ecosistema"
+              />
+            </div>
+
+            <div className="p-5 bg-black/20 rounded-2xl border border-white/5 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-bold text-white">Ocultar Barra Superior</div>
+                  <p className="text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-widest mt-0.5">
+                    Remover la barra de sub-sites del header
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleChange("hideHeaderEcosystem", !formData.hideHeaderEcosystem)}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${formData.hideHeaderEcosystem ? 'bg-[#C8FF00]' : 'bg-white/10'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${formData.hideHeaderEcosystem ? 'left-7' : 'left-1'}`} />
+                </button>
+              </div>
+              
+              <div className="flex gap-3 items-start p-3 bg-white/5 rounded-xl border border-white/5">
+                <Globe size={14} className="text-[var(--text-dim)] mt-0.5 shrink-0" />
+                <p className="text-[10px] text-[var(--text-dim)] leading-relaxed">
+                  Si esta opción está activada, tus sub-sites solo se mostrarán dentro de este bloque en tu board, evitando que se repitan arriba.
+                 </p>
+              </div>
+            </div>
+
+            <div className="p-4 bg-[var(--accent)]/10 rounded-xl border border-[var(--accent)]/20">
+              <p className="text-[11px] text-[var(--text-dim)]">
+                <span className="text-white font-bold">Nota:</span> Este bloque mostrará automáticamente todos los sub-sites que hayas creado. No hace falta agregarlos uno por uno.
+              </p>
+            </div>
+          </div>
+        );
       default:
         return <div>Editor no implementado para este tipo de bloque</div>;
     }
@@ -945,7 +990,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
 
   const renderSizeControls = () => {
     // Blocks that make sense to resize
-    const resizableTypes = ['hero', 'building', 'project', 'github', 'stack', 'community', 'writing', 'cv', 'media', 'certification', 'achievement', 'custom', 'collab'];
+    const resizableTypes = ['hero', 'building', 'project', 'github', 'stack', 'community', 'writing', 'cv', 'media', 'certification', 'achievement', 'custom', 'collab', 'ecosystem'];
     if (!resizableTypes.includes(block.type)) return null;
 
     const isHero = block.type === 'hero';

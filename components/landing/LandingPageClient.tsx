@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { WinnerSection } from "@/components/landing/WinnerSection";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
-import { Activity, Compass, Users, PlusCircle, Layout, Check } from "lucide-react";
+import { Activity, Compass, Users, PlusCircle, Layout, Check, BookOpen, Globe, Link2, BarChart3, TrendingUp } from "lucide-react";
 
 interface LandingPageClientProps {
   showcaseData: any;
@@ -83,8 +83,8 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
     };
   }, []);
 
-  // Price Section - Only for logged in users
-  const showPricing = !!user;
+  // Price Section - Show to everyone
+  const showPricing = true;
 
   return (
     <div className="landing">
@@ -98,7 +98,10 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
           <Link href="/explore" className="btn btn-ghost">
             <span>Explorar</span>
           </Link>
-          <Link href={user ? "/dashboard" : "/login"} className="btn btn-accent !px-6">
+          <Link href="/blog" className="btn btn-ghost">
+            <span>Blog</span>
+          </Link>
+          <Link href={user ? "/dashboard" : "/login"} className="btn btn-accent !px-6 ml-1">
             {user ? (
               <>
                 <Layout size={16} className="mr-2" />
@@ -138,6 +141,10 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
               <Link href="/explore" className="flex-1 flex flex-col items-center gap-1 py-1.5 text-[var(--text-dim)] hover:text-[var(--accent)] transition-colors">
                 <Compass size={18} />
                 <span className="text-[9px] font-bold uppercase tracking-tighter">Explorar</span>
+              </Link>
+              <Link href="/blog" className="flex-1 flex flex-col items-center gap-1 py-1.5 text-[var(--text-dim)] hover:text-[var(--accent)] transition-colors">
+                <BookOpen size={18} />
+                <span className="text-[9px] font-bold uppercase tracking-tighter">Blog</span>
               </Link>
               <Link href={user ? "/dashboard" : "/login"} className="flex-1 flex flex-col items-center gap-1 py-1.5 text-[var(--accent)] transition-colors">
                 {user ? <Layout size={18} /> : <PlusCircle size={18} />}
@@ -366,10 +373,12 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
 
           <div style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', display: 'grid', gap: '24px' }}>
             {[
-              { icon: '🔓', title: 'Bloques Ilimitados', desc: 'Armá tu portfolio sin restricciones. Desbloqueá el grid completo para mostrar todo tu potencial.' },
-              { icon: '🎨', title: 'Colores Custom', desc: 'Elegí cualquier color HEX. No te limites a los presets, definí tu marca personal exacta.' },
-              { icon: '✨', title: 'Sin Marca de Agua', desc: 'Eliminamos el logo de huevsite.io de tu footer para un estilo más minimalista y profesional.' },
-              { icon: '✅', title: 'Verified Badge', desc: 'Destacate en el feed y en tu perfil con el badge oficial de Builder PRO.' }
+              { icon: '🌐', title: 'Tu propio dominio', desc: 'Conectá dominio.com en segundos. Dale a tu portfolio la autoridad que merece con una URL 100% tuya.' },
+              { icon: '🔭', title: 'Insights de Builder', desc: 'No vueles a ciegas. Mirá quién te visita, de dónde vienen y qué es lo que más les gusta de tu trabajo.' },
+              { icon: '⚡', title: 'Explosión de Visibilidad', desc: 'Sumá puntos extra a tu Builder Score automáticamente. Tracción real para aparecer antes que nadie en el feed.' },
+              { icon: '🍱', title: 'Sub-sitios ilimitados', desc: '¿Tenés un SaaS? ¿Un newsletter? ¿Un curso? Creá landing pages específicas para cada proyecto bajo un mismo techo.' },
+              { icon: '🏗️', title: 'Grid Expandido', desc: 'Hasta 32 bloques para que no falte nada. El doble de espacio para tus proyectos, links y obsesiones.' },
+              { icon: '👑', title: 'Estatus de Elite', desc: 'El badge de Verificado no es solo estética: es confianza inmediata para recruiters y clientes.' }
             ].map((f, i) => (
               <div key={i} style={{ padding: '32px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', transition: 'all 0.3s' }} className="group hover:border-[var(--accent)]/30">
                 <div style={{ fontSize: '32px', marginBottom: '20px' }}>{f.icon}</div>
@@ -401,7 +410,7 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
                   </div>
 
                   <ul className="space-y-4 text-left mb-12 max-w-[280px] mx-auto">
-                    {['Hasta 32 bloques en tu grid', 'Color de marca personalizado', 'Perfil verificado Builder PRO', 'Visibilidad en comunidad'].map(item => (
+                    {['Dominio .com personalizado', 'Insights y métricas en tiempo real', 'Boost de Scoring (más visibilidad)', 'Sub-sitios ilimitados por cuenta', 'Hasta 32 bloques en tu grid', 'Verified Badge oficial'].map(item => (
                       <li key={item} className="flex items-center gap-3 text-sm text-[var(--text-dim)]">
                         <Check size={14} className="text-[var(--accent)] shrink-0" />
                         <span>{item}</span>
@@ -410,10 +419,10 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
                   </ul>
 
                   <Link
-                    href="/api/checkout"
+                    href={user ? "/api/checkout" : "/login?redirect=/api/checkout"}
                     className="btn btn-accent w-full !py-5 !text-base !font-bold !rounded-2xl shadow-xl shadow-[var(--accent)]/5 hover:shadow-[var(--accent)]/20 transition-all"
                   >
-                    Mejorar mi huevsite →
+                    {user ? "Mejorar mi huevsite →" : "Hacerme PRO ahora →"}
                   </Link>
 
                   <p className="mt-6 text-[9px] font-mono text-[var(--text-muted)] uppercase tracking-widest opacity-40">
@@ -458,6 +467,7 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
           <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Mostrá lo que buildeás.</div>
         </div>
         <div style={{ display: 'flex', gap: '20px' }}>
+          <Link href="/blog" style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textDecoration: 'none' }}>Blog</Link>
           <Link href="https://x.com/i/communities/2026312282527932637" target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textDecoration: 'none' }}>X Community</Link>
           <Link href="https://discord.gg/qE4CWG6D" target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textDecoration: 'none' }}>Discord Community</Link>
           <Link href="https://github.com/tomasdeluca1" target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textDecoration: 'none' }}>GitHub</Link>

@@ -19,6 +19,12 @@ interface Props {
 
 export function AnalyticsTracker({ userId, subSiteId, blockId, eventType = 'page_view', visitorUserInfo }: Props) {
   useEffect(() => {
+    // No trackear en localhost
+    if (typeof window !== 'undefined' && 
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+      return;
+    }
+
     if (eventType === 'page_view') {
       const track = async () => {
         try {
@@ -46,6 +52,12 @@ export function AnalyticsTracker({ userId, subSiteId, blockId, eventType = 'page
 
 // Helper para trackear clicks manuales
 export async function trackClick(userId: string, blockId: string, subSiteId?: string) {
+  // No trackear en localhost
+  if (typeof window !== 'undefined' && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return;
+  }
+
   try {
     await fetch('/api/analytics/track', {
       method: 'POST',

@@ -17,7 +17,10 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   ChevronRight,
-  Clock
+  Clock,
+  Layout,
+  Globe2,
+  ArrowRight
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -124,16 +127,24 @@ function SparklineChart({ data, accentColor }: { data: DailyPoint[]; accentColor
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: true });
     if (!ctx) return;
 
-    const W = canvas.width;
-    const H = canvas.height;
-    const padB = 28;
-    const padT = 12;
-    const padH = 8;
+    // Use higher resolution for Retina screens
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = rect.height;
+    const padB = 40;
+    const padT = 20;
+    const padH = 15;
+    const chartW = W - padH * 2;
     const chartH = H - padB - padT;
-    const stepX = (W - padH * 2) / (data.length - 1);
+    const stepX = chartW / (data.length - 1);
 
     ctx.clearRect(0, 0, W, H);
 
@@ -142,37 +153,56 @@ function SparklineChart({ data, accentColor }: { data: DailyPoint[]; accentColor
       y: padT + chartH - (d.count / maxVal) * chartH
     }));
 
-    // Draw bars
-    const barW = stepX * 0.5;
+    // Draw grid lines
+    ctx.beginPath();
+    ctx.setLineDash([5, 5]);
+    ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 3; i++) {
+        const y = padT + (chartH / 3) * i;
+        ctx.moveTo(padH, y);
+        ctx.lineTo(W - padH, y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Draw bars for background texture
+    const barW = stepX * 0.4;
     data.forEach((d, i) => {
       const x = padH + i * stepX;
-      const barH = (d.count / maxVal) * chartH;
+      const barH = (d.count / maxVal) * (chartH * 0.8);
       const y = padT + chartH - barH;
-      ctx.fillStyle = accentColor + '33';
+      ctx.fillStyle = accentColor + '08';
       ctx.beginPath();
-      ctx.roundRect(x - barW / 2, y, barW, barH, [3, 3, 0, 0]);
+      ctx.roundRect(x - barW / 2, y, barW, barH, [4, 4, 0, 0]);
       ctx.fill();
     });
 
-    // Draw smooth line
+    // Draw high-quality smooth line
     ctx.beginPath();
     ctx.moveTo(pts[0].x, pts[0].y);
-    for (let i = 1; i < pts.length - 1; i++) {
-      const cpX = (pts[i].x + pts[i + 1].x) / 2;
-      const cpY = (pts[i].y + pts[i + 1].y) / 2;
-      ctx.quadraticCurveTo(pts[i].x, pts[i].y, cpX, cpY);
+    for (let i = 1; i < pts.length; i++) {
+        const xc = (pts[i - 1].x + pts[i].x) / 2;
+        const yc = (pts[i - 1].y + pts[i].y) / 2;
+        ctx.quadraticCurveTo(pts[i - 1].x, pts[i - 1].y, xc, yc);
     }
-    ctx.quadraticCurveTo(pts[pts.length - 2].x, pts[pts.length - 2].y, pts[pts.length - 1].x, pts[pts.length - 1].y);
+    ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+    
+    // Gradient stroke
     ctx.strokeStyle = accentColor;
-    ctx.lineWidth = 2;
-    ctx.shadowBlur = 8;
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    
+    // Glow effect
+    ctx.shadowBlur = 15;
     ctx.shadowColor = accentColor;
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    // Fill gradient under line
+    // Gradient fill
     const gradient = ctx.createLinearGradient(0, padT, 0, padT + chartH);
-    gradient.addColorStop(0, accentColor + '22');
+    gradient.addColorStop(0, accentColor + '1a');
     gradient.addColorStop(1, accentColor + '00');
     ctx.lineTo(pts[pts.length - 1].x, padT + chartH);
     ctx.lineTo(pts[0].x, padT + chartH);
@@ -180,23 +210,30 @@ function SparklineChart({ data, accentColor }: { data: DailyPoint[]; accentColor
     ctx.fillStyle = gradient;
     ctx.fill();
 
-    // Draw dots
-    pts.forEach(p => {
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-      ctx.fillStyle = accentColor;
-      ctx.fill();
+    // Interaction dots (optional, only for key points or highlight)
+    /*
+    pts.forEach((p, i) => {
+      if (data[i].count === maxVal) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+        ctx.fillStyle = accentColor;
+        ctx.fill();
+        ctx.strokeStyle = '#1a1a1f';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
     });
+    */
 
-    // X-axis labels (show every ~5 days)
-    ctx.fillStyle = 'rgba(255,255,255,0.2)';
-    ctx.font = '10px monospace';
+    // X-axis labels
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.font = 'bold 10px var(--font-display), sans-serif';
     ctx.textAlign = 'center';
     data.forEach((d, i) => {
       if (i === 0 || i === data.length - 1 || i % 7 === 0) {
         const parts = d.date.split('-');
         const label = `${parts[2]}/${parts[1]}`;
-        ctx.fillText(label, padH + i * stepX, H - 6);
+        ctx.fillText(label, padH + i * stepX, H - 12);
       }
     });
   }, [data, accentColor, maxVal]);
@@ -206,9 +243,11 @@ function SparklineChart({ data, accentColor }: { data: DailyPoint[]; accentColor
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
-    const W = canvas.width;
-    const padH = 8;
-    const stepX = (W - padH * 2) / (data.length - 1);
+    const W = rect.width;
+    const padH = 15;
+    const chartW = W - padH * 2;
+    const stepX = chartW / (data.length - 1);
+    
     const idx = Math.min(Math.max(Math.round((mouseX - padH) / stepX), 0), data.length - 1);
     const d = data[idx];
     const x = padH + idx * stepX;
@@ -219,9 +258,7 @@ function SparklineChart({ data, accentColor }: { data: DailyPoint[]; accentColor
     <div className="relative w-full">
       <canvas
         ref={canvasRef}
-        width={900}
-        height={200}
-        className="w-full h-[180px]"
+        className="w-full h-[220px]"
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setTooltip(null)}
         style={{ cursor: 'crosshair' }}
@@ -229,17 +266,21 @@ function SparklineChart({ data, accentColor }: { data: DailyPoint[]; accentColor
       <AnimatePresence>
         {tooltip && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="absolute pointer-events-none bg-[#1a1a1f] border border-white/10 rounded-xl px-4 py-3 shadow-2xl text-sm z-20"
-            style={{ left: `${Math.min(Math.max(tooltip.x, 5), 80)}%`, top: '10px' }}
+            className="absolute pointer-events-none bg-[#121214]/90 backdrop-blur-xl border border-white/10 rounded-2xl px-4 py-3 shadow-[0_20px_40px_rgba(0,0,0,0.4)] z-20 flex flex-col items-center min-w-[120px]"
+            style={{ 
+                left: `${Math.min(Math.max(tooltip.x, 10), 90)}%`, 
+                top: '0px',
+                transform: 'translateX(-50%)'
+            }}
           >
-            <div className="text-white/40 text-[10px] font-mono mb-1">{tooltip.date}</div>
+            <div className="text-white/40 text-[9px] font-black uppercase tracking-widest mb-1.5">{new Date(tooltip.date).toLocaleDateString('es-AR', { day: '2-digit', month: 'short' })}</div>
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: accentColor }} />
-              <span className="text-white font-bold">{tooltip.count}</span>
-              <span className="text-white/40 text-[10px]">visitors</span>
+              <div className="w-2.5 h-2.5 rounded-full shadow-[0_0_8px_var(--accent-glow)]" style={{ backgroundColor: accentColor, '--accent-glow': accentColor } as any} />
+              <span className="text-white text-lg font-black tracking-tight">{tooltip.count}</span>
+              <span className="text-white/30 text-[10px] font-bold">VISTAS</span>
             </div>
           </motion.div>
         )}
@@ -267,27 +308,37 @@ function BarRow({
 }) {
   const pct = max > 0 ? (value / max) * 100 : 0;
   return (
-    <div className="flex items-center gap-3 py-2.5 border-b border-white/[0.04] last:border-0 group">
-      <div className="flex items-center gap-2.5 flex-1 min-w-0">
+    <div className="flex items-center gap-4 py-3.5 border-b border-white/[0.03] last:border-0 group relative">
+      <div className="flex items-center gap-3.5 flex-1 min-w-0 z-10">
         {icon && (
-          <div className="w-6 h-6 rounded-lg bg-white/5 flex items-center justify-center text-[10px] shrink-0 border border-white/5">
+          <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-[12px] shrink-0 border border-white/5 group-hover:bg-white/10 transition-colors">
             {icon}
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <div className="relative h-7 flex items-center">
-            <div
-              className="absolute left-0 top-0 bottom-0 rounded-md transition-all duration-700"
-              style={{ width: `${pct}%`, backgroundColor: accent + '22' }}
-            />
-            <span className="relative text-sm font-semibold text-white/80 group-hover:text-white transition-colors truncate pl-2">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-sm font-bold text-white group-hover:text-[var(--accent)] transition-colors truncate">
               {label}
             </span>
+            <span className="text-sm font-black text-white/80 group-hover:text-white transition-colors">
+              {formatNum(value)}
+            </span>
           </div>
-          {sublabel && <div className="text-[9px] text-white/20 font-mono uppercase tracking-widest">{sublabel}</div>}
+          <div className="h-1.5 w-full bg-white/[0.03] rounded-full overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${pct}%` }}
+              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+              className="h-full rounded-full relative"
+              style={{ backgroundColor: accent }}
+            >
+                <div className="absolute inset-0 bg-white/30 animate-pulse" />
+            </motion.div>
+          </div>
+          {sublabel && <div className="text-[9px] text-white/20 font-mono uppercase tracking-[0.2em] mt-1.5 font-black">{sublabel}</div>}
         </div>
       </div>
-      <span className="text-sm font-black text-white/70 shrink-0">{formatNum(value)}</span>
+      <div className="absolute -inset-x-2 -inset-y-0.5 rounded-xl bg-white/[0.01] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
     </div>
   );
 }
@@ -300,34 +351,40 @@ function SectionCard({
   activeTab,
   setActiveTab,
   children,
+  className = "",
 }: {
   title?: string;
   tabs?: string[];
   activeTab?: string;
   setActiveTab?: (t: string) => void;
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] overflow-hidden">
+    <div className={`rounded-3xl bg-white/[0.015] border border-white/[0.05] backdrop-blur-sm overflow-hidden flex flex-col ${className}`}>
       {(title || tabs) && (
-        <div className="flex items-center gap-4 px-5 pt-4 pb-3 border-b border-white/[0.05]">
-          {title && <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">{title}</span>}
-          {tabs && tabs.map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab?.(tab)}
-              className={`text-[10px] font-black uppercase tracking-[0.15em] transition-colors pb-0.5 ${
-                activeTab === tab
-                  ? 'text-white border-b border-white'
-                  : 'text-white/25 hover:text-white/50'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-white/[0.05]">
+          {title && <span className="text-[11px] font-black text-white/30 uppercase tracking-[0.25em] font-display">{title}</span>}
+          {tabs && (
+            <div className="flex items-center gap-4">
+               {tabs.map(tab => (
+                    <button
+                        key={tab}
+                        onClick={() => setActiveTab?.(tab)}
+                        className={`text-[10px] font-black uppercase tracking-[0.15em] transition-all relative py-1 px-3 rounded-lg font-display ${
+                        activeTab === tab
+                            ? 'text-[var(--accent)] bg-[var(--accent-dim)]'
+                            : 'text-white/20 hover:text-white/50 hover:bg-white/5'
+                        }`}
+                    >
+                        {tab}
+                    </button>
+                ))}
+            </div>
+          )}
         </div>
       )}
-      <div className="px-5 py-3">{children}</div>
+      <div className="p-6 flex-1">{children}</div>
     </div>
   );
 }
@@ -350,23 +407,31 @@ function StatCard({
   icon: typeof Users;
 }) {
   return (
-    <div className="flex flex-col justify-between p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-white/10 transition-all">
-      <div className="flex items-center justify-between mb-3">
-        <div className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-          <Icon className="w-4 h-4" style={{ color: accent }} />
+    <motion.div 
+        whileHover={{ y: -4, backgroundColor: 'rgba(255,255,255,0.03)' }}
+        className="flex flex-col justify-between p-6 rounded-3xl bg-white/[0.015] border border-white/[0.05] hover:border-white/20 transition-all group relative overflow-hidden"
+    >
+      <div className="absolute top-0 right-0 w-32 h-32 bg-[radial-gradient(circle,var(--glow-color)_0%,transparent_70%)] opacity-10 blur-2xl pointer-events-none" style={{ '--glow-color': accent } as any} />
+      
+      <div className="flex items-center justify-between mb-6 relative z-10">
+        <div className="w-11 h-11 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center group-hover:scale-110 transition-transform">
+          <Icon className="w-5 h-5" style={{ color: accent }} />
         </div>
         {trend && trend !== 'neutral' && (
-          <div className={`flex items-center gap-1 text-[10px] font-bold ${trend === 'up' ? 'text-emerald-400' : 'text-red-400'}`}>
+          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${trend === 'up' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
             {trend === 'up' ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+            {trend === 'up' ? 'Good' : 'Drop'}
           </div>
         )}
       </div>
-      <div>
-        <div className="text-2xl font-black text-white tracking-tight">{value}</div>
-        <div className="text-[11px] text-white/40 font-semibold mt-0.5">{label}</div>
-        {sub && <div className="text-[9px] text-white/20 font-mono uppercase tracking-widest mt-1">{sub}</div>}
+      <div className="relative z-10">
+        <div className="text-[11px] font-black text-white/30 uppercase tracking-[0.2em] mb-1 font-display">{label}</div>
+        <div className="flex items-baseline gap-2">
+            <div className="text-4xl font-[950] text-white tracking-tighter leading-none font-display">{value}</div>
+            {sub && <span className="text-[9px] text-white/10 font-bold uppercase tracking-widest translate-y-[-2px] font-display">{sub}</span>}
+        </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -401,9 +466,14 @@ export function InsightsTab({ accentColor, blocks }: Props) {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 gap-4">
-        <Loader2 className="w-7 h-7 animate-spin" style={{ color: accentColor }} />
-        <p className="text-white/30 text-xs font-mono tracking-widest uppercase">Crunching data...</p>
+      <div className="flex flex-col items-center justify-center py-32 gap-6">
+        <div className="relative">
+            <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 animate-spin flex items-center justify-center" style={{ animationDuration: '3s' }}>
+                <RefreshCw size={24} className="text-white/20" />
+            </div>
+            <div className="absolute -inset-4 bg-[var(--accent)]/10 blur-2xl rounded-full animate-pulse" />
+        </div>
+        <p className="text-white/20 text-[10px] font-black tracking-[0.3em] uppercase">Analizando métricas...</p>
       </div>
     );
   }
@@ -411,13 +481,15 @@ export function InsightsTab({ accentColor, blocks }: Props) {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
-        <AlertCircle className="w-10 h-10 text-red-500/40" />
-        <p className="text-white/50 text-sm">{error}</p>
+        <div className="w-16 h-16 rounded-full bg-red-500/5 border border-red-500/10 flex items-center justify-center mb-2">
+            <AlertCircle className="w-8 h-8 text-red-500/40" />
+        </div>
+        <p className="text-white/50 text-sm font-medium">{error}</p>
         <button
           onClick={fetchInsights}
-          className="flex items-center gap-2 text-xs text-white/30 hover:text-white/60 transition-colors"
+          className="btn-accent !py-2.5 !px-6 !rounded-xl !text-xs gap-2"
         >
-          <RefreshCw size={12} /> Reintentar
+          <RefreshCw size={14} /> Reintentar
         </button>
       </div>
     );
@@ -441,294 +513,317 @@ export function InsightsTab({ accentColor, blocks }: Props) {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="space-y-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className="space-y-8"
     >
-      {/* ── Top Bar ── */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div
-            className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full border"
-            style={{ borderColor: accentColor + '40', color: accentColor }}
-          >
-            <Circle size={6} className="fill-current animate-pulse" />
-            {data?.onlineNow || 0} online now
-          </div>
+      {/* ── Header ── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2">
+        <div className="flex items-center gap-4">
+            <div className="flex items-center bg-emerald-500/5 border border-emerald-500/10 rounded-2xl px-4 py-2 gap-3 group">
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 relative">
+                    <div className="absolute inset-0 bg-emerald-500 rounded-full animate-ping opacity-60" />
+                </div>
+                <div className="flex flex-col">
+                    <span className="text-white font-black text-xl leading-none">{data?.onlineNow || 0}</span>
+                    <span className="text-[9px] font-black text-emerald-500/70 uppercase tracking-widest mt-0.5">Live now</span>
+                </div>
+            </div>
+            
+            <div className="h-10 w-px bg-white/5 hidden md:block" />
+            
+            <div className="flex flex-col">
+                <span className="text-white/60 text-xs font-bold font-mono tracking-tight">Periodo</span>
+                <span className="text-white/30 text-[10px] uppercase tracking-widest font-black">Últimos 30 días</span>
+            </div>
         </div>
+
         <button
           onClick={fetchInsights}
-          className="flex items-center gap-1.5 text-[10px] text-white/20 hover:text-white/50 transition-colors font-mono uppercase tracking-widest"
+          className="flex items-center gap-2.5 px-5 h-12 rounded-2xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 transition-all text-xs text-white/60 font-black uppercase tracking-widest group"
         >
-          <RefreshCw size={11} /> Refresh
+          <RefreshCw size={14} className="group-hover:rotate-180 transition-transform duration-700" />
+          Actualizar datos
         </button>
       </div>
 
-      {/* ── KPI Cards ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {/* ── KPI Grid ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          label="Unique Visitors"
+          label="Visitantes únicos"
           value={formatNum(data?.uniqueVisitors || 0)}
-          sub="Last 30 days"
-          accent={accentColor}
           icon={Users}
-        />
-        <StatCard
-          label="Total Page Views"
-          value={formatNum(data?.totalPageViews || 0)}
-          sub="All time"
           accent={accentColor}
-          icon={BarChart3}
+          trend="neutral"
         />
         <StatCard
-          label="Bounce Rate"
+          label="Vistas totales"
+          value={formatNum(data?.totalPageViews || 0)}
+          icon={BarChart3}
+          accent={accentColor}
+          sub="HUEVSITE"
+          trend="neutral"
+        />
+        <StatCard
+          label="Tasa de Rebote"
           value={`${data?.bounceRate || 0}%`}
-          sub="Single-visit sessions"
+          icon={TrendingUp}
           accent={accentColor}
           trend={data?.bounceRate && data.bounceRate < 60 ? 'up' : 'down'}
-          icon={TrendingUp}
         />
         <StatCard
-          label="CTR"
+          label="Interacción (CTR)"
           value={`${data?.ctr || 0}%`}
-          sub="Clicks / Views"
-          accent={accentColor}
           icon={MousePointer2}
+          accent={accentColor}
+          sub="CLICKS"
+          trend="neutral"
         />
       </div>
 
-      {/* ── Visitors Chart ── */}
-      {data?.dailyVisitors && data.dailyVisitors.length > 0 && (
-        <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-5">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <div className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">Visitors — Last 30 Days</div>
-              <div className="text-2xl font-black text-white">{formatNum(data.uniqueVisitors)}</div>
+      {/* ── Charts & Lists Grid ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Main Chart */}
+        <SectionCard 
+            title="Tráfico de audiencia" 
+            className="lg:col-span-3 min-h-[400px]"
+        >
+             <div className="flex items-center justify-between mb-8">
+                <div>
+                   <h3 className="text-5xl font-[950] text-white tracking-tighter mb-1 font-display">
+                        {formatNum(data?.uniqueVisitors || 0)}
+                        <span className="text-sm font-black text-white/20 uppercase tracking-[.25em] ml-4 font-display">Builders totales</span>
+                   </h3>
+                   <p className="text-white/30 text-xs font-medium">Visualización de tráfico único diario acumulado en el tiempo.</p>
+                </div>
+                <div className="hidden sm:flex flex-col items-end">
+                    <div className="text-[10px] font-black text-white/20 uppercase tracking-[.2em] mb-1 font-display">Pico de tráfico</div>
+                    <div className="text-2xl font-black text-white/70 tracking-tight font-display">{peakDay?.count || 0} <span className="text-[10px] text-white/20 uppercase ml-1">vistas</span></div>
+                    <div className="text-[10px] font-mono text-white/20 mt-1">{peakDay?.date ? new Date(peakDay.date).toLocaleDateString('es-AR', { day: 'numeric', month: 'long' }) : ''}</div>
+                </div>
             </div>
-            <div className="text-right">
-              <div className="text-[9px] text-white/20 font-mono uppercase tracking-widest">Peak day</div>
-              <div className="text-sm font-black text-white/60">{peakDay?.count || 0}</div>
-              <div className="text-[9px] text-white/20 font-mono">{peakDay?.date?.slice(5) || ''}</div>
-            </div>
-          </div>
-          <SparklineChart data={data.dailyVisitors} accentColor={accentColor} />
-        </div>
-      )}
+            {data?.dailyVisitors && data.dailyVisitors.length > 0 && (
+                <SparklineChart data={data.dailyVisitors} accentColor={accentColor} />
+            )}
+        </SectionCard>
 
-      {/* ── Referrers + Browsers/OS/Device ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-        {/* Referrers */}
+        {/* Origin / Sources */}
         <SectionCard
+          title="Orígenes de tráfico"
           tabs={['Referrer']}
           activeTab={referrerTab}
           setActiveTab={setReferrerTab}
+          className="lg:col-span-1"
         >
-          <div className="flex justify-between mb-1 px-0.5">
-            <span className="text-[9px] text-white/20 font-mono uppercase">Source</span>
-            <span className="text-[9px] text-white/20 font-mono uppercase">Visitors ↓</span>
+          <div className="space-y-1">
+            {(data?.referrers || []).length === 0 ? (
+                <div className="py-20 text-center flex flex-col items-center gap-3">
+                    <Globe2 className="w-8 h-8 text-white/5" />
+                    <span className="text-white/20 text-[10px] font-black uppercase tracking-widest">Esperando visitas...</span>
+                </div>
+            ) : (
+                (data?.referrers || []).slice(0, 8).map((item, i) => (
+                <BarRow
+                    key={i}
+                    label={item.source}
+                    value={item.visitors}
+                    max={maxRef}
+                    accent={accentColor}
+                    icon={getReferrerIcon(item.source)}
+                />
+                ))
+            )}
           </div>
-          {(data?.referrers || []).length === 0 ? (
-            <div className="py-10 text-center text-white/20 text-xs">No referrer data yet</div>
-          ) : (
-            (data?.referrers || []).slice(0, 8).map((item, i) => (
-              <BarRow
-                key={i}
-                label={item.source}
-                value={item.visitors}
-                max={maxRef}
-                accent={accentColor}
-                icon={getReferrerIcon(item.source)}
-              />
-            ))
-          )}
         </SectionCard>
 
-        {/* Browser / OS / Device */}
+        {/* Browser / Tech */}
         <SectionCard
+          title="Tecnología"
           tabs={['Browser', 'OS', 'Device']}
           activeTab={locationTab}
           setActiveTab={setLocationTab}
+          className="lg:col-span-1"
         >
-          <div className="flex justify-between mb-1 px-0.5">
-            <span className="text-[9px] text-white/20 font-mono uppercase">{locationTab}</span>
-            <span className="text-[9px] text-white/20 font-mono uppercase">Visitors ↓</span>
+          <div className="space-y-1">
+            {locationTab === 'Browser' && (
+                <>
+                {(data?.browsers || []).length === 0 ? (
+                    <div className="py-20 text-center flex flex-col items-center gap-3">
+                        <Monitor className="w-8 h-8 text-white/5" />
+                        <span className="text-white/20 text-[10px] font-black uppercase tracking-widest">No hay datos</span>
+                    </div>
+                ) : (
+                    (data?.browsers || []).slice(0, 8).map((item, i) => (
+                    <BarRow
+                        key={i}
+                        label={item.browser}
+                        value={item.visitors}
+                        max={maxBrowser}
+                        accent={accentColor}
+                        icon={getBrowserEmoji(item.browser)}
+                    />
+                    ))
+                )}
+                </>
+            )}
+            {locationTab === 'OS' && (
+                <>
+                {(data?.operatingSystems || []).length === 0 ? (
+                    <div className="py-20 text-center flex flex-col items-center gap-3">
+                         <Layout className="w-8 h-8 text-white/5" />
+                        <span className="text-white/20 text-[10px] font-black uppercase tracking-widest">Cargando...</span>
+                    </div>
+                ) : (
+                    (data?.operatingSystems || []).slice(0, 8).map((item, i) => (
+                    <BarRow
+                        key={i}
+                        label={item.os}
+                        value={item.visitors}
+                        max={maxOS}
+                        accent={accentColor}
+                        icon={item.os === 'Mac OS' ? '' : item.os === 'Windows' ? '田' : item.os === 'Android' ? 'A' : item.os === 'iOS' ? 'i' : '?' }
+                    />
+                    ))
+                )}
+                </>
+            )}
+             {locationTab === 'Device' && (
+                <>
+                {(data?.devices || []).length === 0 ? (
+                    <div className="py-20 text-center text-white/20 text-[10px] font-black uppercase">Direct only</div>
+                ) : (
+                    (data?.devices || []).map((item, i) => (
+                    <BarRow
+                        key={i}
+                        label={item.device}
+                        value={item.visitors}
+                        max={data?.devices[0]?.visitors || 1}
+                        accent={accentColor}
+                        icon={item.device === 'Mobile' ? '📱' : item.device === 'Tablet' ? '💻' : '🖥️'}
+                    />
+                    ))
+                )}
+                </>
+            )}
           </div>
-          {locationTab === 'Browser' && (
-            <>
-              {(data?.browsers || []).length === 0 ? (
-                <div className="py-10 text-center text-white/20 text-xs">No data yet</div>
-              ) : (
-                (data?.browsers || []).slice(0, 8).map((item, i) => (
-                  <BarRow
-                    key={i}
-                    label={item.browser}
-                    value={item.visitors}
-                    max={maxBrowser}
-                    accent={accentColor}
-                    icon={getBrowserEmoji(item.browser)}
-                  />
-                ))
-              )}
-            </>
-          )}
-          {locationTab === 'OS' && (
-            <>
-              {(data?.operatingSystems || []).length === 0 ? (
-                <div className="py-10 text-center text-white/20 text-xs">No data yet</div>
-              ) : (
-                (data?.operatingSystems || []).slice(0, 8).map((item, i) => (
-                  <BarRow
-                    key={i}
-                    label={item.os}
-                    value={item.visitors}
-                    max={maxOS}
-                    accent={accentColor}
-                  />
-                ))
-              )}
-            </>
-          )}
-          {locationTab === 'Device' && (
-            <>
-              {(data?.devices || []).length === 0 ? (
-                <div className="py-10 text-center text-white/20 text-xs">No data yet</div>
-              ) : (
-                (data?.devices || []).map((item, i) => (
-                  <BarRow
-                    key={i}
-                    label={item.device}
-                    value={item.visitors}
-                    max={data?.devices[0]?.visitors || 1}
-                    accent={accentColor}
-                    icon={item.device === 'Mobile' ? '📱' : item.device === 'Tablet' ? '💻' : '🖥️'}
-                  />
-                ))
-              )}
-            </>
-          )}
         </SectionCard>
-      </div>
 
-      {/* ── Block Leaderboard ── */}
-      {topBlocks.length > 0 && (
-        <SectionCard title="Block Click Leaderboard">
-          <div className="flex justify-between mb-1 px-0.5">
-            <span className="text-[9px] text-white/20 font-mono uppercase">Block</span>
-            <span className="text-[9px] text-white/20 font-mono uppercase">Clicks ↓</span>
-          </div>
-          {topBlocks.map((block, i) => (
-            <BarRow
-              key={block.id}
-              label={block.title}
-              value={block.clicks}
-              max={maxBlocks}
-              accent={accentColor}
-              sublabel={block.type}
-              icon={String(i + 1)}
-            />
-          ))}
-        </SectionCard>
-      )}
-
-      {/* ── Recent Visitors ── */}
-      <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] overflow-hidden">
-        <div className="flex items-center gap-4 px-5 pt-4 pb-3 border-b border-white/[0.05]">
-          <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Profile Visitors</span>
-          <div className="ml-auto flex items-center gap-1 text-[9px] text-white/20 font-mono">
-            <Clock size={9} /> Last 30 days
-          </div>
-        </div>
-        <div className="divide-y divide-white/[0.04]">
-          {(data?.recentVisitors || []).length === 0 ? (
-            <div className="py-12 text-center">
-              <div className="text-white/20 text-sm mb-2">No visitors tracked yet</div>
-              <div className="text-white/10 text-xs">Share your profile to start seeing visitors here</div>
+        {/* Content Leaderboard */}
+        <SectionCard title="Ranking de bloques" className="lg:col-span-1">
+             <div className="space-y-1">
+                {topBlocks.length === 0 ? (
+                    <div className="py-20 text-center text-white/10 text-[10px] font-black uppercase tracking-[0.3em]">Sin clics por ahora</div>
+                ) : (
+                    topBlocks.map((block, i) => (
+                        <BarRow
+                            key={block.id}
+                            label={block.title}
+                            value={block.clicks}
+                            max={maxBlocks}
+                            accent={accentColor}
+                            sublabel={block.type}
+                            icon={String(i + 1)}
+                        />
+                    ))
+                )}
             </div>
-          ) : (
-            <>
-              {/* Table Header */}
-              <div className="grid grid-cols-3 px-5 py-2 text-[9px] font-black uppercase tracking-[0.15em] text-white/20">
-                <span>Visitor</span>
-                <span className="hidden sm:block">Source</span>
-                <span className="text-right">Time</span>
-              </div>
-              {(data?.recentVisitors || []).slice(0, 15).map((visitor, i) => (
-                <motion.div
-                  key={visitor.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.03 }}
-                  className="grid grid-cols-3 px-5 py-3 hover:bg-white/[0.02] transition-colors"
-                >
-                  {/* Visitor info */}
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shrink-0 overflow-hidden">
-                      {visitor.visitor_avatar ? (
-                        <img src={visitor.visitor_avatar} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <Users size={14} className="text-white/20" />
-                      )}
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-white/70">
-                        {visitor.visitor_username
-                          ? `@${visitor.visitor_username}`
-                          : visitor.visitor_name
-                          ? visitor.visitor_name
-                          : 'Anonymous'}
-                      </div>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        {visitor.device && (
-                          <span className="text-[9px] text-white/20 font-mono">
-                            {visitor.device === 'Mobile' ? '📱' : visitor.device === 'Tablet' ? '💻' : '🖥️'} {visitor.os}
-                          </span>
-                        )}
-                        {visitor.browser && (
-                          <span className="text-[9px] text-white/20 font-mono">
-                            {getBrowserEmoji(visitor.browser)} {visitor.browser}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+        </SectionCard>
 
-                  {/* Source */}
-                  <div className="hidden sm:flex items-center">
-                    {visitor.referrer ? (
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded-md text-white/40 font-mono">
-                          {visitor.referrer}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-[10px] text-white/20 font-mono">Direct</span>
-                    )}
-                  </div>
+        {/* Recent Activity / Visitors */}
+        <SectionCard title="Visitas recientes" className="lg:col-span-3">
+             <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                    <thead>
+                        <tr className="border-b border-white/[0.05]">
+                            <th className="pb-4 px-2 text-[10px] font-black uppercase tracking-widest text-white/20">Usuario / ID</th>
+                            <th className="pb-4 px-2 text-[10px] font-black uppercase tracking-widest text-white/20">Fuente</th>
+                            <th className="pb-4 px-2 text-[10px] font-black uppercase tracking-widest text-white/20">Referencia tech</th>
+                            <th className="pb-4 px-2 text-[10px] font-black uppercase tracking-widest text-white/20 text-right">Tiempo</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/[0.02]">
+                        {(data?.recentVisitors || []).length === 0 ? (
+                            <tr>
+                                <td colSpan={4} className="py-16 text-center">
+                                     <Users className="w-10 h-10 text-white/5 mx-auto mb-4" />
+                                     <p className="text-white/20 text-xs font-bold uppercase tracking-widest">Aún no hay visitas registradas</p>
+                                </td>
+                            </tr>
+                        ) : (
+                            data?.recentVisitors.slice(0, 10).map((visitor, i) => (
+                                <tr key={visitor.id} className="group hover:bg-white/[0.02] transition-colors">
+                                    <td className="py-4 px-2">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shrink-0 group-hover:border-[var(--accent)]/30 transition-colors">
+                                                {visitor.visitor_avatar ? (
+                                                    <img src={visitor.visitor_avatar} className="w-full h-full object-cover" alt="" />
+                                                ) : <Users size={16} className="text-white/20" />}
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-bold text-white leading-none mb-1">
+                                                    {visitor.visitor_username ? `@${visitor.visitor_username}` : (visitor.visitor_name || 'Anonymous Visitor')}
+                                                </span>
+                                                <span className="text-[9px] font-mono text-white/20 uppercase tracking-tighter">{visitor.id.slice(0, 8)}...</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="py-4 px-2">
+                                        {visitor.referrer ? (
+                                            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-white/5 border border-white/5 group-hover:bg-white/10 transition-colors">
+                                                <span className="text-[10px] font-black text-white/50 uppercase tracking-tight">{visitor.referrer}</span>
+                                            </div>
+                                        ) : (
+                                            <span className="text-[10px] text-white/20 font-mono">Direct/Social</span>
+                                        )}
+                                    </td>
+                                    <td className="py-4 px-2">
+                                        <div className="flex items-center gap-3">
+                                            {visitor.device && <span className="text-[10px] text-white/40">{visitor.device === 'Mobile' ? '📱' : '🖥️'} {visitor.os}</span>}
+                                            <div className="w-1 h-1 rounded-full bg-white/10" />
+                                            {visitor.browser && <span className="text-[10px] text-white/40">{getBrowserEmoji(visitor.browser)} {visitor.browser}</span>}
+                                        </div>
+                                    </td>
+                                    <td className="py-4 px-2 text-right">
+                                        <span className="text-xs font-mono text-white/30 font-bold">{timeAgo(visitor.created_at)}</span>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+             </div>
+             
+             <div className="mt-8 flex justify-center">
+                 <button className="flex items-center gap-2 text-[10px] font-black text-white/20 hover:text-white/60 transition-colors uppercase tracking-[0.3em] group">
+                    Ver historial completo <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
+                 </button>
+             </div>
+        </SectionCard>
 
-                  {/* Time */}
-                  <div className="flex items-center justify-end">
-                    <span className="text-[10px] text-white/30 font-mono">{timeAgo(visitor.created_at)}</span>
-                  </div>
-                </motion.div>
-              ))}
-            </>
-          )}
-        </div>
       </div>
 
-      {/* ── Pro Tip ── */}
-      <div className="flex items-center gap-4 p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-        <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-          style={{ backgroundColor: accentColor + '15', border: `1px solid ${accentColor}30` }}
-        >
-          <TrendingUp className="w-4 h-4" style={{ color: accentColor }} />
+      {/* ── CTA / Tip ── */}
+      <div className="relative p-10 rounded-[2.5rem] bg-gradient-to-br from-white/[0.03] to-transparent border border-white/5 overflow-hidden group">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--accent)]/10 blur-[80px] rounded-full group-hover:bg-[var(--accent)]/20 transition-colors pointer-events-none" />
+        <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
+             <div className="w-16 h-16 rounded-3xl bg-white/5 flex items-center justify-center border border-white/10 shrink-0 shadow-2xl">
+                <TrendingUp className="w-8 h-8 text-[var(--accent)]" />
+             </div>
+             <div>
+                <h4 className="text-xl font-black text-white mb-2">Maximiza tu visibilidad</h4>
+                <p className="text-[var(--text-dim)] text-sm max-w-xl leading-relaxed">
+                    Los bloques en la parte superior del perfil tienen un 40% más de interacción. 
+                    Intenta mover tus proyectos más destacados a las primeras filas para capturar la atención de los reclutadores en los primeros 3 segundos.
+                </p>
+             </div>
+             <div className="md:ml-auto">
+                 <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="btn-accent !px-8 !py-4 !rounded-2xl !text-sm font-[950] shadow-[0_0_30px_rgba(var(--accent-rgb),0.2)]">
+                    Optimizar mi board
+                 </button>
+             </div>
         </div>
-        <p className="text-xs text-white/40 leading-relaxed">
-          <span className="text-white font-bold">Pro Tip:</span>{' '}
-          Blocks at the top of your profile typically get 40% more clicks. Move your most important links up in the editor.
-        </p>
       </div>
     </motion.div>
   );

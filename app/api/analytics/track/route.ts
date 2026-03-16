@@ -6,6 +6,11 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { user_id, event_type, sub_site_id, block_id, metadata } = body;
 
+    const host = req.headers.get('host') || '';
+    if (host.includes('localhost') || host.includes('127.0.0.1')) {
+      return NextResponse.json({ success: true, ignored: true });
+    }
+
     if (!user_id || !event_type) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }

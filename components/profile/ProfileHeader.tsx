@@ -9,6 +9,7 @@ import { FollowListModal } from "@/components/social/FollowListModal";
 import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
 import { BadgeCheck, Globe, ChevronDown, ArrowUpRight, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
+import { BlockData } from "@/lib/profile-types";
 
 interface Props {
   profileId?: string;
@@ -22,8 +23,9 @@ interface Props {
   currentUserId?: string | null;
   isEnabledSocialNetwork?: boolean;
   subscriptionTier?: string;
-  subSites?: { id: string; title: string; slug: string; description?: string; avatarUrl?: string }[];
   username: string;
+  subSites?: { id: string; title: string; slug: string; description?: string; avatarUrl?: string }[];
+  blocks?: BlockData[];
   isCustomDomain?: boolean;
   isWinner?: boolean;
 }
@@ -41,6 +43,7 @@ export function ProfileHeader({
   isEnabledSocialNetwork,
   subscriptionTier,
   subSites = [],
+  blocks = [],
   username,
   isCustomDomain = false,
   isWinner = false,
@@ -49,6 +52,9 @@ export function ProfileHeader({
   const [localFollowersCount, setLocalFollowersCount] = useState(followersCount);
   const [localNominationsCount, setLocalNominationsCount] = useState(nominationsCount);
   const [isScoreOpen, setIsScoreOpen] = useState(false);
+
+  const ecosystemBlock = blocks.find(b => b.type === 'ecosystem' && b.visible) as any;
+  const hideHeaderEcosystem = ecosystemBlock?.hideHeaderEcosystem;
 
   // Sync props to state
   useEffect(() => {
@@ -88,7 +94,7 @@ export function ProfileHeader({
             <div className="flex items-center gap-2">
               <Sparkles size={14} className="text-black fill-black shrink-0" />
               <span className="text-black font-black text-[10px] uppercase tracking-[0.2em] whitespace-nowrap">
-                Builder del mes
+                Builder de la semana
               </span>
             </div>
           </motion.div>
@@ -240,7 +246,7 @@ export function ProfileHeader({
         />
       )}
 
-      {subscriptionTier === "pro" && subSites.length > 0 && (
+      {subscriptionTier === "pro" && subSites.length > 0 && !hideHeaderEcosystem && (
         <div className="mt-8 md:mt-12 backdrop-blur-xl bg-white/[0.02] border border-white/[0.05] rounded-[2rem] p-5 sm:p-6 overflow-hidden relative group">
           <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent)]/10 via-transparent to-transparent opacity-0 group-hover:opacity-50 transition-opacity duration-700 pointer-events-none" />
           

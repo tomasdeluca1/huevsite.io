@@ -57,11 +57,10 @@ export default function BlogIndexPage({
       <div className="flex flex-wrap gap-2 mb-8">
         <Link
           href="/blog"
-          className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-            !activeTag
+          className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${!activeTag
               ? "bg-[var(--accent)] text-black shadow-[0_0_20px_var(--accent-dim)]"
               : "bg-white/5 text-[var(--text-muted)] hover:bg-white/10 hover:text-white border border-white/10"
-          }`}
+            }`}
         >
           Todos
         </Link>
@@ -69,11 +68,10 @@ export default function BlogIndexPage({
           <Link
             key={tag}
             href={`/blog?tag=${tag}`}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              activeTag === tag
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${activeTag === tag
                 ? "bg-[var(--accent)] text-black shadow-[0_0_20px_var(--accent-dim)]"
                 : "bg-white/5 text-[var(--text-muted)] hover:bg-white/10 hover:text-white border border-white/10"
-            }`}
+              }`}
           >
             #{tag}
           </Link>
@@ -90,7 +88,7 @@ export default function BlogIndexPage({
               <Link href={`/blog/${post.slug}`} className="focus:outline-none">
                 {/* CSS Magic: Mapea el click a toda el area del article pero permite excepciones por z-index */}
                 <span className="absolute inset-0 z-0 rounded-[2rem]" aria-hidden="true" />
-                
+
                 <div className="relative z-10 flex items-center gap-3 text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-widest mb-3">
                   <time dateTime={post.date}>
                     {new Date(post.date).toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' })}
@@ -100,7 +98,7 @@ export default function BlogIndexPage({
                 </div>
                 <div className="relative z-10 flex gap-2 mb-2">
                   {post.tags.map(tag => (
-                     <span key={tag} className="text-[10px] uppercase font-bold text-[var(--accent)] tracking-wider">#{tag}</span>
+                    <span key={tag} className="text-[10px] uppercase font-bold text-[var(--accent)] tracking-wider">#{tag}</span>
                   ))}
                 </div>
                 <h2 className="relative z-10 text-2xl font-bold mb-2 group-hover:text-[var(--accent)] transition-colors text-white tracking-tight">

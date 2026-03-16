@@ -62,7 +62,7 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
                   animate={{ rotate: [0, 10, -10, 0] }}
                   transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
                   className="shrink-0"
-                  title="Builder del Mes"
+                  title="Builder de la Semana"
                 >
                   <Trophy size={18} className="text-[var(--accent)] drop-shadow-[0_0_8px_rgba(200,255,0,0.5)] md:w-6 md:h-6" />
                 </motion.div>

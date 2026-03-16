@@ -8,9 +8,11 @@ import {
   AchievementBlockData,
   CustomBlockData,
   CollabBlockData,
+  EcosystemBlockData,
   isDarkColor
 } from "@/lib/profile-types";
-import { ExternalLink, Award, Trophy, Star, Sparkles } from "lucide-react";
+import { ExternalLink, Award, Trophy, Star, Sparkles, Globe, ArrowUpRight } from "lucide-react";
+import Link from "next/link";
 
 import { useEffect } from "react";
 
@@ -331,6 +333,101 @@ export function CollabBlock({ data, accentColor }: { data: CollabBlockData; acce
             </a>
           </div>
         ))}
+      </div>
+    </motion.div>
+  );
+}
+
+export function EcosystemBlock({ 
+  data, 
+  accentColor, 
+  subSites = [],
+  username,
+  isCustomDomain = false
+}: { 
+  data: EcosystemBlockData; 
+  accentColor: string; 
+  subSites: any[];
+  username?: string;
+  isCustomDomain?: boolean;
+}) {
+  return (
+    <motion.div 
+      className="huevsite-block block-ecosystem h-full flex flex-col group relative overflow-hidden bg-gradient-to-br from-[var(--surface)] to-black/20"
+      whileHover={{ scale: 1.01 }}
+      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+    >
+      {/* Premium background glow */}
+      <div 
+        className="absolute -right-20 -top-20 w-64 h-64 opacity-[0.03] group-hover:opacity-[0.08] rounded-full blur-[80px] transition-opacity duration-1000"
+        style={{ backgroundColor: accentColor }}
+      />
+      
+      <div className="flex items-center justify-between mb-5 relative z-10 px-1">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-[var(--accent)]/30 transition-colors">
+            <Globe size={16} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-all duration-500" style={{ '--accent': accentColor } as any} />
+          </div>
+          <div>
+            <h3 className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-[var(--text-muted)] group-hover:text-white transition-colors">
+              {data.title || "Ecosistema"}
+            </h3>
+            <div className="h-0.5 w-4 bg-[var(--accent)]/40 mt-1 group-hover:w-full transition-all duration-700" style={{ '--accent': accentColor } as any} />
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" style={{ '--accent': accentColor } as any} />
+          <div className="text-[9px] text-[var(--text-dim)] font-mono uppercase tracking-widest px-3 py-1 bg-white/5 rounded-full border border-white/10 group-hover:border-[var(--accent)]/20 transition-colors">
+            {subSites.length} {subSites.length === 1 ? "Proyecto" : "Proyectos"}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3 relative z-10 flex-1 overflow-y-auto custom-scrollbar pr-1 pb-2">
+        {subSites.map((site: any) => {
+          const siteUrl = isCustomDomain ? `/${site.slug}` : `/${username}/${site.slug}`;
+          return (
+            <Link
+              key={site.id}
+              href={siteUrl}
+              className="group/item flex items-center gap-3.5 p-3 rounded-2xl bg-white/5 border border-white/[0.08] hover:border-[var(--accent)]/40 hover:bg-[var(--accent)]/10 hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)] transition-all duration-500 text-left relative overflow-hidden"
+              style={{ '--accent': accentColor } as any}
+            >
+              <div className="absolute top-0 right-0 w-16 h-16 bg-[var(--accent)]/10 blur-[20px] rounded-full translate-x-1/2 -translate-y-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity duration-500" />
+              
+              <div className="relative shrink-0">
+                {site.avatarUrl ? (
+                  <img src={site.avatarUrl} alt={site.title} className="w-10 h-10 rounded-xl object-cover bg-black border border-white/10 shadow-sm relative z-10 group-hover/item:scale-105 transition-transform" />
+                ) : (
+                  <div className="w-10 h-10 rounded-xl bg-black border border-white/10 flex items-center justify-center text-[var(--text-muted)] text-[10px] font-black uppercase tracking-wider relative z-10 shadow-sm group-hover/item:text-[var(--accent)] transition-colors">
+                    {site.title.substring(0, 2)}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col min-w-0 flex-1 relative z-10 justify-center">
+                <span className="text-[13px] font-bold text-white group-hover/item:text-[var(--accent)] transition-colors truncate w-full leading-tight mb-0.5">
+                  {site.title}
+                </span>
+                {site.description && (
+                  <span className="text-[10px] text-[var(--text-muted)] truncate w-full group-hover/item:text-[var(--text-dim)] transition-colors leading-tight block">
+                    {site.description}
+                  </span>
+                )}
+              </div>
+              
+              <div className="w-7 h-7 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/5 group-hover/item:bg-[var(--accent)] group-hover/item:border-[var(--accent)] group-hover/item:text-black transition-all duration-300 relative z-10 shadow-sm">
+                 <ArrowUpRight size={12} className="opacity-0 group-hover/item:opacity-100 transition-all transform scale-50 group-hover/item:scale-100" />
+              </div>
+            </Link>
+          );
+        })}
+        {subSites.length === 0 && (
+          <div className="col-span-2 flex flex-col items-center justify-center py-10 opacity-40 group-hover:opacity-60 transition-opacity">
+            <Globe size={24} className="mb-2" />
+            <div className="text-[10px] font-mono uppercase tracking-widest">No hay proyectos vinculados</div>
+          </div>
+        )}
       </div>
     </motion.div>
   );

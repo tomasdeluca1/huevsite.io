@@ -283,7 +283,7 @@ function ProfileCard({ profile, index, isMobile }: { profile: ExploreProfile; in
           <div className="flex items-center gap-1.5 px-4 overflow-hidden">
             <Sparkles size={11} className="text-black fill-black shrink-0" />
             <span className="text-black font-black text-[9px] uppercase tracking-[0.15em] whitespace-nowrap">
-              {(isHovered || isMobile) ? "Builder del mes" : "Destacado"}
+              {(isHovered || isMobile) ? "Builder de la semana" : "Destacado"}
             </span>
           </div>
         </motion.div>

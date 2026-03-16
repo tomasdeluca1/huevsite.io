@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { postBuilderOfTheWeek } from "@/lib/twitter";
+import { resolveXHandles } from "@/lib/twitter-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -60,6 +62,51 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (error) throw error;
+
+      // Publicar en X (Twitter)
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("username, name")
+          .eq("id", userId)
+          .single();
+        
+        if (profile) {
+          // Obtener otros nominados para el tweet
+          const { data: nominations } = await supabase
+            .from("showcase_nominations")
+            .select(`
+              user_id,
+              user:profiles!showcase_nominations_user_id_fkey (username)
+            `)
+            .eq("week", week);
+          
+          const counts = (nominations ?? []).reduce<Record<string, { count: number; username: string }>>((acc, n: any) => {
+            if (n.user_id === userId) return acc;
+            if (!acc[n.user_id]) acc[n.user_id] = { count: 0, username: n.user?.username || "unknown" };
+            acc[n.user_id].count++;
+            return acc;
+          }, {});
+
+          const finalists = Object.values(counts)
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 3);
+
+          const allUsernames = [profile.username, ...finalists.map(f => f.username)];
+          const mentionsMap = await resolveXHandles(allUsernames);
+
+          const winnerMention = mentionsMap[profile.username];
+          const finalistsWithMentions = finalists.map(f => ({
+            mention: mentionsMap[f.username] || `@${f.username}`,
+            count: f.count
+          }));
+
+          await postBuilderOfTheWeek(winnerMention, week, profile.name || undefined, finalistsWithMentions);
+        }
+      } catch (twitterErr) {
+        console.error("Error publicando en X:", twitterErr);
+      }
+
       return NextResponse.json({ success: true, action: 'added', winner: data });
     }
   } catch (error: any) {

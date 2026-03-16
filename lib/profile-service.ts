@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { ProfileData, BlockData } from './profile-types';
+import { ProfileData, BlockData, getAdjustedAccentColor } from './profile-types';
 import { scoreService } from './score-service';
 
 async function getServerClient() {
@@ -155,7 +155,7 @@ export const profileService = {
       tagline: profile.tagline || "",
       avatarUrl: profile.image || "",
       githubHandle: profile.github_handle || "",
-      accentColor: profile.accent_color as any,
+      accentColor: getAdjustedAccentColor(profile.accent_color as any),
       subscriptionTier: (profile.subscription_tier === 'pro' || !!profile.pro_since) ? 'pro' : 'free',
       extraBlocksFromShare: profile.extra_blocks_from_share || 0,
       twitterShareUnlocked: profile.twitter_share_unlocked || false,

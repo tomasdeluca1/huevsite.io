@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { BadgeCheck, Trophy } from "lucide-react";
-import { HeroBlockData } from "@/lib/profile-types";
+import { HeroBlockData, getContrastColor } from "@/lib/profile-types";
 
 interface Props {
   data: HeroBlockData;
@@ -38,8 +38,11 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
               style={{ backgroundColor: accentColor }}
             />
             <div
-              className={`hero-avatar w-14 h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 border-2 shadow-xl rounded-full flex items-center justify-center font-black text-black overflow-hidden relative z-10 ${isWinner ? 'border-[var(--accent)]' : 'border-white/10'}`}
-              style={{ background: avatarUrl ? 'transparent' : `linear-gradient(135deg, ${accentColor}, #00FF88)` }}
+              className={`hero-avatar w-14 h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 border-2 shadow-xl rounded-full flex items-center justify-center font-black overflow-hidden relative z-10 ${isWinner ? 'border-[var(--accent)]' : 'border-white/10'}`}
+              style={{ 
+                background: avatarUrl ? 'transparent' : `linear-gradient(135deg, ${accentColor}, #00FF88)`,
+                color: getContrastColor(accentColor)
+              }}
             >
               {avatarUrl ? (
                 <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />

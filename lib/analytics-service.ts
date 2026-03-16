@@ -140,27 +140,32 @@ export const analyticsService = {
         .select('visitor_id, created_at, metadata')
         .eq('user_id', userId)
         .eq('event_type', 'page_view')
+        .not('visitor_id', 'in', '("127.0.0.1","::1","localhost")')
         .gte('created_at', thirtyDaysAgo.toISOString()),
       supabaseAdmin
         .from('analytics_events')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
+        .not('visitor_id', 'in', '("127.0.0.1","::1","localhost")')
         .eq('event_type', 'page_view'),
       supabaseAdmin
         .from('analytics_events')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
+        .not('visitor_id', 'in', '("127.0.0.1","::1","localhost")')
         .eq('event_type', 'block_click'),
       supabaseAdmin
         .from('analytics_events')
         .select('block_id')
         .eq('user_id', userId)
         .eq('event_type', 'block_click')
+        .not('visitor_id', 'in', '("127.0.0.1","::1","localhost")')
         .not('block_id', 'is', null),
       supabaseAdmin
         .from('profile_visitors')
         .select('id, profile_id, visitor_id, visitor_user_id, visitor_username, visitor_name, visitor_avatar, country, city, referrer, user_agent, browser, os, device, created_at')
         .eq('profile_id', userId)
+        .not('visitor_id', 'in', '("127.0.0.1","::1","localhost")')
         .gte('created_at', thirtyDaysAgo.toISOString())
         .order('created_at', { ascending: false })
         .limit(20),
@@ -169,6 +174,7 @@ export const analyticsService = {
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
         .eq('event_type', 'page_view')
+        .not('visitor_id', 'in', '("127.0.0.1","::1","localhost")')
         .gte('created_at', fiveMinutesAgo.toISOString())
     ]);
 

@@ -7,7 +7,7 @@ import { GitHubBlock } from "@/components/blocks/GitHubBlock"
 import { ProjectBlock } from "@/components/blocks/ProjectBlock"
 import { MetricBlock, SocialBlock, CVBlock } from "@/components/blocks/Widgets"
 import { StackBlock, CommunityBlock, WritingBlock } from "@/components/blocks/ExtraBlocks"
-import { MediaBlock, CertificationBlock, AchievementBlock, CustomBlock, CollabBlock } from "@/components/blocks/NewBlocks"
+import { MediaBlock, CertificationBlock, AchievementBlock, CustomBlock, CollabBlock, EcosystemBlock } from "@/components/blocks/NewBlocks"
 import type { BlockData } from "@/lib/profile-types"
 import { trackClick } from "@/components/analytics/AnalyticsTracker"
 
@@ -20,9 +20,12 @@ interface ProfileGridProps {
   userId?: string
   subSiteId?: string
   isWinner?: boolean
+  subSites?: any[]
+  username?: string
+  isCustomDomain?: boolean
 }
 
-export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscriptionTier, userId, subSiteId, isWinner = false }: ProfileGridProps) {
+export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscriptionTier, userId, subSiteId, isWinner = false, subSites = [], username, isCustomDomain = false }: ProfileGridProps) {
   // Filtrar solo bloques visibles y ordenar
   const visibleBlocks = blocks
     .filter(block => block.visible)
@@ -75,6 +78,8 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscri
         return <CustomBlock {...props} />
       case "collab":
         return <CollabBlock {...props} />
+      case "ecosystem":
+        return <EcosystemBlock {...props} subSites={subSites} username={username} isCustomDomain={isCustomDomain} />
       default:
         return null
     }

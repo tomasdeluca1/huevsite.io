@@ -285,7 +285,7 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
           </div>
 
           {/* Board content — all boards rendered, non-current are hidden with opacity */}
-          <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-hide relative">
+          <div className="flex-1 min-h-0 relative">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentProfile.id || currentIndex}
@@ -294,7 +294,7 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
                 animate="center"
                 exit="exit"
                 transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="w-full absolute inset-0 overflow-y-auto overflow-x-hidden scrollbar-hide"
+                className="w-full absolute inset-0 overflow-y-auto overflow-x-hidden custom-scrollbar overscroll-y-auto"
               >
                 <div className="winner-showcase-grid w-full p-4 md:p-6 overflow-hidden">
                   <ProfileGrid
@@ -302,9 +302,11 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
                     accentColor={currentProfile.accent_color}
                     displayName={currentProfile.name || currentProfile.username}
                     tagline={currentProfile.tagline || undefined}
+                    subSites={currentProfile.sub_sites}
+                    username={currentProfile.username}
                   />
 
-                  {currentProfile.sub_sites && currentProfile.sub_sites.length > 0 && (
+                  {currentProfile.sub_sites && currentProfile.sub_sites.length > 0 && !currentProfile.blocks.some((b: any) => b.type === 'ecosystem' && b.visible) && (
                     <div className="mt-8 md:mt-12 backdrop-blur-xl bg-white/[0.02] border border-white/[0.05] rounded-[2rem] p-5 sm:p-6 overflow-hidden relative group">
                       <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent)]/10 via-transparent to-transparent opacity-0 group-hover:opacity-50 transition-opacity duration-700 pointer-events-none" />
                       

@@ -218,6 +218,7 @@ export default async function ProfilePage({ params }: Props) {
           isEnabledSocialNetwork={isEnabled("socialNetwork")}
           subscriptionTier={profile.subscriptionTier}
           subSites={profile.subSites}
+          blocks={profile.blocks}
           username={profile.username}
           isCustomDomain={isCustomDomain}
           isWinner={profile.isWinner}
@@ -233,6 +234,9 @@ export default async function ProfilePage({ params }: Props) {
             subscriptionTier={profile.subscriptionTier}
             userId={profile.id}
             isWinner={profile.isWinner}
+            subSites={profile.subSites}
+            username={username}
+            isCustomDomain={isCustomDomain}
           />
         </div>
 

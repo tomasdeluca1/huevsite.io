@@ -12,7 +12,7 @@ export const EmailLayout: React.FC<EmailLayoutProps> = ({ children, previewText 
     fontFamily: 'system-ui, -apple-system, sans-serif',
     padding: '40px 20px',
     borderRadius: '16px',
-    maxWidth: '600px',
+    maxWidth: '660px',
     margin: '0 auto',
     border: '1px solid #1a1a1a'
   }}>

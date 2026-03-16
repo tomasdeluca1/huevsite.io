@@ -38,6 +38,7 @@
     "remark-gfm": "^4.0.1",
     "resend": "^6.9.2",
     "tailwind-merge": "^2.2.1",
+    "twitter-api-v2": "^1.29.0",
     "unist-util-visit": "^5.1.0"
   },
   "devDependencies": {

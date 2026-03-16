@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Trophy, Loader2, CheckCircle2, AlertCircle, Trash2, Archive, RotateCcw, X, LogIn } from "lucide-react";
+import { Trophy, Loader2, CheckCircle2, AlertCircle, Trash2, Archive, RotateCcw, X, LogIn, Share2 } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
@@ -44,6 +44,7 @@ export default function AdminPage() {
   const [loadingFeedbacks, setLoadingFeedbacks] = useState(false);
   const [settingWinner, setSettingWinner] = useState<string | null>(null);
   const [feedbackMsg, setFeedbackMsg] = useState<{ type: "ok" | "err"; msg: string } | null>(null);
+  const [postingLeaderboard, setPostingLeaderboard] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -144,6 +145,26 @@ export default function AdminPage() {
     }
   };
 
+  const handlePostLeaderboard = async () => {
+    if (!confirm(`¿Seguro que querés publicar el Ranking actual en X?`)) return;
+    setPostingLeaderboard(true);
+    try {
+      const res = await fetch("/api/admin/twitter/post-leaderboard", {
+        method: "POST",
+      });
+      if (res.ok) {
+        setFeedbackMsg({ type: "ok", msg: `Ranking publicado con éxito! 🔥` });
+      } else {
+        const json = await res.json();
+        setFeedbackMsg({ type: "err", msg: json.error || "Error al publicar ranking" });
+      }
+    } catch (error) {
+      setFeedbackMsg({ type: "err", msg: "Error de conexión" });
+    } finally {
+      setPostingLeaderboard(false);
+    }
+  };
+
   if (checking) {
     return (
       <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center font-display">
@@ -214,6 +235,26 @@ export default function AdminPage() {
           <div className="p-5 rounded-2xl bg-[var(--surface)] border border-[var(--border)]">
             <div className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-widest mb-1">Semana</div>
             <div className="font-bold font-mono text-lg">{data.week}</div>
+          </div>
+
+          <div className="flex gap-4 p-5 rounded-2xl bg-[var(--surface)] border border-[var(--border)] items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
+                <Trophy size={20} />
+              </div>
+              <div>
+                <p className="font-bold text-sm">Postear Ranking</p>
+                <p className="text-[10px] text-[var(--text-dim)] font-mono">Publica el top de builders actual en X (automático según espacio)</p>
+              </div>
+            </div>
+            <button
+              onClick={handlePostLeaderboard}
+              disabled={postingLeaderboard}
+              className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-bold transition-all flex items-center gap-2 border border-white/5"
+            >
+              {postingLeaderboard ? <Loader2 size={12} className="animate-spin" /> : <Share2 size={12} />}
+              Publicar
+            </button>
           </div>
 
           {/* Winner(s) actual(es) */}
@@ -390,7 +431,7 @@ export default function AdminPage() {
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-mono font-bold text-white/30">{fb.user_email}</span>
                           <div className="flex items-center gap-2">
-                            <span className="text-[9px] font-mono bg-white/5 text-white/30 px-2 py-0.5 rounded-full uppercase">Completado</span>
+                            <span className="text-[10px] font-mono bg-white/5 text-white/30 px-2 py-0.5 rounded-full uppercase">Completado</span>
                             <button
                               onClick={() => handleUpdateFeedbackStatus(fb.id, 'pending')}
                               className="p-1.5 rounded-lg hover:bg-white/5 text-[var(--text-muted)] hover:text-white transition-colors"

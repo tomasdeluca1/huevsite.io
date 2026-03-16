@@ -6,6 +6,8 @@ import { render } from "@react-email/render";
 import { getWeekString } from "@/lib/showcase-service";
 import { WinnerEmail } from "@/components/emails/WinnerEmail";
 import React from "react";
+import { postBuilderOfTheWeek } from "@/lib/twitter";
+import { resolveXHandles } from "@/lib/twitter-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -13,28 +15,54 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Para obtener la semana anterior (útil si el cron corre apenas empieza la nueva)
 function getPreviousWeek(): string {
-  const prev = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  return getWeekString(prev);
+  // Si corre el Lunes a la madrugada, "ayer" siempre es parte de la semana que queremos cerrar.
+  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  return getWeekString(yesterday);
 }
 
 async function isAdmin(request: NextRequest, secret: string | null) {
   // 1. Check for Cron/Admin secrets first (for automated jobs)
   const authHeader = request.headers.get("authorization");
-  if (authHeader === `Bearer ${process.env.CRON_SECRET}`) return true;
-  if (secret && secret === process.env.ADMIN_SECRET) return true;
+  
+  // Vercel Crons send "Bearer <token>"
+  if (process.env.CRON_SECRET && authHeader === `Bearer ${process.env.CRON_SECRET}`) {
+    console.log("Authenticated via CRON_SECRET");
+    return true;
+  }
+  
+  if (secret && secret === process.env.ADMIN_SECRET) {
+    console.log("Authenticated via ADMIN_SECRET query param");
+    return true;
+  }
 
   // 2. Check for User session (for manual trigger)
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return false;
+  // We use the service role client here to check the profile, to avoid cookie issues in some environments
+  const supabase = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+  
+  // For manual triggers, we might still have a session if called from the same browser
+  // But usually this will be called via curl or cron
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', user.id)
+      .single();
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('username')
-    .eq('id', user.id)
-    .single();
+    if (profile?.username === 'huevsite') {
+      console.log("Authenticated via user session:", profile.username);
+      return true;
+    }
+  }
 
-  return profile?.username === 'huevsite';
+  console.warn("Authentication failed for pick-winner cron", { 
+    hasAuthHeader: !!authHeader, 
+    hasSecret: !!secret 
+  });
+  return false;
 }
 
 async function handlePickWinner(request: NextRequest) {
@@ -110,6 +138,19 @@ async function handlePickWinner(request: NextRequest) {
       return NextResponse.json({ error: "No se encontró el perfil de los ganadores." }, { status: 404 });
     }
 
+    // Getting top nominees for Twitter
+    const sortedVotes = Object.entries(votes).sort((a, b) => b[1] - a[1]);
+    const topNomineeIds = sortedVotes.slice(0, 5).map(([id]) => id);
+    const { data: topNomineeProfiles } = await supabase
+      .from("profiles")
+      .select("id, username")
+      .in("id", topNomineeIds);
+    
+    const finalistsForTweet = sortedVotes.slice(0, 5).map(([id, count]) => {
+      const p = topNomineeProfiles?.find(tp => tp.id === id);
+      return { username: p?.username || "unknown", count };
+    }).filter(f => f.username !== "unknown");
+
     // 4. Ejecutar función RPC que realiza todas las inserciones/borrados DB de forma segura
     const { error: rpcError } = await supabase.rpc('admin_pick_winner', {
       p_week: week,
@@ -132,6 +173,7 @@ async function handlePickWinner(request: NextRequest) {
 
     for (const winnerProfile of winnerProfiles) {
       try {
+        console.log(`Buscando email para ${winnerProfile.username}...`);
         const { data: authUser, error: authError } = await adminClient.auth.admin.getUserById(winnerProfile.id);
 
         if (authError || !authUser?.user?.email) {
@@ -163,6 +205,31 @@ async function handlePickWinner(request: NextRequest) {
         console.error(`❌ Error enviando email a ${winnerProfile.username}:`, emailErr);
         emailResults.push({ username: winnerProfile.username, sent: false, error: emailErr?.message });
       }
+    }
+
+    // 6. Publicar en X (Twitter)
+    try {
+      const allUsernames = [...winnerProfiles.map(w => w.username), ...finalistsForTweet.map(f => f.username)];
+      const mentionsMap = await resolveXHandles(allUsernames);
+
+      for (const winnerProfile of winnerProfiles) {
+        console.log(`Publicando en X para ${winnerProfile.username}...`);
+        const winnerMention = mentionsMap[winnerProfile.username];
+        
+        // We filter out the winner from the finalists for the "Top 3 was" list
+        const otherFinalists = finalistsForTweet
+          .filter(f => f.username !== winnerProfile.username)
+          .map(f => ({
+            mention: mentionsMap[f.username] || `@${f.username}`,
+            count: f.count
+          }));
+
+        await postBuilderOfTheWeek(winnerMention, week, winnerProfile.name || undefined, otherFinalists);
+        console.log(`✅ Tweet enviado para ${winnerProfile.username}`);
+      }
+    } catch (twitterErr: any) {
+      console.error("❌ Error publicando en X:", twitterErr);
+      // No fallamos toda la request si falla Twitter
     }
 
     return NextResponse.json({

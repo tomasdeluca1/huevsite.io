@@ -70,7 +70,14 @@ export type BlockType =
   | "certification"
   | "achievement"
   | "collab"
+  | "ecosystem"
   | "custom";
+
+export interface EcosystemBlockData extends BaseBlock {
+  type: "ecosystem";
+  title?: string;
+  hideHeaderEcosystem?: boolean;
+}
 
 export interface BaseBlock {
   id: string;
@@ -223,6 +230,7 @@ export type BlockData =
   | CertificationBlockData
   | AchievementBlockData
   | CollabBlockData
+  | EcosystemBlockData
   | CustomBlockData;
 
 export interface SubSite {

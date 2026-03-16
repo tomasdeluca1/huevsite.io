@@ -54,7 +54,7 @@ export default function ShowcasePage() {
           </h1>
           <p className="section-sub mx-auto max-w-md mb-6">
             El builder más nominado de Argentina y LATAM.<br />
-            {data?.week && <span className="font-mono text-xs text-[var(--accent)]">{data.week}</span>}
+            {data?.winners?.[0]?.week && <span className="font-mono text-xs text-[var(--accent)]">Edición {data.winners[0].week}</span>}
           </p>
 
           <div className="inline-flex flex-col items-center p-4 rounded-2xl bg-[var(--surface)] border border-[var(--border)]">
@@ -155,7 +155,7 @@ export default function ShowcasePage() {
             {/* Finalists */}
             {data.finalists.length > 0 && (
               <div>
-                <div className="section-label mb-6">// finalistas de la semana</div>
+                <div className="section-label mb-6">// nominaciones de la semana {data.week}</div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {data.finalists.map((finalist, i) => (
                     <motion.div

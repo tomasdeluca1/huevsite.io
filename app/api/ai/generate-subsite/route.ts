@@ -8,6 +8,81 @@ export const dynamic = "force-dynamic";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+function ensureAbsoluteUrl(input: string) {
+  if (!input) return "";
+  if (/^https?:\/\//i.test(input)) return input;
+  return `https://${input}`;
+}
+
+function extractFaviconCandidates(html: string, pageUrl: string) {
+  const candidates = new Set<string>();
+
+  try {
+    const origin = new URL(pageUrl).origin;
+    candidates.add(`${origin}/favicon.ico`);
+
+    const iconRegex = /<link[^>]+rel=["'][^"']*(?:icon|apple-touch-icon)[^"']*["'][^>]*href=["']([^"']+)["'][^>]*>/gi;
+    for (const match of html.matchAll(iconRegex)) {
+      const href = match[1];
+      if (!href) continue;
+      try {
+        candidates.add(new URL(href, pageUrl).toString());
+      } catch {
+        // Ignore invalid candidate URLs
+      }
+    }
+  } catch {
+    // Ignore parsing errors
+  }
+
+  return Array.from(candidates);
+}
+
+async function resolveFaviconUrl(url: string, pageHtml?: string) {
+  const normalizedUrl = ensureAbsoluteUrl(url);
+  const candidates = new Set<string>();
+
+  try {
+    const parsedUrl = new URL(normalizedUrl);
+    candidates.add(`https://www.google.com/s2/favicons?domain=${parsedUrl.hostname}&sz=128`);
+  } catch {
+    // Ignore invalid URL
+  }
+
+  for (const candidate of extractFaviconCandidates(pageHtml || "", normalizedUrl)) {
+    candidates.add(candidate);
+  }
+
+  for (const candidate of candidates) {
+    try {
+      const response = await fetch(candidate, {
+        method: "GET",
+        headers: {
+          "User-Agent": "Mozilla/5.0 huevsite favicon fetcher",
+        },
+      });
+
+      if (!response.ok) continue;
+
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.startsWith("image/")) continue;
+
+      const bytes = await response.arrayBuffer();
+      if (bytes.byteLength === 0) continue;
+
+      return {
+        sourceUrl: candidate,
+        bytes,
+        contentType,
+      };
+    } catch {
+      // Try next candidate
+    }
+  }
+
+  return null;
+}
+
 const subSiteJsonSchema = {
   type: "object",
   properties: {
@@ -92,7 +167,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Esta función es exclusiva para usuarios PRO." }, { status: 403 });
     }
 
-    const { url } = await request.json();
+    const { url: rawUrl } = await request.json();
+    const url = ensureAbsoluteUrl(rawUrl);
 
     if (!url) {
       return NextResponse.json({ error: "Falta la URL" }, { status: 400 });
@@ -129,34 +205,104 @@ export async function POST(request: NextRequest) {
     const screenshotFallback = `https://s0.wp.com/mshots/v1/${encodeURIComponent(url)}?w=1200&h=800`;
 
     // 2. Generate with OpenAI
-    const systemPrompt = `Sos un Senior Product Marketer y Designer.
-Tu misión: Transformar un sitio web en un Board de huevsite.io (Bento Box style) visualmente impactante, uniforme y extremadamente vendedor.
+    const systemPrompt = `Sos un director de producto, editor y diseñador visual especializado en transformar sitios en boards premium para huevsite.io.
 
-FILOSOFÍA: "Punk Marketing". Directo, sin rellenos corporativos, usando el "voseo" rioplatense (argentino) de forma sutil. 🚀
-ESTRUCTURA: Generarás EXACTAMENTE 8 BLOQUES para un grid de 4x3 (12 celdas).
+OBJETIVO:
+Convertir un sitio en un sub-site minimalista, descriptivo y visualmente atractivo.
+La prioridad, en este orden, es:
+1. Claridad de producto
+2. Branding
+3. Impacto visual
 
-DISTRIBUCIÓN DEL GRID (Total 12 celdas):
-- 1x HERO (2x2) = 4 celdas. "Pitch demoledor".
-- 1x PROJECT (2x1) = 2 celdas. "Wow factor visual".
-- 1x MEDIA (1x1) = 1 celda. "Social proof visual (OG Image)".
-- 2x METRIC (1x1 each) = 2 celdas. "Data-driven trust".
-- 1x BUILDING (1x1) = 1 celda. "Under the hood / Stack".
-- 1x CUSTOM (1x1) = 1 celda. "USP (Unique Selling Proposition)".
-- 1x CUSTOM (1x1) = 1 celda. "CTA / Final impact".
+AUDIENCIA:
+Builders, founders, inversores y clientes potenciales.
 
-REGLAS:
-1. No inventes números. Usá métricas de velocidad/fricción si no hay stats reales.
-2. HERO: El tagline debe ser una bofetada de claridad. "[Qué es] + [Propósito] + [Resultado]".
-3. IMÁGENES: Prioridad absoluta a la OG Image detectada.
+ESTILO:
+- Español neutro
+- Sobrio y premium
+- Minimalista, con edge y personalidad
+- Titulares cortos de alto impacto
+- Descripciones de una sola línea, con máxima precisión
 
-Respondés SIEMPRE con JSON válido según el schema.`;
+PROHIBIDO:
+- Hype
+- Claims inventados
+- Emojis
+- Frases marketineras vacías
+- Jerga inflada tipo "revoluciona", "game changer", "next-gen", "innovador" sin sustancia
 
-    const userPrompt = `Analizá este producto/sitio y creá un board de 12 celdas (4x3):
-URL: ${url}
-OG Image detectada: ${ogImageUrl}
-Screenshot fallback: ${screenshotFallback}
+ESTRUCTURA:
+Debes generar EXACTAMENTE 8 bloques para un grid 4x3:
+1. HERO (2x2)
+2. PROJECT (2x1)
+3. MEDIA (1x1)
+4. METRIC (1x1)
+5. METRIC (1x1)
+6. BUILDING (1x1)
+7. CUSTOM (1x1)
+8. CUSTOM (1x1)
 
-ESTRUCTURA REQUERIDA (8 bloques en orden exacto):
+JERARQUÍA VISUAL:
+- HERO: identidad + propuesta de valor más clara posible.
+- PROJECT: la pieza visual principal del producto.
+- METRICS: prueba concreta o señal objetiva.
+- BUILDING: stack, arquitectura o cómo está construido.
+- CUSTOM: diferenciador real, CTA sobrio o social proof.
+
+REGLAS DE ESCRITURA:
+1. Extraé la verdad central del producto. Si no está clara, simplificala.
+2. El title de cada bloque debe ser corto, limpio y escaneable.
+3. La description debe ser una sola línea. Sin párrafos.
+4. No inventes números, usuarios, revenue, tracción ni logos.
+5. Si no hay métricas reales, usá métricas de performance, velocidad, cobertura o resultado solo si están explícitas o pueden inferirse de forma defensible del contenido.
+6. Si una inferencia no es sólida, no la uses.
+7. Evitá repetir la misma idea en varios bloques.
+8. Cada bloque debe aportar una capa distinta: qué es, qué muestra, qué valida, cómo está hecho, por qué importa.
+9. Menos palabras es mejor. Precisión antes que adorno.
+10. El resultado debe sentirse editorial, tecnológico y premium.
+
+REGLAS POR BLOQUE:
+- HERO:
+  - title: nombre del producto o marca
+  - description: una línea con fórmula "[qué es] + [para quién o para qué] + [resultado]"
+- PROJECT:
+  - mostrar el núcleo visual del producto
+  - title corto
+  - description: qué hace esa pieza visual o demo
+- MEDIA:
+  - usar la imagen más fuerte disponible
+  - title y description discretos, nunca protagonistas
+- METRIC:
+  - label en mayúsculas, una palabra
+  - value corto y visual
+  - solo datos reales o inferencias muy conservadoras
+- BUILDING:
+  - mostrar stack, sistema o capacidad técnica real
+  - priorizar tecnologías conocidas y concretas
+- CUSTOM:
+  - uno debe funcionar como diferenciador o social proof si existe
+  - el otro puede funcionar como CTA sobrio o conclusión de producto
+
+REGLAS VISUALES:
+- Debe sentirse aireado, no cargado
+- Debe favorecer bloques con pocas palabras
+- Debe parecer diseñado, no escrito por marketing
+- Referencia estética: premium, precisa, con personalidad técnica
+
+Respondé SIEMPRE con JSON válido según el schema.`;
+
+    const userPrompt = `Analizá este sitio y convertí su esencia en un board premium de huevsite.io.
+
+REFERENCIAS DE CALIDAD:
+- huevsite.io/huevsite
+- huevsite.io/galfrevn
+
+CONTEXTO:
+- URL: ${url}
+- OG Image detectada: ${ogImageUrl || "No detectada"}
+- Screenshot fallback: ${screenshotFallback}
+
+ESTRUCTURA OBLIGATORIA Y ORDEN EXACTO:
 1. Hero (2x2)
 2. Project (2x1)
 3. Media (1x1) - Usar ${ogImageUrl || screenshotFallback}
@@ -166,9 +312,24 @@ ESTRUCTURA REQUERIDA (8 bloques en orden exacto):
 7. Custom (1x1)
 8. Custom (1x1)
 
-═══════════════════════════════════════
+CRITERIO EDITORIAL:
+- Primero entendé el producto.
+- Después condensalo.
+- Después diseñá el relato visual.
+- El output debe leerse en segundos.
+- Cada bloque debe poder sostenerse por sí solo.
+- Si una idea no suma claridad o valor percibido, no entra.
+
+CHECKLIST ANTES DE RESPONDER:
+- ¿El HERO explica el producto con claridad inmediata?
+- ¿El PROJECT muestra algo visualmente atractivo del producto?
+- ¿Las métricas son reales o extremadamente conservadoras?
+- ¿El BUILDING dice algo técnico concreto?
+- ¿Los CUSTOM agregan diferenciación, prueba o cierre útil?
+- ¿Todo suena sobrio, preciso y premium?
+- ¿Hay pocas palabras y alta densidad de señal?
+
 CONTENIDO DEL SITIO:
-═══════════════════════════════════════
 ${truncatedContent.substring(0, 10000)}`;
 
     const completion = await openai.chat.completions.create({
@@ -193,17 +354,26 @@ ${truncatedContent.substring(0, 10000)}`;
     let faviconUrl = "";
     try {
       const parsedUrl = new URL(url);
-      const googleFaviconUrl = `https://www.google.com/s2/favicons?domain=${parsedUrl.hostname}&sz=128`;
-      const faviconRes = await fetch(googleFaviconUrl);
-      if (faviconRes.ok) {
-        const faviconBuffer = await faviconRes.arrayBuffer();
-        const contentType = faviconRes.headers.get("content-type") || "image/png";
-        const slugForPath = (aiData.slug || parsedUrl.hostname).replace(/[^a-z0-9-]/g, "-");
-        const storagePath = `${user.id}/subsites/${slugForPath}-favicon.png`;
+      const resolvedFavicon = await resolveFaviconUrl(url);
 
-        await supabase.storage.from("assets").upload(storagePath, faviconBuffer, { contentType, upsert: true });
-        const { data: { publicUrl } } = supabase.storage.from("assets").getPublicUrl(storagePath);
-        faviconUrl = publicUrl;
+      if (resolvedFavicon) {
+        faviconUrl = resolvedFavicon.sourceUrl;
+
+        const extension = resolvedFavicon.contentType.split("/")[1]?.split(";")[0] || "png";
+        const slugForPath = (aiData.slug || parsedUrl.hostname).replace(/[^a-z0-9-]/g, "-");
+        const storagePath = `${user.id}/subsites/${slugForPath}-favicon.${extension}`;
+
+        const { error: uploadError } = await supabase.storage.from("assets").upload(storagePath, resolvedFavicon.bytes, {
+          contentType: resolvedFavicon.contentType,
+          upsert: true
+        });
+
+        if (!uploadError) {
+          const { data: { publicUrl } } = supabase.storage.from("assets").getPublicUrl(storagePath);
+          faviconUrl = publicUrl;
+        } else {
+          console.warn("Favicon upload error:", uploadError);
+        }
       }
     } catch (e) {
       console.error("Favicon error:", e);
@@ -254,8 +424,29 @@ ${truncatedContent.substring(0, 10000)}`;
         
       if (retryError) throw retryError;
       newSubSite = retryData;
+
     } else if (subSiteError) {
       throw subSiteError;
+    }
+
+    if (newSubSite?.id) {
+      const updatePayload: Record<string, string> = { source_url: url };
+      if (faviconUrl) {
+        updatePayload.avatar_url = faviconUrl;
+      }
+
+      const { data: updatedSubSite, error: avatarUpdateError } = await supabase
+        .from('sub_sites')
+        .update(updatePayload)
+        .eq('id', newSubSite.id)
+        .select()
+        .single();
+
+      if (!avatarUpdateError && updatedSubSite) {
+        newSubSite = updatedSubSite;
+      } else if (avatarUpdateError) {
+        console.warn("Could not persist sub-site avatar after insert", avatarUpdateError);
+      }
     }
 
     // 4. Save Blocks

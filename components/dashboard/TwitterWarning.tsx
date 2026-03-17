@@ -7,9 +7,10 @@ import { useState, useEffect } from "react";
 
 interface Props {
   blocks: BlockData[];
+  isSubSite?: boolean;
 }
 
-export function TwitterWarning({ blocks }: Props) {
+export function TwitterWarning({ blocks, isSubSite = false }: Props) {
   const [isVisible, setIsVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
@@ -28,7 +29,7 @@ export function TwitterWarning({ blocks }: Props) {
     (b as any).links?.some((l: any) => l.platform === 'twitter' && (l.url || l.handle))
   );
 
-  if (hasTwitter || isDismissed) return null;
+  if (isSubSite || hasTwitter || isDismissed) return null;
 
   return (
     <div className="relative md:absolute md:top-2 md:right-0 z-[1000]">

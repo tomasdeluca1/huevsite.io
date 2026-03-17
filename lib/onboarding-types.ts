@@ -36,6 +36,15 @@ export interface OnboardingState {
   usernameAvailable: boolean | null;
 }
 
+export interface OnboardingCompletionData {
+  username: string;
+  accentColor: AccentColor;
+  layout: LayoutOption;
+  roles: Role[];
+  githubHandle?: string;
+  githubData: GitHubData | null;
+}
+
 export const INITIAL_STATE: OnboardingState = {
   roles: [],
   githubConnected: false,

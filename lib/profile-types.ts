@@ -184,6 +184,7 @@ export interface MediaBlockData extends BaseBlock {
   url: string; // image or video URL
   title?: string;
   description?: string;
+  link?: string;
 }
 
 export interface CertificationBlockData extends BaseBlock {
@@ -251,6 +252,8 @@ export interface ProfileData {
   avatarUrl?: string;
   githubHandle?: string;
   accentColor: string;
+  roles?: Role[];
+  layout?: string;
   subscriptionTier: "free" | "pro";
   twitterShareUnlocked: boolean;
   extraBlocksFromShare: number;

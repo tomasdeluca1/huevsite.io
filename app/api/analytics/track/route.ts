@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { analyticsService, AnalyticsEvent } from '@/lib/analytics-service';
 
+function normalizeGeoHeader(value: string | null) {
+  if (!value) return null;
+  const normalized = value.trim();
+
+  if (!normalized || normalized.toLowerCase() === 'unknown') {
+    return null;
+  }
+
+  return normalized;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -20,6 +31,12 @@ export async function POST(req: NextRequest) {
     const visitor_id = forwardedFor ? forwardedFor.split(',')[0].trim() : 'anonymous';
     const user_agent = req.headers.get('user-agent') || '';
     const referrer = req.headers.get('referer') || '';
+    const country =
+      normalizeGeoHeader(req.headers.get('x-vercel-ip-country')) ||
+      normalizeGeoHeader(req.headers.get('cf-ipcountry'));
+    const city =
+      normalizeGeoHeader(req.headers.get('x-vercel-ip-city')) ||
+      normalizeGeoHeader(req.headers.get('x-appengine-city'));
 
     const event: AnalyticsEvent = {
       user_id,
@@ -47,6 +64,8 @@ export async function POST(req: NextRequest) {
         visitor_username: visitorUserInfo?.username || null,
         visitor_name: visitorUserInfo?.name || null,
         visitor_avatar: visitorUserInfo?.avatar || null,
+        country,
+        city,
         referrer,
         user_agent,
       });

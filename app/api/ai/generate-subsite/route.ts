@@ -22,7 +22,8 @@ function extractFaviconCandidates(html: string, pageUrl: string) {
     candidates.add(`${origin}/favicon.ico`);
 
     const iconRegex = /<link[^>]+rel=["'][^"']*(?:icon|apple-touch-icon)[^"']*["'][^>]*href=["']([^"']+)["'][^>]*>/gi;
-    for (const match of html.matchAll(iconRegex)) {
+    const matches = Array.from(html.matchAll(iconRegex));
+    for (const match of matches) {
       const href = match[1];
       if (!href) continue;
       try {
@@ -53,7 +54,7 @@ async function resolveFaviconUrl(url: string, pageHtml?: string) {
     candidates.add(candidate);
   }
 
-  for (const candidate of candidates) {
+  for (const candidate of Array.from(candidates)) {
     try {
       const response = await fetch(candidate, {
         method: "GET",

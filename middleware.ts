@@ -43,7 +43,7 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const { data: { session } } = await supabase.auth.getSession()
+  const { data: { user } } = await supabase.auth.getUser()
 
   // 2. Lógica de Dominio Custom (Multi-tenant)
   // Solo para usuarios PRO que hayan configurado su dominio
@@ -81,20 +81,20 @@ export async function middleware(request: NextRequest) {
   const isWelcome = url.pathname.startsWith('/welcome')
   const isLogin = url.pathname.startsWith('/login')
 
-  if (isDashboard && !session) {
+  if (isDashboard && !user) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  if (isLogin && session) {
+  if (isLogin && user) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
   // Solo verificar perfil en rutas que requieren configuración (evitar query extra en landing pública)
-  if (session && (isDashboard || isWelcome)) {
+  if (user && (isDashboard || isWelcome)) {
      const { data: profile } = await supabase
        .from('profiles')
        .select('username')
-       .eq('id', session.user.id)
+       .eq('id', user.id)
        .maybeSingle()
      
      if (!profile && !isWelcome) {

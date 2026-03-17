@@ -18,8 +18,9 @@ import { StepLayout } from "@/components/onboarding/StepLayout";
 import { StepAccent } from "@/components/onboarding/StepAccent";
 import { StepUsername } from "@/components/onboarding/StepUsername";
 import { OnboardingDone } from "@/components/onboarding/OnboardingDone";
+import { Suspense } from "react";
 
-export default function OnboardingPage() {
+function OnboardingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [step, setStep] = useState(0);
@@ -125,5 +126,15 @@ export default function OnboardingPage() {
         />
       )}
     </OnboardingShell>
+  );
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#050507]">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/10 border-t-white" />
+    </div>}>
+      <OnboardingContent />
+    </Suspense>
   );
 }

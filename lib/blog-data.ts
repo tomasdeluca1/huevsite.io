@@ -17,6 +17,104 @@ export interface BlogPost {
 
 const RAW_BLOG_POSTS: Omit<BlogPost, 'readingTime'>[] = [
   {
+    slug: "invita-builders-y-gana-pro-gratis",
+    title: "Ganá PRO invitando Builders: Lanzamos el Sistema de Referidos",
+    excerpt: "Queremos que la comunidad crezca. Ahora, por cada 3 amigos que se sumen a huevsite y activen su cuenta, te regalamos 3 meses de PRO gratis.",
+    date: "2026-03-17",
+    tags: ["comunidad", "referidos", "pro"],
+    author: {
+      name: "Tomas Deluca",
+      username: "huevsite",
+      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+    },
+    content: `
+huevsite.io nació para ser el punto de encuentro de los builders de LATAM. Y como sabemos que los mejores builders siempre están rodeados de gente con el mismo mindset, hoy lanzamos el **Sistema de Referidos**.
+
+## Buildeá con amigos y ganá PRO 🥚✨
+Ya no tenés que esperar para desbloquear las métricas premium o conectar tu dominio.
+
+**¿Cómo funciona?**
+1. Entrá a tu **Dashboard**.
+2. Copiá tu **Referral Code**.
+3. Compartilo con esos amigos que todavía no tienen su perfil en huevsite.
+
+Por cada **3 personas** que completen su perfil usando tu código, el sistema te va a activar automáticamente **3 meses de huevsite PRO** totalmente gratis. 
+
+## Recompensas Acumulables
+Lo mejor es que esto se suma. Si traés a 6 amigos, tenés 6 meses. Si traés a 9, tenés casi un año de suscripción PRO sin poner un solo peso. 
+
+Esta es nuestra forma de devolverle algo a los builders que están ayudando a que este ecosistema crezca día a día.
+
+**¡Buscá tu código en el Dashboard y empezá a invitar!**
+
+¡A buildeaRRR!
+    `,
+  },
+  {
+    slug: "automatizacion-x-cada-hito-cuenta",
+    title: "Tu progreso en el radar: Automatizaciones y Preview de Tweets",
+    excerpt: "Desde bienvenidas personalizadas hasta reportes semanales. Potenciamos nuestra integración con X para que el ecosistema se entere de lo que estás buildeando.",
+    date: "2026-03-17",
+    tags: ["twitter", "automatizacion", "admin"],
+    author: {
+      name: "Tomas Deluca",
+      username: "huevsite",
+      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+    },
+    content: `
+La comunidad de builders vive en X (Twitter), y huevsite.io ahora tiene una integración mucho más profunda para que tu actividad no pase desapercibida. 
+
+## Bienvenido a la Tribu
+A partir de ahora, cada vez que un builder conecte su cuenta de Twitter y cree su perfil, nuestra cuenta oficial le dará una **Bienvenida personalizada**. Es la mejor forma de empezar a ganar visibilidad desde el minuto uno.
+
+## Hitos de Comunidad
+No solo celebramos perfiles individuales. Cuando alcanzamos hitos como los **150 o 200 builders**, el sistema genera un post de celebración. ¡Cada vez somos más!
+
+## Reportes Semanales y Leaderboards
+Todos los viernes, el sistema analizará la actividad de la plataforma y publicará:
+- **Stats de la semana**: Cuántos proyectos se lanzaron y cuántos builders nuevos se sumaron.
+- **Top Builders (Non Pro)**: Queremos destacar específicamente a quienes están empezando, por eso lanzaremos rankings exclusivos de builders que no tienen el plan PRO para darles ese empujón de visibilidad que necesitan.
+
+## Control Total: Preview en Admin
+Para que nuestra comunicación sea impecable, hemos implementado un sistema de **Preview**. Ahora, antes de publicar cualquier ranking o reporte semanal en X, el equipo administrador de huevsite puede previsualizar cómo se verá el tweet exacto, confirmando que cada mención y cada dato sea perfecto antes de que el ecosistema lo vea.
+
+**¿Tu perfil ya está listo para salir en el próximo reporte semanal?**
+
+¡A buildeaRRR!
+    `,
+  },
+  {
+    slug: "insights-3-0-quien-esta-del-otro-lado",
+    title: "Insights 3.0: ¿Quién está realmente del otro lado?",
+    excerpt: "Mejoramos el panel de analíticas para darte detalles granulares sobre tus visitas: dispositivos, orígenes de tráfico y una navegación por sesiones mucho más profunda.",
+    date: "2026-03-17",
+    tags: ["analytics", "pro", "feature"],
+    author: {
+      name: "Tomas Deluca",
+      username: "huevsite",
+      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+    },
+    content: `
+Lanzamos **Insights 3.0**, la evolución definitiva de tus analiticas en huevsite.io. Si las métricas antes eran útiles, ahora son quirúrgicas.
+
+## Navegación por Sesiones
+Ya no solo vas a ver números agregados. Ahora implementamos un desglose de **Visitantes Recientes** donde podés explorar cada sesión individual:
+- **Identificados vs Anónimos**: Mirá quiénes de los que te visitan tienen perfil en huevsite y quiénes son visitas externas.
+- **Contexto Técnico Completo**: Filtramos por Navegador, Sistema Operativo y hasta el tipo de dispositivo exacto.
+- **Micro-interacciones**: Entendé qué bloques específicos cliqueó un visitante durante su sesión. Esto es oro puro para saber si tu "Proyecto Destacado" realmente está destacando.
+
+## Filtros de Tiempo Dinámicos
+Ahora podés elegir rangos específicos: las últimas 24 horas, la última semana o ver el acumulado de los últimos 3 meses. Los gráficos se ajustan automáticamente para mostrarte la granularidad (por hora o por día) que necesites.
+
+## Orígenes de Tráfico (Referrers) Precision
+Mejoramos la detección de fuentes para que sepas exactamente si vienen de un link en X, una búsqueda en Google con intención alta, o si tu perfil está siendo compartido por WhatsApp o DMs (tráfico directo).
+
+**Entrá ahora a la pestaña de Insights en tu dashboard y descubrí qué está pasando realmente en tu perfil.**
+
+¡A buildeaRRR!
+    `,
+  },
+  {
     slug: "showcase-semanal-celebrando-el-progreso-constante",
     title: "Showcase Semanal: Celebrando el progreso constante",
     excerpt: "Pasamos del 'Builder del mes' al 'Builder de la semana'. Más ganadores, más visibilidad y una integración total con X (Twitter) para que tu talento llegue más lejos.",

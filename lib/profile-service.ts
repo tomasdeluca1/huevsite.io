@@ -34,7 +34,7 @@ export const profileService = {
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('id, username, name, tagline, image, github_handle, accent_color, subscription_tier, pro_since, extra_blocks_from_share, twitter_share_unlocked, builder_score, ai_credits, custom_domain')
+      .select('id, username, name, tagline, image, github_handle, accent_color, subscription_tier, pro_since, extra_blocks_from_share, twitter_share_unlocked, builder_score, ai_credits, custom_domain, referral_code, referred_by, pro_referrals_count, referral_reward_expires_at, is_onboarding_test_user')
       .eq('username', username)
       .single();
 
@@ -103,7 +103,7 @@ export const profileService = {
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('id, username, name, tagline, image, github_handle, accent_color, subscription_tier, pro_since, extra_blocks_from_share, twitter_share_unlocked, builder_score, ai_credits, custom_domain')
+      .select('id, username, name, tagline, image, github_handle, accent_color, subscription_tier, pro_since, extra_blocks_from_share, twitter_share_unlocked, builder_score, ai_credits, custom_domain, referral_code, referred_by, pro_referrals_count, referral_reward_expires_at, is_onboarding_test_user')
       .eq('username', username)
       .single();
 
@@ -156,12 +156,24 @@ export const profileService = {
       avatarUrl: profile.image || "",
       githubHandle: profile.github_handle || "",
       accentColor: getAdjustedAccentColor(profile.accent_color as any),
-      subscriptionTier: (profile.subscription_tier === 'pro' || !!profile.pro_since) ? 'pro' : 'free',
+      subscriptionTier: (() => {
+        if (profile.subscription_tier === 'pro' || !!profile.pro_since) return 'pro';
+        if (profile.referral_reward_expires_at) {
+          const expiresAt = new Date(profile.referral_reward_expires_at);
+          if (expiresAt > new Date()) return 'pro';
+        }
+        return 'free';
+      })(),
       extraBlocksFromShare: profile.extra_blocks_from_share || 0,
       twitterShareUnlocked: profile.twitter_share_unlocked || false,
       builderScore: profile.builder_score || 0,
       aiCredits: profile.ai_credits || 0,
       customDomain: profile.custom_domain || "",
+      referralCode: profile.referral_code || "",
+      referredBy: profile.referred_by || "",
+      proReferralsCount: profile.pro_referrals_count || 0,
+      referralRewardExpiresAt: profile.referral_reward_expires_at || null,
+      isOnboardingTestUser: profile.is_onboarding_test_user || false,
       subSites: [], // Initially empty, filled by API if needed
       blocks: (blocks || []).map(b => {
         const { id, type, order, col_span, row_span, visible, ...data } = b.data || {};

@@ -2,6 +2,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
+import { postProUpgrade } from "@/lib/twitter";
+import { resolveXHandles } from "@/lib/twitter-utils";
 
 export const dynamic = 'force-dynamic';
 
@@ -94,6 +96,67 @@ export async function POST(req: NextRequest) {
                type: "pro_upgrade",
                data: { event: eventName, subscription_id: subscriptionId },
             });
+
+            // Referral Logic
+            try {
+               const { data: userData } = await supabase
+                  .from("profiles")
+                  .select("referred_by")
+                  .eq("id", userId)
+                  .single();
+
+               if (userData?.referred_by) {
+                  const referrerId = userData.referred_by;
+                  
+                  // Increment count
+                  const { data: referrer, error: refError } = await supabase.rpc('increment_pro_referrals', { user_id_param: referrerId });
+                  
+                  // If we don't have an RPC, we'll do it manually (safest if transition hasn't applied)
+                  if (refError) {
+                     const { data: currentReferrer } = await supabase
+                        .from("profiles")
+                        .select("pro_referrals_count")
+                        .eq("id", referrerId)
+                        .single();
+                     
+                     if (currentReferrer) {
+                        const newCount = (currentReferrer.pro_referrals_count || 0) + 1;
+                        const updates: any = { pro_referrals_count: newCount };
+                        
+                        if (newCount >= 3) {
+                           updates.subscription_tier = "pro";
+                           // Set expiration to 3 months from now
+                           const expiresAt = new Date();
+                           expiresAt.setMonth(expiresAt.getMonth() + 3);
+                           updates.referral_reward_expires_at = expiresAt.toISOString();
+                        }
+                        
+                        await supabase
+                           .from("profiles")
+                           .update(updates)
+                           .eq("id", referrerId);
+                     }
+                  }
+               }
+            } catch (err) {
+               console.error("Error processing referral reward:", err);
+            }
+
+            // Post to X
+            try {
+               const { data: profile } = await supabase
+                  .from("profiles")
+                  .select("username")
+                  .eq("id", userId)
+                  .single();
+
+               if (profile?.username) {
+                  const handles = await resolveXHandles([profile.username]);
+                  await postProUpgrade(profile.username, handles[profile.username]);
+               }
+            } catch (xErr) {
+               console.error("Error posting PRO upgrade to X:", xErr);
+            }
          }
       }
       // Handle Subscription Resumed

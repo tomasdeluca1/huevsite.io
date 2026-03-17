@@ -4,7 +4,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { MetricBlockData, SocialBlockData, CVBlockData, getContrastColor } from "@/lib/profile-types";
 import { SOCIAL_PLATFORMS, SocialPlatformKey } from "@/lib/social-platforms";
-import { Download } from "lucide-react";
+import { Download, Instagram, Youtube, Github, Linkedin, Twitter, MessageSquare, Send, Globe, Mail } from "lucide-react";
 
 interface MetricProps {
   data: MetricBlockData;
@@ -42,14 +42,28 @@ interface SocialProps {
 export function SocialBlock({ data, accentColor }: SocialProps) {
   const links = data.links || [];
 
-  const getIcon = (platform: string) => {
-    const p = SOCIAL_PLATFORMS[platform as SocialPlatformKey];
-    return p?.icon ?? "🔗";
+  const getIcon = (platform: string, color: string) => {
+    const size = 20;
+    switch (platform) {
+      case "instagram": return <Instagram size={size} style={{ color }} />;
+      case "youtube": return <Youtube size={size} style={{ color }} />;
+      case "github": return <Github size={size} style={{ color }} />;
+      case "linkedin": return <Linkedin size={size} style={{ color }} />;
+      case "twitter": return <span className="ml-1 text-xl">𝕏</span>
+      case "discord": return <MessageSquare size={size} style={{ color }} />;
+      case "telegram": return <Send size={size} style={{ color }} />;
+      case "website": return <Globe size={size} style={{ color }} />;
+      default: return <span className="text-lg md:text-xl">{SOCIAL_PLATFORMS[platform as SocialPlatformKey]?.icon || "🔗"}</span>;
+    }
+  };
+
+  const getPlatformData = (platform: string) => {
+    return SOCIAL_PLATFORMS[platform as SocialPlatformKey];
   };
 
   const getLabel = (link: { platform: string; url: string; label?: string }) => {
     if (link.label) return link.label;
-    const p = SOCIAL_PLATFORMS[link.platform as SocialPlatformKey];
+    const p = getPlatformData(link.platform);
     return p?.label ?? link.platform;
   };
 
@@ -69,21 +83,36 @@ export function SocialBlock({ data, accentColor }: SocialProps) {
     >
       <div className="block-label opacity-40 uppercase tracking-[0.2em] text-[10px] mb-4">Conectemos</div>
       <div className="flex flex-col gap-2 mt-auto">
-        {links.filter(l => l.url).map((l, i) => (
-          <a
-            key={i}
-            href={formatUrl(l.url)}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-3 md:gap-4 p-3 md:p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-[var(--accent)]/30 hover:bg-[var(--accent)]/[0.06] transition-all group/item"
-          >
-            <span className="text-lg md:text-xl grayscale group-hover/item:grayscale-0 transition-all">{getIcon(l.platform)}</span>
-            <div className="flex flex-col overflow-hidden">
-              <span className="font-bold text-xs md:text-sm text-white group-hover/item:text-[var(--accent)] transition-colors line-clamp-1" style={{ color: getContrastColor(accentColor) === "#000000" ? undefined : "#ffffff" }}>{getLabel(l)}</span>
-              <span className="text-[9px] md:text-[10px] text-[var(--text-muted)] truncate opacity-50">{l.url.replace('https://', '')}</span>
-            </div>
-          </a>
-        ))}
+        {links.filter(l => l.url).map((l, i) => {
+          const pData = getPlatformData(l.platform);
+          const brandColor = (pData as any)?.brandColor || "#ffffff";
+
+          return (
+            <a
+              key={i}
+              href={formatUrl(l.url)}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-3 md:gap-4 p-3 md:p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-white/20 hover:bg-white/[0.06] transition-all group/item overflow-hidden relative"
+            >
+              <div
+                className="absolute inset-0 opacity-0 group-hover/item:opacity-[0.03] transition-opacity pointer-events-none"
+                style={{ backgroundColor: brandColor }}
+              />
+              <span className="shrink-0 transition-transform group-hover/item:scale-110 duration-300">
+                {getIcon(l.platform, brandColor)}
+              </span>
+              <div className="flex flex-col min-w-0">
+                <span className="font-bold text-xs md:text-sm text-white transition-colors line-clamp-1">
+                  {getLabel(l)}
+                </span>
+                <span className="text-[9px] md:text-[10px] text-[var(--text-muted)] truncate opacity-50 font-mono">
+                  {l.url.replace('https://', '').replace('http://', '').split('?')[0]}
+                </span>
+              </div>
+            </a>
+          );
+        })}
         {links.filter(l => l.url).length === 0 && (
           <p className="text-xs text-[var(--text-dim)] font-mono py-8 text-center opacity-40">
             // sin coordenadas

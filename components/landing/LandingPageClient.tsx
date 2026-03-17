@@ -7,6 +7,7 @@ import { WinnerSection } from "@/components/landing/WinnerSection";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
 import { Activity, Compass, Users, PlusCircle, Layout, Check, BookOpen, Globe, Link2, BarChart3, TrendingUp } from "lucide-react";
+import { PriceBanner } from "@/components/marketing/PriceBanner";
 
 interface LandingPageClientProps {
   showcaseData: any;
@@ -88,6 +89,7 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
 
   return (
     <div className="landing">
+      <PriceBanner />
       {/* NAV */}
       <nav>
         <Link href="/" className="logo">huev<span style={{ color: 'var(--accent)' }}>site</span>.io</Link>
@@ -404,9 +406,12 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
                   <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-[var(--text-muted)] mb-4 block">// suscripción pro</span>
                   <h3 className="text-3xl font-black mb-8 tracking-tighter">Desbloqueá todo</h3>
 
-                  <div className="flex items-baseline justify-center gap-1 mb-10">
+                  <div className="flex items-baseline justify-center gap-1 mb-2">
                     <span className="text-6xl font-black text-white">$5</span>
                     <span className="text-sm font-mono text-[var(--text-muted)]">USD/mes</span>
+                  </div>
+                  <div className="mb-10">
+                    <span className="text-[10px] bg-[#C8FF00] text-black px-2 py-0.5 rounded font-black uppercase">Próximamente $9</span>
                   </div>
 
                   <ul className="space-y-4 text-left mb-12 max-w-[280px] mx-auto">

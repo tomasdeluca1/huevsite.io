@@ -142,7 +142,13 @@ export async function checkAndPostWelcomeTweet(supabase: any, userId: string, bl
     cleanHandle = twitterHandle.replace('@', '');
   }
 
-  if (!cleanHandle || cleanHandle === 'twitter' || cleanHandle === 'x') return;
+  if (!cleanHandle || 
+      cleanHandle === 'twitter' || 
+      cleanHandle === 'x' || 
+      cleanHandle === 'x.com' || 
+      cleanHandle === 'twitter.com' ||
+      cleanHandle.includes('.') // Handles like "x.com" or "twitter.com"
+  ) return;
 
   try {
     // 3. Post tweet

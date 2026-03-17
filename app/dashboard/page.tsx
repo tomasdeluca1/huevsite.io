@@ -664,6 +664,8 @@ export default function DashboardPage() {
   };
 
   const handleOnboardingComplete = async (data: { name: string, tagline: string, accentColor: string, blocks?: any[] }) => {
+    const managedBlockTypes = new Set(["hero", "github", "social", "metric", "stack"]);
+
     // Optimistic update
     setProfile(prev => prev ? {
       ...prev,
@@ -689,29 +691,53 @@ export default function DashboardPage() {
         }),
       });
 
-      // 2. Create Blocks (if any)
+      // 2. Sync onboarding blocks to match the preview exactly
       if (data.blocks && data.blocks.length > 0) {
+        const existingManagedBlocks = (profile?.blocks || []).filter(block => managedBlockTypes.has(block.type));
+
+        for (const existingBlock of existingManagedBlocks) {
+          if (!data.blocks.some(block => block.type === existingBlock.type)) {
+            await fetch(`/api/blocks/${existingBlock.id}`, { method: 'DELETE' });
+          }
+        }
+
         for (const block of data.blocks) {
-          if (block.type === 'hero') continue; // Hero is part of the profile essence, not a separate block in the DB usually, or handled differently. 
-          // Actually, let's check if the user has a Hero block and update it, or create it.
-          // Usually huevsite has a Hero block by default or it's the first one.
-          
-          await fetch('/api/blocks', {
-            method: 'POST',
+          const existingBlock = existingManagedBlocks.find(candidate => candidate.type === block.type);
+          const payload = {
+            type: block.type,
+            order: block.order,
+            colSpan: block.col_span,
+            rowSpan: block.row_span,
+            visible: block.visible,
+            data: block.type === 'hero'
+              ? {
+                  name: block.name,
+                  tagline: block.tagline,
+                  avatarUrl: block.avatarUrl,
+                  status: block.status,
+                  location: block.location,
+                  description: block.description
+                }
+              : block.type === 'github'
+                ? { username: block.username, stats: block.stats }
+                : block.type === 'social'
+                  ? { links: block.links }
+                  : block.type === 'metric'
+                    ? { label: block.label, value: block.value }
+                    : block.type === 'stack'
+                      ? { items: block.items }
+                      : block
+          };
+
+          await fetch(existingBlock ? `/api/blocks/${existingBlock.id}` : '/api/blocks', {
+            method: existingBlock ? 'PATCH' : 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              type: block.type,
-              colSpan: block.col_span,
-              rowSpan: block.row_span,
-              data: block.type === 'github' ? { username: block.username, stats: block.stats } : 
-                    block.type === 'social' ? { links: block.links } :
-                    block.type === 'metric' ? { label: block.label, value: block.value } :
-                    block.type === 'stack' ? { items: block.items } : block
-            }),
+            body: JSON.stringify(payload),
           });
         }
+
         // Refresh profile after creating blocks to get real IDs
-        fetchProfile();
+        await fetchProfile();
       }
       
       localStorage.setItem("huevsite_onboarding_seen", "true");
@@ -842,18 +868,23 @@ export default function DashboardPage() {
         }}
       />
 
-      <main className="flex-1 min-w-0 h-full overflow-y-auto p-4 md:p-8 lg:p-10 relative z-0 custom-scrollbar">
-        <PriceBanner />
+      <main className="flex-1 min-w-0 h-full overflow-y-auto p-4 md:px-8 md:pb-8 md:pt-0 lg:px-10 lg:pb-10 relative z-0 custom-scrollbar">
         <style dangerouslySetInnerHTML={{
           __html: `:root { --accent: ${profile.accentColor}; --accent-dim: ${profile.accentColor}1f; --btn-border: ${isDarkColor(profile.accentColor) ? 'rgba(255,255,255,0.15)' : 'transparent'}; }`
         }} />
         <div className="absolute top-0 right-0 w-full lg:w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(var(--accent-rgb),0.03)_0%,transparent_70%)] pointer-events-none" />
 
-        <header className="flex flex-col md:flex-row md:justify-between md:items-end gap-8 mb-10 md:mb-16 max-w-[1600px] mx-auto items-center text-center md:text-left pt-6 md:pt-0 px-2 md:px-0 relative z-[999]">
+        <div className="max-w-[1600px] mx-auto relative">
+          <div className="absolute inset-x-6 top-0 h-24 md:h-32 bg-[radial-gradient(circle,rgba(var(--accent-rgb),0.12)_0%,transparent_72%)] blur-3xl pointer-events-none opacity-70" />
+          <div className="relative z-20 mb-6 md:mb-8 lg:mb-10">
+            <PriceBanner className="top-0 sm:top-2" />
+          </div>
+
+          <header className="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-6 lg:gap-8 mb-8 md:mb-12 items-center lg:text-left text-center px-2 md:px-0 relative z-[999]">
           <div className="w-full md:w-auto relative">
             <TwitterWarning blocks={profile.blocks} />
             <div className="mb-3 hidden md:block"><div className="section-label">// dashboard / {activeTab}</div></div>
-            <h2 className="text-3xl md:text-5xl font-[950] tracking-tighter leading-none">
+            <h2 className="text-3xl md:text-4xl xl:text-5xl font-[950] tracking-tighter leading-[0.94] text-balance">
               {activeTab === 'board' ? <>Armá tu <span style={{ color: profile.accentColor }}>{selectedSubSiteId ? (profile.subSites.find(s => s.id === selectedSubSiteId)?.title || "Board") : "huevsite"}</span>.</> :
                activeTab === 'insights' ? <>Tus <span style={{ color: profile.accentColor }}>Insights</span>.</> :
                activeTab === 'domain' ? <>Tu <span style={{ color: profile.accentColor }}>Dominio</span>.</> :
@@ -862,14 +893,15 @@ export default function DashboardPage() {
             </h2>
           </div>
           {activeTab === 'board' && (
-            <div className="flex items-center gap-3 w-full md:w-auto">
-              <Link href={selectedSubSiteId ? `/${profile.username}/${profile.subSites.find(s => s.id === selectedSubSiteId)?.slug}` : `/${profile.username}`} target="_blank" className="btn-premium flex-1 md:flex-none flex items-center justify-center gap-2 py-3 px-6 rounded-2xl bg-white/[0.03] border border-white/10 text-white font-bold text-sm transition-all hover:bg-white/5 hover:border-white/20"><Eye size={18} className="text-white/40" /><span>Ver</span></Link>
-              <button onClick={handleSave} disabled={isSaving} className="btn-premium flex-1 md:flex-none flex items-center justify-center gap-2 py-3 px-10 rounded-2xl text-black font-[900] text-sm transition-all shadow-xl" style={{ backgroundColor: profile.accentColor, color: getContrastColor(profile.accentColor) }}>
+            <div className="grid grid-cols-2 gap-3 w-full lg:w-auto lg:flex lg:items-center">
+              <Link href={selectedSubSiteId ? `/${profile.username}/${profile.subSites.find(s => s.id === selectedSubSiteId)?.slug}` : `/${profile.username}`} target="_blank" className="btn-premium flex items-center justify-center gap-2 py-3 px-5 lg:px-6 rounded-2xl bg-white/[0.03] border border-white/10 text-white font-bold text-sm transition-all hover:bg-white/5 hover:border-white/20 min-w-0"><Eye size={18} className="text-white/40 shrink-0" /><span>Ver</span></Link>
+              <button onClick={handleSave} disabled={isSaving} className="btn-premium flex items-center justify-center gap-2 py-3 px-6 lg:px-10 rounded-2xl text-black font-[900] text-sm transition-all shadow-xl min-w-0" style={{ backgroundColor: profile.accentColor, color: getContrastColor(profile.accentColor) }}>
                 {isSaving ? <Sparkles size={18} className="animate-spin" /> : <Save size={18} />}<span>{isSaving ? 'Guardando' : 'Guardar'}</span>
               </button>
             </div>
           )}
-        </header>
+          </header>
+        </div>
 
         <div className="max-w-[1600px] mx-auto pb-32">
           {/* DESKTOP TABS */}
@@ -879,7 +911,7 @@ export default function DashboardPage() {
                 <button 
                   key={t} 
                   onClick={() => setActiveTab(t)} 
-                  className={`px-8 py-3 rounded-[2rem] text-[10px] font-black uppercase tracking-widest transition-all relative shrink-0 ${activeTab === t ? 'text-black' : 'text-white/20 hover:text-white/60 hover:bg-white/[0.03]'}`}
+                  className={`px-4 lg:px-8 py-3 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.18em] transition-all relative shrink-0 ${activeTab === t ? 'text-black' : 'text-white/20 hover:text-white/60 hover:bg-white/[0.03]'}`}
                 >
                   {activeTab === t && (
                     <motion.div 
@@ -960,9 +992,22 @@ export default function DashboardPage() {
           <AnimatePresence mode="wait">
             {activeTab === 'board' && (
               <motion.div key="board" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }}>
+                <div className="mb-6 md:mb-8 lg:mb-10 grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_auto] gap-4 items-start">
+                  <div className="rounded-[2rem] border border-white/[0.06] bg-[linear-gradient(135deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))] px-5 py-4 md:px-6 md:py-5 shadow-[0_20px_60px_rgba(0,0,0,0.18)]">
+                    <p className="text-[10px] uppercase tracking-[0.22em] font-black text-white/25 mb-2">Board Editor</p>
+                    <p className="text-sm md:text-base text-white/65 max-w-3xl text-balance">
+                      Arrastrá bloques, ajustá su tamaño y ordená la composición para que el board se sienta consistente en mobile, tablet y desktop.
+                    </p>
+                  </div>
+                  <div className="hidden xl:flex items-center gap-2 rounded-[2rem] border border-white/[0.06] bg-white/[0.02] px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+                    <span className="inline-flex h-2.5 w-2.5 rounded-full" style={{ backgroundColor: profile.accentColor }} />
+                    {profile.blocks.length} bloques activos
+                  </div>
+                </div>
+
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                   <SortableContext items={profile.blocks.map(b => b.id)} strategy={rectSortingStrategy}>
-                    <div className="huevsite-grid min-h-[600px] p-3 sm:p-8 md:p-12 rounded-[2rem] md:rounded-[2.5rem] border border-dashed border-white/10 bg-white/[0.01]">
+                    <div className="dashboard-board-grid huevsite-grid min-h-[560px] md:min-h-[620px] p-3 sm:p-6 lg:p-8 xl:p-10 rounded-[2rem] md:rounded-[2.5rem] border border-dashed border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.008))] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                       {profile.blocks.length === 0 ? (
                         <div className="col-span-full flex flex-col items-center justify-center py-40 text-center text-white/20 font-bold uppercase tracking-widest text-sm">
                           <Plus className="mb-4 opacity-30" size={40} />

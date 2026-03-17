@@ -127,6 +127,9 @@ export default async function SubSitePage({ params }: Props) {
                         subscriptionTier={profile.subscriptionTier}
                         userId={profile.id}
                         subSiteId={profile.subSiteId}
+                        subSites={profile.subSites}
+                        username={profile.username}
+                        isCustomDomain={isCustomDomain}
                     />
                 </div>
 

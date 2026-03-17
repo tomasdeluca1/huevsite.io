@@ -8,10 +8,7 @@ import {
   MapPin, Check, Lightbulb, Bot, Eye, ChevronLeft, Save, Github, BarChart3, Share2, Layers
 } from "lucide-react";
 import { PRESET_COLORS, getContrastColor, BlockData, BlockType } from "@/lib/profile-types";
-import { HeroBlock } from "@/components/blocks/HeroBlock";
-import { GitHubBlock } from "@/components/blocks/GitHubBlock";
-import { MetricBlock, SocialBlock } from "@/components/blocks/Widgets";
-import { StackBlock } from "@/components/blocks/ExtraBlocks";
+import { ProfileGrid } from "@/components/profile/ProfileGrid";
 
 interface Props {
   isOpen: boolean;
@@ -43,7 +40,20 @@ export function OnboardingModal({
   });
   const [selectedBlockTypes, setSelectedBlockTypes] = useState<BlockType[]>(["github", "social"]);
   const [githubHandle, setGithubHandle] = useState("");
+  const [twitterHandle, setTwitterHandle] = useState("");
+  const [metricLabel, setMetricLabel] = useState("");
+  const [metricValue, setMetricValue] = useState("");
+  const [stackInput, setStackInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [githubStats, setGithubStats] = useState<{
+    stars: number;
+    repos: number;
+    followers: number;
+    topLanguages: Array<{ name: string; percent: number }>;
+  } | null>(null);
+  const [githubError, setGithubError] = useState("");
+  const [isLoadingGithubStats, setIsLoadingGithubStats] = useState(false);
+  const [stepError, setStepError] = useState("");
 
   useEffect(() => {
     setMounted(true);
@@ -57,8 +67,89 @@ export function OnboardingModal({
         tagline: initialTagline,
         accentColor: initialColor
       });
+      setSelectedBlockTypes(["github", "social"]);
+      setGithubHandle("");
+      setTwitterHandle("");
+      setMetricLabel("");
+      setMetricValue("");
+      setStackInput("");
+      setGithubStats(null);
+      setGithubError("");
+      setIsLoadingGithubStats(false);
+      setStepError("");
     }
   }, [isOpen, initialName, initialTagline, initialColor]);
+
+  useEffect(() => {
+    if (!isOpen || !selectedBlockTypes.includes("github")) {
+      setGithubStats(null);
+      setGithubError("");
+      setIsLoadingGithubStats(false);
+      return;
+    }
+
+    const normalizedHandle = githubHandle.trim().replace(/^@/, "");
+
+    if (!normalizedHandle) {
+      setGithubStats(null);
+      setGithubError("");
+      setIsLoadingGithubStats(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      setIsLoadingGithubStats(true);
+      setGithubError("");
+      try {
+        const [userResponse, reposResponse] = await Promise.all([
+          fetch(`https://api.github.com/users/${normalizedHandle}`, { signal: controller.signal }),
+          fetch(`https://api.github.com/users/${normalizedHandle}/repos?type=owner&per_page=100`, { signal: controller.signal }),
+        ]);
+
+        if (!userResponse.ok || !reposResponse.ok) {
+          throw new Error("No se pudo validar ese usuario de GitHub.");
+        }
+
+        const userData = await userResponse.json();
+        const repos = await reposResponse.json();
+
+        const publicRepos = Array.isArray(repos) ? repos : [];
+        const languageCounts = publicRepos.reduce((acc: Record<string, number>, repo: any) => {
+          if (repo?.language) acc[repo.language] = (acc[repo.language] || 0) + 1;
+          return acc;
+        }, {});
+
+        const topLanguages = Object.entries(languageCounts)
+          .sort(([, a], [, b]) => b - a)
+          .slice(0, 5)
+          .map(([name, count]) => ({
+            name,
+            percent: Math.max(10, Math.round((count / publicRepos.length) * 100) || 0)
+          }));
+
+        setGithubStats({
+          stars: publicRepos.reduce((sum: number, repo: any) => sum + (repo?.stargazers_count || 0), 0),
+          repos: publicRepos.length,
+          followers: userData.followers || 0,
+          topLanguages
+        });
+      } catch (error: any) {
+        if (error?.name === "AbortError") return;
+        setGithubStats(null);
+        setGithubError("No pudimos cargar datos reales de GitHub para ese usuario.");
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoadingGithubStats(false);
+        }
+      }
+    }, 400);
+
+    return () => {
+      controller.abort();
+      clearTimeout(timer);
+    };
+  }, [githubHandle, isOpen, selectedBlockTypes]);
 
   if (!mounted) return null;
 
@@ -77,7 +168,46 @@ export function OnboardingModal({
     }
   ];
 
+  const getValidationError = () => {
+    if (step === "identity") {
+      if (!formData.name.trim()) return "Completá tu nombre para seguir.";
+      if (!formData.tagline.trim()) return "Completá tu tagline para seguir.";
+    }
+
+    if (step === "suggestions") {
+      if (selectedBlockTypes.includes("github")) {
+        if (!githubHandle.trim()) return "Completá tu usuario de GitHub.";
+        if (isLoadingGithubStats) return "Estamos validando tu GitHub. Esperá un segundo.";
+        if (!githubStats) return githubError || "Necesitamos datos reales de GitHub para ese bloque.";
+      }
+
+      if (selectedBlockTypes.includes("social")) {
+        const hasSocialData = !!twitterHandle.trim() || !!githubHandle.trim();
+        if (!hasSocialData) return "Completá al menos una red para el bloque social.";
+      }
+
+      if (selectedBlockTypes.includes("metric")) {
+        if (!metricLabel.trim() || !metricValue.trim()) return "Completá la métrica con label y valor.";
+      }
+
+      if (selectedBlockTypes.includes("stack")) {
+        if (stackInput.split(",").map(item => item.trim()).filter(Boolean).length === 0) {
+          return "Completá al menos una tecnología para el bloque de stack.";
+        }
+      }
+    }
+
+    return "";
+  };
+
   const handleNext = () => {
+    const validationError = getValidationError();
+    if (validationError) {
+      setStepError(validationError);
+      return;
+    }
+
+    setStepError("");
     if (step === "welcome") setStep("identity");
     else if (step === "identity") setStep("style");
     else if (step === "style") setStep("suggestions");
@@ -91,6 +221,10 @@ export function OnboardingModal({
 
   const generateFinalBlocks = (): BlockData[] => {
     const blocks: BlockData[] = [];
+    const stackItems = stackInput
+      .split(",")
+      .map(item => item.trim())
+      .filter(Boolean);
     
     // Always include hero
     blocks.push({
@@ -100,11 +234,11 @@ export function OnboardingModal({
       col_span: 2,
       row_span: 2,
       visible: true,
-      name: formData.name || username,
-      tagline: formData.tagline || "Builder",
+      name: formData.name.trim() || username,
+      tagline: formData.tagline.trim(),
       avatarUrl: "",
-      status: "Disponible",
-      location: "Argentina 🇦🇷"
+      status: "",
+      location: ""
     } as any);
 
     selectedBlockTypes.forEach((type, idx) => {
@@ -118,13 +252,21 @@ export function OnboardingModal({
       };
 
       if (type === 'github') {
-        blocks.push({ ...base, username: githubHandle || "usuario", stats: { stars: 12, repos: 8, followers: 45 } } as any);
+        blocks.push({
+          ...base,
+          username: githubHandle.trim().replace(/^@/, ""),
+          stats: githubStats || { stars: 0, repos: 0, followers: 0, topLanguages: [] }
+        } as any);
       } else if (type === 'social') {
-        blocks.push({ ...base, links: [{ platform: "twitter", url: "x.com" }, { platform: "github", url: "github.com" }] } as any);
+        const links = [];
+        if (twitterHandle.trim()) links.push({ platform: "twitter", url: `x.com/${twitterHandle.trim().replace(/^@/, "")}` });
+        if (githubHandle.trim()) links.push({ platform: "github", url: `github.com/${githubHandle.trim().replace(/^@/, "")}` });
+        
+        blocks.push({ ...base, links } as any);
       } else if (type === 'metric') {
-        blocks.push({ ...base, label: "SHIPPED", value: "12" } as any);
+        blocks.push({ ...base, label: metricLabel.trim(), value: metricValue.trim() } as any);
       } else if (type === 'stack') {
-        blocks.push({ ...base, items: ["React", "Next.js", "TypeScript"] } as any);
+        blocks.push({ ...base, items: stackItems } as any);
       }
     });
 
@@ -132,6 +274,7 @@ export function OnboardingModal({
   };
 
   const handleBack = () => {
+    setStepError("");
     if (step === "identity") setStep("welcome");
     else if (step === "style") setStep("identity");
     else if (step === "suggestions") setStep("style");
@@ -197,7 +340,10 @@ export function OnboardingModal({
                 <label className="text-[10px] text-[var(--text-muted)] font-black uppercase tracking-widest pl-1">Nombre Display</label>
                 <input
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, name: e.target.value });
+                    if (stepError) setStepError("");
+                  }}
                   placeholder="Tu Nombre"
                   className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl focus:border-[var(--accent)] outline-none text-white font-bold transition-all text-lg"
                 />
@@ -208,7 +354,10 @@ export function OnboardingModal({
                 <div className="relative">
                   <input
                     value={formData.tagline}
-                    onChange={(e) => setFormData({ ...formData, tagline: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, tagline: e.target.value });
+                      if (stepError) setStepError("");
+                    }}
                     placeholder="ej: Fullstack Developer buildeando en público"
                     className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl focus:border-[var(--accent)] outline-none text-white font-bold transition-all pr-14"
                   />
@@ -226,6 +375,12 @@ export function OnboardingModal({
                 </p>
               </div>
             </div>
+
+            {stepError && (
+              <div className="text-sm text-red-300 bg-red-500/10 border border-red-500/20 rounded-2xl px-4 py-3">
+                {stepError}
+              </div>
+            )}
 
             <div className="flex gap-4 pt-4">
               <button onClick={handleBack} className="p-5 rounded-2xl border border-white/10 text-white/40 hover:text-white hover:bg-white/5"><ChevronLeft /></button>
@@ -298,6 +453,7 @@ export function OnboardingModal({
                 <button
                   key={b.type}
                   onClick={() => {
+                    setStepError("");
                     setSelectedBlockTypes(prev => 
                       prev.includes(b.type as any) 
                         ? prev.filter(t => t !== b.type) 
@@ -325,11 +481,91 @@ export function OnboardingModal({
                 </div>
                 <input 
                   value={githubHandle}
-                  onChange={(e) => setGithubHandle(e.target.value)}
+                  onChange={(e) => {
+                    setGithubHandle(e.target.value);
+                    if (stepError) setStepError("");
+                  }}
                   placeholder="ej: tomasdeluca"
                   className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white outline-none focus:border-[var(--accent)] transition-all font-mono text-sm"
                 />
+                <div className="text-[11px] text-white/50">
+                  {isLoadingGithubStats && "Validando datos reales de GitHub..."}
+                  {!isLoadingGithubStats && githubStats && `Repos: ${githubStats.repos} · Stars: ${githubStats.stars} · Followers: ${githubStats.followers}`}
+                  {!isLoadingGithubStats && githubError && <span className="text-red-300">{githubError}</span>}
+                </div>
               </motion.div>
+            )}
+            
+            {selectedBlockTypes.includes("social") && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-black/40 border border-[var(--accent)]/20 rounded-[2rem] space-y-3">
+                <div className="flex items-center gap-2 text-xs font-bold text-white/60">
+                  <Share2 size={14} /> Tu usuario de X (Twitter)
+                </div>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 font-mono text-sm">@</span>
+                  <input 
+                    value={twitterHandle}
+                    onChange={(e) => {
+                      setTwitterHandle(e.target.value.replace('@', ''));
+                      if (stepError) setStepError("");
+                    }}
+                    placeholder="user"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-3 pl-8 text-white outline-none focus:border-[var(--accent)] transition-all font-mono text-sm"
+                  />
+                </div>
+                <p className="text-[11px] text-white/40">Si también completaste GitHub, lo vamos a incluir en este bloque.</p>
+              </motion.div>
+            )}
+
+            {selectedBlockTypes.includes("metric") && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-black/40 border border-[var(--accent)]/20 rounded-[2rem] space-y-3">
+                <div className="flex items-center gap-2 text-xs font-bold text-white/60">
+                  <BarChart3 size={14} /> Tu métrica principal
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <input
+                    value={metricLabel}
+                    onChange={(e) => {
+                      setMetricLabel(e.target.value);
+                      if (stepError) setStepError("");
+                    }}
+                    placeholder="ej: MRR"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white outline-none focus:border-[var(--accent)] transition-all font-mono text-sm"
+                  />
+                  <input
+                    value={metricValue}
+                    onChange={(e) => {
+                      setMetricValue(e.target.value);
+                      if (stepError) setStepError("");
+                    }}
+                    placeholder="ej: USD 3.2k"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white outline-none focus:border-[var(--accent)] transition-all font-mono text-sm"
+                  />
+                </div>
+              </motion.div>
+            )}
+
+            {selectedBlockTypes.includes("stack") && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-black/40 border border-[var(--accent)]/20 rounded-[2rem] space-y-3">
+                <div className="flex items-center gap-2 text-xs font-bold text-white/60">
+                  <Layers size={14} /> Tus tecnologías
+                </div>
+                <input
+                  value={stackInput}
+                  onChange={(e) => {
+                    setStackInput(e.target.value);
+                    if (stepError) setStepError("");
+                  }}
+                  placeholder="React, Next.js, TypeScript"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white outline-none focus:border-[var(--accent)] transition-all font-mono text-sm"
+                />
+              </motion.div>
+            )}
+
+            {stepError && (
+              <div className="text-sm text-red-300 bg-red-500/10 border border-red-500/20 rounded-2xl px-4 py-3">
+                {stepError}
+              </div>
             )}
 
             <div className="flex gap-4 pt-4">
@@ -353,24 +589,13 @@ export function OnboardingModal({
 
             <div className="max-h-[500px] overflow-y-auto pr-2 custom-scrollbar p-6 bg-black/40 rounded-[2.5rem] border border-white/10 shadow-2xl relative">
               <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--accent)] opacity-[0.03] blur-[100px] pointer-events-none" />
-              
-              <div className="grid grid-cols-2 gap-4">
-                {previewBlocks.map((block) => {
-                  const props = { data: block as any, accentColor: formData.accentColor };
-                  return (
-                    <div 
-                      key={block.id} 
-                      className={`${block.col_span === 2 ? 'col-span-2' : 'col-span-1'} ${block.row_span === 2 ? 'row-span-2' : ''}`}
-                    >
-                      {block.type === 'hero' && <HeroBlock {...props} />}
-                      {block.type === 'github' && <GitHubBlock {...props} />}
-                      {block.type === 'social' && <SocialBlock {...props} />}
-                      {block.type === 'metric' && <MetricBlock {...props} />}
-                      {block.type === 'stack' && <StackBlock {...props} />}
-                    </div>
-                  );
-                })}
-              </div>
+              <ProfileGrid
+                blocks={previewBlocks}
+                accentColor={formData.accentColor}
+                displayName={formData.name.trim() || username}
+                tagline={formData.tagline.trim()}
+                username={username}
+              />
             </div>
 
             <div className="flex gap-4 pt-4">
@@ -454,4 +679,3 @@ export function OnboardingModal({
     document.body
   );
 }
-

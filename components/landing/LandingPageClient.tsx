@@ -7,7 +7,6 @@ import { WinnerSection } from "@/components/landing/WinnerSection";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
 import { Activity, Compass, Users, PlusCircle, Layout, Check, BookOpen, Globe, Link2, BarChart3, TrendingUp } from "lucide-react";
-import { PriceBanner } from "@/components/marketing/PriceBanner";
 
 interface LandingPageClientProps {
   showcaseData: any;
@@ -89,7 +88,6 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
 
   return (
     <div className="landing">
-      <PriceBanner />
       {/* NAV */}
       <nav>
         <Link href="/" className="logo">huev<span style={{ color: 'var(--accent)' }}>site</span>.io</Link>

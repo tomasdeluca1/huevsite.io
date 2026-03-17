@@ -69,6 +69,10 @@ function parseReferrer(ref: string): string {
   }
 }
 
+function getFallbackAvatarUrl() {
+  return '/huevsite-avatar.png';
+}
+
 export const analyticsService = {
   async trackEvent(event: AnalyticsEvent) {
     const { error } = await supabaseAdmin
@@ -119,9 +123,17 @@ export const analyticsService = {
     }
   },
 
-  async getInsights(userId: string) {
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  async getInsights(userId: string, filters: { rangeDays?: number; startDate?: string | null; endDate?: string | null } = {}) {
+    const now = new Date();
+    const rangeEnd = filters.endDate ? new Date(`${filters.endDate}T23:59:59.999Z`) : now;
+    const rangeStart = filters.startDate ? new Date(`${filters.startDate}T00:00:00.000Z`) : new Date(rangeEnd);
+    const derivedRangeDays = filters.rangeDays || 1;
+
+    if (!filters.startDate) {
+      rangeStart.setDate(rangeStart.getDate() - derivedRangeDays);
+    }
+
+    const rangeDays = Math.max(1, Math.ceil((rangeEnd.getTime() - rangeStart.getTime()) / (1000 * 60 * 60 * 24)));
 
     const fiveMinutesAgo = new Date();
     fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5);
@@ -129,10 +141,11 @@ export const analyticsService = {
     // Fetch everything in parallel
     const [
       { data: pageViewEvents, error: pvError },
-      { count: totalPageViewsAllTime },
+      { count: totalPageViews },
       { count: totalClicks },
       { data: blockClicks },
       { data: visitors },
+      { count: totalRecentVisitors },
       { count: onlineNow }
     ] = await Promise.all([
       supabaseAdmin
@@ -141,34 +154,49 @@ export const analyticsService = {
         .eq('user_id', userId)
         .eq('event_type', 'page_view')
         .not('visitor_id', 'in', '("127.0.0.1","::1","localhost")')
-        .gte('created_at', thirtyDaysAgo.toISOString()),
+        .gte('created_at', rangeStart.toISOString())
+        .lte('created_at', rangeEnd.toISOString()),
       supabaseAdmin
         .from('analytics_events')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
         .not('visitor_id', 'in', '("127.0.0.1","::1","localhost")')
-        .eq('event_type', 'page_view'),
+        .eq('event_type', 'page_view')
+        .gte('created_at', rangeStart.toISOString())
+        .lte('created_at', rangeEnd.toISOString()),
       supabaseAdmin
         .from('analytics_events')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
         .not('visitor_id', 'in', '("127.0.0.1","::1","localhost")')
-        .eq('event_type', 'block_click'),
+        .eq('event_type', 'block_click')
+        .gte('created_at', rangeStart.toISOString())
+        .lte('created_at', rangeEnd.toISOString()),
       supabaseAdmin
         .from('analytics_events')
-        .select('block_id')
+        .select('visitor_id, block_id')
         .eq('user_id', userId)
         .eq('event_type', 'block_click')
         .not('visitor_id', 'in', '("127.0.0.1","::1","localhost")')
+        .gte('created_at', rangeStart.toISOString())
+        .lte('created_at', rangeEnd.toISOString())
         .not('block_id', 'is', null),
       supabaseAdmin
         .from('profile_visitors')
         .select('id, profile_id, visitor_id, visitor_user_id, visitor_username, visitor_name, visitor_avatar, country, city, referrer, user_agent, browser, os, device, created_at')
         .eq('profile_id', userId)
         .not('visitor_id', 'in', '("127.0.0.1","::1","localhost")')
-        .gte('created_at', thirtyDaysAgo.toISOString())
+        .gte('created_at', rangeStart.toISOString())
+        .lte('created_at', rangeEnd.toISOString())
         .order('created_at', { ascending: false })
-        .limit(20),
+        .limit(100),
+      supabaseAdmin
+        .from('profile_visitors')
+        .select('*', { count: 'exact', head: true })
+        .eq('profile_id', userId)
+        .not('visitor_id', 'in', '("127.0.0.1","::1","localhost")')
+        .gte('created_at', rangeStart.toISOString())
+        .lte('created_at', rangeEnd.toISOString()),
       supabaseAdmin
         .from('analytics_events')
         .select('*', { count: 'exact', head: true })
@@ -180,32 +208,56 @@ export const analyticsService = {
 
     if (pvError) throw pvError;
 
-    // Unique visitors (30 days)
+    const isHourlyRange = !filters.startDate && !filters.endDate && derivedRangeDays === 1;
+
+    // Unique visitors (filtered range)
     const uniqueVisitors = new Set(pageViewEvents?.map(v => v.visitor_id)).size;
 
-    // Daily visitors chart (last 30 days)
-    const dailyMap: Record<string, number> = {};
-    const today = new Date();
-    for (let i = 29; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(d.getDate() - i);
-      const key = d.toISOString().split('T')[0];
-      dailyMap[key] = 0;
+    const visitorsMap: Record<string, Set<string>> = {};
+    const chartMap: Record<string, number> = {};
+
+    if (isHourlyRange) {
+      const hourStart = new Date(rangeStart);
+      hourStart.setMinutes(0, 0, 0);
+      for (let i = 0; i < 24; i++) {
+        const d = new Date(hourStart);
+        d.setHours(hourStart.getHours() + i);
+        const key = d.toISOString();
+        chartMap[key] = 0;
+      }
+
+      pageViewEvents?.forEach((ev) => {
+        const eventDate = new Date(ev.created_at);
+        eventDate.setMinutes(0, 0, 0);
+        const key = eventDate.toISOString();
+        if (chartMap[key] !== undefined) {
+          if (!visitorsMap[key]) visitorsMap[key] = new Set();
+          visitorsMap[key].add(ev.visitor_id);
+        }
+      });
+    } else {
+      for (let i = 0; i <= rangeDays; i++) {
+        const d = new Date(rangeStart);
+        d.setDate(d.getDate() + i);
+        if (d > rangeEnd) break;
+        const key = d.toISOString().split('T')[0];
+        chartMap[key] = 0;
+      }
+
+      pageViewEvents?.forEach((ev) => {
+        const day = ev.created_at.split('T')[0];
+        if (chartMap[day] !== undefined) {
+          if (!visitorsMap[day]) visitorsMap[day] = new Set();
+          visitorsMap[day].add(ev.visitor_id);
+        }
+      });
     }
 
-    const dailyVisitorsMap: Record<string, Set<string>> = {};
-    pageViewEvents?.forEach(ev => {
-      const day = ev.created_at.split('T')[0];
-      if (dailyMap[day] !== undefined) {
-        if (!dailyVisitorsMap[day]) dailyVisitorsMap[day] = new Set();
-        dailyVisitorsMap[day].add(ev.visitor_id);
-      }
-    });
-    Object.keys(dailyVisitorsMap).forEach(day => {
-      dailyMap[day] = dailyVisitorsMap[day].size;
+    Object.keys(visitorsMap).forEach((bucket) => {
+      chartMap[bucket] = visitorsMap[bucket].size;
     });
 
-    const dailyVisitors = Object.entries(dailyMap).map(([date, count]) => ({ date, count }));
+    const dailyVisitors = Object.entries(chartMap).map(([date, count]) => ({ date, count }));
 
     // Referrer breakdown
     const referrerMap: Record<string, number> = {};
@@ -251,13 +303,22 @@ export const analyticsService = {
       .sort((a, b) => b.visitors - a.visitors);
 
     const blockStats: Record<string, number> = {};
+    const visitorClickCounts: Record<string, number> = {};
+    const visitorBlockClicks: Record<string, Record<string, number>> = {};
     blockClicks?.forEach(bc => {
       blockStats[bc.block_id!] = (blockStats[bc.block_id!] || 0) + 1;
+      if (bc.visitor_id) {
+        visitorClickCounts[bc.visitor_id] = (visitorClickCounts[bc.visitor_id] || 0) + 1;
+        if (bc.block_id) {
+          if (!visitorBlockClicks[bc.visitor_id]) visitorBlockClicks[bc.visitor_id] = {};
+          visitorBlockClicks[bc.visitor_id][bc.block_id] = (visitorBlockClicks[bc.visitor_id][bc.block_id] || 0) + 1;
+        }
+      }
     });
 
     // CTR
-    const ctr = totalPageViewsAllTime && totalPageViewsAllTime > 0
-      ? ((totalClicks || 0) / totalPageViewsAllTime) * 100
+    const ctr = totalPageViews && totalPageViews > 0
+      ? ((totalClicks || 0) / totalPageViews) * 100
       : 0;
 
     // Bounce rate (visitors with only 1 page view ~rough estimate)
@@ -268,13 +329,102 @@ export const analyticsService = {
     const bounced = Object.values(visitorViewCounts).filter(v => v === 1).length;
     const bounceRate = uniqueVisitors > 0 ? (bounced / uniqueVisitors) * 100 : 0;
 
-    const recentVisitors = visitors || [];
+    const visitorPageViews: Record<string, number> = {};
+    pageViewEvents?.forEach(ev => {
+      visitorPageViews[ev.visitor_id] = (visitorPageViews[ev.visitor_id] || 0) + 1;
+    });
+
+    const visitorOccurrences: Record<string, number> = {};
+    (visitors || []).forEach((visitor) => {
+      visitorOccurrences[visitor.visitor_id] = (visitorOccurrences[visitor.visitor_id] || 0) + 1;
+    });
+
+    const visitorUserIds = Array.from(new Set((visitors || []).map((visitor) => visitor.visitor_user_id).filter(Boolean)));
+    const visitorUsernames = Array.from(new Set((visitors || []).map((visitor) => visitor.visitor_username).filter(Boolean)));
+    let visitorProfilesById: Record<string, { image: string | null; username: string | null; name: string | null }> = {};
+    let visitorProfilesByUsername: Record<string, { id: string; image: string | null; username: string | null; name: string | null }> = {};
+    let heroAvatarByUserId: Record<string, string | null> = {};
+
+    if (visitorUserIds.length > 0) {
+      const { data: visitorProfiles } = await supabaseAdmin
+        .from('profiles')
+        .select('id, username, name, image')
+        .in('id', visitorUserIds);
+
+      visitorProfilesById = Object.fromEntries(
+        (visitorProfiles || []).map((profile) => [
+          profile.id,
+          {
+            image: profile.image || null,
+            username: profile.username || null,
+            name: profile.name || null,
+          }
+        ])
+      );
+    }
+
+    if (visitorUsernames.length > 0) {
+      const { data: visitorProfilesByName } = await supabaseAdmin
+        .from('profiles')
+        .select('id, username, name, image')
+        .in('username', visitorUsernames);
+
+      visitorProfilesByUsername = Object.fromEntries(
+        (visitorProfilesByName || []).map((profile) => [
+          profile.username,
+          {
+            id: profile.id,
+            image: profile.image || null,
+            username: profile.username || null,
+            name: profile.name || null,
+          }
+        ])
+      );
+    }
+
+    const heroLookupUserIds = Array.from(new Set([
+      ...visitorUserIds,
+      ...Object.values(visitorProfilesByUsername).map((profile) => profile.id).filter(Boolean),
+    ]));
+
+    if (heroLookupUserIds.length > 0) {
+      const { data: heroBlocks } = await supabaseAdmin
+        .from('blocks')
+        .select('user_id, data')
+        .in('user_id', heroLookupUserIds)
+        .is('sub_site_id', null)
+        .eq('type', 'hero');
+
+      heroAvatarByUserId = Object.fromEntries(
+        (heroBlocks || []).map((block) => [block.user_id, block.data?.avatarUrl || null])
+      );
+    }
+
+    const recentVisitors = (visitors || []).map((visitor) => ({
+      ...visitor,
+      visitor_username: visitorProfilesById[visitor.visitor_user_id || '']?.username || visitorProfilesByUsername[visitor.visitor_username || '']?.username || visitor.visitor_username || null,
+      visitor_name: visitorProfilesById[visitor.visitor_user_id || '']?.name || visitorProfilesByUsername[visitor.visitor_username || '']?.name || visitor.visitor_name || null,
+      visitor_avatar:
+        visitorProfilesById[visitor.visitor_user_id || '']?.image ||
+        heroAvatarByUserId[visitor.visitor_user_id || ''] ||
+        visitorProfilesByUsername[visitor.visitor_username || '']?.image ||
+        heroAvatarByUserId[visitorProfilesByUsername[visitor.visitor_username || '']?.id || ''] ||
+        visitor.visitor_avatar ||
+        getFallbackAvatarUrl(),
+      page_views: visitorPageViews[visitor.visitor_id] || 0,
+      block_clicks: visitorClickCounts[visitor.visitor_id] || 0,
+      visits: visitorOccurrences[visitor.visitor_id] || 1,
+      clicked_blocks: Object.entries(visitorBlockClicks[visitor.visitor_id] || {}).map(([blockId, clicks]) => ({
+        block_id: blockId,
+        clicks,
+      })),
+    }));
 
 
     return {
       uniqueVisitors,
       totalClicks: totalClicks || 0,
-      totalPageViews: totalPageViewsAllTime || 0,
+      totalPageViews: totalPageViews || 0,
       ctr: parseFloat(ctr.toFixed(2)),
       bounceRate: parseFloat(bounceRate.toFixed(1)),
       blockStats,
@@ -284,6 +434,11 @@ export const analyticsService = {
       operatingSystems,
       devices,
       recentVisitors,
+      totalRecentVisitors: totalRecentVisitors || 0,
+      rangeDays,
+      startDate: rangeStart.toISOString().split('T')[0],
+      endDate: rangeEnd.toISOString().split('T')[0],
+      granularity: isHourlyRange ? 'hour' : 'day',
       onlineNow: onlineNow || 0,
     };
   }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { createPortal } from "react-dom";
 import {
   Users,
   MousePointer2,
@@ -14,10 +15,15 @@ import {
   Layout,
   Globe2,
   ArrowRight,
-  LucideIcon
+  LucideIcon,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tooltip } from "@/components/ui/Tooltip";
+import Link from "next/link";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -26,17 +32,25 @@ interface ReferrerItem { source: string; visitors: number; }
 interface BrowserItem { browser: string; visitors: number; }
 interface OSItem { os: string; visitors: number; }
 interface DeviceItem { device: string; visitors: number; }
+interface ClickedBlock { block_id: string; clicks: number; }
 
 interface RecentVisitor {
   id: string;
+  visitor_user_id: string | null;
   visitor_username: string | null;
   visitor_name: string | null;
   visitor_avatar: string | null;
+  country: string | null;
+  city: string | null;
   referrer: string | null;
   browser: string | null;
   os: string | null;
   device: string | null;
   created_at: string;
+  page_views: number;
+  block_clicks: number;
+  visits: number;
+  clicked_blocks: ClickedBlock[];
 }
 
 interface InsightsData {
@@ -52,12 +66,18 @@ interface InsightsData {
   operatingSystems: OSItem[];
   devices: DeviceItem[];
   recentVisitors: RecentVisitor[];
+  totalRecentVisitors: number;
+  rangeDays: number;
+  startDate: string;
+  endDate: string;
+  granularity: "hour" | "day";
   onlineNow: number;
 }
 
 interface Props {
   accentColor: string;
   blocks: any[];
+  onOptimizeBoard?: () => void;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -82,34 +102,92 @@ function timeAgo(dateStr: string): string {
 
 function getReferrerIcon(source: string): string {
   const map: Record<string, string> = {
-    'X': '𝕏',
-    'Google': '🔍',
-    'Facebook': 'f',
-    'Instagram': '📷',
-    'LinkedIn': 'in',
+    'X': '✦',
+    'Google': '🔎',
+    'Facebook': '👥',
+    'Instagram': '📸',
+    'LinkedIn': '💼',
     'YouTube': '▶',
-    'Reddit': '🔴',
-    'TikTok': '♪',
-    'GitHub': '⑃',
-    'Direct/None': '→',
+    'Reddit': '💬',
+    'TikTok': '🎵',
+    'GitHub': '🐙',
+    'Direct/None': '↗',
   };
   return map[source] || source.charAt(0).toUpperCase();
 }
 
 function getBrowserEmoji(browser: string): string {
   const map: Record<string, string> = {
-    'Chrome': '🌐',
+    'Chrome': '◎',
     'Safari': '🧭',
     'Firefox': '🦊',
-    'Edge': '🔷',
-    'Opera': '🔴',
+    'Edge': '🌊',
+    'Opera': '◉',
     'Samsung Internet': '📱',
     'Instagram': '📷',
     'Facebook': '🔵',
-    'Twitter': '🐦',
-    'LinkedIn': '🔷',
+    'Twitter': '✦',
+    'LinkedIn': '💼',
   };
   return map[browser] || '🌐';
+}
+
+function getOSTooltip(os: string): string {
+  const tips: Record<string, string> = {
+    'Mac OS': 'Audiencia con entorno de trabajo típico de builders, founders y perfiles creativos.',
+    'Windows': 'Suele señalar tráfico amplio, reclutadores y usuarios en contexto más corporativo.',
+    'iOS': 'Sesiones móviles cuidadas; útil para validar que tu perfil se vea bien en iPhone.',
+    'Android': 'Buen indicador de alcance mobile amplio fuera del nicho más Apple-centric.',
+    'Linux': 'Tráfico muy técnico; suele venir de devs, OSS y perfiles más infra.',
+  };
+  return tips[os] || 'Te ayuda a entender en qué ecosistema operativo se está consumiendo tu perfil.';
+}
+
+function getBrowserTooltip(browser: string): string {
+  const tips: Record<string, string> = {
+    'Chrome': 'Suele dominar el tráfico general; sirve como baseline para comparar el resto.',
+    'Safari': 'Importante para revisar cómo se percibe tu perfil en dispositivos Apple.',
+    'Firefox': 'Frecuente en audiencias técnicas y usuarios más cuidadosos con privacidad.',
+    'Edge': 'Puede señalar tráfico desde empresas, recruiters o entornos corporativos.',
+    'Samsung Internet': 'Señal clara de consumo mobile Android.',
+    'Instagram': 'Sesiones embebidas desde la app; conviene priorizar CTAs rápidos y visuales.',
+    'Facebook': 'Tráfico social desde navegador interno de la app.',
+    'LinkedIn': 'Suele correlacionar con visitas de networking o reclutamiento.',
+  };
+  return tips[browser] || 'Identifica dónde conviene QA visual y qué contexto de navegación predomina.';
+}
+
+function getReferrerTooltip(source: string): string {
+  const tips: Record<string, string> = {
+    'X': 'Tráfico de discovery rápido. Si crece, tus posts o replies están empujando visitas.',
+    'Google': 'Intención alta: la gente te está encontrando activamente por búsqueda.',
+    'LinkedIn': 'Señal de networking profesional y visitas con contexto laboral.',
+    'GitHub': 'Buen proxy de interés técnico o tráfico desde proyectos y repos.',
+    'Instagram': 'Tráfico más visual y mobile-first; importa que el perfil cargue claro y rápido.',
+    'YouTube': 'Puede venir de demos, talks o contenido evergreen con mejor vida útil.',
+    'Direct/None': 'Incluye tráfico directo, enlaces copiados, DMs o sesiones donde no llega referencia confiable.',
+  };
+  return tips[source] || `Este canal te muestra cuánto aporta ${source} dentro de tu mezcla de adquisición.`;
+}
+
+function getDeviceTooltip(device: string): string {
+  const tips: Record<string, string> = {
+    'Mobile': 'Si domina, conviene priorizar jerarquía visual compacta y bloques above the fold.',
+    'Desktop': 'Más espacio para explorar; suele correlacionar con visitas de trabajo o research.',
+    'Tablet': 'Volumen menor, pero útil para detectar layouts intermedios que pueden romperse.',
+  };
+  return tips[device] || 'Te ayuda a entender en qué contexto físico están navegando tu huevsite.';
+}
+
+const DATE_FILTERS = [
+  { label: '3M', value: 90 },
+  { label: '1M', value: 30 },
+  { label: '7D', value: 7 },
+  { label: '1D', value: 1 },
+];
+
+function getVisitorAvatar(visitor: RecentVisitor) {
+  return visitor.visitor_avatar || '/huevsite-avatar.png';
 }
 
 function EmptyState({
@@ -134,7 +212,7 @@ function EmptyState({
 
 // ─── MiniSparkline Chart ───────────────────────────────────────────────────────
 
-function SparklineChart({ data, accentColor }: { data: DailyPoint[]; accentColor: string }) {
+function SparklineChart({ data, accentColor, granularity }: { data: DailyPoint[]; accentColor: string; granularity: "hour" | "day" }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const maxVal = Math.max(...data.map(d => d.count), 1);
   const [tooltip, setTooltip] = useState<{ x: number; y: number; date: string; count: number } | null>(null);
@@ -246,12 +324,13 @@ function SparklineChart({ data, accentColor }: { data: DailyPoint[]; accentColor
     ctx.textAlign = 'center';
     data.forEach((d, i) => {
       if (i === 0 || i === data.length - 1 || i % 7 === 0) {
-        const parts = d.date.split('-');
-        const label = `${parts[2]}/${parts[1]}`;
+        const label = granularity === "hour"
+          ? new Date(d.date).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+          : `${d.date.split('-')[2]}/${d.date.split('-')[1]}`;
         ctx.fillText(label, padH + i * stepX, H - 12);
       }
     });
-  }, [data, accentColor, maxVal]);
+  }, [data, accentColor, maxVal, granularity]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -291,7 +370,11 @@ function SparklineChart({ data, accentColor }: { data: DailyPoint[]; accentColor
                 transform: 'translateX(-50%)'
             }}
           >
-            <div className="text-white/40 text-[9px] font-black uppercase tracking-widest mb-1.5">{new Date(tooltip.date).toLocaleDateString('es-AR', { day: '2-digit', month: 'short' })}</div>
+            <div className="text-white/40 text-[9px] font-black uppercase tracking-widest mb-1.5">
+              {granularity === "hour"
+                ? new Date(tooltip.date).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+                : new Date(tooltip.date).toLocaleDateString('es-AR', { day: '2-digit', month: 'short' })}
+            </div>
             <div className="flex items-center gap-2">
               <div className="w-2.5 h-2.5 rounded-full shadow-[0_0_8px_var(--accent-glow)]" style={{ backgroundColor: accentColor, '--accent-glow': accentColor } as any} />
               <span className="text-white text-lg font-black tracking-tight">{tooltip.count}</span>
@@ -314,6 +397,8 @@ function BarRow({
   icon,
   sublabel,
   tooltip,
+  onClick,
+  active = false,
 }: {
   label: string;
   value: number;
@@ -322,13 +407,25 @@ function BarRow({
   icon?: string;
   sublabel?: string;
   tooltip?: string;
+  onClick?: () => void;
+  active?: boolean;
 }) {
   const pct = max > 0 ? (value / max) * 100 : 0;
   return (
-    <div className="group relative flex items-center gap-3 py-3.5 sm:gap-4 sm:px-1 border-b border-white/[0.03] last:border-0">
+    <button
+      type="button"
+      onClick={onClick}
+      className={`group relative flex w-full items-center gap-3 border-b py-3.5 text-left transition-all last:border-0 sm:gap-4 sm:px-1 ${
+        active ? "border-white/[0.05] bg-white/[0.035]" : "border-white/[0.03]"
+      } ${onClick ? "cursor-pointer hover:bg-white/[0.02]" : "cursor-default"}`}
+    >
       <div className="z-10 flex min-w-0 flex-1 items-center gap-3 sm:gap-3.5">
         {icon && (
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/5 bg-white/5 text-[12px] transition-colors group-hover:bg-white/10">
+          <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border text-[12px] transition-colors ${
+            active
+              ? "border-[var(--accent)]/20 bg-[var(--accent-dim)]"
+              : "border-white/5 bg-white/5 group-hover:bg-white/10"
+          }`}>
             {icon}
           </div>
         )}
@@ -346,7 +443,7 @@ function BarRow({
                 </Tooltip>
               )}
             </div>
-            <span className="shrink-0 text-sm font-black text-white/80 transition-colors group-hover:text-white">
+            <span className={`shrink-0 text-sm font-black transition-colors ${active ? "text-white" : "text-white/80 group-hover:text-white"}`}>
               {formatNum(value)}
             </span>
           </div>
@@ -364,8 +461,10 @@ function BarRow({
           {sublabel && <div className="text-[9px] text-white/20 font-mono uppercase tracking-[0.2em] mt-1.5 font-black">{sublabel}</div>}
         </div>
       </div>
-      <div className="pointer-events-none absolute -inset-x-2 -inset-y-0.5 rounded-xl bg-white/[0.01] opacity-0 transition-opacity group-hover:opacity-100" />
-    </div>
+      <div className={`pointer-events-none absolute -inset-x-2 -inset-y-0.5 rounded-xl transition-opacity ${
+        active ? "bg-[var(--accent)]/[0.08] opacity-100" : "bg-white/[0.01] opacity-0 group-hover:opacity-100"
+      }`} />
+    </button>
   );
 }
 
@@ -496,20 +595,33 @@ function StatCard({
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export function InsightsTab({ accentColor, blocks }: Props) {
+export function InsightsTab({ accentColor, blocks, onOptimizeBoard }: Props) {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<InsightsData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [referrerTab, setReferrerTab] = useState('Referrer');
   const [locationTab, setLocationTab] = useState('Browser');
-  const fetchInsights = async () => {
+  const [rangeDays, setRangeDays] = useState(1);
+  const [visitorPage, setVisitorPage] = useState(1);
+  const [visitorIdentityFilter, setVisitorIdentityFilter] = useState<"all" | "identified" | "anonymous">("all");
+  const [selectedVisitorId, setSelectedVisitorId] = useState<string | null>(null);
+  const [selectedTechnology, setSelectedTechnology] = useState<{ kind: "browser" | "os" | "device"; value: string } | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const recentVisitorsRef = useRef<HTMLDivElement>(null);
+  const VISITORS_PER_PAGE = 8;
+
+  const fetchInsights = async ({ range = rangeDays }: { range?: number } = {}) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/analytics/insights");
+      const params = new URLSearchParams();
+      params.set("range", String(range));
+      const res = await fetch(`/api/analytics/insights?${params.toString()}`);
       if (!res.ok) throw new Error("Error al cargar las métricas");
       const insights = await res.json();
       setData(insights);
+      setVisitorPage(1);
+      setSelectedVisitorId(null);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -518,8 +630,77 @@ export function InsightsTab({ accentColor, blocks }: Props) {
   };
 
   useEffect(() => {
-    fetchInsights();
+    setMounted(true);
   }, []);
+
+  useEffect(() => {
+    fetchInsights({ range: rangeDays });
+  }, [rangeDays]);
+
+  useEffect(() => {
+    setSelectedTechnology(null);
+    setVisitorIdentityFilter("all");
+  }, [rangeDays]);
+
+  const technologyFilteredVisitors = useMemo(() => {
+    const visitors = data?.recentVisitors || [];
+    if (!selectedTechnology) return visitors;
+
+    return visitors.filter((visitor) => {
+      if (selectedTechnology.kind === "browser") return visitor.browser === selectedTechnology.value;
+      if (selectedTechnology.kind === "os") return visitor.os === selectedTechnology.value;
+      return visitor.device === selectedTechnology.value;
+    });
+  }, [data?.recentVisitors, selectedTechnology]);
+
+  const filteredReferrers = useMemo(() => {
+    const counts = new Map<string, number>();
+
+    for (const visitor of technologyFilteredVisitors) {
+      const key = visitor.referrer || "Direct/None";
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+
+    return Array.from(counts.entries())
+      .map(([source, visitors]) => ({ source, visitors }))
+      .sort((a, b) => b.visitors - a.visitors)
+      .slice(0, 8);
+  }, [technologyFilteredVisitors]);
+
+  const filteredBlockStats = useMemo(() => {
+    const counts = new Map<string, number>();
+
+    for (const visitor of technologyFilteredVisitors) {
+      for (const clicked of visitor.clicked_blocks) {
+        counts.set(clicked.block_id, (counts.get(clicked.block_id) || 0) + clicked.clicks);
+      }
+    }
+
+    return counts;
+  }, [technologyFilteredVisitors]);
+
+  const visibleVisitors = useMemo(() => {
+    return technologyFilteredVisitors.filter((visitor) => {
+      const isAnonymous = !visitor.visitor_user_id && !visitor.visitor_username;
+
+      if (visitorIdentityFilter === "anonymous") return isAnonymous;
+      if (visitorIdentityFilter === "identified") return !isAnonymous;
+      return true;
+    });
+  }, [technologyFilteredVisitors, visitorIdentityFilter]);
+
+  useEffect(() => {
+    const maxPages = Math.max(1, Math.ceil(visibleVisitors.length / VISITORS_PER_PAGE));
+    if (visitorPage > maxPages) {
+      setVisitorPage(maxPages);
+    }
+  }, [visibleVisitors.length, visitorPage]);
+
+  useEffect(() => {
+    if (selectedVisitorId && !visibleVisitors.some((visitor) => visitor.id === selectedVisitorId)) {
+      setSelectedVisitorId(null);
+    }
+  }, [selectedVisitorId, visibleVisitors]);
 
   if (loading) {
     return (
@@ -543,7 +724,7 @@ export function InsightsTab({ accentColor, blocks }: Props) {
         </div>
         <p className="text-white/50 text-sm font-medium">{error}</p>
         <button
-          onClick={fetchInsights}
+          onClick={() => fetchInsights({ range: rangeDays })}
           className="btn-accent !py-2.5 !px-6 !rounded-xl !text-xs gap-2"
         >
           <RefreshCw size={14} /> Reintentar
@@ -553,7 +734,7 @@ export function InsightsTab({ accentColor, blocks }: Props) {
   }
 
   // Block leaderboard
-  const topBlocks = Object.entries(data?.blockStats || {})
+  const topBlocks = Array.from(filteredBlockStats.entries())
     .map(([id, clicks]) => {
       const block = blocks.find(b => b.id === id);
       return { id, clicks, title: block?.data?.title || block?.type || 'Bloque', type: block?.type };
@@ -561,20 +742,36 @@ export function InsightsTab({ accentColor, blocks }: Props) {
     .sort((a, b) => b.clicks - a.clicks)
     .slice(0, 8);
 
-  const maxRef = data?.referrers?.[0]?.visitors || 1;
+  const maxRef = filteredReferrers[0]?.visitors || 1;
   const maxBrowser = data?.browsers?.[0]?.visitors || 1;
   const maxOS = data?.operatingSystems?.[0]?.visitors || 1;
+  const maxDevice = data?.devices?.[0]?.visitors || 1;
   const maxBlocks = topBlocks[0]?.clicks || 1;
 
   const peakDay = data?.dailyVisitors?.reduce((max, d) => d.count > max.count ? d : max, { date: '', count: 0 });
   const totalDailyVisitors = data?.dailyVisitors?.reduce((sum, day) => sum + day.count, 0) || 0;
   const averageDailyVisitors = data?.dailyVisitors?.length ? Math.round(totalDailyVisitors / data.dailyVisitors.length) : 0;
   const activeDays = data?.dailyVisitors?.filter((day) => day.count > 0).length || 0;
+  const filteredTotalClicks = topBlocks.reduce((sum, block) => sum + block.clicks, 0);
+  const selectedVisitor = visibleVisitors.find((visitor) => visitor.id === selectedVisitorId) || null;
+  const selectedVisitorIndex = selectedVisitor ? visibleVisitors.findIndex((visitor) => visitor.id === selectedVisitor.id) : -1;
+  const totalVisitorPages = Math.max(1, Math.ceil(visibleVisitors.length / VISITORS_PER_PAGE));
+  const paginatedVisitors = visibleVisitors.slice((visitorPage - 1) * VISITORS_PER_PAGE, visitorPage * VISITORS_PER_PAGE);
   const summaryChips = [
     { label: "Promedio diario", value: averageDailyVisitors },
     { label: "Días activos", value: activeDays },
     { label: "Pico", value: peakDay?.count || 0 },
   ];
+  const activeTechnologyLabel = selectedTechnology ? `${selectedTechnology.kind.toUpperCase()}: ${selectedTechnology.value}` : null;
+  const activeVisitorFilterLabel = visitorIdentityFilter === "anonymous" ? "Anónimos" : visitorIdentityFilter === "identified" ? "Con perfil" : null;
+
+  const handleTechnologyToggle = (kind: "browser" | "os" | "device", value: string) => {
+    setSelectedTechnology((current) => {
+      const nextValue = current?.kind === kind && current.value === value ? null : { kind, value };
+      setVisitorPage(1);
+      return nextValue;
+    });
+  };
 
   return (
     <motion.div
@@ -602,17 +799,36 @@ export function InsightsTab({ accentColor, blocks }: Props) {
             
             <div className="flex flex-col rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3 sm:min-w-[160px]">
                 <span className="text-white/60 text-xs font-bold font-mono tracking-tight">Periodo</span>
-                <span className="text-white/30 text-[10px] uppercase tracking-widest font-black">Últimos 30 días</span>
+                <span className="text-white/30 text-[10px] uppercase tracking-widest font-black">
+                  {data?.startDate === data?.endDate ? data?.startDate : `${data?.startDate} → ${data?.endDate}`}
+                </span>
             </div>
         </div>
 
-        <button
-          onClick={fetchInsights}
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+          <div className="flex items-center gap-2 overflow-x-auto rounded-2xl border border-white/5 bg-white/[0.02] p-1">
+            {DATE_FILTERS.map((filter) => (
+              <button
+                key={filter.value}
+                onClick={() => setRangeDays(filter.value)}
+                className={`rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-[0.22em] transition-all ${
+                  rangeDays === filter.value
+                    ? "bg-white text-black"
+                    : "text-white/35 hover:bg-white/[0.05] hover:text-white/70"
+                }`}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => fetchInsights({ range: rangeDays })}
           className="group flex h-12 w-full items-center justify-center gap-2.5 rounded-2xl border border-white/10 bg-white/5 px-5 text-[11px] font-black uppercase tracking-[0.2em] text-white/60 transition-all hover:border-white/20 hover:bg-white/10 sm:w-auto"
-        >
-          <RefreshCw size={14} className="group-hover:rotate-180 transition-transform duration-700" />
-          Actualizar datos
-        </button>
+          >
+            <RefreshCw size={14} className="group-hover:rotate-180 transition-transform duration-700" />
+            Actualizar datos
+          </button>
+        </div>
       </div>
 
       {/* ── KPI Grid ── */}
@@ -660,7 +876,7 @@ export function InsightsTab({ accentColor, blocks }: Props) {
         <SectionCard 
             title="Tráfico de audiencia" 
             description="Seguí la evolución del tráfico diario y detectá cuándo tu perfil gana más atención."
-            badge="30 días"
+          badge={DATE_FILTERS.find((filter) => filter.value === rangeDays)?.label || `${rangeDays}d`}
             className="min-h-[320px] md:col-span-2 xl:col-span-12"
         >
              <div className="mb-6 flex flex-col gap-5 lg:mb-8 lg:flex-row lg:items-end lg:justify-between">
@@ -679,7 +895,7 @@ export function InsightsTab({ accentColor, blocks }: Props) {
             </div>
             {data?.dailyVisitors && data.dailyVisitors.length > 0 && (
                 <>
-                  <SparklineChart data={data.dailyVisitors} accentColor={accentColor} />
+                  <SparklineChart data={data.dailyVisitors} accentColor={accentColor} granularity={data.granularity} />
                   <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3">
                     {summaryChips.map((item) => (
                       <div key={item.label} className="rounded-2xl border border-white/[0.05] bg-white/[0.02] px-4 py-3">
@@ -696,21 +912,21 @@ export function InsightsTab({ accentColor, blocks }: Props) {
         <SectionCard
           title="Orígenes de tráfico"
           description="De dónde llega tu audiencia y qué canal te está trayendo mejores visitas."
-          badge={`${data?.referrers?.length || 0} fuentes`}
+          badge={activeTechnologyLabel || `${filteredReferrers.length} fuentes`}
           tabs={['Referrer']}
           activeTab={referrerTab}
           setActiveTab={setReferrerTab}
           className="md:col-span-1 xl:col-span-4"
         >
           <div className="space-y-1">
-            {(data?.referrers || []).length === 0 ? (
+            {filteredReferrers.length === 0 ? (
                 <EmptyState
                   icon={Globe2}
                   title="Esperando visitas"
-                  description="Todavía no hay referencias detectadas. Cuando lleguen visitas vas a ver qué canales mejor convierten."
+                  description={selectedTechnology ? "No hay orígenes de tráfico para esta tecnología en el período elegido." : "Todavía no hay referencias detectadas. Cuando lleguen visitas vas a ver qué canales mejor convierten."}
                 />
             ) : (
-                (data?.referrers || []).slice(0, 8).map((item, i) => (
+                filteredReferrers.map((item, i) => (
                 <BarRow
                     key={i}
                     label={item.source}
@@ -718,7 +934,7 @@ export function InsightsTab({ accentColor, blocks }: Props) {
                     max={maxRef}
                     accent={accentColor}
                     icon={getReferrerIcon(item.source)}
-                    tooltip={item.source === 'Direct/None' ? 'Visitas directas, tráfico social no trackeado o sesiones privadas.' : undefined}
+                    tooltip={getReferrerTooltip(item.source)}
                 />
                 ))
             )}
@@ -729,12 +945,26 @@ export function InsightsTab({ accentColor, blocks }: Props) {
         <SectionCard
           title="Tecnología"
           description="Con qué dispositivos, sistemas y navegadores están viendo tu perfil."
-          badge={locationTab}
+          badge={activeTechnologyLabel || locationTab}
           tabs={['Browser', 'OS', 'Device']}
           activeTab={locationTab}
           setActiveTab={setLocationTab}
           className="md:col-span-1 xl:col-span-4"
         >
+          <div className="mb-4 flex flex-wrap gap-2">
+            <div className="rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/35">
+              Tocá una fila para filtrar
+            </div>
+            {selectedTechnology && (
+              <button
+                type="button"
+                onClick={() => setSelectedTechnology(null)}
+                className="rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/55 transition-all hover:border-white/20 hover:text-white"
+              >
+                Limpiar filtro
+              </button>
+            )}
+          </div>
           <div className="space-y-1">
             {locationTab === 'Browser' && (
                 <>
@@ -753,6 +983,9 @@ export function InsightsTab({ accentColor, blocks }: Props) {
                         max={maxBrowser}
                         accent={accentColor}
                         icon={getBrowserEmoji(item.browser)}
+                        tooltip={getBrowserTooltip(item.browser)}
+                        active={selectedTechnology?.kind === "browser" && selectedTechnology.value === item.browser}
+                        onClick={() => handleTechnologyToggle("browser", item.browser)}
                     />
                     ))
                 )}
@@ -774,7 +1007,10 @@ export function InsightsTab({ accentColor, blocks }: Props) {
                         value={item.visitors}
                         max={maxOS}
                         accent={accentColor}
-                        icon={item.os === 'Mac OS' ? '' : item.os === 'Windows' ? '田' : item.os === 'Android' ? 'A' : item.os === 'iOS' ? 'i' : '?' }
+                        icon={item.os === 'Mac OS' ? '🍎' : item.os === 'Windows' ? '🪟' : item.os === 'Android' ? '🤖' : item.os === 'iOS' ? '📱' : '💻' }
+                        tooltip={getOSTooltip(item.os)}
+                        active={selectedTechnology?.kind === "os" && selectedTechnology.value === item.os}
+                        onClick={() => handleTechnologyToggle("os", item.os)}
                     />
                     ))
                 )}
@@ -794,9 +1030,12 @@ export function InsightsTab({ accentColor, blocks }: Props) {
                         key={i}
                         label={item.device}
                         value={item.visitors}
-                        max={data?.devices[0]?.visitors || 1}
+                        max={maxDevice}
                         accent={accentColor}
                         icon={item.device === 'Mobile' ? '📱' : item.device === 'Tablet' ? '💻' : '🖥️'}
+                        tooltip={getDeviceTooltip(item.device)}
+                        active={selectedTechnology?.kind === "device" && selectedTechnology.value === item.device}
+                        onClick={() => handleTechnologyToggle("device", item.device)}
                     />
                     ))
                 )}
@@ -809,7 +1048,7 @@ export function InsightsTab({ accentColor, blocks }: Props) {
         <SectionCard
           title="Ranking de bloques"
           description="Los elementos que más clics están generando dentro de tu board."
-          badge={`${topBlocks.length} bloques`}
+          badge={activeTechnologyLabel || `${topBlocks.length} bloques`}
           className="md:col-span-2 xl:col-span-4"
         >
              <div className="space-y-1">
@@ -817,7 +1056,7 @@ export function InsightsTab({ accentColor, blocks }: Props) {
                     <EmptyState
                       icon={MousePointer2}
                       title="Sin clics por ahora"
-                      description="Cuando tu audiencia empiece a interactuar, acá vas a ver qué bloques funcionan mejor."
+                      description={selectedTechnology ? "No hay clicks en bloques para esta tecnología en el período elegido." : "Cuando tu audiencia empiece a interactuar, acá vas a ver qué bloques funcionan mejor."}
                     />
                 ) : (
                     topBlocks.map((block, i) => (
@@ -829,7 +1068,7 @@ export function InsightsTab({ accentColor, blocks }: Props) {
                             accent={accentColor}
                             sublabel={block.type}
                             icon={String(i + 1)}
-                            tooltip={`Este bloque recibió ${block.clicks} interacciones únicas.`}
+                            tooltip={`Concentra ${Math.round((block.clicks / Math.max(filteredTotalClicks || 1, 1)) * 100)}% de los clicks detectados en esta vista. Úsalo para decidir qué destacar arriba.`}
                         />
                     ))
                 )}
@@ -839,32 +1078,60 @@ export function InsightsTab({ accentColor, blocks }: Props) {
         {/* Recent Activity / Visitors */}
         <SectionCard
           title="Visitas recientes"
-          description="Últimos visitantes detectados con su fuente y contexto técnico."
-          badge={`${Math.min(data?.recentVisitors?.length || 0, 10)} recientes`}
+          description="Explorá quién pasó por tu huevsite, qué hizo y desde qué contexto llegó."
+          badge={activeVisitorFilterLabel || activeTechnologyLabel || `${visibleVisitors.length} sesiones`}
           className="md:col-span-2 xl:col-span-12"
         >
-             <div className="space-y-3 md:hidden">
-                {(data?.recentVisitors || []).length === 0 ? (
+             <div className="mb-4 flex flex-wrap gap-2">
+                {[
+                  { label: "Todos", value: "all" },
+                  { label: "Con perfil", value: "identified" },
+                  { label: "Anónimos", value: "anonymous" },
+                ].map((filter) => (
+                  <button
+                    key={filter.value}
+                    type="button"
+                    onClick={() => {
+                      setVisitorIdentityFilter(filter.value as "all" | "identified" | "anonymous");
+                      setVisitorPage(1);
+                    }}
+                    className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] transition-all ${
+                      visitorIdentityFilter === filter.value
+                        ? "border-white/20 bg-white text-black"
+                        : "border-white/[0.08] bg-white/[0.03] text-white/45 hover:border-white/20 hover:text-white"
+                    }`}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+             </div>
+             <div ref={recentVisitorsRef} className="space-y-3 md:hidden">
+                {visibleVisitors.length === 0 ? (
                   <EmptyState
                     icon={Users}
                     title="Sin visitas registradas"
-                    description="En cuanto lleguen visitas vas a poder ver el detalle de cada sesión reciente desde acá."
+                    description={visitorIdentityFilter === "anonymous" ? "No hay visitas anónimas en este período con los filtros actuales." : selectedTechnology ? "No hay sesiones recientes para esta tecnología en el período elegido." : "En cuanto lleguen visitas vas a poder ver el detalle de cada sesión reciente desde acá."}
                   />
                 ) : (
-                  data?.recentVisitors.slice(0, 10).map((visitor) => (
-                    <div key={visitor.id} className="rounded-[1.6rem] border border-white/[0.05] bg-white/[0.02] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+                  paginatedVisitors.map((visitor) => (
+                    <button
+                      key={visitor.id}
+                      type="button"
+                      onClick={() => setSelectedVisitorId(visitor.id)}
+                      className="w-full rounded-[1.6rem] border border-white/[0.05] bg-white/[0.02] p-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] transition-all hover:border-white/[0.14]"
+                    >
                       <div className="flex items-start gap-3">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/5">
                           {visitor.visitor_avatar ? (
-                            <img src={visitor.visitor_avatar} className="h-full w-full object-cover" alt="" />
-                          ) : <Users size={16} className="text-white/20" />}
+                            <img src={getVisitorAvatar(visitor)} className="h-full w-full object-cover" alt="" />
+                          ) : <img src={getVisitorAvatar(visitor)} className="h-full w-full object-cover" alt="" />}
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="truncate text-sm font-bold text-white">
                             {visitor.visitor_username ? `@${visitor.visitor_username}` : (visitor.visitor_name || 'Anonymous Visitor')}
                           </div>
                           <div className="mt-1 text-[10px] uppercase tracking-[0.18em] text-white/20 font-mono">
-                            {visitor.id.slice(0, 8)}... · {timeAgo(visitor.created_at)}
+                            {visitor.id.slice(0, 8)}... · {timeAgo(visitor.created_at)} · {visitor.page_views} vistas
                           </div>
                           <div className="mt-3 flex flex-wrap gap-2">
                             <span className="rounded-lg border border-white/5 bg-white/5 px-2.5 py-1 text-[10px] font-black uppercase tracking-tight text-white/50">
@@ -883,12 +1150,13 @@ export function InsightsTab({ accentColor, blocks }: Props) {
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </button>
                   ))
                 )}
              </div>
 
-             <div className="hidden overflow-x-auto rounded-[1.75rem] border border-white/[0.05] bg-white/[0.02] md:block">
+             <div className="hidden min-h-[520px] overflow-hidden rounded-[1.75rem] border border-white/[0.05] bg-white/[0.02] md:flex md:flex-col">
+                <div className="flex-1 overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="border-b border-white/[0.05]">
@@ -899,7 +1167,7 @@ export function InsightsTab({ accentColor, blocks }: Props) {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/[0.02]">
-                        {(data?.recentVisitors || []).length === 0 ? (
+                        {visibleVisitors.length === 0 ? (
                             <tr>
                                 <td colSpan={4} className="py-16 text-center">
                                      <Users className="mx-auto mb-4 h-10 w-10 text-white/5" />
@@ -907,20 +1175,22 @@ export function InsightsTab({ accentColor, blocks }: Props) {
                                 </td>
                             </tr>
                         ) : (
-                            data?.recentVisitors.slice(0, 10).map((visitor, i) => (
-                                <tr key={visitor.id} className="group hover:bg-white/[0.02] transition-colors">
+                            paginatedVisitors.map((visitor, i) => (
+                                <tr key={visitor.id} className="group cursor-pointer transition-colors hover:bg-white/[0.02]" onClick={() => setSelectedVisitorId(visitor.id)}>
                                     <td className="px-4 py-4">
                                         <div className="flex items-center gap-3">
                                             <div className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shrink-0 group-hover:border-[var(--accent)]/30 transition-colors">
                                                 {visitor.visitor_avatar ? (
-                                                    <img src={visitor.visitor_avatar} className="w-full h-full object-cover" alt="" />
-                                                ) : <Users size={16} className="text-white/20" />}
+                                                    <img src={getVisitorAvatar(visitor)} className="w-full h-full object-cover" alt="" />
+                                                ) : <img src={getVisitorAvatar(visitor)} className="w-full h-full object-cover" alt="" />}
                                             </div>
                                             <div className="flex flex-col">
                                                 <span className="text-sm font-bold text-white leading-none mb-1">
                                                     {visitor.visitor_username ? `@${visitor.visitor_username}` : (visitor.visitor_name || 'Anonymous Visitor')}
                                                 </span>
-                                                <span className="text-[9px] font-mono text-white/20 uppercase tracking-tighter">{visitor.id.slice(0, 8)}...</span>
+                                                <span className="text-[9px] font-mono text-white/20 uppercase tracking-tighter">
+                                                  {visitor.id.slice(0, 8)}... {visitor.city || visitor.country ? `· ${[visitor.city, visitor.country].filter(Boolean).join(", ")}` : ""}
+                                                </span>
                                             </div>
                                         </div>
                                     </td>
@@ -935,9 +1205,11 @@ export function InsightsTab({ accentColor, blocks }: Props) {
                                     </td>
                                     <td className="px-4 py-4">
                                         <div className="flex items-center gap-3">
-                                            {visitor.device && <span className="text-[10px] text-white/40">{visitor.device === 'Mobile' ? '📱' : '🖥️'} {visitor.os}</span>}
+                                            {visitor.device && <span className="text-[10px] text-white/40">{visitor.device === 'Mobile' ? '📱' : visitor.device === 'Tablet' ? '💻' : '🖥️'} {visitor.os}</span>}
                                             <div className="w-1 h-1 rounded-full bg-white/10" />
                                             {visitor.browser && <span className="text-[10px] text-white/40">{getBrowserEmoji(visitor.browser)} {visitor.browser}</span>}
+                                            <div className="w-1 h-1 rounded-full bg-white/10" />
+                                            <span className="text-[10px] text-white/40">{visitor.page_views} pv / {visitor.block_clicks} clicks</span>
                                         </div>
                                     </td>
                                     <td className="px-4 py-4 text-right">
@@ -948,14 +1220,195 @@ export function InsightsTab({ accentColor, blocks }: Props) {
                         )}
                     </tbody>
                 </table>
+                </div>
              </div>
              
-             <div className="mt-6 flex justify-center sm:mt-8">
+             {visibleVisitors.length > 0 && (
+              <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:items-center sm:justify-between">
+                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-white/25">
+                  Mostrando {(visitorPage - 1) * VISITORS_PER_PAGE + 1}-{Math.min(visitorPage * VISITORS_PER_PAGE, visibleVisitors.length)} de {visibleVisitors.length}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setVisitorPage((page) => Math.max(1, page - 1))}
+                    disabled={visitorPage === 1}
+                    className="inline-flex h-10 items-center justify-center rounded-xl border border-white/10 px-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/55 transition-all hover:border-white/20 hover:text-white disabled:opacity-30"
+                  >
+                    Anterior
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setVisitorPage((page) => Math.min(totalVisitorPages, page + 1))}
+                    disabled={visitorPage === totalVisitorPages}
+                    className="inline-flex h-10 items-center justify-center rounded-xl border border-white/10 px-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/55 transition-all hover:border-white/20 hover:text-white disabled:opacity-30"
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              </div>
+             )}
+             <div className="mt-4 flex justify-center">
                  <button className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-white/20 transition-colors hover:text-white/60">
-                    Ver historial completo <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
+                    Explorá cada visita <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
                  </button>
              </div>
         </SectionCard>
+
+      {mounted && createPortal(
+        <AnimatePresence>
+          {selectedVisitor && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[2200] bg-black/90 backdrop-blur-xl"
+                onClick={() => setSelectedVisitorId(null)}
+              />
+              <motion.div
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 18 }}
+                className="fixed inset-0 z-[2210] p-0 sm:p-3 lg:p-4"
+              >
+              <div className="flex h-full w-full flex-col overflow-hidden rounded-[2rem] border border-white/[0.08] bg-[#050507] shadow-[0_50px_180px_rgba(0,0,0,0.78)]">
+              <div className="flex items-center justify-between border-b border-white/[0.06] bg-[#050507] px-5 py-4 sm:px-6">
+                <div className="text-[10px] font-black uppercase tracking-[0.24em] text-white/30">
+                  Visitante {selectedVisitorIndex + 1} de {visibleVisitors.length || 0}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedVisitorId(null)}
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-white/45 transition-all hover:border-white/20 hover:text-white"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto bg-[#050507] p-5 sm:p-6 md:p-8">
+                <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[1.4rem] border border-white/10 bg-white/5">
+                      <img src={getVisitorAvatar(selectedVisitor)} className="h-full w-full object-cover" alt="" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xl font-black tracking-tight text-white">
+                        {selectedVisitor.visitor_username ? `@${selectedVisitor.visitor_username}` : (selectedVisitor.visitor_name || 'Anonymous Visitor')}
+                      </div>
+                      <div className="mt-1 text-sm text-white/55">
+                        {selectedVisitor.visitor_name && selectedVisitor.visitor_username ? selectedVisitor.visitor_name : "Visitante de tu huevsite"}
+                      </div>
+                      <div className="mt-2 text-[11px] uppercase tracking-[0.22em] text-white/25 font-mono">
+                        {selectedVisitor.city || selectedVisitor.country ? [selectedVisitor.city, selectedVisitor.country].filter(Boolean).join(", ") : "Ubicación no disponible"} · {timeAgo(selectedVisitor.created_at)}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedVisitor.visitor_username && (
+                      <Link
+                        href={`/${selectedVisitor.visitor_username}?from=insights&return_to=/dashboard?tab=insights`}
+                        className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 text-[11px] font-black uppercase tracking-[0.2em] text-white/70 transition-all hover:border-white/20 hover:text-white"
+                      >
+                        Ver perfil <ExternalLink size={14} />
+                      </Link>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedVisitorId(null);
+                        recentVisitorsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }}
+                      className="inline-flex h-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] px-4 text-[11px] font-black uppercase tracking-[0.2em] text-white/65 transition-all hover:border-white/20 hover:text-white"
+                    >
+                      Volver a visitas
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+                  <div className="rounded-[1.6rem] border border-white/[0.06] bg-white/[0.03] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                    <div className="text-[10px] font-black uppercase tracking-[0.22em] text-white/25">Sesiones</div>
+                    <div className="mt-2 text-2xl font-black tracking-tight text-white">{selectedVisitor.visits}</div>
+                  </div>
+                  <div className="rounded-[1.6rem] border border-white/[0.06] bg-white/[0.03] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                    <div className="text-[10px] font-black uppercase tracking-[0.22em] text-white/25">Page views</div>
+                    <div className="mt-2 text-2xl font-black tracking-tight text-white">{selectedVisitor.page_views}</div>
+                  </div>
+                  <div className="rounded-[1.6rem] border border-white/[0.06] bg-white/[0.03] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                    <div className="text-[10px] font-black uppercase tracking-[0.22em] text-white/25">Clicks</div>
+                    <div className="mt-2 text-2xl font-black tracking-tight text-white">{selectedVisitor.block_clicks}</div>
+                  </div>
+                  <div className="rounded-[1.6rem] border border-white/[0.06] bg-white/[0.03] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                    <div className="text-[10px] font-black uppercase tracking-[0.22em] text-white/25">Fuente</div>
+                    <div className="mt-2 text-sm font-black tracking-tight text-white">{selectedVisitor.referrer || "Direct/Social"}</div>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
+                  <div className="rounded-[1.75rem] border border-white/[0.06] bg-white/[0.03] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                    <div className="mb-3 text-[10px] font-black uppercase tracking-[0.22em] text-white/25">Contexto técnico</div>
+                    <div className="space-y-2 text-sm text-white/60">
+                      <div>{selectedVisitor.device || "Dispositivo desconocido"} · {selectedVisitor.os || "SO desconocido"}</div>
+                      <div>{selectedVisitor.browser || "Browser desconocido"}</div>
+                    </div>
+                  </div>
+                  <div className="rounded-[1.75rem] border border-white/[0.06] bg-white/[0.03] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                    <div className="mb-3 text-[10px] font-black uppercase tracking-[0.22em] text-white/25">Interacción con tu huevsite</div>
+                    {selectedVisitor.clicked_blocks.length > 0 ? (
+                      <div className="space-y-2">
+                        {selectedVisitor.clicked_blocks.slice(0, 6).map((clicked) => {
+                          const block = blocks.find((item) => item.id === clicked.block_id);
+                          const blockLabel = (block as any)?.title || (block as any)?.label || (block as any)?.name || block?.type || "Bloque";
+                          return (
+                            <div key={clicked.block_id} className="flex items-center justify-between rounded-xl border border-white/[0.04] bg-white/[0.03] px-3 py-2">
+                              <span className="truncate text-sm font-bold text-white/75">{blockLabel}</span>
+                              <span className="shrink-0 text-[10px] font-black uppercase tracking-[0.18em] text-white/35">{clicked.clicks} clicks</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-sm leading-relaxed text-white/35">No registró clicks en bloques durante este período. Puede haber sido una visita de exploración rápida.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between border-t border-white/[0.06] bg-[#050507] px-5 py-4 sm:px-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const previousVisitor = visibleVisitors[selectedVisitorIndex - 1];
+                    if (previousVisitor) setSelectedVisitorId(previousVisitor.id);
+                  }}
+                  disabled={selectedVisitorIndex <= 0}
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 text-[11px] font-black uppercase tracking-[0.2em] text-white/65 transition-all hover:border-white/20 hover:text-white disabled:opacity-30"
+                >
+                  <ChevronLeft size={14} /> Anterior
+                </button>
+                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-white/25">
+                  Navegá sin cerrar el detalle
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextVisitor = visibleVisitors[selectedVisitorIndex + 1];
+                    if (nextVisitor) setSelectedVisitorId(nextVisitor.id);
+                  }}
+                  disabled={selectedVisitorIndex === -1 || selectedVisitorIndex >= visibleVisitors.length - 1}
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 text-[11px] font-black uppercase tracking-[0.2em] text-white/65 transition-all hover:border-white/20 hover:text-white disabled:opacity-30"
+                >
+                  Siguiente <ChevronRight size={14} />
+                </button>
+              </div>
+              </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       </div>
 
@@ -982,7 +1435,16 @@ export function InsightsTab({ accentColor, blocks }: Props) {
                 </div>
              </div>
              <div className="w-full md:ml-auto md:w-auto">
-                 <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="btn-accent !w-full !rounded-2xl !px-8 !py-4 !text-sm font-[950] shadow-[0_0_30px_rgba(var(--accent-rgb),0.2)] md:!w-auto">
+                 <button
+                   onClick={() => {
+                     if (onOptimizeBoard) {
+                       onOptimizeBoard();
+                       return;
+                     }
+                     window.scrollTo({ top: 0, behavior: 'smooth' });
+                   }}
+                   className="btn-accent !w-full !rounded-2xl !px-8 !py-4 !text-sm font-[950] shadow-[0_0_30px_rgba(var(--accent-rgb),0.2)] md:!w-auto"
+                 >
                     Optimizar mi board
                  </button>
              </div>

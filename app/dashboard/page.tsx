@@ -85,6 +85,13 @@ export default function DashboardPage() {
   const [isTabMenuOpen, setIsTabMenuOpen] = useState(false);
   const supabase = createClient();
 
+  const normalizeSubSites = (subSites: any[] = []) =>
+    subSites.map((site: any) => ({
+      ...site,
+      avatarUrl: site.avatarUrl || site.avatar_url || "",
+      sourceUrl: site.sourceUrl || site.source_url || "",
+    }));
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     window.location.href = '/login';
@@ -136,7 +143,7 @@ export default function DashboardPage() {
         referredBy: data.profile.referred_by || "",
         proReferralsCount: data.profile.pro_referrals_count || 0,
         referralRewardExpiresAt: data.profile.referral_reward_expires_at || null,
-        subSites: data.subSites || [],
+        subSites: normalizeSubSites(data.subSites || []),
         blocks: data.blocks.map((block: any) => {
           const { id: _, type: __, order: ___, col_span: ____, row_span: _____, visible: ______, ...cleanData } = block.data || {};
           return {
@@ -180,6 +187,14 @@ export default function DashboardPage() {
   // Fetch profile on mount
   useEffect(() => {
     fetchProfile();
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get("tab");
+    if (tab === "insights" || tab === "subsites" || tab === "domain" || tab === "transfer" || tab === "board") {
+      setActiveTab(tab);
+    }
   }, []);
 
   // Fetch blocks when switching sub-sites
@@ -606,7 +621,7 @@ export default function DashboardPage() {
       try {
         const resp = await fetch('/api/profile');
         const data = await resp.json();
-        const freshSubSites = (data.subSites || []).map((s: any) => ({ ...s, avatarUrl: s.avatar_url }));
+        const freshSubSites = normalizeSubSites(data.subSites || []);
         setProfile(prev => prev ? { ...prev, subSites: freshSubSites } : null);
       } catch (e) { console.error(e); }
       return;
@@ -620,10 +635,7 @@ export default function DashboardPage() {
       });
       if (resp.ok) {
         const data = await resp.json();
-        const newSite = {
-          ...data.subSite,
-          avatarUrl: data.subSite.avatar_url
-        };
+        const newSite = normalizeSubSites([data.subSite])[0];
         setProfile(prev => prev ? { ...prev, subSites: [newSite, ...(prev.subSites || [])] } : null);
       }
     } catch (e) { console.error(e); }
@@ -868,7 +880,11 @@ export default function DashboardPage() {
         }}
       />
 
-      <main className="flex-1 min-w-0 h-full overflow-y-auto p-4 md:px-8 md:pb-8 md:pt-0 lg:px-10 lg:pb-10 relative z-0 custom-scrollbar">
+      <main className={`flex-1 min-w-0 h-full overflow-y-auto p-4 md:px-8 lg:px-10 relative z-0 custom-scrollbar ${
+        profile.subscriptionTier === 'pro'
+          ? 'pt-6 md:pb-8 md:pt-6 lg:pb-10 lg:pt-8'
+          : 'md:pb-8 md:pt-0 lg:pb-10'
+      }`}>
         <style dangerouslySetInnerHTML={{
           __html: `:root { --accent: ${profile.accentColor}; --accent-dim: ${profile.accentColor}1f; --btn-border: ${isDarkColor(profile.accentColor) ? 'rgba(255,255,255,0.15)' : 'transparent'}; }`
         }} />
@@ -876,9 +892,11 @@ export default function DashboardPage() {
 
         <div className="max-w-[1600px] mx-auto relative">
           <div className="absolute inset-x-6 top-0 h-24 md:h-32 bg-[radial-gradient(circle,rgba(var(--accent-rgb),0.12)_0%,transparent_72%)] blur-3xl pointer-events-none opacity-70" />
-          <div className="relative z-20 mb-6 md:mb-8 lg:mb-10">
-            <PriceBanner className="top-0 sm:top-2" />
-          </div>
+          {profile.subscriptionTier !== 'pro' && (
+            <div className="relative z-20 mb-6 md:mb-8 lg:mb-10">
+              <PriceBanner className="top-0 sm:top-2" />
+            </div>
+          )}
 
           <header className="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-6 lg:gap-8 mb-8 md:mb-12 items-center lg:text-left text-center px-2 md:px-0 relative z-[999]">
           <div className="w-full md:w-auto relative">
@@ -1031,15 +1049,21 @@ export default function DashboardPage() {
                   </SortableContext>
                 </DndContext>
 
-                <div className="mt-12 max-w-[1200px] mx-auto">
-                   <ReferralDashboard profile={profile} />
-                </div>
+                {profile.subscriptionTier !== 'pro' && (
+                  <div className="mt-12 max-w-[1200px] mx-auto">
+                     <ReferralDashboard profile={profile} />
+                  </div>
+                )}
               </motion.div>
             )}
 
             {activeTab === 'insights' && (
               <motion.div key="insights" initial={{ opacity: 0, scale: 0.99 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.99 }} className="max-w-5xl mx-auto px-2">
-                <InsightsTab accentColor={profile.accentColor} blocks={profile.blocks} />
+                <InsightsTab
+                  accentColor={profile.accentColor}
+                  blocks={profile.blocks}
+                  onOptimizeBoard={() => setActiveTab('board')}
+                />
               </motion.div>
             )}
 

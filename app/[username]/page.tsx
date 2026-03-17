@@ -15,6 +15,7 @@ import { AnalyticsTracker } from "@/components/analytics/AnalyticsTracker";
 
 interface Props {
   params: { username: string };
+  searchParams?: { from?: string; return_to?: string };
 }
 
 
@@ -58,9 +59,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function ProfilePage({ params }: Props) {
+export default async function ProfilePage({ params, searchParams }: Props) {
   const { username } = await params;
   const profile = await profileService.getProfile(username);
+  const navigationOrigin = searchParams?.from;
+  const returnTo = searchParams?.return_to || (navigationOrigin === "feed" ? "/feed" : "/dashboard?tab=insights");
 
   if (!profile) {
     notFound();
@@ -205,6 +208,17 @@ export default async function ProfilePage({ params }: Props) {
         <MobileBottomNav accentColor={profile.accentColor} currentUserId={currentUserId} isCustomDomain={isCustomDomain} />
 
         {/* Header / Nav */}
+        {(navigationOrigin === "insights" || navigationOrigin === "feed") && (
+          <div className="relative z-10 mb-6 flex justify-center md:mb-8">
+            <Link
+              href={returnTo}
+              className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3 text-[11px] font-black uppercase tracking-[0.2em] text-white/70 transition-all hover:border-white/20 hover:text-white"
+            >
+              {navigationOrigin === "feed" ? "← Volver al feed" : "← Volver al dashboard"}
+            </Link>
+          </div>
+        )}
+
         <ProfileHeader
           profileId={profile.id}
           isFollowing={isFollowing}

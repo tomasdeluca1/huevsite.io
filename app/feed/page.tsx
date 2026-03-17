@@ -25,6 +25,36 @@ interface Activity {
   user: ActivityUser;
 }
 
+function spreadAdjacentDuplicates(items: Activity[]): Activity[] {
+  const remaining = [...items];
+  const ordered: Activity[] = [];
+
+  while (remaining.length > 0) {
+    const previous = ordered[ordered.length - 1];
+    let nextIndex = 0;
+
+    if (previous) {
+      const candidateIndex = remaining.findIndex(
+        (activity) => activity.type !== previous.type && activity.user.id !== previous.user.id
+      );
+
+      if (candidateIndex !== -1) {
+        nextIndex = candidateIndex;
+      } else {
+        const differentTypeIndex = remaining.findIndex((activity) => activity.type !== previous.type);
+
+        if (differentTypeIndex !== -1) {
+          nextIndex = differentTypeIndex;
+        }
+      }
+    }
+
+    ordered.push(remaining.splice(nextIndex, 1)[0]);
+  }
+
+  return ordered;
+}
+
 const ACTIVITY_LABELS: Record<string, (data: Record<string, string>, username: string) => string> = {
   new_project: (data, u) => `${u} lanzó un proyecto: ${data.projectName ?? ""}`,
   new_block: (data, u) => `${u} agregó un nuevo bloque: ${data.blockType ?? ""}`,
@@ -259,8 +289,9 @@ function FeedContent() {
   };
 
   const activityGroups = useMemo(() => {
+    const orderedActivities = spreadAdjacentDuplicates(activities);
     const groups: Activity[][] = [];
-    activities.forEach((acc: Activity) => {
+    orderedActivities.forEach((acc: Activity) => {
       const last = groups[groups.length - 1];
       if (last && last[0].user.id === acc.user.id) last.push(acc);
       else groups.push([acc]);

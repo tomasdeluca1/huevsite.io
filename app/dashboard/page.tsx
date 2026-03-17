@@ -49,6 +49,7 @@ import { CreateSubSiteModal } from "@/components/dashboard/CreateSubSiteModal";
 import { TwitterWarning } from "@/components/dashboard/TwitterWarning";
 import { PriceBanner } from "@/components/marketing/PriceBanner";
 import { ReferralDashboard } from "@/components/dashboard/ReferralDashboard";
+import { GitHubData, OnboardingCompletionData, Role, LayoutOption } from "@/lib/onboarding-types";
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -84,6 +85,7 @@ export default function DashboardPage() {
   const [verificationResult, setVerificationResult] = useState<{ isValid: boolean; message: string } | null>(null);
   const [isTabMenuOpen, setIsTabMenuOpen] = useState(false);
   const supabase = createClient();
+  const referralsSectionRef = useRef<HTMLDivElement | null>(null);
 
   const normalizeSubSites = (subSites: any[] = []) =>
     subSites.map((site: any) => ({
@@ -128,6 +130,8 @@ export default function DashboardPage() {
         username: data.profile.username,
         displayName: data.profile.name || data.profile.username,
         accentColor: data.profile.accent_color,
+        roles: data.profile.roles || [],
+        layout: data.profile.layout || null,
         subscriptionTier: (data.profile.subscription_tier === 'pro' || !!data.profile.pro_since) ? 'pro' : 'free',
         extraBlocksFromShare: data.profile.extra_blocks_from_share || 0,
         twitterShareUnlocked: data.profile.twitter_share_unlocked || false,
@@ -196,6 +200,22 @@ export default function DashboardPage() {
       setActiveTab(tab);
     }
   }, []);
+
+  useEffect(() => {
+    if (!profile) return;
+    if (activeTab !== "board") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("scrollTo") !== "referrals") return;
+
+    const timer = window.setTimeout(() => {
+      referralsSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  }, [profile, activeTab]);
 
   // Fetch blocks when switching sub-sites
   useEffect(() => {
@@ -387,6 +407,7 @@ export default function DashboardPage() {
           url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop",
           title: "Mi diseño / video",
           description: "Un vistazo a mi trabajo más reciente.",
+          link: "",
         };
         break;
       case "certification":
@@ -675,35 +696,46 @@ export default function DashboardPage() {
     } catch (e) { console.error(e); }
   };
 
-  const handleOnboardingComplete = async (data: { name: string, tagline: string, accentColor: string, blocks?: any[] }) => {
+  const handleOnboardingComplete = async (data: OnboardingCompletionData & { blocks: BlockData[] }) => {
     const managedBlockTypes = new Set(["hero", "github", "social", "metric", "stack"]);
+    const nextDisplayName = data.githubData?.name || profile?.displayName || data.username;
+    const nextTagline = data.githubData?.bio || profile?.tagline || "";
+    const nextAvatar = data.githubData?.avatarUrl || profile?.avatarUrl || "";
 
     // Optimistic update
     setProfile(prev => prev ? {
       ...prev,
-      displayName: data.name,
-      tagline: data.tagline,
+      username: data.username,
+      displayName: nextDisplayName,
+      tagline: nextTagline,
+      avatarUrl: nextAvatar,
       accentColor: data.accentColor,
+      roles: data.roles,
+      layout: data.layout,
+      githubHandle: data.githubHandle || prev.githubHandle,
       isOnboardingTestUser: false,
       blocks: data.blocks && data.blocks.length > 0 
-        ? data.blocks.map(b => ({ ...b, id: Math.random().toString() })) // Temporary IDs for UI
+        ? data.blocks.map(b => ({ ...b, id: Math.random().toString() }))
         : prev.blocks
     } : null);
 
     try {
-      // 1. Update Profile
       await fetch('/api/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: data.name,
-          tagline: data.tagline,
+          username: data.username,
+          name: nextDisplayName,
+          tagline: nextTagline,
+          image: nextAvatar,
           accent_color: data.accentColor,
+          roles: data.roles,
+          layout: data.layout,
+          github_handle: data.githubHandle || null,
           is_onboarding_test_user: false
         }),
       });
 
-      // 2. Sync onboarding blocks to match the preview exactly
       if (data.blocks && data.blocks.length > 0) {
         const existingManagedBlocks = (profile?.blocks || []).filter(block => managedBlockTypes.has(block.type));
 
@@ -728,14 +760,15 @@ export default function DashboardPage() {
                   avatarUrl: block.avatarUrl,
                   status: block.status,
                   location: block.location,
-                  description: block.description
+                  description: block.description,
+                  roles: block.roles
                 }
               : block.type === 'github'
-                ? { username: block.username, stats: block.stats }
+                ? { username: block.username, stats: block.stats, showAdvanced: block.showAdvanced }
                 : block.type === 'social'
                   ? { links: block.links }
                   : block.type === 'metric'
-                    ? { label: block.label, value: block.value }
+                    ? { label: block.label, value: block.value, icon: block.icon }
                     : block.type === 'stack'
                       ? { items: block.items }
                       : block
@@ -751,7 +784,7 @@ export default function DashboardPage() {
         // Refresh profile after creating blocks to get real IDs
         await fetchProfile();
       }
-      
+
       localStorage.setItem("huevsite_onboarding_seen", "true");
     } catch (error) {
       console.error('Error saving onboarding data:', error);
@@ -900,7 +933,7 @@ export default function DashboardPage() {
 
           <header className="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-6 lg:gap-8 mb-8 md:mb-12 items-center lg:text-left text-center px-2 md:px-0 relative z-[999]">
           <div className="w-full md:w-auto relative">
-            <TwitterWarning blocks={profile.blocks} />
+            <TwitterWarning blocks={profile.blocks} isSubSite={Boolean(selectedSubSiteId)} />
             <div className="mb-3 hidden md:block"><div className="section-label">// dashboard / {activeTab}</div></div>
             <h2 className="text-3xl md:text-4xl xl:text-5xl font-[950] tracking-tighter leading-[0.94] text-balance">
               {activeTab === 'board' ? <>Armá tu <span style={{ color: profile.accentColor }}>{selectedSubSiteId ? (profile.subSites.find(s => s.id === selectedSubSiteId)?.title || "Board") : "huevsite"}</span>.</> :
@@ -1050,7 +1083,7 @@ export default function DashboardPage() {
                 </DndContext>
 
                 {profile.subscriptionTier !== 'pro' && (
-                  <div className="mt-12 max-w-[1200px] mx-auto">
+                  <div ref={referralsSectionRef} className="mt-12 max-w-[1200px] mx-auto scroll-mt-28">
                      <ReferralDashboard profile={profile} />
                   </div>
                 )}
@@ -1190,18 +1223,24 @@ export default function DashboardPage() {
         onClose={() => { 
           localStorage.setItem("huevsite_onboarding_seen", "true"); 
           setIsOnboardingOpen(false); 
-          if (profile.isOnboardingTestUser) {
-            handleOnboardingComplete({ 
-              name: profile.displayName, 
-              tagline: profile.tagline || "", 
-              accentColor: profile.accentColor 
-            });
-          }
         }} 
         username={profile.username}
-        initialName={profile.displayName}
-        initialTagline={profile.tagline}
+        displayName={profile.displayName}
+        tagline={profile.tagline}
+        avatarUrl={profile.avatarUrl}
+        githubData={profile.githubHandle ? {
+          username: profile.githubHandle,
+          avatarUrl: profile.avatarUrl || "",
+          name: profile.displayName,
+          bio: profile.tagline || "",
+          publicRepos: 0,
+          followers: 0,
+          topLanguages: [],
+          topRepos: [],
+        } as GitHubData : null}
         initialColor={profile.accentColor}
+        initialLayout={(profile.layout as LayoutOption | null) || null}
+        initialRoles={(profile.roles as Role[] | null) || []}
         onComplete={handleOnboardingComplete}
       />
       <AnimatePresence>{isDeletingId && <div className="fixed inset-0 z-[500] flex items-center justify-center p-4"><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setIsDeletingId(null)} /><motion.div initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }} className="relative w-full max-w-sm bg-[var(--surface)] border border-red-500/30 rounded-[2rem] shadow-2xl p-8 z-[510] text-center"><div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-6 text-red-500"><Trash2 size={32} /></div><h3 className="text-2xl font-black mb-3 text-white">¿Borrar bloque?</h3><p className="text-[var(--text-dim)] mb-8 text-sm leading-relaxed">Esta acción no se puede deshacer.</p><div className="flex gap-3"><button onClick={() => setIsDeletingId(null)} className="flex-1 py-3.5 rounded-2xl bg-[var(--surface2)] font-bold text-sm text-white">Cancelar</button><button onClick={() => { removeBlock(isDeletingId); setIsDeletingId(null); }} className="flex-1 py-3.5 rounded-2xl bg-red-500 font-bold text-sm text-white transition-all">Eliminar</button></div></motion.div></div>}</AnimatePresence>

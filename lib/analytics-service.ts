@@ -92,6 +92,8 @@ export const analyticsService = {
     visitor_username?: string | null;
     visitor_name?: string | null;
     visitor_avatar?: string | null;
+    country?: string | null;
+    city?: string | null;
     referrer?: string | null;
     user_agent?: string | null;
   }) {
@@ -110,6 +112,8 @@ export const analyticsService = {
         visitor_username: data.visitor_username || null,
         visitor_name: data.visitor_name || null,
         visitor_avatar: data.visitor_avatar || null,
+        country: data.country || null,
+        city: data.city || null,
         referrer,
         user_agent: ua,
         browser,

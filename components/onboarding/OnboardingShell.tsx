@@ -8,12 +8,16 @@ interface OnboardingShellProps {
   currentStep: number;
   children: React.ReactNode;
   stepKey: StepId;
+  skipHref?: string;
+  onSkip?: () => void;
 }
 
 export function OnboardingShell({
   currentStep,
   children,
   stepKey,
+  skipHref = "/dashboard",
+  onSkip,
 }: OnboardingShellProps) {
   const progress = ((currentStep + 1) / STEPS.length) * 100;
 
@@ -75,9 +79,19 @@ export function OnboardingShell({
             })}
           </div>
 
-          <Link href="/dashboard" className="text-[var(--text-dim)] hover:text-white text-[10px] font-mono uppercase tracking-widest transition-colors">
-            saltar todo →
-          </Link>
+          {onSkip ? (
+            <button
+              type="button"
+              onClick={onSkip}
+              className="text-[var(--text-dim)] hover:text-white text-[10px] font-mono uppercase tracking-widest transition-colors"
+            >
+              saltar todo →
+            </button>
+          ) : (
+            <Link href={skipHref} className="text-[var(--text-dim)] hover:text-white text-[10px] font-mono uppercase tracking-widest transition-colors">
+              saltar todo →
+            </Link>
+          )}
         </div>
       </header>
 

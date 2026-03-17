@@ -749,6 +749,15 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
               />
             </div>
             <div className="space-y-2">
+              <div className="section-label !text-[9px] px-1">// link de destino (opcional)</div>
+              <input
+                value={formData.link || ""}
+                onChange={(e) => handleChange("link", e.target.value)}
+                className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-mono text-xs"
+                placeholder="https://otro-sitio.com"
+              />
+            </div>
+            <div className="space-y-2">
               <div className="section-label !text-[9px] px-1">// descripción (opcional)</div>
               <textarea
                 value={formData.description || ""}

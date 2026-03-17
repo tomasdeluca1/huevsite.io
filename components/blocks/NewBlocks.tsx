@@ -22,8 +22,8 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
   const isYouTube = data.url.includes("youtube.com") || data.url.includes("youtu.be");
   const isVimeo = data.url.includes("vimeo.com");
   const isVideo = isDirectVideo || isYouTube || isVimeo;
-
-  const isExternal = !data.url.includes('supabase.co') && !data.url.startsWith('/storage');
+  const externalLink = data.link?.trim() || ((!data.url.includes('supabase.co') && !data.url.startsWith('/storage')) ? data.url : "");
+  const hasExternalLink = externalLink.length > 0;
 
   // Lock scroll when zoomed
   useEffect(() => {
@@ -154,9 +154,9 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
                 )}
 
                 {/* Overlay link button inside media if external */}
-                {isExternal && (
+                {hasExternalLink && (
                   <a
-                    href={data.url}
+                    href={externalLink}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="absolute top-6 right-6 p-4 rounded-2xl bg-black/60 backdrop-blur-md border border-white/20 text-white hover:bg-white hover:text-black transition-all flex items-center gap-2 font-bold text-sm shadow-xl"
@@ -177,9 +177,9 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
                   >
                     Esc para cerrar
                   </button>
-                  {isExternal && (
+                  {hasExternalLink && (
                     <a
-                      href={data.url}
+                      href={externalLink}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-full sm:w-auto px-10 py-4 rounded-2xl font-bold text-sm transition-all shadow-lg active:scale-95"

@@ -594,6 +594,63 @@ nav {
   padding-bottom: 50px;
 }
 
+.dashboard-board-grid {
+  position: relative;
+}
+
+.dashboard-board-grid::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 100% 128px, calc(100% / 4) 100%;
+  mask-image: linear-gradient(180deg, rgba(0,0,0,0.55), transparent 92%);
+  opacity: 0.45;
+}
+
+@media (max-width: 767px) {
+  .dashboard-board-grid::before {
+    background-size: 100% 110px, 100% 100%;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .dashboard-board-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .dashboard-board-grid::before {
+    background-size: 100% 120px, calc(100% / 2) 100%;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1399px) {
+  .dashboard-board-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-rows: minmax(120px, auto);
+    gap: 18px;
+  }
+
+  .dashboard-board-grid .col-span-1 { grid-column: span 1; }
+  .dashboard-board-grid .col-span-2 { grid-column: span 2; }
+  .dashboard-board-grid .col-span-3 { grid-column: span 3; }
+  .dashboard-board-grid .col-span-4 { grid-column: span 3; }
+
+  .dashboard-board-grid::before {
+    background-size: 100% 120px, calc(100% / 3) 100%;
+  }
+}
+
+@media (min-width: 1400px) {
+  .dashboard-board-grid::before {
+    background-size: 100% 128px, calc(100% / 4) 100%;
+  }
+}
+
 /* Winner showcase: controlled grid for the "demo" environment */
 @media (min-width: 1200px) {
   .winner-showcase-grid .huevsite-grid {

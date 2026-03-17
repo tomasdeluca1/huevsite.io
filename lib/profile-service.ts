@@ -43,7 +43,8 @@ export const profileService = {
     // Run these in parallel for faster response
     const [
       { data: blocks, error: blocksError },
-      { data: winnerData },
+      { data: userWinnerData },
+      { data: latestWinnerData },
       { data: subSites, error: subSitesError }
     ] = await Promise.all([
       supabase
@@ -55,8 +56,15 @@ export const profileService = {
         .order('order', { ascending: true }),
       supabase
         .from('showcase_winners')
-        .select('id')
+        .select('week')
         .eq('user_id', profile.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from('showcase_winners')
+        .select('week')
+        .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle(),
       supabase
@@ -93,7 +101,10 @@ export const profileService = {
 
     const transformed = this._transformProfile(profile, blocks || []);
     transformed.subSites = subSitesWithAvatar;
-    transformed.isWinner = !!winnerData;
+    transformed.isWinner =
+      !!userWinnerData &&
+      !!latestWinnerData &&
+      userWinnerData.week === latestWinnerData.week;
     
     return transformed;
   },
@@ -119,23 +130,60 @@ export const profileService = {
 
     if (subSiteError || !subSite) return null;
 
-    const { data: blocks, error: blocksError } = await supabase
-      .from('blocks')
-      .select('id, type, order, col_span, row_span, visible, data')
-      .eq('user_id', profile.id)
-      .eq('sub_site_id', subSite.id)
-      .eq('visible', true)
-      .order('order', { ascending: true });
+    const [
+      { data: blocks, error: blocksError },
+      { data: subSites }
+    ] = await Promise.all([
+      supabase
+        .from('blocks')
+        .select('id, type, order, col_span, row_span, visible, data')
+        .eq('user_id', profile.id)
+        .eq('sub_site_id', subSite.id)
+        .eq('visible', true)
+        .order('order', { ascending: true }),
+      supabase
+        .from('sub_sites')
+        .select('id, title, description, slug, avatar_url, source_url, created_at')
+        .eq('user_id', profile.id)
+        .order('created_at', { ascending: false })
+    ]);
 
     if (blocksError) return null;
 
     const transformed = this._transformProfile(profile, blocks || []);
+
+    let subSitesWithAvatar = (subSites || []).map(s => ({
+      ...s,
+      avatarUrl: s.avatar_url || null,
+      sourceUrl: s.source_url || null
+    }));
+
+    if (subSitesWithAvatar.length > 0) {
+      const subSiteIds = subSitesWithAvatar.map(s => s.id);
+      const { data: subSiteBlocks } = await supabase
+        .from('blocks')
+        .select('sub_site_id, data')
+        .in('sub_site_id', subSiteIds)
+        .eq('type', 'hero');
+
+      if (subSiteBlocks) {
+        subSitesWithAvatar = subSitesWithAvatar.map(s => {
+          const hero = subSiteBlocks.find(b => b.sub_site_id === s.id);
+          return {
+            ...s,
+            avatarUrl: s.avatarUrl || hero?.data?.avatarUrl || null
+          };
+        });
+      }
+    }
+
     // Customization for subsite:
     return {
       ...transformed,
       displayName: subSite.title,
       tagline: subSite.description || transformed.tagline,
       avatarUrl: subSite.avatar_url || transformed.avatarUrl,
+      subSites: subSitesWithAvatar,
       subSiteId: subSite.id,
       sourceUrl: subSite.source_url || null,
       parentProfile: {

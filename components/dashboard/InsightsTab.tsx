@@ -6,23 +6,18 @@ import {
   MousePointer2,
   BarChart3,
   TrendingUp,
-  Loader2,
   AlertCircle,
-  Globe,
   Monitor,
-  Smartphone,
-  ExternalLink,
   RefreshCw,
-  Circle,
   ArrowUpRight,
   ArrowDownRight,
-  ChevronRight,
-  Clock,
   Layout,
   Globe2,
-  ArrowRight
+  ArrowRight,
+  LucideIcon
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Tooltip } from "@/components/ui/Tooltip";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -115,6 +110,26 @@ function getBrowserEmoji(browser: string): string {
     'LinkedIn': '🔷',
   };
   return map[browser] || '🌐';
+}
+
+function EmptyState({
+  icon: Icon,
+  title,
+  description,
+}: {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="flex min-h-[220px] flex-col items-center justify-center rounded-[1.75rem] border border-dashed border-white/[0.06] bg-white/[0.015] px-6 py-10 text-center">
+      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/5 bg-white/[0.03]">
+        <Icon className="h-5 w-5 text-white/25" />
+      </div>
+      <div className="text-[10px] font-black uppercase tracking-[0.28em] text-white/45">{title}</div>
+      <p className="mt-3 max-w-[240px] text-sm leading-relaxed text-white/28">{description}</p>
+    </div>
+  );
 }
 
 // ─── MiniSparkline Chart ───────────────────────────────────────────────────────
@@ -258,7 +273,7 @@ function SparklineChart({ data, accentColor }: { data: DailyPoint[]; accentColor
     <div className="relative w-full">
       <canvas
         ref={canvasRef}
-        className="w-full h-[220px]"
+        className="h-[200px] w-full sm:h-[220px] lg:h-[260px]"
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setTooltip(null)}
         style={{ cursor: 'crosshair' }}
@@ -298,6 +313,7 @@ function BarRow({
   accent,
   icon,
   sublabel,
+  tooltip,
 }: {
   label: string;
   value: number;
@@ -305,22 +321,32 @@ function BarRow({
   accent: string;
   icon?: string;
   sublabel?: string;
+  tooltip?: string;
 }) {
   const pct = max > 0 ? (value / max) * 100 : 0;
   return (
-    <div className="flex items-center gap-4 py-3.5 border-b border-white/[0.03] last:border-0 group relative">
-      <div className="flex items-center gap-3.5 flex-1 min-w-0 z-10">
+    <div className="group relative flex items-center gap-3 py-3.5 sm:gap-4 sm:px-1 border-b border-white/[0.03] last:border-0">
+      <div className="z-10 flex min-w-0 flex-1 items-center gap-3 sm:gap-3.5">
         {icon && (
-          <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-[12px] shrink-0 border border-white/5 group-hover:bg-white/10 transition-colors">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/5 bg-white/5 text-[12px] transition-colors group-hover:bg-white/10">
             {icon}
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-sm font-bold text-white group-hover:text-[var(--accent)] transition-colors truncate">
-              {label}
-            </span>
-            <span className="text-sm font-black text-white/80 group-hover:text-white transition-colors">
+          <div className="mb-1.5 flex items-start justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-1.5">
+              <span className="truncate text-sm font-bold text-white transition-colors group-hover:text-[var(--accent)]">
+                {label}
+              </span>
+              {tooltip && (
+                <Tooltip content={tooltip}>
+                   <div className="flex h-3 w-3 cursor-help items-center justify-center rounded-full bg-white/5 pointer-events-auto">
+                     <AlertCircle size={8} className="text-white/20 hover:text-white/60" />
+                   </div>
+                </Tooltip>
+              )}
+            </div>
+            <span className="shrink-0 text-sm font-black text-white/80 transition-colors group-hover:text-white">
               {formatNum(value)}
             </span>
           </div>
@@ -338,7 +364,7 @@ function BarRow({
           {sublabel && <div className="text-[9px] text-white/20 font-mono uppercase tracking-[0.2em] mt-1.5 font-black">{sublabel}</div>}
         </div>
       </div>
-      <div className="absolute -inset-x-2 -inset-y-0.5 rounded-xl bg-white/[0.01] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+      <div className="pointer-events-none absolute -inset-x-2 -inset-y-0.5 rounded-xl bg-white/[0.01] opacity-0 transition-opacity group-hover:opacity-100" />
     </div>
   );
 }
@@ -347,6 +373,8 @@ function BarRow({
 
 function SectionCard({
   title,
+  description,
+  badge,
   tabs,
   activeTab,
   setActiveTab,
@@ -354,6 +382,8 @@ function SectionCard({
   className = "",
 }: {
   title?: string;
+  description?: string;
+  badge?: string;
   tabs?: string[];
   activeTab?: string;
   setActiveTab?: (t: string) => void;
@@ -361,17 +391,29 @@ function SectionCard({
   className?: string;
 }) {
   return (
-    <div className={`rounded-3xl bg-white/[0.015] border border-white/[0.05] backdrop-blur-sm overflow-hidden flex flex-col ${className}`}>
+    <div className={`flex flex-col overflow-hidden rounded-3xl border border-white/[0.05] bg-white/[0.015] backdrop-blur-sm ${className}`}>
       {(title || tabs) && (
-        <div className="flex items-center justify-between px-6 py-5 border-b border-white/[0.05]">
-          {title && <span className="text-[11px] font-black text-white/30 uppercase tracking-[0.25em] font-display">{title}</span>}
+        <div className="flex flex-col gap-3 border-b border-white/[0.05] px-4 py-4 sm:px-6">
+          {(title || description || badge) && (
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                {title && <span className="text-[11px] font-black uppercase tracking-[0.25em] text-white/30 font-display">{title}</span>}
+                {description && <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/28">{description}</p>}
+              </div>
+              {badge && (
+                <div className="inline-flex shrink-0 items-center rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-white/35">
+                  {badge}
+                </div>
+              )}
+            </div>
+          )}
           {tabs && (
-            <div className="flex items-center gap-4">
+            <div className="-mx-1 flex items-center gap-2 overflow-x-auto px-1 pb-1 sm:mx-0 sm:px-0 sm:pb-0">
                {tabs.map(tab => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab?.(tab)}
-                        className={`text-[10px] font-black uppercase tracking-[0.15em] transition-all relative py-1 px-3 rounded-lg font-display ${
+                        className={`relative shrink-0 rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.15em] transition-all font-display ${
                         activeTab === tab
                             ? 'text-[var(--accent)] bg-[var(--accent-dim)]'
                             : 'text-white/20 hover:text-white/50 hover:bg-white/5'
@@ -384,7 +426,7 @@ function SectionCard({
           )}
         </div>
       )}
-      <div className="p-6 flex-1">{children}</div>
+      <div className="flex-1 p-4 sm:p-5">{children}</div>
     </div>
   );
 }
@@ -398,6 +440,7 @@ function StatCard({
   accent,
   trend,
   icon: Icon,
+  tooltip,
 }: {
   label: string;
   value: string | number;
@@ -405,30 +448,46 @@ function StatCard({
   accent: string;
   trend?: 'up' | 'down' | 'neutral';
   icon: typeof Users;
+  tooltip?: string;
 }) {
   return (
     <motion.div 
         whileHover={{ y: -4, backgroundColor: 'rgba(255,255,255,0.03)' }}
-        className="flex flex-col justify-between p-6 rounded-3xl bg-white/[0.015] border border-white/[0.05] hover:border-white/20 transition-all group relative overflow-hidden"
+        className="group relative flex min-h-[154px] flex-col justify-between overflow-hidden rounded-[2rem] border border-white/[0.05] bg-white/[0.015] p-4 transition-all hover:border-white/20 sm:min-h-[170px] sm:p-[18px] lg:min-h-[182px] lg:p-5"
     >
       <div className="absolute top-0 right-0 w-32 h-32 bg-[radial-gradient(circle,var(--glow-color)_0%,transparent_70%)] opacity-10 blur-2xl pointer-events-none" style={{ '--glow-color': accent } as any} />
       
-      <div className="flex items-center justify-between mb-6 relative z-10">
-        <div className="w-11 h-11 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center group-hover:scale-110 transition-transform">
+      <div className="relative z-10 mb-4 flex items-start justify-between gap-3">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.04] transition-transform group-hover:scale-110">
           <Icon className="w-5 h-5" style={{ color: accent }} />
         </div>
-        {trend && trend !== 'neutral' && (
-          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${trend === 'up' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
-            {trend === 'up' ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
-            {trend === 'up' ? 'Good' : 'Drop'}
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {tooltip && (
+            <Tooltip content={tooltip} position="bottom">
+              <button
+                type="button"
+                aria-label={`Más información sobre ${label}`}
+                className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] text-white/[0.28] transition-colors hover:border-white/[0.15] hover:text-white/60"
+              >
+                <AlertCircle size={14} />
+              </button>
+            </Tooltip>
+          )}
+          {trend && trend !== 'neutral' && (
+            <div className={`flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${trend === 'up' ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400' : 'border-red-500/20 bg-red-500/10 text-red-400'}`}>
+              {trend === 'up' ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+              {trend === 'up' ? 'Good' : 'Drop'}
+            </div>
+          )}
+        </div>
       </div>
       <div className="relative z-10">
-        <div className="text-[11px] font-black text-white/30 uppercase tracking-[0.2em] mb-1 font-display">{label}</div>
-        <div className="flex items-baseline gap-2">
-            <div className="text-4xl font-[950] text-white tracking-tighter leading-none font-display">{value}</div>
-            {sub && <span className="text-[9px] text-white/10 font-bold uppercase tracking-widest translate-y-[-2px] font-display">{sub}</span>}
+        <div className="mb-1.5 flex items-center gap-2">
+          <div className="text-[11px] font-black uppercase tracking-[0.2em] text-white/30 font-display">{label}</div>
+        </div>
+        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <div className="text-3xl leading-none tracking-tighter text-white font-[950] font-display sm:text-[2.5rem]">{value}</div>
+            {sub && <span className="translate-y-[-1px] text-[9px] font-bold uppercase tracking-widest text-white/10 font-display">{sub}</span>}
         </div>
       </div>
     </motion.div>
@@ -443,8 +502,6 @@ export function InsightsTab({ accentColor, blocks }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [referrerTab, setReferrerTab] = useState('Referrer');
   const [locationTab, setLocationTab] = useState('Browser');
-  const [visitorsTab, setVisitorsTab] = useState('Recent');
-
   const fetchInsights = async () => {
     setLoading(true);
     setError(null);
@@ -510,6 +567,14 @@ export function InsightsTab({ accentColor, blocks }: Props) {
   const maxBlocks = topBlocks[0]?.clicks || 1;
 
   const peakDay = data?.dailyVisitors?.reduce((max, d) => d.count > max.count ? d : max, { date: '', count: 0 });
+  const totalDailyVisitors = data?.dailyVisitors?.reduce((sum, day) => sum + day.count, 0) || 0;
+  const averageDailyVisitors = data?.dailyVisitors?.length ? Math.round(totalDailyVisitors / data.dailyVisitors.length) : 0;
+  const activeDays = data?.dailyVisitors?.filter((day) => day.count > 0).length || 0;
+  const summaryChips = [
+    { label: "Promedio diario", value: averageDailyVisitors },
+    { label: "Días activos", value: activeDays },
+    { label: "Pico", value: peakDay?.count || 0 },
+  ];
 
   return (
     <motion.div
@@ -519,21 +584,23 @@ export function InsightsTab({ accentColor, blocks }: Props) {
       className="space-y-8"
     >
       {/* ── Header ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2">
-        <div className="flex items-center gap-4">
-            <div className="flex items-center bg-emerald-500/5 border border-emerald-500/10 rounded-2xl px-4 py-2 gap-3 group">
-                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 relative">
-                    <div className="absolute inset-0 bg-emerald-500 rounded-full animate-ping opacity-60" />
+      <div className="flex flex-col gap-4 pb-2 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:justify-start">
+            <Tooltip content="Personas que están navegando tu perfil exacto en este momento." position="bottom">
+                <div className="group flex cursor-help items-center gap-3 rounded-2xl border border-emerald-500/10 bg-emerald-500/5 px-4 py-3 transition-all animate-pulse hover:animate-none">
+                    <div className="relative h-2.5 w-2.5 rounded-full bg-emerald-500">
+                        <div className="absolute inset-0 bg-emerald-500 rounded-full animate-ping opacity-60" />
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="text-white font-black text-xl leading-none">{data?.onlineNow || 0}</span>
+                        <span className="text-[9px] font-black text-emerald-500/70 uppercase tracking-widest mt-0.5">Live now</span>
+                    </div>
                 </div>
-                <div className="flex flex-col">
-                    <span className="text-white font-black text-xl leading-none">{data?.onlineNow || 0}</span>
-                    <span className="text-[9px] font-black text-emerald-500/70 uppercase tracking-widest mt-0.5">Live now</span>
-                </div>
-            </div>
+            </Tooltip>
             
-            <div className="h-10 w-px bg-white/5 hidden md:block" />
+            <div className="hidden h-10 w-px bg-white/5 lg:block" />
             
-            <div className="flex flex-col">
+            <div className="flex flex-col rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3 sm:min-w-[160px]">
                 <span className="text-white/60 text-xs font-bold font-mono tracking-tight">Periodo</span>
                 <span className="text-white/30 text-[10px] uppercase tracking-widest font-black">Últimos 30 días</span>
             </div>
@@ -541,7 +608,7 @@ export function InsightsTab({ accentColor, blocks }: Props) {
 
         <button
           onClick={fetchInsights}
-          className="flex items-center gap-2.5 px-5 h-12 rounded-2xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 transition-all text-xs text-white/60 font-black uppercase tracking-widest group"
+          className="group flex h-12 w-full items-center justify-center gap-2.5 rounded-2xl border border-white/10 bg-white/5 px-5 text-[11px] font-black uppercase tracking-[0.2em] text-white/60 transition-all hover:border-white/20 hover:bg-white/10 sm:w-auto"
         >
           <RefreshCw size={14} className="group-hover:rotate-180 transition-transform duration-700" />
           Actualizar datos
@@ -549,13 +616,14 @@ export function InsightsTab({ accentColor, blocks }: Props) {
       </div>
 
       {/* ── KPI Grid ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-3">
         <StatCard
           label="Visitantes únicos"
           value={formatNum(data?.uniqueVisitors || 0)}
           icon={Users}
           accent={accentColor}
           trend="neutral"
+          tooltip="Personas distintas que visitaron tu perfil basándose en su ID de navegador."
         />
         <StatCard
           label="Vistas totales"
@@ -564,6 +632,7 @@ export function InsightsTab({ accentColor, blocks }: Props) {
           accent={accentColor}
           sub="HUEVSITE"
           trend="neutral"
+          tooltip="Cantidad total de veces que se cargó tu perfil en los últimos 30 días."
         />
         <StatCard
           label="Tasa de Rebote"
@@ -571,6 +640,7 @@ export function InsightsTab({ accentColor, blocks }: Props) {
           icon={TrendingUp}
           accent={accentColor}
           trend={data?.bounceRate && data.bounceRate < 60 ? 'up' : 'down'}
+          tooltip="Porcentaje de visitantes que salieron de tu perfil sin interactuar con ningún bloque."
         />
         <StatCard
           label="Interacción (CTR)"
@@ -579,50 +649,66 @@ export function InsightsTab({ accentColor, blocks }: Props) {
           accent={accentColor}
           sub="CLICKS"
           trend="neutral"
+          tooltip="Click-Through Rate: El porcentaje de visitantes que hicieron clic en al menos uno de tus bloques."
         />
       </div>
 
       {/* ── Charts & Lists Grid ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12 xl:gap-4">
         
         {/* Main Chart */}
         <SectionCard 
             title="Tráfico de audiencia" 
-            className="lg:col-span-3 min-h-[400px]"
+            description="Seguí la evolución del tráfico diario y detectá cuándo tu perfil gana más atención."
+            badge="30 días"
+            className="min-h-[320px] md:col-span-2 xl:col-span-12"
         >
-             <div className="flex items-center justify-between mb-8">
-                <div>
-                   <h3 className="text-5xl font-[950] text-white tracking-tighter mb-1 font-display">
+             <div className="mb-6 flex flex-col gap-5 lg:mb-8 lg:flex-row lg:items-end lg:justify-between">
+                <div className="min-w-0">
+                   <h3 className="mb-2 flex flex-wrap items-end gap-x-3 gap-y-2 text-4xl tracking-tighter text-white font-[950] font-display sm:text-5xl">
                         {formatNum(data?.uniqueVisitors || 0)}
-                        <span className="text-sm font-black text-white/20 uppercase tracking-[.25em] ml-4 font-display">Builders totales</span>
+                        <span className="text-xs font-black uppercase tracking-[.25em] text-white/20 font-display sm:text-sm">Builders totales</span>
                    </h3>
-                   <p className="text-white/30 text-xs font-medium">Visualización de tráfico único diario acumulado en el tiempo.</p>
+                   <p className="max-w-2xl text-xs font-medium text-white/30 sm:text-sm">Visualización de tráfico único diario acumulado en el tiempo.</p>
                 </div>
-                <div className="hidden sm:flex flex-col items-end">
-                    <div className="text-[10px] font-black text-white/20 uppercase tracking-[.2em] mb-1 font-display">Pico de tráfico</div>
-                    <div className="text-2xl font-black text-white/70 tracking-tight font-display">{peakDay?.count || 0} <span className="text-[10px] text-white/20 uppercase ml-1">vistas</span></div>
-                    <div className="text-[10px] font-mono text-white/20 mt-1">{peakDay?.date ? new Date(peakDay.date).toLocaleDateString('es-AR', { day: 'numeric', month: 'long' }) : ''}</div>
+                <div className="flex flex-col rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3 lg:items-end">
+                    <div className="mb-1 text-[10px] font-black uppercase tracking-[.2em] text-white/20 font-display">Pico de tráfico</div>
+                    <div className="text-xl font-black tracking-tight text-white/70 font-display sm:text-2xl">{peakDay?.count || 0} <span className="ml-1 text-[10px] uppercase text-white/20">vistas</span></div>
+                    <div className="mt-1 text-[10px] text-white/20 font-mono">{peakDay?.date ? new Date(peakDay.date).toLocaleDateString('es-AR', { day: 'numeric', month: 'long' }) : ''}</div>
                 </div>
             </div>
             {data?.dailyVisitors && data.dailyVisitors.length > 0 && (
-                <SparklineChart data={data.dailyVisitors} accentColor={accentColor} />
+                <>
+                  <SparklineChart data={data.dailyVisitors} accentColor={accentColor} />
+                  <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    {summaryChips.map((item) => (
+                      <div key={item.label} className="rounded-2xl border border-white/[0.05] bg-white/[0.02] px-4 py-3">
+                        <div className="text-[10px] font-black uppercase tracking-[0.22em] text-white/25">{item.label}</div>
+                        <div className="mt-2 text-2xl font-black tracking-tight text-white">{formatNum(item.value)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </>
             )}
         </SectionCard>
 
         {/* Origin / Sources */}
         <SectionCard
           title="Orígenes de tráfico"
+          description="De dónde llega tu audiencia y qué canal te está trayendo mejores visitas."
+          badge={`${data?.referrers?.length || 0} fuentes`}
           tabs={['Referrer']}
           activeTab={referrerTab}
           setActiveTab={setReferrerTab}
-          className="lg:col-span-1"
+          className="md:col-span-1 xl:col-span-4"
         >
           <div className="space-y-1">
             {(data?.referrers || []).length === 0 ? (
-                <div className="py-20 text-center flex flex-col items-center gap-3">
-                    <Globe2 className="w-8 h-8 text-white/5" />
-                    <span className="text-white/20 text-[10px] font-black uppercase tracking-widest">Esperando visitas...</span>
-                </div>
+                <EmptyState
+                  icon={Globe2}
+                  title="Esperando visitas"
+                  description="Todavía no hay referencias detectadas. Cuando lleguen visitas vas a ver qué canales mejor convierten."
+                />
             ) : (
                 (data?.referrers || []).slice(0, 8).map((item, i) => (
                 <BarRow
@@ -632,6 +718,7 @@ export function InsightsTab({ accentColor, blocks }: Props) {
                     max={maxRef}
                     accent={accentColor}
                     icon={getReferrerIcon(item.source)}
+                    tooltip={item.source === 'Direct/None' ? 'Visitas directas, tráfico social no trackeado o sesiones privadas.' : undefined}
                 />
                 ))
             )}
@@ -641,19 +728,22 @@ export function InsightsTab({ accentColor, blocks }: Props) {
         {/* Browser / Tech */}
         <SectionCard
           title="Tecnología"
+          description="Con qué dispositivos, sistemas y navegadores están viendo tu perfil."
+          badge={locationTab}
           tabs={['Browser', 'OS', 'Device']}
           activeTab={locationTab}
           setActiveTab={setLocationTab}
-          className="lg:col-span-1"
+          className="md:col-span-1 xl:col-span-4"
         >
           <div className="space-y-1">
             {locationTab === 'Browser' && (
                 <>
                 {(data?.browsers || []).length === 0 ? (
-                    <div className="py-20 text-center flex flex-col items-center gap-3">
-                        <Monitor className="w-8 h-8 text-white/5" />
-                        <span className="text-white/20 text-[10px] font-black uppercase tracking-widest">No hay datos</span>
-                    </div>
+                    <EmptyState
+                      icon={Monitor}
+                      title="Sin datos de browser"
+                      description="Todavía no hay suficiente actividad para segmentar navegadores."
+                    />
                 ) : (
                     (data?.browsers || []).slice(0, 8).map((item, i) => (
                     <BarRow
@@ -671,10 +761,11 @@ export function InsightsTab({ accentColor, blocks }: Props) {
             {locationTab === 'OS' && (
                 <>
                 {(data?.operatingSystems || []).length === 0 ? (
-                    <div className="py-20 text-center flex flex-col items-center gap-3">
-                         <Layout className="w-8 h-8 text-white/5" />
-                        <span className="text-white/20 text-[10px] font-black uppercase tracking-widest">Cargando...</span>
-                    </div>
+                    <EmptyState
+                      icon={Layout}
+                      title="Sin datos de sistema"
+                      description="A medida que entren más visitas, acá vas a ver el reparto por sistema operativo."
+                    />
                 ) : (
                     (data?.operatingSystems || []).slice(0, 8).map((item, i) => (
                     <BarRow
@@ -692,7 +783,11 @@ export function InsightsTab({ accentColor, blocks }: Props) {
              {locationTab === 'Device' && (
                 <>
                 {(data?.devices || []).length === 0 ? (
-                    <div className="py-20 text-center text-white/20 text-[10px] font-black uppercase">Direct only</div>
+                    <EmptyState
+                      icon={Monitor}
+                      title="Sin mix de dispositivos"
+                      description="Todavía no hay suficiente señal para separar mobile, tablet y desktop."
+                    />
                 ) : (
                     (data?.devices || []).map((item, i) => (
                     <BarRow
@@ -711,10 +806,19 @@ export function InsightsTab({ accentColor, blocks }: Props) {
         </SectionCard>
 
         {/* Content Leaderboard */}
-        <SectionCard title="Ranking de bloques" className="lg:col-span-1">
+        <SectionCard
+          title="Ranking de bloques"
+          description="Los elementos que más clics están generando dentro de tu board."
+          badge={`${topBlocks.length} bloques`}
+          className="md:col-span-2 xl:col-span-4"
+        >
              <div className="space-y-1">
                 {topBlocks.length === 0 ? (
-                    <div className="py-20 text-center text-white/10 text-[10px] font-black uppercase tracking-[0.3em]">Sin clics por ahora</div>
+                    <EmptyState
+                      icon={MousePointer2}
+                      title="Sin clics por ahora"
+                      description="Cuando tu audiencia empiece a interactuar, acá vas a ver qué bloques funcionan mejor."
+                    />
                 ) : (
                     topBlocks.map((block, i) => (
                         <BarRow
@@ -725,6 +829,7 @@ export function InsightsTab({ accentColor, blocks }: Props) {
                             accent={accentColor}
                             sublabel={block.type}
                             icon={String(i + 1)}
+                            tooltip={`Este bloque recibió ${block.clicks} interacciones únicas.`}
                         />
                     ))
                 )}
@@ -732,29 +837,79 @@ export function InsightsTab({ accentColor, blocks }: Props) {
         </SectionCard>
 
         {/* Recent Activity / Visitors */}
-        <SectionCard title="Visitas recientes" className="lg:col-span-3">
-             <div className="overflow-x-auto">
+        <SectionCard
+          title="Visitas recientes"
+          description="Últimos visitantes detectados con su fuente y contexto técnico."
+          badge={`${Math.min(data?.recentVisitors?.length || 0, 10)} recientes`}
+          className="md:col-span-2 xl:col-span-12"
+        >
+             <div className="space-y-3 md:hidden">
+                {(data?.recentVisitors || []).length === 0 ? (
+                  <EmptyState
+                    icon={Users}
+                    title="Sin visitas registradas"
+                    description="En cuanto lleguen visitas vas a poder ver el detalle de cada sesión reciente desde acá."
+                  />
+                ) : (
+                  data?.recentVisitors.slice(0, 10).map((visitor) => (
+                    <div key={visitor.id} className="rounded-[1.6rem] border border-white/[0.05] bg-white/[0.02] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/5">
+                          {visitor.visitor_avatar ? (
+                            <img src={visitor.visitor_avatar} className="h-full w-full object-cover" alt="" />
+                          ) : <Users size={16} className="text-white/20" />}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm font-bold text-white">
+                            {visitor.visitor_username ? `@${visitor.visitor_username}` : (visitor.visitor_name || 'Anonymous Visitor')}
+                          </div>
+                          <div className="mt-1 text-[10px] uppercase tracking-[0.18em] text-white/20 font-mono">
+                            {visitor.id.slice(0, 8)}... · {timeAgo(visitor.created_at)}
+                          </div>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            <span className="rounded-lg border border-white/5 bg-white/5 px-2.5 py-1 text-[10px] font-black uppercase tracking-tight text-white/50">
+                              {visitor.referrer || 'Direct/Social'}
+                            </span>
+                            {visitor.device && (
+                              <span className="rounded-lg border border-white/5 bg-white/5 px-2.5 py-1 text-[10px] text-white/40">
+                                {visitor.device === 'Mobile' ? '📱' : visitor.device === 'Tablet' ? '💻' : '🖥️'} {visitor.os}
+                              </span>
+                            )}
+                            {visitor.browser && (
+                              <span className="rounded-lg border border-white/5 bg-white/5 px-2.5 py-1 text-[10px] text-white/40">
+                                {getBrowserEmoji(visitor.browser)} {visitor.browser}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+             </div>
+
+             <div className="hidden overflow-x-auto rounded-[1.75rem] border border-white/[0.05] bg-white/[0.02] md:block">
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="border-b border-white/[0.05]">
-                            <th className="pb-4 px-2 text-[10px] font-black uppercase tracking-widest text-white/20">Usuario / ID</th>
-                            <th className="pb-4 px-2 text-[10px] font-black uppercase tracking-widest text-white/20">Fuente</th>
-                            <th className="pb-4 px-2 text-[10px] font-black uppercase tracking-widest text-white/20">Referencia tech</th>
-                            <th className="pb-4 px-2 text-[10px] font-black uppercase tracking-widest text-white/20 text-right">Tiempo</th>
+                            <th className="px-4 pb-4 pt-4 text-[10px] font-black uppercase tracking-widest text-white/20">Usuario / ID</th>
+                            <th className="px-4 pb-4 pt-4 text-[10px] font-black uppercase tracking-widest text-white/20">Fuente</th>
+                            <th className="px-4 pb-4 pt-4 text-[10px] font-black uppercase tracking-widest text-white/20">Referencia tech</th>
+                            <th className="px-4 pb-4 pt-4 text-right text-[10px] font-black uppercase tracking-widest text-white/20">Tiempo</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/[0.02]">
                         {(data?.recentVisitors || []).length === 0 ? (
                             <tr>
                                 <td colSpan={4} className="py-16 text-center">
-                                     <Users className="w-10 h-10 text-white/5 mx-auto mb-4" />
-                                     <p className="text-white/20 text-xs font-bold uppercase tracking-widest">Aún no hay visitas registradas</p>
+                                     <Users className="mx-auto mb-4 h-10 w-10 text-white/5" />
+                                     <p className="text-xs font-bold uppercase tracking-widest text-white/20">Aún no hay visitas registradas</p>
                                 </td>
                             </tr>
                         ) : (
                             data?.recentVisitors.slice(0, 10).map((visitor, i) => (
                                 <tr key={visitor.id} className="group hover:bg-white/[0.02] transition-colors">
-                                    <td className="py-4 px-2">
+                                    <td className="px-4 py-4">
                                         <div className="flex items-center gap-3">
                                             <div className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shrink-0 group-hover:border-[var(--accent)]/30 transition-colors">
                                                 {visitor.visitor_avatar ? (
@@ -769,7 +924,7 @@ export function InsightsTab({ accentColor, blocks }: Props) {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="py-4 px-2">
+                                    <td className="px-4 py-4">
                                         {visitor.referrer ? (
                                             <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-white/5 border border-white/5 group-hover:bg-white/10 transition-colors">
                                                 <span className="text-[10px] font-black text-white/50 uppercase tracking-tight">{visitor.referrer}</span>
@@ -778,14 +933,14 @@ export function InsightsTab({ accentColor, blocks }: Props) {
                                             <span className="text-[10px] text-white/20 font-mono">Direct/Social</span>
                                         )}
                                     </td>
-                                    <td className="py-4 px-2">
+                                    <td className="px-4 py-4">
                                         <div className="flex items-center gap-3">
                                             {visitor.device && <span className="text-[10px] text-white/40">{visitor.device === 'Mobile' ? '📱' : '🖥️'} {visitor.os}</span>}
                                             <div className="w-1 h-1 rounded-full bg-white/10" />
                                             {visitor.browser && <span className="text-[10px] text-white/40">{getBrowserEmoji(visitor.browser)} {visitor.browser}</span>}
                                         </div>
                                     </td>
-                                    <td className="py-4 px-2 text-right">
+                                    <td className="px-4 py-4 text-right">
                                         <span className="text-xs font-mono text-white/30 font-bold">{timeAgo(visitor.created_at)}</span>
                                     </td>
                                 </tr>
@@ -795,8 +950,8 @@ export function InsightsTab({ accentColor, blocks }: Props) {
                 </table>
              </div>
              
-             <div className="mt-8 flex justify-center">
-                 <button className="flex items-center gap-2 text-[10px] font-black text-white/20 hover:text-white/60 transition-colors uppercase tracking-[0.3em] group">
+             <div className="mt-6 flex justify-center sm:mt-8">
+                 <button className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-white/20 transition-colors hover:text-white/60">
                     Ver historial completo <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
                  </button>
              </div>
@@ -805,21 +960,29 @@ export function InsightsTab({ accentColor, blocks }: Props) {
       </div>
 
       {/* ── CTA / Tip ── */}
-      <div className="relative p-10 rounded-[2.5rem] bg-gradient-to-br from-white/[0.03] to-transparent border border-white/5 overflow-hidden group">
+      <div className="group relative overflow-hidden rounded-[2rem] border border-white/5 bg-gradient-to-br from-white/[0.03] to-transparent p-6 sm:rounded-[2.5rem] sm:p-8 lg:p-10">
         <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--accent)]/10 blur-[80px] rounded-full group-hover:bg-[var(--accent)]/20 transition-colors pointer-events-none" />
-        <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-             <div className="w-16 h-16 rounded-3xl bg-white/5 flex items-center justify-center border border-white/10 shrink-0 shadow-2xl">
+        <div className="relative z-10 flex flex-col items-start gap-6 md:flex-row md:items-center md:gap-8">
+             <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl border border-white/10 bg-white/5 shadow-2xl">
                 <TrendingUp className="w-8 h-8 text-[var(--accent)]" />
              </div>
-             <div>
+             <div className="min-w-0">
                 <h4 className="text-xl font-black text-white mb-2">Maximiza tu visibilidad</h4>
-                <p className="text-[var(--text-dim)] text-sm max-w-xl leading-relaxed">
+                <p className="max-w-xl text-sm leading-relaxed text-[var(--text-dim)]">
                     Los bloques en la parte superior del perfil tienen un 40% más de interacción. 
                     Intenta mover tus proyectos más destacados a las primeras filas para capturar la atención de los reclutadores en los primeros 3 segundos.
                 </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <div className="rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/35">
+                    Top rows convierten mejor
+                  </div>
+                  <div className="rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/35">
+                    Revisá bloques con menos clicks
+                  </div>
+                </div>
              </div>
-             <div className="md:ml-auto">
-                 <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="btn-accent !px-8 !py-4 !rounded-2xl !text-sm font-[950] shadow-[0_0_30px_rgba(var(--accent-rgb),0.2)]">
+             <div className="w-full md:ml-auto md:w-auto">
+                 <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="btn-accent !w-full !rounded-2xl !px-8 !py-4 !text-sm font-[950] shadow-[0_0_30px_rgba(var(--accent-rgb),0.2)] md:!w-auto">
                     Optimizar mi board
                  </button>
              </div>

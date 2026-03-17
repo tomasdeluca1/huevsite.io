@@ -53,6 +53,7 @@ function ActivityGroup({ group, index }: { group: Activity[]; index: number }) {
   const main = group[0];
   const user = main.user;
   const isMultiple = group.length > 1;
+  const profileHref = `/${user.username}?from=feed&return_to=/feed`;
 
   const getLabel = (activity: Activity) => {
     const label = ACTIVITY_LABELS[activity.type]?.(activity.data, user.name ?? user.username) ?? `${user.username} hizo algo nuevo`;
@@ -80,7 +81,7 @@ function ActivityGroup({ group, index }: { group: Activity[]; index: number }) {
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-start gap-4">
-          <Link href={`/${user.username}`} onClick={(e) => e.stopPropagation()} className="shrink-0">
+          <Link href={profileHref} onClick={(e) => e.stopPropagation()} className="shrink-0">
             {user.image ? (
               <img
                 src={user.image}
@@ -102,7 +103,7 @@ function ActivityGroup({ group, index }: { group: Activity[]; index: number }) {
             <div className="flex items-center justify-between gap-2 mb-1">
               <div className="flex items-center gap-1.5 min-w-0">
                 <Link
-                  href={`/${user.username}`}
+                  href={profileHref}
                   className="font-bold hover:underline truncate"
                   style={{ color: user.accent_color }}
                   onClick={(e) => e.stopPropagation()}
@@ -322,10 +323,10 @@ function FeedContent() {
             {launches.map(launch => (
               <div key={launch.id} className="bg-[var(--surface)] border border-[var(--border)] p-6 rounded-3xl flex gap-6 items-center group">
                  <div className="flex-1">
-                    <Link href={`/${launch.profiles.username}`} className="flex items-center gap-2 mb-2 text-xs text-[var(--text-muted)] uppercase tracking-widest font-mono">
+                    <Link href={`/${launch.profiles.username}?from=feed&return_to=/feed`} className="flex items-center gap-2 mb-2 text-xs text-[var(--text-muted)] uppercase tracking-widest font-mono">
                       @{launch.profiles.username}
                     </Link>
-                    <Link href={`/${launch.profiles.username}`}>
+                    <Link href={`/${launch.profiles.username}?from=feed&return_to=/feed`}>
                       <h2 className="text-xl font-bold group-hover:text-[var(--accent)] transition-colors">{launch.title}</h2>
                       <p className="text-sm text-[var(--text-dim)] line-clamp-2 mt-1">{launch.tagline}</p>
                     </Link>

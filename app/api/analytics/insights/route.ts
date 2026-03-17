@@ -24,7 +24,17 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const insights = await analyticsService.getInsights(user.id);
+    const rangeParam = req.nextUrl.searchParams.get('range');
+    const startDate = req.nextUrl.searchParams.get('start');
+    const endDate = req.nextUrl.searchParams.get('end');
+    const parsedRange = Number(rangeParam);
+    const rangeDays = Number.isFinite(parsedRange) && parsedRange > 0 ? Math.min(parsedRange, 365) : 1;
+
+    const insights = await analyticsService.getInsights(user.id, {
+      rangeDays,
+      startDate,
+      endDate,
+    });
 
     return NextResponse.json(insights);
   } catch (error: any) {

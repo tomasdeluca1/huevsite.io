@@ -45,6 +45,13 @@ export default function AdminPage() {
   const [settingWinner, setSettingWinner] = useState<string | null>(null);
   const [feedbackMsg, setFeedbackMsg] = useState<{ type: "ok" | "err"; msg: string } | null>(null);
   const [postingLeaderboard, setPostingLeaderboard] = useState(false);
+  const [postingNonProLeaderboard, setPostingNonProLeaderboard] = useState(false);
+  const [postingWeeklyReport, setPostingWeeklyReport] = useState(false);
+  
+  // Preview states
+  const [previewText, setPreviewText] = useState<string | null>(null);
+  const [currentAction, setCurrentAction] = useState<{ type: 'general' | 'non-pro' | 'weekly', url: string } | null>(null);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -146,22 +153,76 @@ export default function AdminPage() {
   };
 
   const handlePostLeaderboard = async () => {
-    if (!confirm(`¿Seguro que querés publicar el Ranking actual en X?`)) return;
     setPostingLeaderboard(true);
     try {
-      const res = await fetch("/api/admin/twitter/post-leaderboard", {
-        method: "POST",
-      });
-      if (res.ok) {
-        setFeedbackMsg({ type: "ok", msg: `Ranking publicado con éxito! 🔥` });
+      const res = await fetch("/api/admin/twitter/post-leaderboard?preview=true", { method: "POST" });
+      const json = await res.json();
+      if (res.ok && json.preview) {
+        setPreviewText(json.preview);
+        setCurrentAction({ type: 'general', url: "/api/admin/twitter/post-leaderboard" });
       } else {
-        const json = await res.json();
-        setFeedbackMsg({ type: "err", msg: json.error || "Error al publicar ranking" });
+        setFeedbackMsg({ type: "err", msg: json.error || "Error al generar preview" });
       }
     } catch (error) {
       setFeedbackMsg({ type: "err", msg: "Error de conexión" });
     } finally {
       setPostingLeaderboard(false);
+    }
+  };
+
+  const handlePostNonProLeaderboard = async () => {
+    setPostingNonProLeaderboard(true);
+    try {
+      const res = await fetch("/api/admin/twitter/post-leaderboard?filter=non-pro&preview=true", { method: "POST" });
+      const json = await res.json();
+      if (res.ok && json.preview) {
+        setPreviewText(json.preview);
+        setCurrentAction({ type: 'non-pro', url: "/api/admin/twitter/post-leaderboard?filter=non-pro" });
+      } else {
+        setFeedbackMsg({ type: "err", msg: json.error || "Error al generar preview" });
+      }
+    } catch (error) {
+      setFeedbackMsg({ type: "err", msg: "Error de conexión" });
+    } finally {
+      setPostingNonProLeaderboard(false);
+    }
+  };
+
+  const handlePostWeeklyStats = async () => {
+    setPostingWeeklyReport(true);
+    try {
+      const res = await fetch("/api/admin/twitter/post-weekly-stats?preview=true", { method: "POST" });
+      const json = await res.json();
+      if (res.ok && json.preview) {
+        setPreviewText(json.preview);
+        setCurrentAction({ type: 'weekly', url: "/api/admin/twitter/post-weekly-stats" });
+      } else {
+        setFeedbackMsg({ type: "err", msg: json.error || "Error al generar preview" });
+      }
+    } catch (error) {
+      setFeedbackMsg({ type: "err", msg: "Error de conexión" });
+    } finally {
+      setPostingWeeklyReport(false);
+    }
+  };
+
+  const confirmPost = async () => {
+    if (!currentAction) return;
+    setIsConfirming(true);
+    try {
+      const res = await fetch(currentAction.url, { method: "POST" });
+      if (res.ok) {
+        setFeedbackMsg({ type: "ok", msg: `Posteado con éxito en X! 🔥` });
+        setPreviewText(null);
+        setCurrentAction(null);
+      } else {
+        const json = await res.json();
+        setFeedbackMsg({ type: "err", msg: json.error || "Error al postear" });
+      }
+    } catch (error) {
+      setFeedbackMsg({ type: "err", msg: "Error de conexión" });
+    } finally {
+      setIsConfirming(false);
     }
   };
 
@@ -211,6 +272,58 @@ export default function AdminPage() {
         <Link href="/" className="logo text-base">huev<span>site</span>.io</Link>
       </header>
 
+      {/* Tweet Preview Modal */}
+      {previewText && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-lg bg-zinc-900 border border-white/10 rounded-3xl overflow-hidden shadow-2xl"
+          >
+            <div className="p-6 border-b border-white/5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Share2 size={18} className="text-[var(--accent)]" />
+                <h2 className="font-bold">Preview del Tweet</h2>
+              </div>
+              <button 
+                onClick={() => setPreviewText(null)}
+                className="text-[var(--text-dim)] hover:text-white transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-8 bg-black/40">
+              <div className="p-6 rounded-2xl bg-zinc-800/50 border border-white/5 font-sans leading-relaxed text-sm whitespace-pre-wrap">
+                {previewText}
+              </div>
+              <div className="mt-4 flex justify-end">
+                <span className="text-[10px] font-mono text-[var(--text-dim)] uppercase tracking-widest">
+                  {previewText.length} / 280 caracteres
+                </span>
+              </div>
+            </div>
+
+            <div className="p-6 bg-zinc-900/50 flex gap-3">
+              <button
+                onClick={() => setPreviewText(null)}
+                className="flex-1 py-3 font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-white/5 transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmPost}
+                disabled={isConfirming}
+                className="flex-[2] py-3 font-bold text-xs uppercase tracking-widest rounded-xl bg-[var(--accent)] text-black hover:opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+              >
+                {isConfirming ? <Loader2 size={14} className="animate-spin" /> : <Share2 size={14} />}
+                Confirmar y Postear
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       {feedbackMsg && (
         <motion.div
           initial={{ opacity: 0, y: -8 }}
@@ -253,7 +366,47 @@ export default function AdminPage() {
               className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-bold transition-all flex items-center gap-2 border border-white/5"
             >
               {postingLeaderboard ? <Loader2 size={12} className="animate-spin" /> : <Share2 size={12} />}
-              Publicar
+              Publicar General
+            </button>
+          </div>
+
+          <div className="flex gap-4 p-5 rounded-2xl bg-[var(--surface)] border border-dashed border-blue-500/30 items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
+                <Share2 size={20} />
+              </div>
+              <div>
+                <p className="font-bold text-sm text-blue-400">Ranking Non-Pro</p>
+                <p className="text-[10px] text-[var(--text-dim)] font-mono">Publica el top solo con builders que no tienen plan PRO</p>
+              </div>
+            </div>
+            <button
+              onClick={handlePostNonProLeaderboard}
+              disabled={postingNonProLeaderboard}
+              className="px-4 py-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-xs font-bold transition-all flex items-center gap-2 border border-blue-500/20 text-blue-400"
+            >
+              {postingNonProLeaderboard ? <Loader2 size={12} className="animate-spin" /> : <Share2 size={12} />}
+              Publicar Non-Pro
+            </button>
+          </div>
+
+          <div className="flex gap-4 p-5 rounded-2xl bg-[var(--surface)] border border-dashed border-purple-500/30 items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">
+                <Archive size={20} />
+              </div>
+              <div>
+                <p className="font-bold text-sm text-purple-400">Reporte Semanal (Viernes)</p>
+                <p className="text-[10px] text-[var(--text-dim)] font-mono">Resumen de nuevos proyectos y builders de los últimos 7 días</p>
+              </div>
+            </div>
+            <button
+              onClick={handlePostWeeklyStats}
+              disabled={postingWeeklyReport}
+              className="px-4 py-2 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-xs font-bold transition-all flex items-center gap-2 border border-purple-500/20 text-purple-400"
+            >
+              {postingWeeklyReport ? <Loader2 size={12} className="animate-spin" /> : <Share2 size={12} />}
+              Publicar Reporte
             </button>
           </div>
 

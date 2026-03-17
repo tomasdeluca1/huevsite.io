@@ -23,12 +23,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const filter = searchParams.get('filter'); // 'non-pro' or null
+    const preview = searchParams.get('preview') === 'true';
+
     // Fetch top candidates (let the Twitter service decide how many fit)
-    const { data: topProfiles, error: fetchError } = await supabase
+    let query = supabase
       .from('profiles')
-      .select('username, builder_score')
+      .select('username, builder_score, subscription_tier')
       .order('builder_score', { ascending: false })
-      .limit(20);
+      .limit(30);
+
+    if (filter === 'non-pro') {
+      query = query.eq('subscription_tier', 'free');
+    }
+
+    const { data: topProfiles, error: fetchError } = await query;
 
     if (fetchError) throw fetchError;
 
@@ -44,9 +54,13 @@ export async function POST(request: NextRequest) {
       score: p.builder_score || 0
     }));
 
-    await postLeaderboard(leaderboardData);
+    const title = filter === 'non-pro' ? '🔥 TOP BUILDERS (Non Pro Only)' : '🔥 TOP BUILDERS';
+    const result = await postLeaderboard(leaderboardData, preview, title);
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ 
+      success: true, 
+      preview: preview ? result : null 
+    });
   } catch (error: any) {
     console.error("Leaderboard Twitter post error:", error);
     return NextResponse.json({ error: error.message || "Failed to post leaderboard" }, { status: 500 });

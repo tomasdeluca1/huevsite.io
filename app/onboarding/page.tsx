@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   INITIAL_STATE,
   STEPS,
@@ -21,6 +21,7 @@ import { OnboardingDone } from "@/components/onboarding/OnboardingDone";
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState(0);
   const [done, setDone] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -47,6 +48,7 @@ export default function OnboardingPage() {
           roles: state.roles,
           githubHandle: state.githubData?.username,
           githubData: state.githubData,
+          referredBy: searchParams.get('ref') || undefined,
         }),
       });
 

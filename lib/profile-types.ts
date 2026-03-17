@@ -260,9 +260,14 @@ export interface ProfileData {
   customDomain?: string;
   subSiteId?: string;
   isWinner?: boolean;
+  isOnboardingTestUser?: boolean;
   subSites: SubSite[];
   blocks: BlockData[];
   sourceUrl?: string;
+  referralCode?: string;
+  referredBy?: string;
+  proReferralsCount?: number;
+  referralRewardExpiresAt?: string;
   parentProfile?: { 
     username: string; 
     displayName: string; 

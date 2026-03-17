@@ -46,6 +46,9 @@ import { UpgradeModal } from "@/components/dashboard/UpgradeModal";
 import { DashboardSidebar } from "@/components/dashboard/Sidebar";
 import { InsightsTab } from "@/components/dashboard/InsightsTab";
 import { CreateSubSiteModal } from "@/components/dashboard/CreateSubSiteModal";
+import { TwitterWarning } from "@/components/dashboard/TwitterWarning";
+import { PriceBanner } from "@/components/marketing/PriceBanner";
+import { ReferralDashboard } from "@/components/dashboard/ReferralDashboard";
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -99,70 +102,83 @@ export default function DashboardPage() {
     }
   };
 
+  const fetchProfile = async () => {
+    try {
+      const response = await fetch('/api/profile');
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          window.location.href = '/welcome';
+          return;
+        }
+        throw new Error(`Failed to fetch profile: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      const transformedProfile: ProfileData = {
+        id: data.profile.id,
+        username: data.profile.username,
+        displayName: data.profile.name || data.profile.username,
+        accentColor: data.profile.accent_color,
+        subscriptionTier: (data.profile.subscription_tier === 'pro' || !!data.profile.pro_since) ? 'pro' : 'free',
+        extraBlocksFromShare: data.profile.extra_blocks_from_share || 0,
+        twitterShareUnlocked: data.profile.twitter_share_unlocked || false,
+        hasSeenUpdateFeb25: data.profile.has_seen_update_feb25 || false,
+        tagline: data.profile.tagline || "",
+        avatarUrl: data.profile.image || "",
+        githubHandle: data.profile.github_handle || "",
+        builderScore: data.profile.builder_score || 0,
+        aiCredits: data.profile.ai_credits || 0,
+        isOnboardingTestUser: data.profile.is_onboarding_test_user || false,
+        customDomain: data.profile.custom_domain || "",
+        referralCode: data.profile.referral_code || "",
+        referredBy: data.profile.referred_by || "",
+        proReferralsCount: data.profile.pro_referrals_count || 0,
+        referralRewardExpiresAt: data.profile.referral_reward_expires_at || null,
+        subSites: data.subSites || [],
+        blocks: data.blocks.map((block: any) => {
+          const { id: _, type: __, order: ___, col_span: ____, row_span: _____, visible: ______, ...cleanData } = block.data || {};
+          return {
+            id: block.id,
+            type: block.type as BlockType,
+            order: block.order,
+            col_span: block.col_span,
+            row_span: block.row_span,
+            visible: block.visible,
+            ...cleanData
+          };
+        })
+      };
+
+      setProfile(transformedProfile);
+      setTempProfileData({
+        username: transformedProfile.username,
+        display_name: transformedProfile.displayName,
+        tagline: transformedProfile.tagline || '',
+        avatarUrl: transformedProfile.avatarUrl || '',
+        githubHandle: transformedProfile.githubHandle || ''
+      });
+      setDomain(transformedProfile.customDomain || "");
+
+      const { builderScore, ...content } = transformedProfile;
+      lastSavedVersionRef.current = JSON.stringify(content);
+      if (transformedProfile.blocks.length === 0 || transformedProfile.isOnboardingTestUser) {
+        const hasSeen = localStorage.getItem("huevsite_onboarding_seen");
+        if (!hasSeen || transformedProfile.isOnboardingTestUser) {
+          setIsOnboardingOpen(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      window.location.href = '/login';
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch profile on mount
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const response = await fetch('/api/profile');
-
-        if (!response.ok) {
-          if (response.status === 404) {
-            window.location.href = '/welcome';
-            return;
-          }
-          throw new Error(`Failed to fetch profile: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        const transformedProfile: ProfileData = {
-          id: data.profile.id,
-          username: data.profile.username,
-          displayName: data.profile.name || data.profile.username,
-          accentColor: data.profile.accent_color,
-          subscriptionTier: (data.profile.subscription_tier === 'pro' || !!data.profile.pro_since) ? 'pro' : 'free',
-          extraBlocksFromShare: data.profile.extra_blocks_from_share || 0,
-          twitterShareUnlocked: data.profile.twitter_share_unlocked || false,
-          hasSeenUpdateFeb25: data.profile.has_seen_update_feb25 || false,
-          tagline: data.profile.tagline || "",
-          avatarUrl: data.profile.image || "",
-          githubHandle: data.profile.github_handle || "",
-          builderScore: data.profile.builder_score || 0,
-          customDomain: data.profile.custom_domain || "",
-          subSites: data.subSites || [],
-          blocks: data.blocks.map((block: any) => {
-            const { id, type, order, col_span, row_span, visible, ...cleanData } = block.data || {};
-            return {
-              id: block.id,
-              type: block.type as BlockType,
-              order: block.order,
-              col_span: block.col_span,
-              row_span: block.row_span,
-              visible: block.visible,
-              ...cleanData
-            };
-          })
-        };
-
-        setProfile(transformedProfile);
-        setDomain(transformedProfile.customDomain || "");
-
-        const { builderScore, ...content } = transformedProfile;
-        lastSavedVersionRef.current = JSON.stringify(content);
-        if (transformedProfile.blocks.length === 0) {
-          const hasSeen = localStorage.getItem("huevsite_onboarding_seen");
-          if (!hasSeen) {
-            setIsOnboardingOpen(true);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching profile:', error);
-        window.location.href = '/login';
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchProfile();
   }, []);
 
@@ -647,6 +663,63 @@ export default function DashboardPage() {
     } catch (e) { console.error(e); }
   };
 
+  const handleOnboardingComplete = async (data: { name: string, tagline: string, accentColor: string, blocks?: any[] }) => {
+    // Optimistic update
+    setProfile(prev => prev ? {
+      ...prev,
+      displayName: data.name,
+      tagline: data.tagline,
+      accentColor: data.accentColor,
+      isOnboardingTestUser: false,
+      blocks: data.blocks && data.blocks.length > 0 
+        ? data.blocks.map(b => ({ ...b, id: Math.random().toString() })) // Temporary IDs for UI
+        : prev.blocks
+    } : null);
+
+    try {
+      // 1. Update Profile
+      await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: data.name,
+          tagline: data.tagline,
+          accent_color: data.accentColor,
+          is_onboarding_test_user: false
+        }),
+      });
+
+      // 2. Create Blocks (if any)
+      if (data.blocks && data.blocks.length > 0) {
+        for (const block of data.blocks) {
+          if (block.type === 'hero') continue; // Hero is part of the profile essence, not a separate block in the DB usually, or handled differently. 
+          // Actually, let's check if the user has a Hero block and update it, or create it.
+          // Usually huevsite has a Hero block by default or it's the first one.
+          
+          await fetch('/api/blocks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: block.type,
+              colSpan: block.col_span,
+              rowSpan: block.row_span,
+              data: block.type === 'github' ? { username: block.username, stats: block.stats } : 
+                    block.type === 'social' ? { links: block.links } :
+                    block.type === 'metric' ? { label: block.label, value: block.value } :
+                    block.type === 'stack' ? { items: block.items } : block
+            }),
+          });
+        }
+        // Refresh profile after creating blocks to get real IDs
+        fetchProfile();
+      }
+      
+      localStorage.setItem("huevsite_onboarding_seen", "true");
+    } catch (error) {
+      console.error('Error saving onboarding data:', error);
+    }
+  };
+
 
   const handleTransferProject = async (email: string) => {
     alert("Función inhabilitada temporalmente.");
@@ -770,13 +843,15 @@ export default function DashboardPage() {
       />
 
       <main className="flex-1 min-w-0 h-full overflow-y-auto p-4 md:p-8 lg:p-10 relative z-0 custom-scrollbar">
+        <PriceBanner />
         <style dangerouslySetInnerHTML={{
           __html: `:root { --accent: ${profile.accentColor}; --accent-dim: ${profile.accentColor}1f; --btn-border: ${isDarkColor(profile.accentColor) ? 'rgba(255,255,255,0.15)' : 'transparent'}; }`
         }} />
         <div className="absolute top-0 right-0 w-full lg:w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(var(--accent-rgb),0.03)_0%,transparent_70%)] pointer-events-none" />
 
-        <header className="flex flex-col md:flex-row md:justify-between md:items-end gap-8 mb-10 md:mb-16 max-w-[1600px] mx-auto items-center text-center md:text-left pt-6 md:pt-0 px-2 md:px-0 relative z-10">
-          <div className="w-full md:w-auto">
+        <header className="flex flex-col md:flex-row md:justify-between md:items-end gap-8 mb-10 md:mb-16 max-w-[1600px] mx-auto items-center text-center md:text-left pt-6 md:pt-0 px-2 md:px-0 relative z-[999]">
+          <div className="w-full md:w-auto relative">
+            <TwitterWarning blocks={profile.blocks} />
             <div className="mb-3 hidden md:block"><div className="section-label">// dashboard / {activeTab}</div></div>
             <h2 className="text-3xl md:text-5xl font-[950] tracking-tighter leading-none">
               {activeTab === 'board' ? <>Armá tu <span style={{ color: profile.accentColor }}>{selectedSubSiteId ? (profile.subSites.find(s => s.id === selectedSubSiteId)?.title || "Board") : "huevsite"}</span>.</> :
@@ -910,6 +985,10 @@ export default function DashboardPage() {
                     </div>
                   </SortableContext>
                 </DndContext>
+
+                <div className="mt-12 max-w-[1200px] mx-auto">
+                   <ReferralDashboard profile={profile} />
+                </div>
               </motion.div>
             )}
 
@@ -1037,7 +1116,25 @@ export default function DashboardPage() {
         />
       )}
       <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
-      <OnboardingModal isOpen={isOnboardingOpen} onClose={() => { localStorage.setItem("huevsite_onboarding_seen", "true"); setIsOnboardingOpen(false); }} username={profile.username} />
+      <OnboardingModal 
+        isOpen={isOnboardingOpen} 
+        onClose={() => { 
+          localStorage.setItem("huevsite_onboarding_seen", "true"); 
+          setIsOnboardingOpen(false); 
+          if (profile.isOnboardingTestUser) {
+            handleOnboardingComplete({ 
+              name: profile.displayName, 
+              tagline: profile.tagline || "", 
+              accentColor: profile.accentColor 
+            });
+          }
+        }} 
+        username={profile.username}
+        initialName={profile.displayName}
+        initialTagline={profile.tagline}
+        initialColor={profile.accentColor}
+        onComplete={handleOnboardingComplete}
+      />
       <AnimatePresence>{isDeletingId && <div className="fixed inset-0 z-[500] flex items-center justify-center p-4"><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setIsDeletingId(null)} /><motion.div initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }} className="relative w-full max-w-sm bg-[var(--surface)] border border-red-500/30 rounded-[2rem] shadow-2xl p-8 z-[510] text-center"><div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-6 text-red-500"><Trash2 size={32} /></div><h3 className="text-2xl font-black mb-3 text-white">¿Borrar bloque?</h3><p className="text-[var(--text-dim)] mb-8 text-sm leading-relaxed">Esta acción no se puede deshacer.</p><div className="flex gap-3"><button onClick={() => setIsDeletingId(null)} className="flex-1 py-3.5 rounded-2xl bg-[var(--surface2)] font-bold text-sm text-white">Cancelar</button><button onClick={() => { removeBlock(isDeletingId); setIsDeletingId(null); }} className="flex-1 py-3.5 rounded-2xl bg-red-500 font-bold text-sm text-white transition-all">Eliminar</button></div></motion.div></div>}</AnimatePresence>
       <AnimatePresence>{isProfileModalOpen && <div className="fixed inset-0 z-[500] flex items-center justify-center p-4"><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsProfileModalOpen(false)} className="absolute inset-0 bg-black/80 backdrop-blur-md" /><motion.div initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }} className="relative w-full max-w-md bg-[var(--surface)] border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden z-[510] p-8 pt-10"><div className="text-center mb-8"><div className="section-label mb-2 mx-auto w-fit">// identidad {selectedSubSiteId ? '(sub-site)' : ''}</div><h3 className="text-2xl font-black tracking-tighter">Editar {selectedSubSiteId ? 'Sub-site' : 'Perfil'}</h3></div><div className="space-y-6"><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1">URL del {selectedSubSiteId ? 'Sub-site' : 'Perfil'}</label><div className="flex items-center gap-2 p-4 rounded-2xl bg-black/40 border border-white/10 focus-within:border-[var(--accent)] transition-all font-mono"><span className="text-xs text-white/20">huevsite.io/{selectedSubSiteId ? `${profile.username}/` : ''}</span><input value={tempProfileData.username} onChange={(e) => setTempProfileData(p => ({ ...p, username: e.target.value.toLowerCase() }))} className="bg-transparent border-none outline-none text-sm font-black text-[var(--accent)] flex-1 p-0" /></div></div><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">Foto (URL)</label><input value={tempProfileData.avatarUrl} onChange={(e) => setTempProfileData(p => ({ ...p, avatarUrl: e.target.value }))} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-white/60 focus:border-[var(--accent)] transition-all font-mono" /></div><div className="space-y-4 pt-2"><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">Nombre</label><input value={tempProfileData.display_name} onChange={(e) => setTempProfileData(p => ({ ...p, display_name: e.target.value }))} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm font-black text-white focus:border-[var(--accent)] transition-all" /></div><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">{selectedSubSiteId ? 'Descripción' : 'Tagline'}</label><input value={tempProfileData.tagline} onChange={(e) => setTempProfileData(p => ({ ...p, tagline: e.target.value }))} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-white/60 focus:border-[var(--accent)] transition-all" /></div></div></div><div className="flex gap-4 mt-10"><button onClick={() => setIsProfileModalOpen(false)} className="flex-1 py-4 text-sm font-bold text-white/30 hover:text-white transition-colors">Cancelar</button><button onClick={async () => { 
         if (selectedSubSiteId) {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { checkAndPostCommunityMilestone } from '@/lib/twitter'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,6 +15,7 @@ interface CreateProfileRequest {
   roles: string[]
   location?: string
   githubHandle?: string
+  referredBy?: string // Referral code
   githubData?: any
   blocks?: Array<{
     type: string
@@ -70,6 +72,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Buscar ID del referente si existe código
+    let referredById = null;
+    if (body.referredBy) {
+      const { data: referrer } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('referral_code', body.referredBy)
+        .maybeSingle();
+      
+      if (referrer) {
+        referredById = referrer.id;
+      }
+    }
+
     // Crear perfil
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
@@ -86,6 +102,7 @@ export async function POST(request: NextRequest) {
         tagline: body.tagline || null,
         location: body.location || null,
         available: false,
+        referred_by: referredById,
       })
       .select()
       .single()
@@ -193,6 +210,9 @@ export async function POST(request: NextRequest) {
       type: 'new_builder',
       data: { username: body.username }
     });
+
+    // Check for community milestones (e.g. 100, 150, 200...)
+    await checkAndPostCommunityMilestone(supabase);
 
     return NextResponse.json({
       success: true,

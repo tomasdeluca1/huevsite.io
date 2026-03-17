@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     // Obtener perfil
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('*')
+      .select('*, ai_credits, is_onboarding_test_user')
       .eq('id', user.id)
       .single()
 
@@ -100,6 +100,7 @@ export async function PATCH(request: NextRequest) {
       'github_handle',
       'has_seen_update_feb25',
       'custom_domain',
+      'is_onboarding_test_user',
     ]
 
     // Segurizar: Solo usuarios PRO pueden configurar custom_domain

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { scoreService } from '@/lib/score-service'
+import { checkAndPostWelcomeTweet } from '@/lib/twitter'
 
 export const dynamic = 'force-dynamic'
 
@@ -114,6 +115,9 @@ export async function PATCH(
     });
 
     if (activityError) console.error("Error logging block activity", activityError);
+
+    // Check and post welcome tweet if social block
+    await checkAndPostWelcomeTweet(supabase, user.id, block.type, block.data);
 
     // Recompute score
     await scoreService.recomputeScore(user.id);

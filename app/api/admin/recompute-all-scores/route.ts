@@ -13,6 +13,17 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
+        // Admin check
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('id', user.id)
+            .single();
+
+        if (profile?.username !== 'huevsite') {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
         const { data: profiles, error } = await supabase
             .from("profiles")
             .select("id");

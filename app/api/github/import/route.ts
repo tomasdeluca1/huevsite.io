@@ -22,19 +22,21 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = createClient()
 
-    // Obtener sesión y provider token
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    // Verificamos identidad de forma segura
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (sessionError || !session) {
+    if (authError || !user) {
       return NextResponse.json(
         { error: 'No autenticado' },
         { status: 401 }
       )
     }
 
-    // El provider_token es el access token de GitHub
-    const providerToken = session.provider_token
-    const githubHandle = session.user.user_metadata.user_name
+    // Para obtener el provider_token de GitHub, necesitamos la sesión (leer del cookie)
+    // getSession() es aceptable AQUÍ solo para extraer el token, habiendo validado antes con getUser()
+    const { data: { session } } = await supabase.auth.getSession()
+    const providerToken = session?.provider_token
+    const githubHandle = user.user_metadata.user_name
 
     if (!githubHandle) {
       return NextResponse.json(

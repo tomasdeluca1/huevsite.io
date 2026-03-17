@@ -17,6 +17,72 @@ export interface BlogPost {
 
 const RAW_BLOG_POSTS: Omit<BlogPost, 'readingTime'>[] = [
   {
+    slug: "showcase-semanal-celebrando-el-progreso-constante",
+    title: "Showcase Semanal: Celebrando el progreso constante",
+    excerpt: "Pasamos del 'Builder del mes' al 'Builder de la semana'. Más ganadores, más visibilidad y una integración total con X (Twitter) para que tu talento llegue más lejos.",
+    date: "2026-03-16",
+    tags: ["comunidad", "showcase", "Twitter"],
+    author: {
+      name: "Tomas Deluca",
+      username: "huevsite",
+      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+    },
+    content: `
+En huevsite.io creemos que el building es una maratón, pero se corre paso a paso. Esperar un mes entero para celebrar a los builders que están rompiéndola se sentía demasiado lento. Por eso, hoy anunciamos el nuevo **Showcase Semanal**.
+
+## Más Ritmo, Más Ganadores
+A partir de ahora, la competencia por ser el Builder destacado se renueva cada semana. Esto significa:
+- **Badge Dinámico en Explore**: Solo los ganadores de la *semana actual* llevarán el codiciado badge de "Builder de la Semana". Esto mantiene la sección Explore fresca y recompensa el esfuerzo reciente.
+- **Destaque en el Perfil**: Tu badge ahora es dinámico y refleja tu estatus de ganador de forma prominente en tu Hero block y en tu header.
+
+## Ahora en X (Twitter)
+No queremos que tu éxito se quede solo dentro de huevsite. Hemos integrado un sistema automático que celebrará a los ganadores directamente en nuestra cuenta de X.
+- **Anuncios de Ganadores**: Cada vez que se elija un builder destacado, saldrá un tweet automático mencionándote y mostrando tu perfil.
+- **Leaderboards**: Periódicamente, publicaremos el Top 10 de builders basado en el **Builder Score**. ¡Es hora de subir ese puntaje para aparecer en el radar de toda la comunidad!
+
+## ¿Cómo ganar?
+El proceso no cambió, pero ahora es más dinámico. Los builders con más nominaciones de la semana pasan a ser finalistas, y de ahí se eligen los ganadores. Recordá que tener un perfil completo y conectar tus proyectos aumenta tus chances de que otros builders te nominen.
+
+**¿Estás listo para ser el próximo Builder de la Semana?**
+
+¡A buildeaRRR!
+    `,
+  },
+  {
+    slug: "insights-2-0-metricas-bento-style",
+    title: "Insights 2.0: Métricas con estética Premium",
+    excerpt: "Rediseñamos por completo el panel de Insights. Ahora tus analíticas se ven tan bien como tu portfolio, con gráficos fluidos y una nueva distribución bento-grid.",
+    date: "2026-03-16",
+    tags: ["feature", "analytics", "design"],
+    author: {
+      name: "Tomas Deluca",
+      username: "huevsite",
+      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+    },
+    content: `
+Si sos un builder PRO, sabés que medir es fundamental. Pero, ¿por qué las herramientas de analíticas tienen que ser aburridas o feas? En huevsite.io nos obsesiona el diseño, y hoy lanzamos **Insights 2.0**.
+
+## Una UI a la altura de tu Portfolio
+Inspirados en la misma lógica bento-box de los perfiles, rediseñamos el dashboard de analíticas:
+- **Bento Grid Layout**: Las métricas clave (Visitantes, Vistas, Rebote, CTR) ahora viven en tarjetas interactivas que se adaptan a cualquier pantalla.
+- **Gráficos High-Fidelity**: Implementamos un sistema de renderizado custom para los gráficos de actividad. Son fluidos, animados y usan tus propios colores de acento para que la experiencia sea única.
+- **Tipografía Consistente**: Llevamos nuestra fuente de display al dashboard para que los números no solo sean datos, sino que se sientan parte de una interfaz premium.
+
+## Nuevas Métricas que importan
+No solo es un cambio visual. Agregamos información más accionable:
+- **Leaderboard de Contenido**: Mirá exactamente qué bloque de tu perfil está generando más interés. ¿Es tu último proyecto? ¿O quizás tu descripción de Stack técnico?
+- **Actividad Reciente**: Un feed en tiempo real de los eventos que ocurren en tu sitio.
+- **Optimización de Tráfico**: Filtramos automáticamente todo el tráfico de desarrollo (localhost) para que tus números sean 100% reales y representen a tu audiencia de producción.
+
+## Privacidad Reafirmada
+Seguimos cumpliendo nuestra promesa: métricas potentes sin cookies invasivas ni rastreo de datos personales. Vos sos dueño de tu data, y tus visitantes están protegidos.
+
+**Entrá ahora a tu Dashboard y descubrí la nueva cara de tus métricas.**
+
+¡A buildeaRRR!
+    `,
+  },
+  {
     slug: "subi-de-nivel-todo-sobre-el-builder-score",
     title: "Subí de nivel: Todo sobre el Builder Score",
     excerpt: "Descubrí cómo funciona nuestro sistema de puntuación y qué podés hacer para aparecer en lo más alto de la sección Explore.",

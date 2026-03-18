@@ -102,12 +102,12 @@ export function DashboardSidebar({
         fixed inset-y-0 left-0 w-[300px] shrink-0 border-r border-white/5 bg-[#09090b]/95
         backdrop-blur-xl z-[210] transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-        md:sticky md:top-0 md:h-full md:translate-x-0 flex flex-col shadow-[20px_0_50px_rgba(0,0,0,0.5)]
+        md:sticky md:top-0 md:h-full md:translate-x-0 flex flex-col shadow-[20px_0_50px_rgba(0,0,0,0.5)] overflow-visible
         scrollbar-none
       `}>
         <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-[var(--accent)]/5 to-transparent pointer-events-none" />
         
-        <div className="p-6 pb-2 relative z-10">
+        <div className="p-6 pb-2 relative z-30">
           <div className="flex items-center justify-between mb-8">
             <Link href="/" className="group flex items-center gap-2">
               <div className="w-8 h-8 rounded-xl bg-[var(--accent)] flex items-center justify-center rotate-3 group-hover:rotate-12 transition-transform shadow-[0_0_15px_var(--accent)]/40">
@@ -153,7 +153,7 @@ export function DashboardSidebar({
                      initial={{ opacity: 0, scale: 0.95, y: -10 }}
                      animate={{ opacity: 1, scale: 1, y: 0 }}
                      exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                     className="absolute top-full left-0 right-0 mt-2 p-2 bg-[#121214] border border-white/10 rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 overflow-hidden backdrop-blur-xl"
+                     className="absolute top-full left-0 right-0 mt-2 p-2 bg-[#121214] border border-white/10 rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-[260] overflow-hidden backdrop-blur-xl"
                    >
                       <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
                         <button 
@@ -214,7 +214,7 @@ export function DashboardSidebar({
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto px-6 space-y-8 pb-8 custom-scrollbar">
+        <div className="relative z-0 flex-1 overflow-y-auto px-6 space-y-8 pb-8 custom-scrollbar">
           
           {/* Main Actions Section */}
           <div className="space-y-3">
@@ -242,7 +242,7 @@ export function DashboardSidebar({
           <motion.div
             initial={false}
             onClick={() => openModal(setIsScoreInfoOpen)}
-            className="group/score p-5 rounded-[2rem] bg-gradient-to-br from-white/[0.03] to-white/[0.01] border border-white/[0.05] hover:border-[var(--accent)]/30 transition-all cursor-pointer relative overflow-hidden"
+            className="group/score z-0 p-5 rounded-[2rem] bg-gradient-to-br from-white/[0.03] to-white/[0.01] border border-white/[0.05] hover:border-[var(--accent)]/30 transition-all cursor-pointer relative overflow-hidden"
           >
             <div className="absolute top-0 right-0 w-24 h-24 bg-[var(--accent)]/10 blur-[30px] -translate-y-1/2 translate-x-1/2" />
             

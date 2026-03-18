@@ -27,7 +27,25 @@ export async function GET(
 
         if (blocksError) throw blocksError
 
-        return NextResponse.json({ blocks: blocks || [] })
+        const { data: subSite } = await supabase
+            .from('sub_sites')
+            .select('avatar_url')
+            .eq('id', id)
+            .eq('user_id', user.id)
+            .maybeSingle()
+
+        const normalizedBlocks = (blocks || []).map((block: any) => {
+            if (block.type !== 'hero') return block
+            return {
+                ...block,
+                data: {
+                    ...(block.data || {}),
+                    avatarUrl: subSite?.avatar_url || "",
+                }
+            }
+        })
+
+        return NextResponse.json({ blocks: normalizedBlocks })
 
     } catch (error: any) {
         console.error('Error fetching sub-site blocks:', error)

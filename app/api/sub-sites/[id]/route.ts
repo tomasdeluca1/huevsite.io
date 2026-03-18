@@ -3,6 +3,29 @@ import { createClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
+async function syncSubSiteHeroAvatar(supabase: any, userId: string, subSiteId: string, avatarUrl: string | null) {
+    const { data: heroBlock } = await supabase
+        .from('blocks')
+        .select('id, data')
+        .eq('user_id', userId)
+        .eq('sub_site_id', subSiteId)
+        .eq('type', 'hero')
+        .maybeSingle();
+
+    if (!heroBlock) return;
+
+    const nextData = {
+        ...(heroBlock.data || {}),
+        avatarUrl: avatarUrl || ""
+    };
+
+    await supabase
+        .from('blocks')
+        .update({ data: nextData })
+        .eq('id', heroBlock.id)
+        .eq('user_id', userId);
+}
+
 // DELETE /api/sub-sites/[id] - eliminar un sub-site
 export async function DELETE(
     request: NextRequest,
@@ -87,6 +110,10 @@ export async function PATCH(
         }
 
         if (updateError) throw updateError
+
+        if (updateData.avatar_url !== undefined) {
+            await syncSubSiteHeroAvatar(supabase, user.id, id, updateData.avatar_url || null)
+        }
 
         return NextResponse.json({ success: true, subSite })
 

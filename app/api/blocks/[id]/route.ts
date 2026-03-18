@@ -5,6 +5,30 @@ import { checkAndPostWelcomeTweet } from '@/lib/twitter'
 
 export const dynamic = 'force-dynamic'
 
+async function syncOwnerAvatarFromHero(
+  supabase: any,
+  userId: string,
+  subSiteId: string | null,
+  avatarUrl: string | null
+) {
+  if (subSiteId) {
+    await supabase
+      .from('sub_sites')
+      .update({
+        avatar_url: avatarUrl || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', subSiteId)
+      .eq('user_id', userId);
+    return;
+  }
+
+  await supabase
+    .from('profiles')
+    .update({ image: avatarUrl || null })
+    .eq('id', userId);
+}
+
 // PATCH /api/blocks/[id] - actualizar bloque
 export async function PATCH(
   request: NextRequest,
@@ -101,6 +125,15 @@ export async function PATCH(
         { error: 'Error al actualizar bloque' },
         { status: 500 }
       )
+    }
+
+    if (existingBlock.type === 'hero' && jsonData.avatarUrl !== undefined) {
+      await syncOwnerAvatarFromHero(
+        supabase,
+        user.id,
+        existingBlock.sub_site_id || null,
+        jsonData.avatarUrl || null
+      );
     }
 
     // Log the activity to the feed

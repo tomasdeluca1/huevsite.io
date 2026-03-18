@@ -1,7 +1,9 @@
 import { ImageResponse } from 'next/og';
-import { supabase } from '@/lib/supabase';
+import { profileService } from '@/lib/profile-service';
 
 export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET(
   request: Request,
@@ -9,185 +11,223 @@ export async function GET(
 ) {
   try {
     const { username } = params;
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('id, username, display_name, accent_color')
-      .eq('username', username.toLowerCase())
-      .single();
+    const profile = await profileService.getProfile(username);
 
     if (!profile) return new Response('Profile not found', { status: 404 });
-
-    const { data: heroBlock } = await supabase
-      .from('blocks')
-      .select('content')
-      .eq('profile_id', profile.id)
-      .eq('type', 'hero')
-      .maybeSingle();
-
-    const tagline = heroBlock?.content?.tagline || 'Builder en huevsite.io';
-    const roles = (heroBlock?.content?.roles as string[]) || [];
-    const accentColor = profile.accent_color || '#C8FF00';
+    const displayName = profile.displayName || username;
+    const heroBlock = profile.blocks.find((block) => block.type === 'hero');
+    const tagline = (heroBlock as any)?.tagline || profile.tagline || 'Builder en huevsite.io';
+    const roles = (profile as any)?.roles?.slice(0, 3) || [];
+    const accentColor = profile.accentColor || '#C8FF00';
+    const score = profile.builderScore || 0;
+    const isWinner = profile.isWinner || false;
+    const avatarUrl = profile.avatarUrl;
 
     return new ImageResponse(
       (
         <div
           style={{
-            height: '100%',
             width: '100%',
+            height: '100%',
             display: 'flex',
             flexDirection: 'column',
             backgroundColor: '#050505',
-            backgroundImage: 'radial-gradient(circle at 50% 120%, rgba(200,255,0,0.15) 0%, #050505 60%)',
-            padding: '80px',
             position: 'relative',
-            justifyContent: 'space-between',
+            padding: 60,
+            overflow: 'hidden',
             fontFamily: 'sans-serif',
           }}
         >
-          {/* Subtle Grid effect overlay */}
           <div
             style={{
               position: 'absolute',
-              inset: 0,
-              backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
-              backgroundSize: '40px 40px',
-              zIndex: 0,
+              top: '-20%',
+              right: '-10%',
+              width: '60%',
+              height: '120%',
+              backgroundColor: accentColor,
+              opacity: 0.08,
+              filter: 'blur(100px)',
+              borderRadius: '50%',
             }}
           />
 
-          {/* Top Logo Section */}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: '-20%',
+              left: '-10%',
+              width: '40%',
+              height: '80%',
+              backgroundColor: accentColor,
+              opacity: 0.05,
+              filter: 'blur(80px)',
+              borderRadius: '50%',
+            }}
+          />
+
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: 60,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'baseline' }}>
+              <span style={{ fontSize: 28, fontWeight: 900, color: 'white', letterSpacing: '-0.04em' }}>huev</span>
+              <span style={{ fontSize: 28, fontWeight: 900, color: accentColor, letterSpacing: '-0.04em' }}>site</span>
+              <span style={{ fontSize: 28, fontWeight: 900, color: 'white', opacity: 0.4, letterSpacing: '-0.04em' }}>.io</span>
+            </div>
+
+            {isWinner && (
+              <div style={{
+                display: 'flex',
+                padding: '10px 20px',
+                backgroundColor: `${accentColor}1A`,
+                border: `1px solid ${accentColor}40`,
+                borderRadius: 20,
+                color: accentColor,
+                fontSize: 18,
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em'
+              }}>
+                Builder de la Semana
+              </div>
+            )}
+          </div>
+
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '16px',
-              zIndex: 10,
+              flex: 1,
+              gap: 60,
             }}
           >
-            <div
-              style={{
-                fontSize: '32px',
-                fontWeight: '800',
-                color: 'white',
-                letterSpacing: '-1px',
-                display: 'flex'
-              }}
-            >
-              huev<span style={{ color: accentColor }}>site</span>.io
-            </div>
-            <div
-              style={{
-                padding: '4px 12px',
-                borderRadius: '100px',
-                border: '1px solid #333',
-                backgroundColor: '#111',
-                color: '#888',
-                fontSize: '14px',
-                fontWeight: '600',
-                textTransform: 'uppercase',
-                letterSpacing: '2px',
-                display: 'flex'
-              }}
-            >
-              // builder logic
-            </div>
-          </div>
-
-          {/* Main Content Area */}
-          <div style={{ display: 'flex', flexDirection: 'column', zIndex: 10 }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '24px',
-              marginBottom: '40px'
-            }}>
-              <div style={{
-                width: '110px',
-                height: '110px',
-                borderRadius: '50%',
-                background: `linear-gradient(135deg, ${accentColor}, #00FF88)`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '48px',
-                fontWeight: '800',
-                color: '#000',
-                boxShadow: `0 0 40px ${accentColor}40`
-              }}>
-                {(profile.display_name || username).substring(0, 1).toUpperCase()}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span
+            <div style={{ display: 'flex', position: 'relative' }}>
+              <div
+                style={{
+                  position: 'absolute',
+                  top: -20,
+                  left: -20,
+                  right: -20,
+                  bottom: -20,
+                  background: `radial-gradient(circle, ${accentColor}33 0%, transparent 70%)`,
+                  borderRadius: '50%',
+                }}
+              />
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
                   style={{
-                    fontSize: '92px',
-                    fontWeight: '900',
-                    color: 'white',
-                    lineHeight: 1,
-                    letterSpacing: '-3px',
-                    marginBottom: '8px',
+                    width: 240,
+                    height: 240,
+                    borderRadius: 60,
+                    border: `4px solid ${accentColor}40`,
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: 240,
+                    height: 240,
+                    borderRadius: 60,
+                    backgroundColor: `${accentColor}1A`,
+                    border: `4px solid ${accentColor}40`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: accentColor,
+                    fontSize: 100,
+                    fontWeight: 900,
                   }}
                 >
-                  {profile.display_name || username}
-                </span>
-                {/* Badges / Roles */}
-                {roles.length > 0 && (
-                  <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-                    {roles.map((role: string) => (
-                      <div
-                        key={role}
-                        style={{
-                          padding: '8px 20px',
-                          borderRadius: '12px',
-                          border: `1px solid ${accentColor}50`,
-                          backgroundColor: `${accentColor}10`,
-                          color: '#FFF',
-                          fontSize: '20px',
-                          fontWeight: '700',
-                          letterSpacing: '-0.5px'
-                        }}
-                      >
-                        {role}
-                      </div>
-                    ))}
-                  </div>
-                )}
+                  {displayName.charAt(0).toUpperCase()}
+                </div>
+              )}
+
+              <div style={{
+                position: 'absolute',
+                bottom: -20,
+                right: -20,
+                backgroundColor: '#0A0A0C',
+                border: `2px solid ${accentColor}`,
+                borderRadius: 24,
+                padding: '12px 20px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+              }}>
+                <span style={{ fontSize: 12, fontWeight: 900, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Score</span>
+                <span style={{ fontSize: 32, fontWeight: 900, color: 'white' }}>{score}</span>
               </div>
             </div>
 
-            <span
-              style={{
-                fontSize: '36px',
-                color: '#A0A0A0',
-                maxWidth: '900px',
-                lineHeight: 1.4,
-                fontWeight: '500',
-                letterSpacing: '-0.5px'
-              }}
-            >
-              {tagline}
-            </span>
+            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center' }}>
+              <h1
+                style={{
+                  fontSize: 84,
+                  fontWeight: 900,
+                  lineHeight: 1,
+                  letterSpacing: '-0.04em',
+                  margin: '0 0 20px 0',
+                  color: 'white',
+                }}
+              >
+                {displayName}
+              </h1>
+
+              <p
+                style={{
+                  fontSize: 28,
+                  color: 'rgba(255,255,255,0.6)',
+                  lineHeight: 1.4,
+                  margin: '0 0 32px 0',
+                  maxWidth: 600,
+                }}
+              >
+                {tagline}
+              </p>
+
+              <div style={{ display: 'flex', gap: 12 }}>
+                {roles.map((role: string) => (
+                  <div key={role} style={{
+                    padding: '8px 16px',
+                    backgroundColor: 'rgba(255,255,255,0.06)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 12,
+                    fontSize: 16,
+                    fontWeight: 600,
+                    color: 'white'
+                  }}>
+                    {role}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
-          {/* Bottom URL section */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', zIndex: 10 }}>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                padding: '16px 32px',
-                borderRadius: '100px',
-                border: `1px solid ${accentColor}40`,
-                backgroundColor: 'rgba(0,0,0,0.6)',
-                boxShadow: `0 8px 32px rgba(0,0,0,0.4)`,
-              }}
-            >
-              <span style={{ fontSize: '24px', color: '#888', fontWeight: '500', fontFamily: 'monospace' }}>
-                huevsite.io/
-              </span>
-              <span style={{ fontSize: '24px', color: accentColor, fontWeight: '800', fontFamily: 'monospace' }}>
-                {username}
-              </span>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'flex-start',
+            alignItems: 'center',
+            marginTop: 40,
+          }}>
+            <div style={{
+              display: 'flex',
+              backgroundColor: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              padding: '10px 20px',
+              borderRadius: 100,
+              fontSize: 18,
+              fontWeight: 800,
+              color: 'rgba(255,255,255,0.4)',
+              fontFamily: 'monospace'
+            }}>
+              huevsite.io/<span style={{ color: 'white' }}>{username}</span>
             </div>
           </div>
         </div>

@@ -13,15 +13,38 @@ interface Props {
     params: { username: string; slug: string };
 }
 
+const OG_IMAGE_VERSION = "20260318";
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { username, slug } = await params;
     const profile = await profileService.getSubSiteProfile(username, slug);
 
     if (!profile) return { title: "Sub-site no encontrado | huevsite.io" };
 
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.huevsite.io";
+    const ogImageUrl = `${baseUrl}/${username}/${slug}/opengraph-image?v=${OG_IMAGE_VERSION}`;
+
     return {
-        title: `${profile.displayName} | @${params.username} | huevsite.io`,
+        title: `${profile.displayName} | @${username} | huevsite.io`,
         description: profile.tagline,
+        openGraph: {
+            title: `${profile.displayName} | @${username}`,
+            description: profile.tagline,
+            images: [
+                {
+                    url: ogImageUrl,
+                    width: 1200,
+                    height: 630,
+                    alt: `${profile.displayName} sub-site cover on huevsite.io`,
+                },
+            ],
+        },
+        twitter: {
+            card: "summary_large_image",
+            title: `${profile.displayName} | @${username}`,
+            description: profile.tagline,
+            images: [ogImageUrl],
+        },
     };
 }
 

@@ -18,7 +18,7 @@ interface Props {
   searchParams?: { from?: string; return_to?: string };
 }
 
-
+const OG_IMAGE_VERSION = "20260318";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { username } = await params;
@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // Note: we can safely bypass standard Next metadata cache parameter using a bust cache hash
   // if required, but default Next app-router already suffixes ?hash. 
   // We'll explicitly define the absolute OG image URL since Next sometimes fails to resolve absolute paths automatically.
-  const ogImageUrl = `${baseUrl}/${username}/opengraph-image`;
+  const ogImageUrl = `${baseUrl}/${username}/opengraph-image?v=${OG_IMAGE_VERSION}`;
 
   return {
     title: `${profile.displayName} (@${profile.username}) | huevsite.io`,

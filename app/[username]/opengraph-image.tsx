@@ -81,7 +81,6 @@ export default async function Image({
             justifyContent: 'space-between',
             alignItems: 'center',
             marginBottom: 60,
-            zIndex: 10,
           }}
         >
           <div style={{ display: 'flex', alignItems: 'baseline' }}>
@@ -116,7 +115,6 @@ export default async function Image({
             alignItems: 'center',
             flex: 1,
             gap: 60,
-            zIndex: 10,
           }}
         >
           {/* Left: Avatar with Glow */}
@@ -140,7 +138,6 @@ export default async function Image({
                   height: 240,
                   borderRadius: 60,
                   border: `4px solid ${accentColor}40`,
-                  objectFit: 'cover',
                 }}
               />
             ) : (
@@ -234,7 +231,6 @@ export default async function Image({
           justifyContent: 'flex-start',
           alignItems: 'center',
           marginTop: 40,
-          zIndex: 10
         }}>
           <div style={{ 
             display: 'flex', 

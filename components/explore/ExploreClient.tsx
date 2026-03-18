@@ -7,6 +7,15 @@ import { motion } from "framer-motion";
 
 import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
 
+const VALID_EXPLORE_SORTS = new Set([
+  "score",
+  "created_at",
+  "updated_at",
+  "followers",
+  "nominations",
+  "endorsements",
+]);
+
 interface ExploreProfile {
   id: string;
   username: string;
@@ -42,7 +51,16 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
       }
     }
 
-    return saved || defaultValue;
+    if (!saved) return defaultValue;
+
+    // Ignore stale Explore values from older UI variants so hidden filters
+    // do not exclude valid text search results.
+    if (!VALID_EXPLORE_SORTS.has(saved)) {
+      localStorage.removeItem(key);
+      return defaultValue;
+    }
+
+    return saved;
   };
 
   const [search, setSearch] = useState(() =>
@@ -364,6 +382,9 @@ function ProfileCard({ profile, index, isMobile }: { profile: ExploreProfile; in
                 </div>
 
                 <div className="flex-1 min-w-0">
+                  <p className="text-[11px] font-mono text-[var(--accent)] mb-1 truncate">
+                    @{profile.username}
+                  </p>
                   <div className="flex items-center gap-2 mb-1.5">
                     <h2 className="text-xl font-bold tracking-tight text-white group-hover:text-[var(--accent)] transition-colors truncate">
                       {profile.name || profile.username}
@@ -402,7 +423,7 @@ function ProfileCard({ profile, index, isMobile }: { profile: ExploreProfile; in
                     boxShadow: `0 0 10px ${accentColor}80` 
                   }}
                 />
-                <span className="group-hover:text-white transition-colors">@{profile.username}</span>
+                <span className="group-hover:text-white transition-colors">/{profile.username}</span>
               </div>
               
               <div

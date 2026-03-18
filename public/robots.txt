@@ -14,6 +14,7 @@ Disallow: /dashboard/
 Disallow: /onboarding/
 Disallow: /login/
 Disallow: /admin/
+Allow: /api/og/*
 
 # ==========================================
 # 2. OPTIMIZACIÓN PARA ANSWER ENGINES (AEO) Y LLMs (GEO)

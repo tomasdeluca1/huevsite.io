@@ -107,8 +107,8 @@ export async function postLeaderboard(profiles: { mention: string, score: number
  */
 export async function postWelcomeBuilder(username: string, twitterHandle: string) {
   const cleanHandle = twitterHandle.replace('@', '');
-  const text = `Nuevos builders que se suman — Bienvenido @${cleanHandle} a huevsite 👋\n\nMirá su perfil: huevsite.io/${username}`;
-  
+  const text = `Un nuevo builder sumó su X handle: Bienvenido @${cleanHandle} a huevsite 👋\n\nAcá su perfil: huevsite.io/${username}\n\n#BuildeaEnPublico`;
+
   return sendTweet(text);
 }
 
@@ -142,12 +142,12 @@ export async function checkAndPostWelcomeTweet(supabase: any, userId: string, bl
     cleanHandle = twitterHandle.replace('@', '');
   }
 
-  if (!cleanHandle || 
-      cleanHandle === 'twitter' || 
-      cleanHandle === 'x' || 
-      cleanHandle === 'x.com' || 
-      cleanHandle === 'twitter.com' ||
-      cleanHandle.includes('.') // Handles like "x.com" or "twitter.com"
+  if (!cleanHandle ||
+    cleanHandle === 'twitter' ||
+    cleanHandle === 'x' ||
+    cleanHandle === 'x.com' ||
+    cleanHandle === 'twitter.com' ||
+    cleanHandle.includes('.') // Handles like "x.com" or "twitter.com"
   ) return;
 
   try {
@@ -211,12 +211,12 @@ export async function checkAndPostCommunityMilestone(supabase: any) {
  * Posts a shout-out for a new PRO builder
  */
 export async function postProUpgrade(username: string, twitterHandle?: string) {
-  const mention = twitterHandle 
-    ? `@${twitterHandle.replace('@', '')}` 
+  const mention = twitterHandle
+    ? `@${twitterHandle.replace('@', '')}`
     : `@${username}`;
-  
+
   const text = `💎 ¡Nuevo Builder PRO en la casa! \n\nFelicitaciones a ${mention} por sumarse al plan Pro de huevsite. ✨\n\nMirá su perfil: huevsite.io/${username}\n\n#probuilder #huevsite`;
-  
+
   return sendTweet(text);
 }
 
@@ -248,7 +248,7 @@ export async function postWeeklyStats(supabase: any, preview = false) {
     if (builderCount === 0 && projectCount === 0) return null;
 
     const text = `📊 Stats de la semana en huevsite:\n\n🚀 ${projectCount} nuevos proyectos publicados\n👋 ${builderCount} nuevos builders se sumaron\n\n¡La comunidad no para de crecer! 🥚✨\n\nhuevsite.io\n\n#buildinpublic #latam`;
-    
+
     if (preview) return text;
     await sendTweet(text);
     console.log("// Weekly stats posted successfully");

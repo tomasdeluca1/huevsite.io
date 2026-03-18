@@ -5,6 +5,30 @@ import { checkAndPostWelcomeTweet } from '@/lib/twitter'
 
 export const dynamic = 'force-dynamic'
 
+async function syncOwnerAvatarFromHero(
+  supabase: any,
+  userId: string,
+  subSiteId: string | null,
+  avatarUrl: string | null
+) {
+  if (subSiteId) {
+    await supabase
+      .from('sub_sites')
+      .update({
+        avatar_url: avatarUrl || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', subSiteId)
+      .eq('user_id', userId);
+    return;
+  }
+
+  await supabase
+    .from('profiles')
+    .update({ image: avatarUrl || null })
+    .eq('id', userId);
+}
+
 // POST /api/blocks - crear nuevo bloque
 export async function POST(request: NextRequest) {
   try {
@@ -132,6 +156,15 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('POST - Success:', block)
+
+    if (body.type === 'hero') {
+      await syncOwnerAvatarFromHero(
+        supabase,
+        user.id,
+        body.sub_site_id || null,
+        body.data?.avatarUrl || null
+      );
+    }
 
     // Log the activity to the feed
     const { error: activityError } = await supabase.from('activities').insert({

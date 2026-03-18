@@ -13,7 +13,7 @@ interface Props {
     params: { username: string; slug: string };
 }
 
-const OG_IMAGE_VERSION = "20260318";
+const OG_IMAGE_VERSION = "20260318a";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { username, slug } = await params;
@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     if (!profile) return { title: "Sub-site no encontrado | huevsite.io" };
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.huevsite.io";
-    const ogImageUrl = `${baseUrl}/${username}/${slug}/opengraph-image?v=${OG_IMAGE_VERSION}`;
+    const ogImageUrl = `${baseUrl}/api/og/${username}/${slug}?v=${OG_IMAGE_VERSION}`;
 
     return {
         title: `${profile.displayName} | @${username} | huevsite.io`,

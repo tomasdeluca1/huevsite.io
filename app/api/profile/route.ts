@@ -5,6 +5,29 @@ import { vercelService } from '@/lib/vercel-service'
 
 export const dynamic = 'force-dynamic'
 
+async function syncMainHeroAvatar(supabase: any, userId: string, avatarUrl: string | null) {
+  const { data: heroBlock } = await supabase
+    .from('blocks')
+    .select('id, data')
+    .eq('user_id', userId)
+    .is('sub_site_id', null)
+    .eq('type', 'hero')
+    .maybeSingle();
+
+  if (!heroBlock) return;
+
+  const nextData = {
+    ...(heroBlock.data || {}),
+    avatarUrl: avatarUrl || "",
+  };
+
+  await supabase
+    .from('blocks')
+    .update({ data: nextData })
+    .eq('id', heroBlock.id)
+    .eq('user_id', userId);
+}
+
 // GET /api/profile - obtener perfil del usuario autenticado
 export async function GET(request: NextRequest) {
   try {
@@ -45,6 +68,17 @@ export async function GET(request: NextRequest) {
       console.error('Error fetching blocks:', blocksError)
     }
 
+    const normalizedBlocks = (blocks || []).map((block: any) => {
+      if (block.type !== 'hero') return block;
+      return {
+        ...block,
+        data: {
+          ...(block.data || {}),
+          avatarUrl: profile.image || "",
+        },
+      };
+    });
+
     // Obtener sub_sites
     const { data: subSites, error: subSitesError } = await supabase
       .from('sub_sites')
@@ -58,7 +92,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       profile,
-      blocks: blocks || [],
+      blocks: normalizedBlocks,
       subSites: subSites || [],
     })
 
@@ -98,6 +132,7 @@ export async function PATCH(request: NextRequest) {
       'location',
       'available',
       'github_handle',
+      'image',
       'has_seen_update_feb25',
       'custom_domain',
       'is_onboarding_test_user',
@@ -170,6 +205,10 @@ export async function PATCH(request: NextRequest) {
         { error: 'Error al actualizar perfil' },
         { status: 500 }
       )
+    }
+
+    if (updateData.image !== undefined) {
+      await syncMainHeroAvatar(supabase, user.id, updateData.image || null)
     }
 
     // Al actualizar el perfil (name, tagline, image), el score puede cambiar

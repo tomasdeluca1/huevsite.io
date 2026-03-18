@@ -487,10 +487,28 @@ export default function DashboardPage() {
   };
 
   const updateBlock = async (updatedBlock: BlockData) => {
-    setProfile((prev) => prev ? {
-      ...prev,
-      blocks: prev.blocks.map(b => b.id === updatedBlock.id ? updatedBlock : b)
-    } : prev);
+    setProfile((prev) => {
+      if (!prev) return prev;
+
+      const nextProfile = {
+        ...prev,
+        blocks: prev.blocks.map(b => b.id === updatedBlock.id ? updatedBlock : b)
+      };
+
+      if (updatedBlock.type === 'hero') {
+        if (selectedSubSiteId) {
+          nextProfile.subSites = prev.subSites.map(site =>
+            site.id === selectedSubSiteId
+              ? { ...site, avatarUrl: updatedBlock.avatarUrl || "" }
+              : site
+          );
+        } else {
+          nextProfile.avatarUrl = updatedBlock.avatarUrl || "";
+        }
+      }
+
+      return nextProfile;
+    });
 
     if (!updatedBlock.id.startsWith('temp-')) {
       try {
@@ -1246,6 +1264,19 @@ export default function DashboardPage() {
       <AnimatePresence>{isDeletingId && <div className="fixed inset-0 z-[500] flex items-center justify-center p-4"><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setIsDeletingId(null)} /><motion.div initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }} className="relative w-full max-w-sm bg-[var(--surface)] border border-red-500/30 rounded-[2rem] shadow-2xl p-8 z-[510] text-center"><div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-6 text-red-500"><Trash2 size={32} /></div><h3 className="text-2xl font-black mb-3 text-white">¿Borrar bloque?</h3><p className="text-[var(--text-dim)] mb-8 text-sm leading-relaxed">Esta acción no se puede deshacer.</p><div className="flex gap-3"><button onClick={() => setIsDeletingId(null)} className="flex-1 py-3.5 rounded-2xl bg-[var(--surface2)] font-bold text-sm text-white">Cancelar</button><button onClick={() => { removeBlock(isDeletingId); setIsDeletingId(null); }} className="flex-1 py-3.5 rounded-2xl bg-red-500 font-bold text-sm text-white transition-all">Eliminar</button></div></motion.div></div>}</AnimatePresence>
       <AnimatePresence>{isProfileModalOpen && <div className="fixed inset-0 z-[500] flex items-center justify-center p-4"><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsProfileModalOpen(false)} className="absolute inset-0 bg-black/80 backdrop-blur-md" /><motion.div initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }} className="relative w-full max-w-md bg-[var(--surface)] border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden z-[510] p-8 pt-10"><div className="text-center mb-8"><div className="section-label mb-2 mx-auto w-fit">// identidad {selectedSubSiteId ? '(sub-site)' : ''}</div><h3 className="text-2xl font-black tracking-tighter">Editar {selectedSubSiteId ? 'Sub-site' : 'Perfil'}</h3></div><div className="space-y-6"><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1">URL del {selectedSubSiteId ? 'Sub-site' : 'Perfil'}</label><div className="flex items-center gap-2 p-4 rounded-2xl bg-black/40 border border-white/10 focus-within:border-[var(--accent)] transition-all font-mono"><span className="text-xs text-white/20">huevsite.io/{selectedSubSiteId ? `${profile.username}/` : ''}</span><input value={tempProfileData.username} onChange={(e) => setTempProfileData(p => ({ ...p, username: e.target.value.toLowerCase() }))} className="bg-transparent border-none outline-none text-sm font-black text-[var(--accent)] flex-1 p-0" /></div></div><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">Foto (URL)</label><input value={tempProfileData.avatarUrl} onChange={(e) => setTempProfileData(p => ({ ...p, avatarUrl: e.target.value }))} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-white/60 focus:border-[var(--accent)] transition-all font-mono" /></div><div className="space-y-4 pt-2"><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">Nombre</label><input value={tempProfileData.display_name} onChange={(e) => setTempProfileData(p => ({ ...p, display_name: e.target.value }))} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm font-black text-white focus:border-[var(--accent)] transition-all" /></div><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">{selectedSubSiteId ? 'Descripción' : 'Tagline'}</label><input value={tempProfileData.tagline} onChange={(e) => setTempProfileData(p => ({ ...p, tagline: e.target.value }))} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-white/60 focus:border-[var(--accent)] transition-all" /></div></div></div><div className="flex gap-4 mt-10"><button onClick={() => setIsProfileModalOpen(false)} className="flex-1 py-4 text-sm font-bold text-white/30 hover:text-white transition-colors">Cancelar</button><button onClick={async () => { 
         if (selectedSubSiteId) {
+          setProfile(prev => prev ? {
+            ...prev,
+            subSites: prev.subSites.map(site =>
+              site.id === selectedSubSiteId
+                ? { ...site, title: tempProfileData.display_name, slug: tempProfileData.username, description: tempProfileData.tagline, avatarUrl: tempProfileData.avatarUrl }
+                : site
+            ),
+            blocks: prev.blocks.map(block =>
+              block.type === 'hero'
+                ? { ...block, avatarUrl: tempProfileData.avatarUrl || "" }
+                : block
+            )
+          } : null);
           await handleUpdateSubSite(selectedSubSiteId, {
             title: tempProfileData.display_name,
             slug: tempProfileData.username,
@@ -1253,7 +1284,18 @@ export default function DashboardPage() {
             avatarUrl: tempProfileData.avatarUrl
           });
         } else {
-          setProfile(prev => prev ? { ...prev, username: tempProfileData.username, displayName: tempProfileData.display_name, tagline: tempProfileData.tagline, avatarUrl: tempProfileData.avatarUrl } : null); 
+          setProfile(prev => prev ? {
+            ...prev,
+            username: tempProfileData.username,
+            displayName: tempProfileData.display_name,
+            tagline: tempProfileData.tagline,
+            avatarUrl: tempProfileData.avatarUrl,
+            blocks: prev.blocks.map(block =>
+              block.type === 'hero'
+                ? { ...block, avatarUrl: tempProfileData.avatarUrl || "" }
+                : block
+            )
+          } : null); 
           await fetch('/api/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: tempProfileData.username, name: tempProfileData.display_name, tagline: tempProfileData.tagline, image: tempProfileData.avatarUrl }) });
         }
         setIsProfileModalOpen(false); 

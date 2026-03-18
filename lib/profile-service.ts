@@ -100,6 +100,11 @@ export const profileService = {
     }
 
     const transformed = this._transformProfile(profile, blocks || []);
+    transformed.blocks = transformed.blocks.map((block: any) =>
+      block.type === 'hero'
+        ? { ...block, avatarUrl: profile.image || "" }
+        : block
+    ) as BlockData[];
     transformed.subSites = subSitesWithAvatar;
     transformed.isWinner =
       !!userWinnerData &&
@@ -183,6 +188,11 @@ export const profileService = {
       displayName: subSite.title,
       tagline: subSite.description || transformed.tagline,
       avatarUrl: subSite.avatar_url || transformed.avatarUrl,
+      blocks: transformed.blocks.map((block: any) =>
+        block.type === 'hero'
+          ? { ...block, avatarUrl: subSite.avatar_url || "" }
+          : block
+      ) as BlockData[],
       subSites: subSitesWithAvatar,
       subSiteId: subSite.id,
       sourceUrl: subSite.source_url || null,

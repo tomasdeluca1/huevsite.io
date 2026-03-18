@@ -3,17 +3,61 @@ import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
+const VALID_SORTS = new Set([
+  "score",
+  "created_at",
+  "updated_at",
+  "followers",
+  "nominations",
+  "endorsements",
+  "following",
+  "followers_me",
+]);
+
+const VALID_FILTERS = new Set([
+  "score",
+  "created_at",
+  "updated_at",
+  "followers",
+  "nominations",
+  "endorsements",
+]);
+
+function normalizeSearchValue(value: string | null | undefined) {
+  return (value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+}
+
+function getSearchRelevance(profile: any, query: string) {
+  const username = normalizeSearchValue(profile.username);
+  const name = normalizeSearchValue(profile.name);
+
+  if (username === query) return 0;
+  if (username.startsWith(query)) return 1;
+  if (name === query) return 2;
+  if (name.startsWith(query)) return 3;
+  if (username.includes(query)) return 4;
+  if (name.includes(query)) return 5;
+  return 6;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "0", 10);
     const limit = parseInt(searchParams.get("limit") || "24", 10);
-    const sort = searchParams.get("sort") || "score"; // 'score' | 'created_at' | 'updated_at' | ...
+    const rawSort = searchParams.get("sort") || "score";
     const q = searchParams.get("q") || "";
-    const filter = searchParams.get("filter") || "score"; // 'score' | 'winners' | 'pro' | 'created_at'
+    const rawFilter = searchParams.get("filter") || "score";
+    const sort = VALID_SORTS.has(rawSort) ? rawSort : "score";
+    const filter = VALID_FILTERS.has(rawFilter) ? rawFilter : "score";
 
     const startIndex = page * limit;
     const endIndex = startIndex + limit - 1;
+    const normalizedQuery = normalizeSearchValue(q);
 
     const supabase = await createClient();
 
@@ -25,12 +69,6 @@ export async function GET(request: NextRequest) {
     if (q) {
       // Basic text search over username or name
       query = query.or(`username.ilike.%${q}%,name.ilike.%${q}%`);
-    }
-
-    if (filter === 'winners') {
-      query = query.eq('is_winner', true);
-    } else if (filter === 'pro') {
-      query = query.not('pro_since', 'is', null);
     }
 
     // We might need the user object for certain filters
@@ -90,7 +128,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Final Ordering Logic (Universal)
-    const shouldPin = filter === 'score' || filter === 'winners';
+    const shouldPin = filter === "score";
 
     if (shouldPin) {
       // PIN WINNERS/PRO FIRST
@@ -105,13 +143,28 @@ export async function GET(request: NextRequest) {
       query = query.order("created_at", { ascending: false });
     }
 
-    query = query.range(startIndex, endIndex);
+    if (normalizedQuery) {
+      const searchWindowEnd = Math.max(endIndex, 199);
+      query = query.range(0, searchWindowEnd);
+    } else {
+      query = query.range(startIndex, endIndex);
+    }
 
-    const { data: profiles, error, count } = await query;
+    const { data, error, count } = await query;
 
     if (error) {
       console.error("Explore API DB error:", error);
       return NextResponse.json({ error: "DB Error" }, { status: 500 });
+    }
+
+    let profiles = data || [];
+
+    if (normalizedQuery) {
+      profiles = [...profiles].sort((a, b) => {
+        const relevanceDiff = getSearchRelevance(a, normalizedQuery) - getSearchRelevance(b, normalizedQuery);
+        if (relevanceDiff !== 0) return relevanceDiff;
+        return 0;
+      }).slice(startIndex, endIndex + 1);
     }
 
     return NextResponse.json({ profiles, count, hasMore: (startIndex + limit) < (count || 0) }, { status: 200 });

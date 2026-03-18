@@ -6,15 +6,23 @@ import { createClient } from "@/lib/supabase/client";
 import { motion } from "framer-motion";
 import { Loader2, Check, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 export default function SetupPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
   const [username, setUsername] = useState("");
   const [available, setAvailable] = useState<boolean | null>(null);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const claimedUsername = searchParams.get("claim");
+    if (!claimedUsername) return;
+    setUsername(claimedUsername.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase());
+  }, [searchParams]);
 
   useEffect(() => {
     if (username.length < 3) {
@@ -148,7 +156,7 @@ export default function SetupPage() {
                 placeholder="tu-username"
                 required
                 value={username}
-                onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9-]/g, '').toLowerCase())}
+                onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase())}
                 className="w-full p-4 pr-12 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none transition-all text-xl font-mono placeholder:text-[var(--text-muted)]"
               />
               <div className="absolute right-4 top-1/2 -translate-y-1/2">

@@ -110,6 +110,11 @@ export const profileService = {
       !!userWinnerData &&
       !!latestWinnerData &&
       userWinnerData.week === latestWinnerData.week;
+    transformed.ogImageVersion = [
+      "botw",
+      latestWinnerData?.week || "none",
+      transformed.isWinner ? "winner" : "default",
+    ].join("-");
     
     return transformed;
   },

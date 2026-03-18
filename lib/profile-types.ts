@@ -263,6 +263,7 @@ export interface ProfileData {
   customDomain?: string;
   subSiteId?: string;
   isWinner?: boolean;
+  ogImageVersion?: string;
   isOnboardingTestUser?: boolean;
   subSites: SubSite[];
   blocks: BlockData[];

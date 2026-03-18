@@ -18,8 +18,6 @@ interface Props {
   searchParams?: { from?: string; return_to?: string };
 }
 
-const OG_IMAGE_VERSION = "20260318a";
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { username } = await params;
   const profile = await profileService.getProfile(username);
@@ -30,10 +28,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const tagline = (heroBlock as any)?.tagline || 'Builder en huevsite.io';
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.huevsite.io';
-  // Note: we can safely bypass standard Next metadata cache parameter using a bust cache hash
-  // if required, but default Next app-router already suffixes ?hash. 
-  // We'll explicitly define the absolute OG image URL since Next sometimes fails to resolve absolute paths automatically.
-  const ogImageUrl = `${baseUrl}/api/og/${username}?v=${OG_IMAGE_VERSION}`;
+  const ogImageVersion = profile.ogImageVersion || "botw-none-default";
+  // Use a winner-aware cache buster so social crawlers fetch a fresh OG image
+  // when the current Builder of the Week changes and the badge state flips.
+  const ogImageUrl = `${baseUrl}/api/og/${username}?v=${encodeURIComponent(ogImageVersion)}`;
 
   return {
     title: `${profile.displayName} (@${profile.username}) | huevsite.io`,

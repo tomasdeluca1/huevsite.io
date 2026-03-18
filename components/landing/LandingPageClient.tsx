@@ -1,15 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { WinnerSection } from "@/components/landing/WinnerSection";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
-import { Activity, Compass, Users, PlusCircle, Layout, Check, BookOpen, Globe, Link2, BarChart3, TrendingUp } from "lucide-react";
+import { Activity, Compass, Users, PlusCircle, Layout, Check, BookOpen, Globe, Link2, BarChart3, TrendingUp, Loader2, ArrowRight, Sparkles } from "lucide-react";
 
 interface LandingPageClientProps {
   showcaseData: any;
+}
+
+type HeroVariant = "claim" | "social";
+
+declare global {
+  interface Window {
+    umami?: {
+      track: (eventName: string, data?: Record<string, any>) => void;
+    };
+  }
 }
 
 export default function LandingPageClient({ showcaseData }: LandingPageClientProps) {
@@ -17,6 +27,88 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
   const [selectedRoles, setSelectedRoles] = useState<string[]>(['Developer', 'Founder']);
   const [user, setUser] = useState<User | null>(null);
   const [showMobileNav, setShowMobileNav] = useState(false);
+  const [heroVariant, setHeroVariant] = useState<HeroVariant>("claim");
+  const [claimInput, setClaimInput] = useState("");
+  const [claimStatus, setClaimStatus] = useState<"idle" | "checking" | "available" | "taken" | "invalid" | "error">("idle");
+  const [claimSuggestions, setClaimSuggestions] = useState<string[]>([]);
+
+  const heroExperiment = {
+    claim: {
+      eyebrow: "Reclamá tu URL antes de seguir scrolleando",
+      title: (
+        <>
+          Tu <span className="accent">nombre</span>, tu trabajo, <br className="hidden md:block" />
+          tu rincón en <br className="hidden md:block" />
+          internet.
+        </>
+      ),
+      description: "Probá tu username, confirmá si está libre y entrá al flujo con una acción concreta. Menos rebote, más intención real.",
+      primaryHref: "/explore",
+      primaryLabel: "Ver cómo se ve uno bueno",
+      secondaryHref: "/explore",
+      secondaryLabel: "Explorar builders",
+    },
+    social: {
+      eyebrow: "Entrá por tracción real, no por promesas vacías",
+      title: (
+        <>
+          El lugar para <span className="accent">mostrar</span> <br className="hidden md:block" />
+          qué estás <br className="hidden md:block" />
+          construyendo ahora.
+        </>
+      ),
+      description: "Perfil público, lanzamientos, score, sub-sites y señales de vida en una sola URL que invita a seguir mirando.",
+      primaryHref: "/feed",
+      primaryLabel: "Entrar por el feed",
+      secondaryHref: user ? "/dashboard" : "/login",
+      secondaryLabel: user ? "Ir a mi dashboard" : "Crear el mío",
+    },
+  } satisfies Record<HeroVariant, {
+    eyebrow: string;
+    title: ReactNode;
+    description: string;
+    primaryHref: string;
+    primaryLabel: string;
+    secondaryHref: string;
+    secondaryLabel: string;
+  }>;
+
+  const contentPath = [
+    {
+      href: "/explore",
+      label: "Explorar builders",
+      copy: "Mirar cómo se presentan otros y sacar ideas rápido.",
+      icon: Compass,
+    },
+    {
+      href: "/feed",
+      label: "Ver lanzamientos",
+      copy: "Entrar por actividad real, no por una landing abstracta.",
+      icon: Activity,
+    },
+    {
+      href: "/blog",
+      label: "Entender el sistema",
+      copy: "Leer cómo funciona el score, los sub-sites y la visibilidad.",
+      icon: BookOpen,
+    },
+  ];
+
+  const currentHero = heroExperiment[heroVariant];
+  const normalizedClaim = claimInput.trim().toLowerCase();
+  const claimPath = normalizedClaim ? `/welcome?claim=${encodeURIComponent(normalizedClaim)}` : "/welcome";
+  const claimHref = user ? claimPath : `/login?next=${encodeURIComponent(claimPath)}`;
+
+  const trackLandingEvent = (eventName: string, payload: Record<string, any>) => {
+    if (typeof window === "undefined") return;
+    window.umami?.track(eventName, payload);
+  };
+
+  const submitClaim = () => {
+    if (claimStatus !== "available") return;
+    trackLandingEvent("landing_claim_submit", { variant: heroVariant, username: normalizedClaim });
+    window.location.href = claimHref;
+  };
 
   const toggleRole = (role: string) => {
     if (selectedRoles.includes(role)) {
@@ -44,6 +136,17 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
       const code = urlParams.get("code");
       if (code) {
         window.location.href = `/auth/callback?code=${code}`;
+      }
+
+      const storedVariant = window.localStorage.getItem("hs_lp_hero_variant_v2") as HeroVariant | null;
+      if (storedVariant === "claim" || storedVariant === "social") {
+        setHeroVariant(storedVariant);
+        trackLandingEvent("landing_hero_variant_seen", { variant: storedVariant });
+      } else {
+        const assignedVariant: HeroVariant = Math.random() > 0.5 ? "claim" : "social";
+        window.localStorage.setItem("hs_lp_hero_variant_v2", assignedVariant);
+        setHeroVariant(assignedVariant);
+        trackLandingEvent("landing_hero_variant_seen", { variant: assignedVariant });
       }
     }
 
@@ -82,6 +185,48 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
       clearTimeout(scrollTimeout);
     };
   }, []);
+
+  useEffect(() => {
+    if (normalizedClaim.length === 0) {
+      setClaimStatus("idle");
+      setClaimSuggestions([]);
+      return;
+    }
+
+    if (!/^[a-z0-9_]{3,20}$/.test(normalizedClaim)) {
+      setClaimStatus("invalid");
+      setClaimSuggestions([]);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      try {
+        setClaimStatus("checking");
+        const response = await fetch(`/api/username/check?u=${encodeURIComponent(normalizedClaim)}`, {
+          signal: controller.signal,
+        });
+        const data = await response.json();
+
+        if (data.available) {
+          setClaimStatus("available");
+          setClaimSuggestions([]);
+        } else {
+          setClaimStatus("taken");
+          setClaimSuggestions(data.suggestions || []);
+        }
+      } catch (error: any) {
+        if (error?.name === "AbortError") return;
+        setClaimStatus("error");
+        setClaimSuggestions([]);
+      }
+    }, 350);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [normalizedClaim]);
 
   // Price Section - Show to everyone
   const showPricing = true;
@@ -157,35 +302,150 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
 
       {/* HERO */}
       <section className="hero">
-        <div className="badge">
-          <span className="dot"></span>
-          Para builders de Argentina y LATAM
-        </div>
+        <div className="hero-shell">
+          <div className="hero-copy">
+            <div className="badge">
+              <span className="dot"></span>
+              {currentHero.eyebrow}
+            </div>
 
-        <h1 className="text-center leading-[1.05]">
-          El <span className="accent">portfolio</span> <br className="hidden md:block" />
-          que no da <br className="hidden md:block" />
-          <span className="strike">vergüenza</span> ajena.
-        </h1>
+            <h1 className="text-center md:text-left leading-[1.05]">
+              {currentHero.title}
+            </h1>
 
-        <p className="text-center mx-auto">Mostrá quién sos y qué buildeás. Sin diseñar desde cero y con personalidad propia.</p>
+            <p className="text-center md:text-left mx-auto md:mx-0">{currentHero.description}</p>
 
-        <div className="hero-ctas flex justify-center">
-          <Link href={user ? "/dashboard" : "/login"} className="btn btn-accent !px-8 !py-4 text-base">
-            {user ? "Mi huevsite" : "Empezar gratis"}
-          </Link>
-          <span className="hero-username-preview">huevsite.io/<strong style={{ color: 'var(--accent)' }}>tuusuario</strong></span>
-        </div>
+            <div className="hero-ctas flex justify-center md:justify-start items-center flex-wrap gap-3">
+              <Link
+                href={currentHero.primaryHref}
+                className="btn btn-accent !px-8 !py-4 text-base"
+                onClick={() => trackLandingEvent("landing_hero_primary_click", { variant: heroVariant, href: currentHero.primaryHref })}
+              >
+                {currentHero.primaryLabel}
+              </Link>
+              <Link
+                href={currentHero.secondaryHref}
+                className="btn btn-ghost !px-6 !py-4 text-sm"
+                onClick={() => trackLandingEvent("landing_hero_secondary_click", { variant: heroVariant, href: currentHero.secondaryHref })}
+              >
+                {currentHero.secondaryLabel}
+              </Link>
+              <span className="hero-username-preview">huevsite.io/<strong style={{ color: 'var(--accent)' }}>{normalizedClaim || 'tuusuario'}</strong></span>
+            </div>
 
-        <div className="social-proof">
-          <div className="avatars">
-            <div className="avatar a1">F</div>
-            <div className="avatar a2">M</div>
-            <div className="avatar a3">S</div>
-            <div className="avatar a4">L</div>
-            <div className="avatar a5">P</div>
+            <div className="social-proof">
+              <div className="avatars">
+                <div className="avatar a1">F</div>
+                <div className="avatar a2">M</div>
+                <div className="avatar a3">S</div>
+                <div className="avatar a4">L</div>
+                <div className="avatar a5">P</div>
+              </div>
+              <span className="social-proof-text"><strong>+{(Math.floor((showcaseData.total_builders || 50) / 10) * 10).toLocaleString()} builders</strong> ya armaron su huevsite</span>
+            </div>
           </div>
-          <span className="social-proof-text"><strong>+{(Math.floor((showcaseData.total_builders || 50) / 10) * 10).toLocaleString()} builders</strong> ya armaron su huevsite</span>
+
+          <div className="hero-claim-panel">
+            <div className="hero-claim-eyebrow">
+              <Sparkles size={14} />
+              Reclamá tu huevsite
+            </div>
+
+            <div className="hero-claim-title">Probá tu username ahora</div>
+            <p className="hero-claim-sub">
+              Si está libre, te llevamos al onboarding con ese nombre ya cargado.
+            </p>
+
+            <div className="hero-claim-input-wrap">
+              <span className="hero-claim-prefix">huevsite.io/</span>
+              <input
+                value={claimInput}
+                onChange={(e) => setClaimInput(e.target.value.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase())}
+                placeholder="tuusuario"
+                className="hero-claim-input"
+              />
+              <div className="hero-claim-status">
+                {claimStatus === "checking" && <Loader2 size={16} className="animate-spin text-white/40" />}
+                {claimStatus === "available" && <Check size={16} className="text-[var(--accent)]" />}
+              </div>
+            </div>
+
+            <button
+              onClick={submitClaim}
+              disabled={claimStatus !== "available"}
+              className="hero-claim-button"
+            >
+              {claimStatus === "available" ? (
+                <>
+                  Reclamar {normalizedClaim}
+                  <ArrowRight size={16} />
+                </>
+              ) : claimStatus === "checking" ? (
+                "Chequeando disponibilidad..."
+              ) : (
+                "Elegí un username disponible"
+              )}
+            </button>
+
+            <div className="hero-claim-feedback">
+              {claimStatus === "idle" && "Usá entre 3 y 20 caracteres. Solo minúsculas, números y guión bajo."}
+              {claimStatus === "invalid" && "Ese formato no va. Probá con minúsculas, números o _."}
+              {claimStatus === "available" && `Disponible. ${user ? "Vamos a prellenarlo." : "Te lo preparamos para el login."}`}
+              {claimStatus === "taken" && "Ese ya fue reclamado. Probá una variante."}
+              {claimStatus === "error" && "No pudimos validar ahora mismo. Reintentá en unos segundos."}
+            </div>
+
+            {claimSuggestions.length > 0 && (
+              <div className="hero-claim-suggestions">
+                {claimSuggestions.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    onClick={() => {
+                      setClaimInput(suggestion);
+                      trackLandingEvent("landing_claim_suggestion_click", { variant: heroVariant, suggestion });
+                    }}
+                    className="hero-claim-chip"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="hero-claim-metrics">
+              <div className="hero-metric-card">
+                <span className="hero-metric-label">Tiempo hasta publicar</span>
+                <strong>~3 min</strong>
+              </div>
+              <div className="hero-metric-card">
+                <span className="hero-metric-label">Desde el hero</span>
+                <strong>username validado</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="w-full max-w-6xl mt-8 grid gap-3 md:grid-cols-3">
+          {contentPath.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => trackLandingEvent("landing_content_path_click", { variant: heroVariant, href: item.href })}
+                className="group rounded-[1.6rem] border border-white/8 bg-white/[0.025] px-5 py-5 text-left transition-all hover:-translate-y-0.5 hover:border-[var(--accent)]/30 hover:bg-white/[0.04]"
+              >
+                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--accent)]/10 text-[var(--accent)]">
+                  <Icon size={18} />
+                </div>
+                <div className="text-sm font-black tracking-tight text-white">{item.label}</div>
+                <p className="mt-2 text-sm leading-6 text-[var(--text-dim)]">{item.copy}</p>
+                <div className="mt-4 text-[11px] font-mono uppercase tracking-[0.18em] text-white/35 transition-colors group-hover:text-[var(--accent)]">
+                  Seguir por aca
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </section>
 

@@ -17,6 +17,203 @@ export interface BlogPost {
 
 const RAW_BLOG_POSTS: Omit<BlogPost, 'readingTime'>[] = [
   {
+    slug: "reclama-tu-username-y-publica-tu-huevsite-en-minutos",
+    title: "Reclamá tu username y publicá tu huevsite en minutos",
+    excerpt: "Ahora podés probar si tu URL está libre antes de entrar al onboarding. Menos fricción, más intención real y un camino mucho más rápido para salir publicado.",
+    date: "2026-03-18",
+    tags: ["onboarding", "feature", "perfil"],
+    author: {
+      name: "Tomas Deluca",
+      username: "huevsite",
+      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+    },
+    content: `
+Elegir un username no parece gran cosa, hasta que te das cuenta de que esa URL va a aparecer en tu bio, en tu CV, en tus mensajes privados y en cada link que compartas.
+
+Por eso sumamos una mejora simple pero poderosa: **ahora podés probar y reclamar tu username antes de meterte de lleno en el onboarding**.
+
+## Qué cambia
+En vez de hacerte entrar, navegar, pensar y recién ahí enterarte de que el nombre que querías ya estaba tomado, ahora el flujo arranca al revés:
+
+1. Escribís tu username ideal.
+2. huevsite te dice si está libre.
+3. Si está disponible, te lo llevamos precargado al setup.
+
+Es un cambio chico en interfaz, pero enorme en intención. Cuando alguien ya ve \`huevsite.io/su-nombre\` frente a sus ojos, deja de imaginar el producto y empieza a proyectarse adentro.
+
+## Menos fricción, más acción
+Este tipo de decisión temprana mejora dos cosas:
+
+- **Reduce rebote**: en vez de scrollear una landing eterna, el usuario interactúa con algo concreto.
+- **Aumenta compromiso**: quien ya eligió username llegó un paso más cerca de publicar.
+
+Y si el nombre ya fue manoteado, ahora también sugerimos variantes para que no se corte el impulso.
+
+## Por qué importa tanto tu URL
+Tu huevsite no es una cuenta más. Es una dirección pública para mostrar:
+
+- qué construís
+- en qué estás trabajando ahora
+- tus proyectos más serios
+- señales sociales como follows, endorsements o nominaciones
+
+Esa URL es tu punto de entrada. Si la sentís propia, tenés muchas más chances de usarla de verdad.
+
+## Ideal para compartir desde el día uno
+El objetivo no es que pases una hora “configurando”. Es que puedas salir con algo publicable en muy poco tiempo:
+
+- username definido
+- perfil visible
+- blocks básicos cargados
+- link listo para mandar
+
+**Si todavía no reclamaste el tuyo, este es el mejor momento para hacerlo antes de que llegue alguien con tu mismo nombre.**
+
+¡A buildeaRRR!
+    `,
+  },
+  {
+    slug: "feed-follow-endorsements-la-capa-social-de-huevsite",
+    title: "Feed, follows y endorsements: la capa social de huevsite",
+    excerpt: "Tu portfolio ya no vive aislado. Entre feed global, follows, endorsements y nominaciones, huevsite se vuelve una red para builders que realmente están en movimiento.",
+    date: "2026-03-18",
+    tags: ["comunidad", "social", "feature"],
+    author: {
+      name: "Tomas Deluca",
+      username: "huevsite",
+      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+    },
+    content: `
+Un portfolio sirve para mostrar. Una red sirve para circular. huevsite quiere hacer las dos cosas.
+
+Por eso, además de tu perfil público, cada vez hay más funciones pensadas para que el ecosistema se mueva:
+
+- **Feed global**
+- **Follows entre builders**
+- **Endorsements**
+- **Nominaciones al showcase**
+
+## El feed global: actividad, no humo
+El feed no está para llenar pantalla. Está para responder una pregunta simple:
+
+**¿Quién está construyendo qué, hoy?**
+
+Ahí viven cambios de perfil, nuevos bloques, lanzamientos, movimientos relevantes y señales de que la gente no abandonó su página después de crearla.
+
+Eso hace que descubrir builders no dependa solo de rankings. También podés entrar por momentum.
+
+## Follows y endorsements
+Seguir a alguien en huevsite no es solo “me cae bien”. Es una forma de decir:
+
+- quiero ver qué sigue construyendo
+- quiero tenerlo en el radar
+- me interesa su estilo, su nivel o su consistencia
+
+Los **endorsements** van un paso más allá. Son señal pública de confianza. No reemplazan a un caso de estudio ni a un buen proyecto, pero sí ayudan a que otros entiendan rápido si detrás del perfil hay alguien que realmente entrega.
+
+## Showcase y nominaciones
+La lógica del showcase suma una capa semanal de visibilidad. En vez de dejar todo librado al algoritmo, abrimos una dinámica más humana: builders nominando builders.
+
+Eso genera algo sano:
+
+- más descubrimiento
+- más reciprocidad
+- más contexto social alrededor del trabajo
+
+No es popularidad vacía. Es reputación en movimiento.
+
+## Tu perfil ya no está solo
+La mejor parte de esta capa social es que hace más útil cada bloque de tu huevsite.
+
+Tu proyecto deja de ser “algo que subiste” y pasa a ser:
+
+- algo que aparece en actividad
+- algo que puede generar follows
+- algo que puede recibir endorsements
+- algo que puede empujarte a más visibilidad
+
+**Si ya tenés tu huevsite publicado, ahora también tenés una red para moverlo.**
+
+¡A buildeaRRR!
+    `,
+  },
+  {
+    slug: "cuando-conviene-crear-un-sub-site-y-no-meter-todo-en-el-mismo-perfil",
+    title: "Cuándo conviene crear un sub-site y no meter todo en el mismo perfil",
+    excerpt: "No todo merece vivir en tu board principal. Te contamos cuándo conviene abrir un sub-site, qué tipo de proyectos se benefician y cómo ordenarlo sin saturar tu perfil.",
+    date: "2026-03-18",
+    tags: ["sub-sites", "portfolio", "tips"],
+    author: {
+      name: "Tomas Deluca",
+      username: "huevsite",
+      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+    },
+    content: `
+Uno de los errores más comunes en portfolios de builders es querer meter absolutamente todo en la home principal.
+
+Resultado: demasiados bloques, poca jerarquía y ninguna historia clara.
+
+Para eso existen los **sub-sites**.
+
+## Qué es un sub-site
+Es una página hija dentro de tu mismo universo. Mantiene tu identidad, cuelga de tu username o dominio y te deja dedicarle una URL específica a un proyecto, producto o experimento.
+
+Ejemplos:
+
+- tu startup principal
+- un side project que ya tiene tracción
+- un curso o newsletter
+- un experimento visual
+- una landing para una hackathon
+
+## Cuándo conviene abrir uno
+La regla simple es esta:
+
+**si un proyecto necesita contexto propio, merece su sub-site.**
+
+Abrí un sub-site cuando:
+
+1. Tenés demasiado material para un solo bloque.
+2. Querés compartir una URL específica de un producto.
+3. Necesitás una narrativa más enfocada.
+4. El proyecto tiene branding, métricas o assets propios.
+
+## Cuándo NO conviene
+No todo necesita una página hija. Si es apenas una prueba, un repo chico o algo que todavía no tiene forma, probablemente alcance con un bloque dentro de tu perfil principal.
+
+Tu board principal debería responder:
+
+- quién sos
+- qué hacés
+- qué proyectos importan más
+
+Los sub-sites están para profundizar, no para reemplazar esa síntesis.
+
+## Cómo usarlos bien
+Una forma simple de pensarlo:
+
+- **Perfil principal**: identidad, credibilidad, overview.
+- **Sub-site**: foco, detalle, CTA específico.
+
+Eso te permite compartir mejor.
+
+En vez de mandar a alguien a un perfil general donde tiene que buscar, le pasás directamente:
+
+\`huevsite.io/tuusuario/tu-proyecto\`
+
+o incluso el path correspondiente bajo tu dominio custom si sos PRO.
+
+## Menos ruido, más claridad
+El mejor uso de sub-sites no es “tener más páginas”. Es lograr que cada visita llegue al lugar correcto con menos fricción.
+
+Si tu perfil principal ya está empezando a parecer un depósito de cosas, probablemente no necesites borrar nada. **Necesitás separar mejor.**
+
+**Pensá tu perfil como índice y tus sub-sites como capítulos.**
+
+¡A buildeaRRR!
+    `,
+  },
+  {
     slug: "invita-builders-y-gana-pro-gratis",
     title: "Ganá PRO invitando Builders: Lanzamos el Sistema de Referidos",
     excerpt: "Queremos que la comunidad crezca. Ahora, por cada 3 amigos que se sumen a huevsite y activen su cuenta, te regalamos 3 meses de PRO gratis.",

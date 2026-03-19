@@ -20,7 +20,7 @@ const jetbrains = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "huevsite.io | Mostrá lo que buildeás",
   description: "Red social y portfolio para builders de Argentina y LATAM.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://localhost:3000'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://huevsite.io"),
   alternates: {
     types: {
       'application/rss+xml': '/blog/feed.xml',

@@ -12,6 +12,7 @@ import { getCurrentWeek } from "@/lib/showcase-service";
 import { ExploreNavigation } from "@/components/explore/ExploreNavigation";
 import { headers } from "next/headers";
 import { AnalyticsTracker } from "@/components/analytics/AnalyticsTracker";
+import { SITE_URL } from "@/lib/site-url";
 
 interface Props {
   params: { username: string };
@@ -27,18 +28,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const heroBlock = profile.blocks.find(b => b.type === 'hero');
   const tagline = (heroBlock as any)?.tagline || 'Builder en huevsite.io';
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.huevsite.io';
   const ogImageVersion = profile.ogImageVersion || "botw-none-default";
   // Use a winner-aware cache buster so social crawlers fetch a fresh OG image
   // when the current Builder of the Week changes and the badge state flips.
-  const ogImageUrl = `${baseUrl}/api/og/${username}?v=${encodeURIComponent(ogImageVersion)}`;
+  const ogImageUrl = `${SITE_URL}/api/og/${username}?v=${encodeURIComponent(ogImageVersion)}`;
 
   return {
     title: `${profile.displayName} (@${profile.username}) | huevsite.io`,
     description: tagline,
+    alternates: {
+      canonical: `${SITE_URL}/${profile.username}`,
+    },
     openGraph: {
       title: `${profile.displayName} (@${profile.username})`,
       description: tagline,
+      url: `${SITE_URL}/${profile.username}`,
       images: [
         {
           url: ogImageUrl,

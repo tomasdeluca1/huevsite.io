@@ -9,6 +9,7 @@ import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github-dark.css";
 import Image from "next/image";
+import { SITE_URL } from "@/lib/site-url";
 
 export async function generateMetadata({ 
   params 
@@ -20,18 +21,26 @@ export async function generateMetadata({
   if (!post) {
     return { title: 'Post no encontrado' };
   }
+
+  const pageUrl = `${SITE_URL}/blog/${slug}`;
+  const imageUrl = `${SITE_URL}/blog/${slug}/opengraph-image`;
+
   return {
     title: `${post.title} | Blog huevsite.io`,
     description: post.excerpt,
+    alternates: {
+      canonical: pageUrl,
+    },
     openGraph: {
       title: post.title,
       description: post.excerpt,
       type: "article",
+      url: pageUrl,
       authors: [post.author.name],
       publishedTime: post.date,
       images: [
         {
-          url: `/blog/${slug}/opengraph-image`,
+          url: imageUrl,
           width: 1200,
           height: 630,
           alt: post.title,
@@ -42,7 +51,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: post.title,
       description: post.excerpt,
-      images: [`/blog/${slug}/opengraph-image`],
+      images: [imageUrl],
     }
   };
 }
@@ -71,8 +80,7 @@ export default async function BlogPostPage({
       p.tags.some((tag) => post.tags.includes(tag))
   ).slice(0, 2);
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://huevsite.io';
-  const postUrl = `${siteUrl}/blog/${post.slug}`;
+  const postUrl = `${SITE_URL}/blog/${post.slug}`;
 
   const jsonLd = {
     "@context": "https://schema.org",

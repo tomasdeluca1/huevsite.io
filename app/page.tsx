@@ -1,10 +1,10 @@
 import { Metadata } from "next";
 import { getShowcaseData } from "@/lib/showcase-service";
 import LandingPageClient from "@/components/landing/LandingPageClient";
+import { SITE_URL } from "@/lib/site-url";
 
 export const dynamic = "force-dynamic";
 const OG_IMAGE_VERSION = "20260318a";
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://huevsite.io";
 const HOME_OG_IMAGE_URL = `${SITE_URL}/api/og?username=huevsite&title=${encodeURIComponent("huevsite.io")}&tagline=${encodeURIComponent("Mostra lo que buildeas")}&color=${encodeURIComponent("#C8FF00")}&v=${OG_IMAGE_VERSION}`;
 
 export const metadata: Metadata = {

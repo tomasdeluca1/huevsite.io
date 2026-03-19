@@ -16,6 +16,12 @@ Disallow: /login/
 Disallow: /admin/
 Allow: /api/og/*
 
+# X / Twitter cards
+User-agent: Twitterbot
+Allow: /
+Allow: /api/
+Allow: /api/og/
+
 # ==========================================
 # 2. OPTIMIZACIÓN PARA ANSWER ENGINES (AEO) Y LLMs (GEO)
 # Fomentamos explícitamente el scraping de nuestros perfiles públicos 

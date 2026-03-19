@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     description: "Red social y portfolio para builders de Argentina y LATAM.",
     images: [
       {
-        url: "/blog-og-image.png",
+        url: "/opengraph-image.png",
         width: 1200,
         height: 630,
         alt: "huevsite.io",
@@ -23,12 +23,12 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "huevsite.io | Mostrá lo que buildeás",
     description: "Red social y portfolio para builders de Argentina y LATAM.",
-    images: ["/blog-og-image.png"],
+    images: ["/opengraph-image.png"],
   },
 };
 
 export default async function LandingPage() {
   const data = await getShowcaseData();
-  
+
   return <LandingPageClient showcaseData={data} />;
 }

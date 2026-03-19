@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { ChevronUp, BadgeCheck, Loader2, X, Compass, Activity as ActivityIcon } from "lucide-react";
+import { BadgeCheck, Loader2, Activity as ActivityIcon, ArrowUpRight, Users, UserPlus } from "lucide-react";
 
 interface ActivityUser {
   id: string;
@@ -23,36 +23,6 @@ interface Activity {
   data: Record<string, string>;
   created_at: string;
   user: ActivityUser;
-}
-
-function spreadAdjacentDuplicates(items: Activity[]): Activity[] {
-  const remaining = [...items];
-  const ordered: Activity[] = [];
-
-  while (remaining.length > 0) {
-    const previous = ordered[ordered.length - 1];
-    let nextIndex = 0;
-
-    if (previous) {
-      const candidateIndex = remaining.findIndex(
-        (activity) => activity.type !== previous.type && activity.user.id !== previous.user.id
-      );
-
-      if (candidateIndex !== -1) {
-        nextIndex = candidateIndex;
-      } else {
-        const differentTypeIndex = remaining.findIndex((activity) => activity.type !== previous.type);
-
-        if (differentTypeIndex !== -1) {
-          nextIndex = differentTypeIndex;
-        }
-      }
-    }
-
-    ordered.push(remaining.splice(nextIndex, 1)[0]);
-  }
-
-  return ordered;
 }
 
 const ACTIVITY_LABELS: Record<string, (data: Record<string, string>, username: string) => string> = {
@@ -193,12 +163,14 @@ function FeedContent() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [tab, setTab] = useState<"global" | "following" | "launches">("global");
+  const [tab, setTab] = useState<"activity" | "launches">("activity");
+  const [audienceFilter, setAudienceFilter] = useState<"all" | "following">("all");
   const [filterType, setFilterType] = useState<string>("all");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [launches, setLaunches] = useState<any[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const fromDashboard = searchParams.get("from") === "dashboard";
   const supabase = createClient();
@@ -206,7 +178,9 @@ function FeedContent() {
   useEffect(() => {
     setPage(1);
     setActivities([]);
-  }, [tab, filterType]);
+    setLaunches([]);
+    setError(null);
+  }, [tab, filterType, audienceFilter]);
 
   useEffect(() => {
     async function loadData() {
@@ -217,29 +191,36 @@ function FeedContent() {
       setCurrentUserId(authData.user?.id || null);
 
       if (tab === "launches") {
-        const { data, error } = await supabase
-          .from("launches")
-          .select(`*, profiles (username, name, image)`)
-          .order("created_at", { ascending: false })
-          .limit(20);
-
-        if (data && !error) {
-          if (authData.user) {
-            const { data: upvotes } = await supabase.from("launch_upvotes").select("launch_id").eq("user_id", authData.user.id);
-            const upvotedIds = new Set(upvotes?.map(u => u.launch_id) || []);
-            setLaunches(data.map((l: any) => ({ ...l, hasUpvoted: upvotedIds.has(l.id) })));
-          } else {
-            setLaunches(data.map((l: any) => ({ ...l, hasUpvoted: false })));
-          }
-        }
-        setLoading(false);
-        setLoadingMore(false);
-      } else {
-        const typeParam = filterType !== "all" ? `&type=${filterType}` : "";
-        // Fetch more items to ensure we can group them into at least 5 users
-        fetch(`/api/social/feed?tab=${tab}&page=${page}&limit=25${typeParam}`)
+        fetch(`/api/social/feed?tab=launches&audience=${audienceFilter}&page=${page}&limit=24`)
           .then(r => r.json())
           .then(data => {
+            if (data.error) {
+              setError(data.error);
+              if (page === 1) setLaunches([]);
+              return;
+            }
+            const newLaunches = data.launches ?? [];
+            if (page === 1) setLaunches(newLaunches);
+            else setLaunches(prev => [...prev, ...newLaunches]);
+            setTotalPages(data.totalPages ?? 1);
+          })
+          .catch(console.error)
+          .finally(() => {
+            setLoading(false);
+            setLoadingMore(false);
+          });
+      } else {
+        const typeParam = filterType !== "all" ? `&type=${filterType}` : "";
+        const activityTab = audienceFilter === "following" ? "following" : "global";
+        // Fetch more items to ensure we can group them into at least 5 users
+        fetch(`/api/social/feed?tab=${activityTab}&page=${page}&limit=25${typeParam}`)
+          .then(r => r.json())
+          .then(data => {
+            if (data.error) {
+              setError(data.error);
+              if (page === 1) setActivities([]);
+              return;
+            }
             const newActivities = data.activities ?? [];
             if (page === 1) setActivities(newActivities);
             else setActivities(prev => [...prev, ...newActivities]);
@@ -253,7 +234,7 @@ function FeedContent() {
       }
     }
     loadData();
-  }, [tab, page, filterType, supabase]);
+  }, [tab, page, filterType, audienceFilter, supabase]);
 
   // Infinite scroll observer
   useEffect(() => {
@@ -274,24 +255,9 @@ function FeedContent() {
     return () => observer.disconnect();
   }, [loading, loadingMore, page, totalPages]);
 
-  const handleUpvote = async (launch: any) => {
-    if (!currentUserId) return alert("Iniciá sesión para votar");
-    const newHasUpvoted = !launch.hasUpvoted;
-    const change = newHasUpvoted ? 1 : -1;
-    setLaunches(launches.map((l: any) => l.id === launch.id ? { ...l, hasUpvoted: newHasUpvoted, upvotes: l.upvotes + change } : l));
-    if (newHasUpvoted) {
-      await supabase.from('launch_upvotes').insert({ launch_id: launch.id, user_id: currentUserId });
-      await supabase.from('launches').update({ upvotes: launch.upvotes + 1 }).eq('id', launch.id);
-    } else {
-      await supabase.from('launch_upvotes').delete().eq('launch_id', launch.id).eq('user_id', currentUserId);
-      await supabase.from('launches').update({ upvotes: Math.max(0, launch.upvotes - 1) }).eq('id', launch.id);
-    }
-  };
-
   const activityGroups = useMemo(() => {
-    const orderedActivities = spreadAdjacentDuplicates(activities);
     const groups: Activity[][] = [];
-    orderedActivities.forEach((acc: Activity) => {
+    activities.forEach((acc: Activity) => {
       const last = groups[groups.length - 1];
       if (last && last[0].user.id === acc.user.id) last.push(acc);
       else groups.push([acc]);
@@ -311,9 +277,12 @@ function FeedContent() {
         </div>
         <div className="section-label mb-2">// comunidad</div>
         <h1 className="text-4xl font-extrabold tracking-tighter">Qué está pasando?</h1>
+        <p className="mt-3 max-w-xl text-sm leading-relaxed text-[var(--text-dim)]">
+          Seguí la actividad real de la comunidad y descubrí proyectos publicados directamente desde los bloques de los builders.
+        </p>
         
         <div className="flex gap-2 mt-8 bg-black/20 p-1 rounded-2xl border border-[var(--border)] overflow-hidden">
-          {["launches", "global"].map((t) => (
+          {["launches", "activity"].map((t) => (
             <button
               key={t}
               onClick={() => setTab(t as any)}
@@ -323,6 +292,30 @@ function FeedContent() {
             </button>
           ))}
         </div>
+
+        <div className="mt-4 flex gap-2">
+          {[
+            { id: "all", label: "Todos", icon: Users },
+            { id: "following", label: "Seguidos", icon: UserPlus },
+          ].map((option) => {
+            const Icon = option.icon;
+            const active = audienceFilter === option.id;
+            return (
+              <button
+                key={option.id}
+                onClick={() => setAudienceFilter(option.id as "all" | "following")}
+                className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${
+                  active
+                    ? "border-[var(--accent)]/30 bg-[var(--accent)]/10 text-[var(--accent)]"
+                    : "border-white/10 bg-white/[0.03] text-[var(--text-muted)] hover:border-white/20 hover:text-white"
+                }`}
+              >
+                <Icon size={14} />
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
       </header>
 
       {loading ? (
@@ -331,6 +324,23 @@ function FeedContent() {
             <div key={i} className="h-24 rounded-2xl bg-[var(--surface)] border border-[var(--border)] animate-pulse" />
           ))}
         </div>
+      ) : error && audienceFilter === "following" && !currentUserId ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center py-20 px-8 border border-dashed border-[var(--border)] rounded-[2.5rem] bg-black/10"
+        >
+          <div className="w-16 h-16 bg-[var(--surface2)] rounded-2xl flex items-center justify-center mx-auto mb-6 text-[var(--accent)] shadow-xl shadow-[var(--accent)]/5">
+            <UserPlus size={28} />
+          </div>
+          <h3 className="text-xl font-bold mb-2 text-white">Entrá para ver a quién seguís</h3>
+          <p className="text-sm text-[var(--text-dim)] font-mono leading-relaxed mb-8 max-w-sm mx-auto">
+            El filtro de seguidos arma un feed más relevante con la actividad y los proyectos de tu propia red.
+          </p>
+          <Link href="/login" className="btn btn-accent inline-flex !rounded-2xl shadow-lg shadow-[var(--accent)]/20">
+            Iniciar sesión
+          </Link>
+        </motion.div>
       ) : tab === "launches" ? (
         launches.length === 0 ? (
           <motion.div 
@@ -341,40 +351,133 @@ function FeedContent() {
             <div className="w-16 h-16 bg-[var(--surface2)] rounded-2xl flex items-center justify-center mx-auto mb-6 text-[var(--accent)] shadow-xl shadow-[var(--accent)]/5">
               <ActivityIcon size={32} />
             </div>
-            <h3 className="text-xl font-bold mb-2 text-white">No hay lanzamientos activos</h3>
+            <h3 className="text-xl font-bold mb-2 text-white">
+              {audienceFilter === "following" ? "Tus seguidos todavía no publicaron proyectos" : "Todavía no encontramos proyectos publicados"}
+            </h3>
             <p className="text-sm text-[var(--text-dim)] font-mono leading-relaxed mb-8 max-w-xs mx-auto">
-              Sé el primero en mostrarle a la comunidad lo que estás buildeando.
+              {audienceFilter === "following"
+                ? "Seguí más builders o volvé a Todos para descubrir proyectos públicos del resto de la comunidad."
+                : "Cuando un builder agrega un bloque de proyecto, debería aparecer acá automáticamente."}
             </p>
             <Link href="/dashboard" className="btn btn-accent inline-flex !rounded-2xl shadow-lg shadow-[var(--accent)]/20">
-              Lanzar mi proyecto 🚀
+              Agregar un proyecto
             </Link>
           </motion.div>
         ) : (
           <div className="space-y-4">
             {launches.map(launch => (
-              <div key={launch.id} className="bg-[var(--surface)] border border-[var(--border)] p-6 rounded-3xl flex gap-6 items-center group">
-                 <div className="flex-1">
-                    <Link href={`/${launch.profiles.username}?from=feed&return_to=/feed`} className="flex items-center gap-2 mb-2 text-xs text-[var(--text-muted)] uppercase tracking-widest font-mono">
-                      @{launch.profiles.username}
-                    </Link>
-                    <Link href={`/${launch.profiles.username}?from=feed&return_to=/feed`}>
-                      <h2 className="text-xl font-bold group-hover:text-[var(--accent)] transition-colors">{launch.title}</h2>
-                      <p className="text-sm text-[var(--text-dim)] line-clamp-2 mt-1">{launch.tagline}</p>
-                    </Link>
-                 </div>
-                 <button onClick={() => handleUpvote(launch)} className={`flex flex-col items-center justify-center w-16 h-20 rounded-2xl border transition-all ${launch.hasUpvoted ? 'bg-[var(--accent)]/10 border-[var(--accent)] text-[var(--accent)]' : 'border-[var(--border)] text-[var(--text-dim)] hover:border-white hover:text-white'}`}>
-                    <ChevronUp size={24} />
-                    <span className="font-bold">{launch.upvotes}</span>
-                 </button>
+              <div key={launch.id} className="bg-[var(--surface)] border border-[var(--border)] p-5 md:p-6 rounded-3xl group overflow-hidden">
+                <div className="flex flex-col md:flex-row gap-5">
+                  <div className="w-full md:w-40 lg:w-48 shrink-0">
+                    {launch.imageUrl ? (
+                      <img
+                        src={launch.imageUrl}
+                        alt={launch.title}
+                        className="w-full aspect-[1.2/1] rounded-2xl object-cover border border-white/10 bg-black"
+                      />
+                    ) : (
+                      <div className="w-full aspect-[1.2/1] rounded-2xl border border-white/10 bg-black/40 flex items-center justify-center text-[var(--text-muted)] text-[10px] font-mono uppercase tracking-widest">
+                        Sin preview
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-2 text-[10px] uppercase tracking-widest font-mono text-[var(--text-muted)]">
+                      <Link href={`/${launch.user.username}?from=feed&return_to=/feed`} className="hover:text-white transition-colors">
+                        @{launch.user.username}
+                      </Link>
+                      <span>•</span>
+                      <span>{timeAgo(launch.created_at)}</span>
+                      {launch.subSite?.slug && (
+                        <>
+                          <span>•</span>
+                          <span className="text-[var(--accent)]">/{launch.subSite.slug}</span>
+                        </>
+                      )}
+                    </div>
+
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <h2 className="text-xl font-bold group-hover:text-[var(--accent)] transition-colors text-white tracking-tight">
+                          {launch.title}
+                        </h2>
+                        {launch.description && (
+                          <p className="text-sm text-[var(--text-dim)] line-clamp-3 mt-2 leading-relaxed">
+                            {launch.description}
+                          </p>
+                        )}
+                      </div>
+
+                      {(launch.user.subscription_tier === 'pro' || !!launch.user.pro_since) && (
+                        <BadgeCheck size={18} className="shrink-0 text-[var(--accent)] mt-1" />
+                      )}
+                    </div>
+
+                    {(launch.metrics || (launch.stack && launch.stack.length > 0)) && (
+                      <div className="flex flex-wrap gap-2 mt-4">
+                        {launch.metrics && (
+                          <span className="px-3 py-1 rounded-full bg-[var(--accent)]/10 border border-[var(--accent)]/20 text-[var(--accent)] text-[10px] font-black uppercase tracking-widest">
+                            {launch.metrics}
+                          </span>
+                        )}
+                        {(launch.stack || []).slice(0, 4).map((item: string) => (
+                          <span key={item} className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/70 text-[10px] font-bold uppercase tracking-wide">
+                            {item}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap gap-3 mt-5">
+                      {launch.link && (
+                        <Link
+                          href={launch.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-accent !rounded-2xl !px-5 !py-3 !text-[11px] uppercase tracking-widest"
+                        >
+                          Ver proyecto <ArrowUpRight size={14} className="ml-2" />
+                        </Link>
+                      )}
+                      <Link
+                        href={`/${launch.user.username}?from=feed&return_to=/feed`}
+                        className="btn btn-ghost !rounded-2xl !px-5 !py-3 !text-[11px] uppercase tracking-widest"
+                      >
+                        Ver perfil
+                      </Link>
+                    </div>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
         )
       ) : (
         <div className="space-y-6">
-          {activityGroups.map((group, i) => (
-            <ActivityGroup key={group[0].id} group={group} index={i} />
-          ))}
+          {activityGroups.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-20 px-8 border border-dashed border-[var(--border)] rounded-[2.5rem] bg-black/10"
+            >
+              <div className="w-16 h-16 bg-[var(--surface2)] rounded-2xl flex items-center justify-center mx-auto mb-6 text-[var(--accent)] shadow-xl shadow-[var(--accent)]/5">
+                <ActivityIcon size={28} />
+              </div>
+              <h3 className="text-xl font-bold mb-2 text-white">
+                {audienceFilter === "following" ? "Todavía no hay actividad de tus seguidos" : "Todavía no hay actividad para mostrar"}
+              </h3>
+              <p className="text-sm text-[var(--text-dim)] font-mono leading-relaxed max-w-sm mx-auto">
+                {audienceFilter === "following"
+                  ? "Seguí builders para armar un feed más personal con sus movimientos recientes."
+                  : "Cuando la comunidad publique cambios, proyectos o hitos, vas a empezar a verlos acá."}
+              </p>
+            </motion.div>
+          ) : (
+            activityGroups.map((group, i) => (
+              <ActivityGroup key={group[0].id} group={group} index={i} />
+            ))
+          )}
           
           {loadingMore && (
              <div className="space-y-4">

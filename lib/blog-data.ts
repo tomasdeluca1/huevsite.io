@@ -626,6 +626,210 @@ Siendo usuario PRO ya podés entrar a tus ajustes (PRO Settings -> Sub-sites) y 
     `,
   },
   {
+    slug: "lanzamientos-reales-desde-tus-bloques-de-proyecto",
+    title: "Lanzamientos reales: ahora tus bloques de proyecto alimentan el feed",
+    excerpt: "La pestaña de lanzamientos ya no depende de una capa separada. Si publicás un bloque de proyecto en tu perfil o sub-site, aparece automáticamente donde la comunidad descubre qué se está shippeando.",
+    date: "2026-03-18",
+    tags: ["feed", "launches", "feature"],
+    author: {
+      name: "Tomas Deluca",
+      username: "huevsite",
+      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+    },
+    content: `
+Durante mucho tiempo, “lanzamientos” y “proyectos reales” vivían demasiado separados.
+
+Eso generaba una fricción rara: alguien podía tener un proyecto muy bueno publicado en su huevsite, pero igual no aparecer en la pestaña donde la comunidad entra a ver qué se está construyendo.
+
+Eso ya no va más.
+
+## Qué cambió
+La sección de **Lanzamientos** ahora se alimenta directamente de tus **bloques \`project\`**.
+
+Eso significa que si agregás un proyecto en:
+
+- tu perfil principal
+- un sub-site
+- una página pública visible
+
+ese proyecto ya puede aparecer automáticamente en el feed de lanzamientos.
+
+## Menos duplicación, más verdad
+La idea es simple:
+
+**si ya cargaste un proyecto en huevsite, no deberías tener que “relanzarlo” en otro sistema paralelo para que exista.**
+
+Ahora la fuente es una sola. Tu contenido real.
+
+Eso mejora varias cosas:
+
+- menos mantenimiento
+- menos data duplicada
+- más consistencia entre perfil, sub-sites y feed
+- una pestaña de lanzamientos mucho más útil
+
+## Qué conviene hacer para aparecer mejor
+Si querés que tu proyecto destaque más en esa pestaña, vale la pena cuidar bien tu bloque:
+
+1. Poné un título claro.
+2. Sumá una descripción concreta.
+3. Agregá preview visual si tenés.
+4. Completá bien el link de destino.
+5. Si el proyecto vive mejor solo, mandalo a un sub-site.
+
+No hace falta “optimizar para algoritmo”. Hace falta que el proyecto se entienda rápido.
+
+## Lanzamientos más vivos, menos humo
+Con este cambio, la pestaña deja de ser una vidriera aislada y pasa a reflejar mejor el estado real del ecosistema.
+
+Si la gente publica proyectos, aparecen.
+Si los builders mejoran sus blocks, el feed mejora solo.
+
+**En vez de inventar una capa extra, conectamos mejor la que ya existía.**
+
+¡A buildeaRRR!
+    `,
+  },
+  {
+    slug: "feed-por-seguidos-o-todos-como-entrar-mejor-a-la-red",
+    title: "Feed por Seguidos o Todos: dos formas de entrar mejor a la red",
+    excerpt: "El feed ahora separa lo que sigue toda la comunidad de lo que te importa a vos. Con el filtro entre Seguidos y Todos, huevsite se vuelve más útil para descubrir y también para volver.",
+    date: "2026-03-18",
+    tags: ["feed", "social", "feature"],
+    author: {
+      name: "Tomas Deluca",
+      username: "huevsite",
+      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+    },
+    content: `
+No todos entran al feed buscando lo mismo.
+
+Algunos quieren descubrir builders nuevos. Otros quieren volver rápido a la gente que ya eligieron seguir.
+
+Por eso sumamos una mejora que parece obvia, pero cambia mucho la experiencia: **ahora podés filtrar el feed entre \`Todos\` y \`Seguidos\`.**
+
+## Dos modos, dos intenciones
+### Todos
+La vista **Todos** sirve para exploración.
+
+Es donde ves actividad del ecosistema completo:
+
+- nuevos proyectos
+- movimientos en perfiles
+- builders que empiezan a aparecer
+- señales frescas de qué está pasando en la red
+
+Es ideal si entrás con ganas de descubrir.
+
+### Seguidos
+La vista **Seguidos** es otra cosa.
+
+Ahí el feed se vuelve más personal:
+
+- seguís el progreso de gente que te interesa
+- volvés a builders que ya te generaron confianza
+- ves más rápido si alguien lanzó algo nuevo o actualizó su huevsite
+
+Es ideal si entrás con intención de continuidad.
+
+## Por qué importa este cambio
+Un feed bueno no tiene que servir solo para “ver cosas”. Tiene que ayudarte a volver.
+
+Cuando existe una capa de seguimiento real, huevsite deja de ser solamente una página que mostraste una vez y pasa a ser un lugar al que regresás porque hay movimiento que te importa.
+
+## Mejor descubrimiento, mejor retención
+La combinación funciona así:
+
+- **Todos** mejora el descubrimiento.
+- **Seguidos** mejora la profundidad y la recurrencia.
+
+No compiten entre sí. Se complementan.
+
+Primero encontrás builders interesantes. Después los seguís. Después tu feed se vuelve más valioso con el tiempo.
+
+## Menos feed genérico, más contexto
+La meta no es copiar una red social masiva.
+
+La meta es que un builder entre a huevsite y en segundos pueda responder:
+
+- qué se está moviendo en la comunidad
+- qué lanzó la gente que sigo
+- a quién vale la pena mirar más de cerca
+
+**Con ese filtro, el feed deja de ser una lista plana y empieza a parecerse a una herramienta.**
+
+¡A buildeaRRR!
+    `,
+  },
+  {
+    slug: "bio-block-y-avatar-una-sola-identidad-visual",
+    title: "Bio block y avatar: una sola identidad visual para perfiles y sub-sites",
+    excerpt: "Sincronizamos la imagen del bio block con el avatar real del perfil o sub-site. Si cambiás una, la otra se actualiza para evitar desfasajes y mantener una identidad visual consistente.",
+    date: "2026-03-18",
+    tags: ["perfil", "sub-sites", "update"],
+    author: {
+      name: "Tomas Deluca",
+      username: "huevsite",
+      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+    },
+    content: `
+Había un problema chiquito, pero muy visible: a veces la imagen del **bio block** y el **avatar real** no coincidían.
+
+Eso rompía algo importante: la sensación de identidad consistente.
+
+Ahora lo corregimos.
+
+## Qué pasa a partir de ahora
+La imagen del bio block funciona como espejo del avatar del owner:
+
+- en perfiles principales, del usuario
+- en sub-sites, del sub-site correspondiente
+
+Si actualizás una, la otra también se actualiza.
+
+## Por qué importa
+Puede parecer detalle visual, pero no lo es.
+
+Cuando alguien entra a tu huevsite necesita entender rápido que todo pertenece al mismo sistema:
+
+- la foto del perfil
+- la cabecera
+- la portada que aparece primero
+- la imagen que ve cuando navega entre tus páginas
+
+Si esas piezas se contradicen, baja la sensación de orden y profesionalismo.
+
+## Menos desajustes manuales
+Antes era posible que:
+
+1. cambiaras la imagen desde editar perfil
+2. el bio block quedara viejo
+3. o editaras el bloque y el avatar no acompañara
+
+Ahora esa lógica está unificada.
+
+Eso significa:
+
+- menos mantenimiento manual
+- menos errores visuales
+- menos perfiles “medio rotos” después de un cambio
+
+## También aplica a sub-sites
+Este punto era importante.
+
+Los sub-sites ya no se sienten como páginas desconectadas: también respetan esa misma lógica visual. Si el sub-site tiene su propia imagen, el bloque principal acompaña. Si cambiás el bloque, el avatar del sub-site se alinea.
+
+## Una mejora chica que ordena todo
+Las mejores mejoras no siempre son las más ruidosas.
+
+A veces son las que hacen que el producto se sienta más sólido, más coherente y menos frágil.
+
+**Cuando el bio block y el avatar hablan el mismo idioma, toda la página se ve más cuidada.**
+
+¡A buildeaRRR!
+    `,
+  },
+  {
     slug: "el-fin-de-huevsite",
     title: "Por qué creamos huevsite: El portfolio definitivo",
     excerpt: "Unificando a los builders, developers y creadores de LATAM bajo una misma red orientada a la acción y a construir impacto real.",

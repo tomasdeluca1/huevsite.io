@@ -302,20 +302,20 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
 
       {/* HERO */}
       <section className="hero">
-        <div className="hero-shell">
+        <div className={`hero-shell ${user ? "hero-shell--solo" : "hero-shell--with-claim"}`}>
           <div className="hero-copy">
             <div className="badge">
               <span className="dot"></span>
               {currentHero.eyebrow}
             </div>
 
-            <h1 className="text-center md:text-left leading-[1.05]">
+            <h1 className="text-center xl:text-left leading-[1.05]">
               {currentHero.title}
             </h1>
 
-            <p className="text-center md:text-left mx-auto md:mx-0">{currentHero.description}</p>
+            <p className="text-center xl:text-left mx-auto xl:mx-0">{currentHero.description}</p>
 
-            <div className="hero-ctas flex justify-center md:justify-start items-center flex-wrap gap-3">
+            <div className="hero-ctas flex justify-center xl:justify-start items-center flex-wrap gap-3">
               <Link
                 href={currentHero.primaryHref}
                 className="btn btn-accent !px-8 !py-4 text-base"
@@ -345,84 +345,94 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
             </div>
           </div>
 
-          <div className="hero-claim-panel">
-            <div className="hero-claim-eyebrow">
-              <Sparkles size={14} />
-              Reclamá tu huevsite
-            </div>
-
-            <div className="hero-claim-title">Probá tu username ahora</div>
-            <p className="hero-claim-sub">
-              Si está libre, te llevamos al onboarding con ese nombre ya cargado.
-            </p>
-
-            <div className="hero-claim-input-wrap">
-              <span className="hero-claim-prefix">huevsite.io/</span>
-              <input
-                value={claimInput}
-                onChange={(e) => setClaimInput(e.target.value.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase())}
-                placeholder="tuusuario"
-                className="hero-claim-input"
-              />
-              <div className="hero-claim-status">
-                {claimStatus === "checking" && <Loader2 size={16} className="animate-spin text-white/40" />}
-                {claimStatus === "available" && <Check size={16} className="text-[var(--accent)]" />}
+          {!user && (
+            <div className={`hero-claim-panel hero-claim-panel--${claimStatus}`}>
+              <div className="hero-claim-orb" aria-hidden="true" />
+              <div className="hero-claim-eyebrow">
+                <Sparkles size={14} />
+                Reclamá tu huevsite
               </div>
-            </div>
 
-            <button
-              onClick={submitClaim}
-              disabled={claimStatus !== "available"}
-              className="hero-claim-button"
-            >
-              {claimStatus === "available" ? (
-                <>
-                  Reclamar {normalizedClaim}
-                  <ArrowRight size={16} />
-                </>
-              ) : claimStatus === "checking" ? (
-                "Chequeando disponibilidad..."
-              ) : (
-                "Elegí un username disponible"
+              <div className="hero-claim-title">Probá tu username ahora</div>
+              <p className="hero-claim-sub">
+                Si está libre, te llevamos al onboarding con ese nombre ya cargado.
+              </p>
+
+              <div className="hero-claim-action">
+                <div className="hero-claim-url-label">Tu URL potencial</div>
+
+                <div className="hero-claim-input-wrap">
+                  <span className="hero-claim-prefix">huevsite.io/</span>
+                  <input
+                    value={claimInput}
+                    onChange={(e) => setClaimInput(e.target.value.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase())}
+                    placeholder="tuusuario"
+                    className="hero-claim-input"
+                  />
+                  <div className="hero-claim-status">
+                    {claimStatus === "checking" && <Loader2 size={16} className="animate-spin text-white/40" />}
+                    {claimStatus === "available" && <Check size={16} className="text-[var(--accent)]" />}
+                  </div>
+                </div>
+
+                <button
+                  onClick={submitClaim}
+                  disabled={claimStatus !== "available"}
+                  className="hero-claim-button"
+                >
+                  {claimStatus === "available" ? (
+                    <>
+                      Reclamar {normalizedClaim}
+                      <ArrowRight size={16} />
+                    </>
+                  ) : claimStatus === "checking" ? (
+                    "Chequeando disponibilidad..."
+                  ) : (
+                    "Elegí un username disponible"
+                  )}
+                </button>
+
+                <div className={`hero-claim-feedback hero-claim-feedback--${claimStatus}`}>
+                  {claimStatus === "idle" && "Usá entre 3 y 20 caracteres. Solo minúsculas, números y guión bajo."}
+                  {claimStatus === "invalid" && "Ese formato no va. Probá con minúsculas, números o _."}
+                  {claimStatus === "available" && `Disponible. ${user ? "Vamos a prellenarlo." : "Te lo preparamos para el login."}`}
+                  {claimStatus === "taken" && "Ese ya fue reclamado. Probá una variante."}
+                  {claimStatus === "error" && "No pudimos validar ahora mismo. Reintentá en unos segundos."}
+                </div>
+              </div>
+
+              {claimSuggestions.length > 0 && (
+                <div className="hero-claim-suggestions-wrap">
+                  <div className="hero-claim-suggestions-label">Probá alguna de estas</div>
+                  <div className="hero-claim-suggestions">
+                  {claimSuggestions.map((suggestion) => (
+                    <button
+                      key={suggestion}
+                      onClick={() => {
+                        setClaimInput(suggestion);
+                        trackLandingEvent("landing_claim_suggestion_click", { variant: heroVariant, suggestion });
+                      }}
+                      className="hero-claim-chip"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                  </div>
+                </div>
               )}
-            </button>
 
-            <div className="hero-claim-feedback">
-              {claimStatus === "idle" && "Usá entre 3 y 20 caracteres. Solo minúsculas, números y guión bajo."}
-              {claimStatus === "invalid" && "Ese formato no va. Probá con minúsculas, números o _."}
-              {claimStatus === "available" && `Disponible. ${user ? "Vamos a prellenarlo." : "Te lo preparamos para el login."}`}
-              {claimStatus === "taken" && "Ese ya fue reclamado. Probá una variante."}
-              {claimStatus === "error" && "No pudimos validar ahora mismo. Reintentá en unos segundos."}
-            </div>
-
-            {claimSuggestions.length > 0 && (
-              <div className="hero-claim-suggestions">
-                {claimSuggestions.map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    onClick={() => {
-                      setClaimInput(suggestion);
-                      trackLandingEvent("landing_claim_suggestion_click", { variant: heroVariant, suggestion });
-                    }}
-                    className="hero-claim-chip"
-                  >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <div className="hero-claim-metrics">
-              <div className="hero-metric-card">
-                <span className="hero-metric-label">Tiempo hasta publicar</span>
-                <strong>~3 min</strong>
-              </div>
-              <div className="hero-metric-card">
-                <span className="hero-metric-label">Desde el hero</span>
-                <strong>username validado</strong>
+              <div className="hero-claim-metrics">
+                <div className="hero-metric-card">
+                  <span className="hero-metric-label">Tiempo hasta publicar</span>
+                  <strong>~3 min</strong>
+                </div>
+                <div className="hero-metric-card">
+                  <span className="hero-metric-label">Desde el hero</span>
+                  <strong>username validado</strong>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div className="w-full max-w-6xl mt-8 grid gap-3 md:grid-cols-3">

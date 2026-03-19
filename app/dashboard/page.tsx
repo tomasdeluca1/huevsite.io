@@ -41,11 +41,11 @@ import { OnboardingModal } from "@/components/dashboard/OnboardingModal";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
-import { ProSettingsModal } from "@/components/dashboard/ProSettingsModal";
 import { UpgradeModal } from "@/components/dashboard/UpgradeModal";
 import { DashboardSidebar } from "@/components/dashboard/Sidebar";
 import { InsightsTab } from "@/components/dashboard/InsightsTab";
 import { CreateSubSiteModal } from "@/components/dashboard/CreateSubSiteModal";
+import { DomainConnectionCard } from "@/components/dashboard/DomainConnectionCard";
 import { TwitterWarning } from "@/components/dashboard/TwitterWarning";
 import { PriceBanner } from "@/components/marketing/PriceBanner";
 import { ReferralDashboard } from "@/components/dashboard/ReferralDashboard";
@@ -62,7 +62,6 @@ export default function DashboardPage() {
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isScoreInfoOpen, setIsScoreInfoOpen] = useState(false);
-  const [isProSettingsOpen, setIsProSettingsOpen] = useState(false);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [isCreateSubSiteOpen, setIsCreateSubSiteOpen] = useState(false);
   const [tempProfileData, setTempProfileData] = useState({
@@ -86,6 +85,57 @@ export default function DashboardPage() {
   const [isTabMenuOpen, setIsTabMenuOpen] = useState(false);
   const supabase = createClient();
   const referralsSectionRef = useRef<HTMLDivElement | null>(null);
+
+  const normalizeDomainInput = (value: string) =>
+    value.trim().replace(/^(?:https?:\/\/)?/i, "").replace(/^www\./i, "").split("/")[0].toLowerCase();
+
+  const getDomainGuide = (value: string) => {
+    const normalized = normalizeDomainInput(value);
+    const labels = normalized.split(".").filter(Boolean);
+
+    if (!normalized || labels.length < 2) {
+      return {
+        normalized,
+        isSubdomain: false,
+        host: "@",
+        targetType: "A Record",
+        targetValue: "216.150.1.1",
+        recommendation: "Escribí un dominio válido para ver la guía exacta.",
+        steps: [
+          "Guardalo en huevsite.",
+          "Creá el DNS en tu proveedor.",
+          "Corré el check cuando propague.",
+        ],
+      };
+    }
+
+    const isSubdomain = labels.length > 2;
+    const host = isSubdomain ? labels.slice(0, -2).join(".") : "@";
+
+    return {
+      normalized,
+      isSubdomain,
+      host,
+      targetType: isSubdomain ? "CNAME" : "A Record",
+      targetValue: isSubdomain ? "cname.vercel-dns.com" : "216.150.1.1",
+      recommendation: isSubdomain
+        ? "Usá un CNAME para ese host."
+        : "Usá un A record para el dominio raíz.",
+      steps: isSubdomain
+        ? [
+            "Guardá el dominio.",
+            `Creá un CNAME ${host} -> cname.vercel-dns.com.`,
+            "Corré el check.",
+          ]
+        : [
+            "Guardá el dominio.",
+            "Creá un A record @ -> 216.150.1.1.",
+            "Corré el check.",
+          ],
+    };
+  };
+
+  const domainGuide = getDomainGuide(domain);
 
   const normalizeSubSites = (subSites: any[] = []) =>
     subSites.map((site: any) => ({
@@ -625,14 +675,12 @@ export default function DashboardPage() {
       const res = await fetch("/api/profile/verify-domain", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ domain })
+        body: JSON.stringify({ domain: normalizeDomainInput(domain) })
       });
       const data = await res.json();
       setVerificationResult({ isValid: data.isValid, message: data.message });
-      if (data.isValid) alert("¡Dominio verificado!");
-      else alert(data.message || "Propagación pendiente.");
     } catch (error) {
-      setVerificationResult({ isValid: false, message: "Error" });
+      setVerificationResult({ isValid: false, message: "No pudimos verificar el dominio en este momento." });
     } finally {
       setVerifying(false);
     }
@@ -643,10 +691,13 @@ export default function DashboardPage() {
       const resp = await fetch('/api/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ custom_domain: domain }),
+        body: JSON.stringify({ custom_domain: normalizeDomainInput(domain) }),
       });
       if (!resp.ok) throw new Error('Error domain update');
-      setProfile(prev => prev ? { ...prev, customDomain: domain } : null);
+      const normalizedDomain = normalizeDomainInput(domain);
+      setProfile(prev => prev ? { ...prev, customDomain: normalizedDomain } : null);
+      setDomain(normalizedDomain);
+      setVerificationResult(null);
     } catch (e: any) {
       alert('Error guardando dominio.');
     }
@@ -915,7 +966,6 @@ export default function DashboardPage() {
         handleLogout={handleLogout}
         setIsProfileModalOpen={setIsProfileModalOpen}
         setIsScoreInfoOpen={setIsScoreInfoOpen}
-        setIsProSettingsOpen={setIsProSettingsOpen}
         setIsCreateSubSiteOpen={setIsCreateSubSiteOpen}
         setIsUpgradeModalOpen={setIsUpgradeModalOpen}
         setIsFeedbackOpen={setIsFeedbackOpen}
@@ -1119,41 +1169,20 @@ export default function DashboardPage() {
             )}
 
             {activeTab === 'domain' && (
-              <motion.div key="domain" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="max-w-xl mx-auto space-y-8 md:space-y-12 px-4">
-                <div className="text-center space-y-4">
-                  <h3 className="text-2xl md:text-3xl font-[950] tracking-tighter text-white">Conectá tu Marca.</h3>
-                  <p className="text-white/40 text-xs md:text-sm">Usá tu dominio propio para una presencia 100% profesional.</p>
-                </div>
-                <div className="space-y-4 md:space-y-6">
-                  <div className="relative group">
-                    <Globe className="absolute left-5 md:left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[var(--accent)] transition-all size-5 md:size-6" />
-                    <input 
-                      value={domain} 
-                      onChange={(e) => setDomain(e.target.value)} 
-                      placeholder="tudominio.com" 
-                      className="w-full bg-white/[0.03] border border-white/10 rounded-[1.5rem] md:rounded-[2rem] pl-14 md:pl-16 pr-6 md:pr-8 py-5 md:py-6 text-lg md:text-xl font-bold focus:outline-none focus:border-[var(--accent)] transition-all" 
-                    />
-                  </div>
-                  <button onClick={() => handleUpdateDomain(domain)} className="w-full py-5 md:py-6 rounded-[1.5rem] md:rounded-[2rem] bg-[var(--accent)] text-black font-black uppercase tracking-widest shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all text-xs md:text-sm">Vincular Dominio</button>
-                </div>
-                {profile.customDomain && (
-                  <div className="pt-8 md:pt-10 border-t border-white/5 space-y-6">
-                    <div className="flex justify-between items-center text-[9px] md:text-[10px] font-black uppercase tracking-widest px-2">
-                       <span className="text-white/20">DNS Records</span>
-                       <button onClick={handleVerify} disabled={verifying} className="text-[var(--accent)] hover:brightness-125 transition-all disabled:opacity-30">{verifying ? 'Verificando...' : 'Check Status'}</button>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                       <div onClick={() => { navigator.clipboard.writeText("76.76.21.21"); alert("Copiado!"); }} className="p-5 md:p-6 rounded-2xl md:rounded-3xl bg-white/[0.02] border border-white/5 cursor-pointer hover:bg-white/5 transition-all">
-                          <p className="text-[8px] md:text-[9px] font-black text-white/20 mb-2 uppercase">Registro A</p>
-                          <code className="text-white font-mono text-xs md:text-sm">76.76.21.21</code>
-                       </div>
-                       <div onClick={() => { navigator.clipboard.writeText("nodes.huevsite.io"); alert("Copiado!"); }} className="p-5 md:p-6 rounded-2xl md:rounded-3xl bg-white/[0.02] border border-white/5 cursor-pointer hover:bg-white/5 transition-all">
-                          <p className="text-[8px] md:text-[9px] font-black text-white/20 mb-2 uppercase">CNAME</p>
-                          <code className="text-white font-mono text-xs md:text-sm uppercase truncate block">nodes.huevsite.io</code>
-                       </div>
-                    </div>
-                  </div>
-                )}
+              <motion.div key="domain" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="max-w-5xl mx-auto space-y-8 md:space-y-12 px-4">
+                <DomainConnectionCard
+                  domain={domain}
+                  currentDomain={profile.customDomain}
+                  domainGuide={domainGuide}
+                  verifying={verifying}
+                  verificationResult={verificationResult}
+                  onDomainChange={(value) => {
+                    setDomain(value);
+                    setVerificationResult(null);
+                  }}
+                  onSave={() => handleUpdateDomain(domain)}
+                  onVerify={handleVerify}
+                />
               </motion.div>
             )}
 
@@ -1301,21 +1330,6 @@ export default function DashboardPage() {
         setIsProfileModalOpen(false); 
       }} className="flex-[2] py-4 rounded-2xl bg-[var(--accent)] text-black font-black text-sm shadow-xl" style={{ backgroundColor: profile.accentColor, color: getContrastColor(profile.accentColor) }}>Guardar</button></div></motion.div></div>}</AnimatePresence>
       <ScoreInfoModal isOpen={isScoreInfoOpen} onClose={() => setIsScoreInfoOpen(false)} accentColor={profile.accentColor} profileId={profile.id} />
-      <ProSettingsModal
-        isOpen={isProSettingsOpen}
-        onClose={() => setIsProSettingsOpen(false)}
-        accentColor={profile.accentColor}
-        subSites={profile.subSites}
-        blocks={profile.blocks}
-        customDomain={profile.customDomain}
-        onUpdateDomain={handleUpdateDomain}
-        onAddSubSite={handleAddSubSite}
-        onUpdateSubSite={handleUpdateSubSite}
-        onDeleteSubSite={handleDeleteSubSite}
-        onTransferProject={handleTransferProject}
-        username={profile.username}
-      />
-
       <CreateSubSiteModal
         isOpen={isCreateSubSiteOpen}
         onClose={() => setIsCreateSubSiteOpen(false)}

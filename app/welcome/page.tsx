@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { motion } from "framer-motion";
@@ -8,7 +8,7 @@ import { Loader2, Check, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-export default function SetupPage() {
+function SetupPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
@@ -195,3 +195,16 @@ export default function SetupPage() {
     </div>
   );
 }
+
+export default function SetupPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center p-6">
+        <Loader2 className="animate-spin text-[var(--accent)]" size={32} />
+      </div>
+    }>
+      <SetupPageContent />
+    </Suspense>
+  );
+}
+

@@ -67,8 +67,10 @@ export async function GET(request: NextRequest) {
       .select("*", { count: "exact" });
 
     if (q) {
-      // Basic text search over username or name
-      query = query.or(`username.ilike.%${q}%,name.ilike.%${q}%`);
+      // Improved text search over username, name or tagline
+      // Replace spaces with % to allow fuzzy matching (e.g. "Joaquin Giorgis" matches "JoaquinGiorgis")
+      const fuzzyQ = q.trim().replace(/\s+/g, '%');
+      query = query.or(`username.ilike.%${fuzzyQ}%,name.ilike.%${fuzzyQ}%,tagline.ilike.%${fuzzyQ}%`);
     }
 
     // We might need the user object for certain filters

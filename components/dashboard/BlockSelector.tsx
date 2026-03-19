@@ -124,7 +124,7 @@ export function BlockSelector({
       {mounted && createPortal(
         <AnimatePresence>
           {isOpen && (
-            <div className="portal-root fixed inset-0 z-[100] flex items-end md:items-center justify-center p-0 md:p-4">
+            <div className="portal-root fixed inset-0 z-[300] flex items-end md:items-center justify-center p-0 md:p-4">
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

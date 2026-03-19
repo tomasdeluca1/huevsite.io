@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
+import { SITE_URL } from "@/lib/site-url";
 import "./globals.css";
 
 const bricolage = Bricolage_Grotesque({
@@ -20,7 +21,7 @@ const jetbrains = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "huevsite.io | Mostrá lo que buildeás",
   description: "Red social y portfolio para builders de Argentina y LATAM.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://huevsite.io"),
+  metadataBase: new URL(SITE_URL),
   alternates: {
     types: {
       'application/rss+xml': '/blog/feed.xml',

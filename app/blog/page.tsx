@@ -1,17 +1,22 @@
 import Link from "next/link";
 import { BLOG_POSTS, BlogPost } from "@/lib/blog-data";
 import Image from "next/image";
+import { SITE_URL } from "@/lib/site-url";
 
 export const metadata = {
   title: "Blog - huevsite.io",
   description: "Noticias, guías y casos de estudio de la comunidad de huevsite.io para empoderar a creadores y builders.",
+  alternates: {
+    canonical: `${SITE_URL}/blog`,
+  },
   openGraph: {
     title: "Blog - huevsite.io",
     description: "Noticias, guías y casos de estudio de la comunidad de huevsite.io para empoderar a creadores y builders.",
+    url: `${SITE_URL}/blog`,
     type: "website",
     images: [
       {
-        url: "/blog-og-image.png",
+        url: `${SITE_URL}/blog-og-image.png`,
         width: 1200,
         height: 630,
         alt: "huevsite.io blog",
@@ -22,7 +27,7 @@ export const metadata = {
     card: "summary_large_image",
     title: "Blog - huevsite.io",
     description: "Noticias, guías y casos de estudio de la comunidad de huevsite.io.",
-    images: ["/blog-og-image.png"],
+    images: [`${SITE_URL}/blog-og-image.png`],
   }
 };
 

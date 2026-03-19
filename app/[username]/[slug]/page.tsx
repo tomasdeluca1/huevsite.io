@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 
 import { headers } from "next/headers";
 import { AnalyticsTracker } from "@/components/analytics/AnalyticsTracker";
+import { SITE_URL } from "@/lib/site-url";
 
 interface Props {
     params: { username: string; slug: string };
@@ -21,15 +22,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     if (!profile) return { title: "Sub-site no encontrado | huevsite.io" };
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.huevsite.io";
-    const ogImageUrl = `${baseUrl}/api/og/${username}/${slug}?v=${OG_IMAGE_VERSION}`;
+    const pageUrl = `${SITE_URL}/${username}/${slug}`;
+    const ogImageUrl = `${SITE_URL}/api/og/${username}/${slug}?v=${OG_IMAGE_VERSION}`;
 
     return {
         title: `${profile.displayName} | @${username} | huevsite.io`,
         description: profile.tagline,
+        alternates: {
+            canonical: pageUrl,
+        },
         openGraph: {
             title: `${profile.displayName} | @${username}`,
             description: profile.tagline,
+            url: pageUrl,
             images: [
                 {
                     url: ogImageUrl,

@@ -6,6 +6,8 @@ export const dynamic = 'force-dynamic';
 const VERCEL_TOKEN = process.env.VERCEL_TOKEN;
 const PROJECT_ID = process.env.VERCEL_PROJECT_ID;
 const TEAM_ID = process.env.VERCEL_TEAM_ID;
+const ACCEPTED_VERCEL_A_RECORDS = ['216.150.1.1', '76.76.21.21'];
+const ACCEPTED_VERCEL_CNAME_TARGETS = ['cname.vercel-dns.com', 'vercel.pub', 'huevsite.io'];
 
 export async function POST(req: NextRequest) {
     try {
@@ -48,7 +50,7 @@ export async function POST(req: NextRequest) {
         // Intento CNAME
         try {
             const cnameRecords = await dns.resolveCname(cleanDomain);
-            if (cnameRecords.some(r => r.includes('huevsite.io') || r.includes('vercel.pub'))) {
+            if (cnameRecords.some(r => ACCEPTED_VERCEL_CNAME_TARGETS.some(target => r.includes(target)))) {
                 resolved = true;
                 method = 'CNAME';
             }
@@ -58,7 +60,7 @@ export async function POST(req: NextRequest) {
         if (!resolved) {
             try {
                 const aRecords = await dns.resolve4(cleanDomain);
-                if (aRecords.includes('76.76.21.21')) { // IP estándar de Vercel
+                if (aRecords.some(record => ACCEPTED_VERCEL_A_RECORDS.includes(record))) {
                     resolved = true;
                     method = 'A Record';
                 }

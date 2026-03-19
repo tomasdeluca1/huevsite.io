@@ -24,7 +24,6 @@ interface SidebarProps {
   handleLogout: () => void;
   setIsProfileModalOpen: (open: boolean) => void;
   setIsScoreInfoOpen: (open: boolean) => void;
-  setIsProSettingsOpen: (open: boolean) => void;
   setIsCreateSubSiteOpen: (open: boolean) => void;
   setIsUpgradeModalOpen: (open: boolean) => void;
   setIsFeedbackOpen: (open: boolean) => void;
@@ -50,7 +49,6 @@ export function DashboardSidebar({
   handleLogout,
   setIsProfileModalOpen,
   setIsScoreInfoOpen,
-  setIsProSettingsOpen,
   setIsCreateSubSiteOpen,
   setIsUpgradeModalOpen,
   setIsFeedbackOpen,

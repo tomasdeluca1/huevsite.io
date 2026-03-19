@@ -15,6 +15,14 @@ export function getCurrentWeek(): string {
   return getWeekString(new Date());
 }
 
+function normalizeSubSites(subSites: any[] = []) {
+  return subSites.map((site: any) => ({
+    ...site,
+    avatarUrl: site.avatarUrl || site.avatar_url || "",
+    sourceUrl: site.sourceUrl || site.source_url || "",
+  }));
+}
+
 export async function getShowcaseData(requestedWeek?: string | null) {
   const currentWeek = requestedWeek || getCurrentWeek();
 
@@ -58,6 +66,9 @@ export async function getShowcaseData(requestedWeek?: string | null) {
         winners = winnerData.map((w: any) => {
           if (w.user && w.user.blocks) {
             w.user.blocks = w.user.blocks.filter((b: any) => b.sub_site_id === null);
+          }
+          if (w.user?.sub_sites) {
+            w.user.sub_sites = normalizeSubSites(w.user.sub_sites);
           }
           return w;
         });
@@ -109,6 +120,9 @@ export async function getShowcaseData(requestedWeek?: string | null) {
         const parsedProfiles = randomData.map((p: any) => {
            if (p.blocks) {
              p.blocks = p.blocks.filter((b: any) => b.sub_site_id === null);
+           }
+           if (p.sub_sites) {
+             p.sub_sites = normalizeSubSites(p.sub_sites);
            }
            return p;
         });

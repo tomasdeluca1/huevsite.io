@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { checkAndPostCommunityMilestone } from '@/lib/twitter'
+import { type LinktreeImportData } from '@/lib/linktree-import'
 
 export const dynamic = 'force-dynamic'
 
 const USERNAME_REGEX = /^[a-z0-9_]{3,20}$/
+const LINKTREE_BONUS_BLOCKS = 3
 
 interface CreateProfileRequest {
   username: string
   name?: string
   tagline?: string
+  image?: string
   accentColor: string
   layout: string
   roles: string[]
@@ -17,6 +20,7 @@ interface CreateProfileRequest {
   githubHandle?: string
   referredBy?: string // Referral code
   githubData?: any
+  linktreeData?: LinktreeImportData | null
   blocks?: Array<{
     type: string
     order: number
@@ -87,6 +91,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Crear perfil
+    const hasImportedLinktree = !!body.linktreeData?.links?.length
+
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .insert({
@@ -94,7 +100,7 @@ export async function POST(request: NextRequest) {
         username: body.username,
         name: body.name || user.user_metadata.full_name || null,
         email: user.email || null,
-        image: user.user_metadata.avatar_url || null,
+        image: body.image || user.user_metadata.avatar_url || null,
         github_handle: body.githubHandle || user.user_metadata.user_name || null,
         accent_color: body.accentColor,
         layout: body.layout,
@@ -103,6 +109,7 @@ export async function POST(request: NextRequest) {
         location: body.location || null,
         available: false,
         referred_by: referredById,
+        extra_blocks_from_share: hasImportedLinktree ? LINKTREE_BONUS_BLOCKS : 0,
       })
       .select()
       .single()

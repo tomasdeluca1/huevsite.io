@@ -1,3 +1,5 @@
+import { type LinktreeImportData } from "@/lib/linktree-import";
+
 export type Role = "developer" | "designer" | "founder" | "indie_hacker";
 
 export type AccentColor =
@@ -27,6 +29,7 @@ export interface OnboardingState {
   // Step 2
   githubConnected: boolean;
   githubData: GitHubData | null;
+  linktreeData: LinktreeImportData | null;
   // Step 3
   layout: LayoutOption | null;
   // Step 4
@@ -43,12 +46,14 @@ export interface OnboardingCompletionData {
   roles: Role[];
   githubHandle?: string;
   githubData: GitHubData | null;
+  linktreeData: LinktreeImportData | null;
 }
 
 export const INITIAL_STATE: OnboardingState = {
   roles: [],
   githubConnected: false,
   githubData: null,
+  linktreeData: null,
   layout: null,
   accentColor: "#C8FF00",
   username: "",

@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useRouter } from "next/navigation";
+import { type LinktreeImportData } from "@/lib/linktree-import";
 import {
   STEPS,
   type AccentColor,
@@ -59,6 +60,7 @@ export function OnboardingExperience({
       layout: initialState?.layout,
       roles: initialState?.roles,
       githubData: initialState?.githubData,
+      linktreeData: initialState?.linktreeData,
     })
   );
 
@@ -81,16 +83,27 @@ export function OnboardingExperience({
       });
 
       if (mode === "create") {
+        const profileName =
+          completion.githubData?.name || completion.linktreeData?.displayName || displayName;
+        const profileTagline =
+          completion.githubData?.bio || completion.linktreeData?.bio || tagline;
+        const profileImage =
+          completion.githubData?.avatarUrl || completion.linktreeData?.avatarUrl || avatarUrl;
+
         const response = await fetch("/api/profile/create", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             username: completion.username,
+            name: profileName,
+            tagline: profileTagline,
+            image: profileImage,
             accentColor: completion.accentColor,
             layout: completion.layout,
             roles: completion.roles,
             githubHandle: completion.githubHandle,
             githubData: completion.githubData,
+            linktreeData: completion.linktreeData,
             referredBy: referredBy || undefined,
             blocks: blocks.map((block) => ({
               type: block.type,
@@ -121,6 +134,13 @@ export function OnboardingExperience({
                   ? { label: block.label, value: block.value, icon: block.icon }
                   : block.type === "stack"
                   ? { items: block.items }
+                  : block.type === "custom"
+                  ? {
+                      label: block.label,
+                      title: block.title,
+                      description: block.description,
+                      link: block.link,
+                    }
                   : {},
             })),
           }),
@@ -178,6 +198,9 @@ export function OnboardingExperience({
           state={state}
           onConnect={(data: GitHubData) =>
             update({ githubConnected: true, githubData: data })
+          }
+          onImportLinktree={(data: LinktreeImportData) =>
+            update({ linktreeData: data })
           }
           onSkip={next}
           onNext={next}

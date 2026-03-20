@@ -17,6 +17,191 @@ export interface BlogPost {
 
 const RAW_BLOG_POSTS: Omit<BlogPost, 'readingTime'>[] = [
   {
+    slug: "importa-tu-linktree-o-bio-site-y-arranca-con-un-board-de-verdad",
+    title: "Importá tu Linktree o Bio Site y arrancá con un board de verdad",
+    excerpt: "El onboarding ahora puede traerse tu avatar, bio y links visibles desde Linktree o Bio Site para que no empieces desde cero ni armes un perfil genérico.",
+    date: "2026-03-20",
+    tags: ["onboarding", "linktree", "feature"],
+    author: {
+      name: "Tomas Deluca",
+      username: "huevsite",
+      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+    },
+    content: `
+Arrancar un perfil desde cero puede ser una paja. Tenés que pensar el nombre, rearmar tus links, volver a escribir la bio y encima decidir qué mostrar primero.
+
+Por eso sumamos una mejora fuerte al onboarding: **ahora podés importar tu Linktree o Bio Site y usar esa data real para construir tu huevsite desde el arranque**.
+
+## Qué se importa
+Cuando pegás la URL, huevsite lee lo visible y recupera:
+
+- avatar
+- nombre o display name
+- bio
+- links destacados
+- thumbnails cuando existen
+
+No es un simple copy-paste de enlaces. El sistema además intenta **clasificar cada link** para ubicarlo mejor dentro del board:
+
+- sociales
+- proyectos
+- writing
+- media
+- comunidad
+
+Eso hace que el perfil inicial ya salga con bastante más criterio.
+
+## Menos setup manual, más señal real
+La gracia no es ahorrarte 30 segundos. La gracia es que tu perfil ya nazca con señales que dicen algo de vos.
+
+Si venís de Linktree o Bio Site, ya tenés branding, bio y un orden mínimo de prioridades. Aprovechar eso hace que huevsite no arranque vacío ni con contenido de mentira.
+
+En vez de inventar bloques para completar, ahora podés partir de:
+
+- proyectos que ya compartías
+- canales donde ya publicás
+- comunidad donde ya existís
+- una identidad visual más consistente
+
+## También mejora el refactor del board
+Esta lógica no vive solo en el onboarding.
+
+Ahora también existe una forma de **rehacer el board principal desde Linktree** usando créditos IA, priorizando:
+
+- nombre
+- tagline
+- links más importantes
+
+Eso sirve mucho si tu perfil actual quedó viejo, desordenado o si querés reconstruirlo más rápido sin tocar tus sub-sites.
+
+## Además, el layout ya no depende de que elijas una plantilla a ciegas
+Otra mejora silenciosa pero muy útil: el onboarding ahora selecciona automáticamente un layout inicial para que no tengas que frenarte en decisiones de interfaz demasiado temprano.
+
+Primero cargás tu señal.
+Después ajustás.
+
+Ese orden es mucho mejor para publicar rápido.
+
+**Si ya tenías un Linktree armado, ahora podés convertirlo en un huevsite con mucha menos fricción y bastante más intención.**
+
+¡A buildeaRRR!
+    `,
+  },
+  {
+    slug: "dominios-custom-sin-adivinar-que-dns-te-falta",
+    title: "Dominios custom sin adivinar qué DNS te falta",
+    excerpt: "Rediseñamos la conexión de dominios para que sepas exactamente qué guardar, qué copiar y cuándo verificar, sin navegar un setup confuso.",
+    date: "2026-03-20",
+    tags: ["pro", "dominios", "feature"],
+    author: {
+      name: "Tomas Deluca",
+      username: "huevsite",
+      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+    },
+    content: `
+Conectar un dominio custom debería sentirse como un upgrade premium. No como una búsqueda del tesoro entre registros DNS, capturas viejas y mensajes ambiguos.
+
+Por eso rehicimos el flujo de dominios en huevsite.
+
+## Ahora el proceso es mucho más claro
+La nueva experiencia te guía en tres pasos bien concretos:
+
+1. elegís el dominio exacto
+2. copiás el registro DNS correcto
+3. corrés el check cuando propagó
+
+Puede parecer obvio, pero antes mucha fricción venía de no saber cuál era el próximo paso real.
+
+## Menos interpretación, más instrucciones accionables
+El sistema ahora te muestra con claridad:
+
+- si estás conectando un dominio raíz o un subdominio
+- qué tipo de registro tenés que crear
+- qué host usar
+- a qué valor tiene que apuntar
+
+Eso reduce muchísimo el clásico problema de:
+
+- guardar un dominio mal normalizado
+- cargar un \`www\` cuando no corresponde
+- o verificar antes de tiempo sin entender qué faltaba
+
+## Verificación más honesta
+Otra mejora importante es el check.
+
+Si Vercel ya ve el dominio como configurado y verificado, te lo decimos. Si el DNS parece correcto pero el SSL todavía está procesando, también.
+
+Ese matiz importa porque evita la sensación de “hice todo bien y igual no sé si funciona”.
+
+## El resultado: más confianza para usar tu propia marca
+Conectar un dominio propio cambia bastante la percepción de un perfil. No solo se ve más serio. También se siente más tuyo.
+
+La mejora acá no es solo técnica. Es psicológica:
+
+- menos miedo a romper algo
+- menos soporte manual
+- más claridad para completar el setup
+
+**Si tenías frenado tu dominio por miedo al DNS, ahora el camino es bastante más directo.**
+
+¡A buildeaRRR!
+    `,
+  },
+  {
+    slug: "eliminar-tu-cuenta-sin-escribirle-a-soporte",
+    title: "Eliminar tu cuenta, sin escribirle a soporte",
+    excerpt: "Sumamos borrado de cuenta con confirmación explícita para que cada builder tenga salida real del producto sin depender de mensajes manuales.",
+    date: "2026-03-20",
+    tags: ["cuenta", "privacidad", "update"],
+    author: {
+      name: "Tomas Deluca",
+      username: "huevsite",
+      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+    },
+    content: `
+Un producto serio no solo te deja entrar fácil. También te deja salir con claridad.
+
+Por eso sumamos una función que hacía falta: **ahora podés eliminar tu cuenta desde el dashboard, sin depender de soporte**.
+
+## Qué incluye este borrado
+La acción está pensada como una eliminación real de cuenta y contenido asociado. El flujo contempla:
+
+- acceso del usuario
+- perfil
+- sub-sites
+- bloques
+- actividad
+- assets subidos
+
+Si además tenías un dominio custom conectado, el sistema también remueve esa asociación antes de cerrar todo.
+
+## Confirmación manual para evitar accidentes
+Como es una acción irreversible, no alcanza con un botón rojo.
+
+Implementamos una confirmación explícita donde tenés que escribir una frase exacta antes de avanzar. Eso agrega una pausa saludable y evita borrados por error, clicks impulsivos o confusión dentro del dashboard.
+
+## Más autonomía, menos tickets innecesarios
+Esta feature no está para empujar a nadie a irse. Está para que el producto sea más honesto.
+
+Dar control real también significa:
+
+- no esconder la salida
+- no obligarte a hablar con alguien
+- no dejar datos colgados por un proceso manual
+
+En productos chicos, este tipo de cosas suele postergarse. Nosotros preferimos resolverlas temprano.
+
+## Un detalle que también construye confianza
+Tener una opción clara de borrado mejora la percepción general del producto, incluso si nunca la usás.
+
+Porque transmite algo simple:
+
+**tu cuenta es tuya, y tu decisión también.**
+
+¡A buildeaRRR!
+    `,
+  },
+  {
     slug: "reclama-tu-username-y-publica-tu-huevsite-en-minutos",
     title: "Reclamá tu username y publicá tu huevsite en minutos",
     excerpt: "Ahora podés probar si tu URL está libre antes de entrar al onboarding. Menos fricción, más intención real y un camino mucho más rápido para salir publicado.",

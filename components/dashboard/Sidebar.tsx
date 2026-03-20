@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Trophy, Settings, ArrowLeft, Copy, Check, Globe, Activity, 
   Compass, Save, LogOut, MessageSquare, Layout as LayoutIcon, 
-  Sparkles, ArrowUpRight, Lock, ChevronRight, User, PlusCircle, Trash2
+  Sparkles, ArrowUpRight, Lock, ChevronRight, User, PlusCircle, Trash2, Link2
 } from "lucide-react";
 import Link from "next/link";
 import { ProfileData, BlockType } from "@/lib/profile-types";
@@ -28,6 +28,7 @@ interface SidebarProps {
   setIsUpgradeModalOpen: (open: boolean) => void;
   setIsFeedbackOpen: (open: boolean) => void;
   setIsDeleteAccountOpen: (open: boolean) => void;
+  setIsLinktreeRefactorOpen: (open: boolean) => void;
   setTempProfileData: (data: any) => void;
   addBlock: (type: BlockType) => void;
   handleColorChange: (color: string, confirmed: boolean) => void;
@@ -54,6 +55,7 @@ export function DashboardSidebar({
   setIsUpgradeModalOpen,
   setIsFeedbackOpen,
   setIsDeleteAccountOpen,
+  setIsLinktreeRefactorOpen,
   setTempProfileData,
   addBlock,
   handleColorChange,
@@ -83,6 +85,7 @@ export function DashboardSidebar({
   const currentBoardTitle = selectedSubSiteId ? currentSubSite?.title : "Perfil Principal";
   const currentBoardSlug = selectedSubSiteId ? `/${profile.username}/${currentSubSite?.slug}` : `/${profile.username}`;
   const currentBoardAvatar = selectedSubSiteId ? currentSubSite?.avatarUrl : profile.avatarUrl;
+  const isPro = profile.subscriptionTier === "pro";
 
   return (
     <>
@@ -119,10 +122,12 @@ export function DashboardSidebar({
 
           {/* Board Switcher Popover */}
           <div className="relative mb-6">
-             <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] px-2 mb-2 block">Board Activo</span>
-             <button
-               onClick={() => setIsSwitcherOpen(!isSwitcherOpen)}
-               className="w-full group p-3 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-white/20 hover:bg-white/[0.05] transition-all flex items-center gap-3 text-left relative"
+             <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] px-2 mb-2 block">
+               {isPro ? "Board Activo" : "Tu Perfil"}
+             </span>
+             <div
+               className={`w-full group p-3 rounded-2xl bg-white/[0.03] border border-white/5 transition-all flex items-center gap-3 text-left relative ${isPro ? "hover:border-white/20 hover:bg-white/[0.05]" : ""}`}
+               onClick={isPro ? () => setIsSwitcherOpen(!isSwitcherOpen) : undefined}
              >
                 <div className="shrink-0 relative">
                    {currentBoardAvatar ? (
@@ -140,13 +145,15 @@ export function DashboardSidebar({
                   <h4 className="text-xs font-black text-white truncate">{currentBoardTitle}</h4>
                   <p className="text-[10px] font-mono opacity-30 truncate">{currentBoardSlug}</p>
                 </div>
-                <div className={`transition-transform duration-300 ${isSwitcherOpen ? 'rotate-180' : ''}`}>
-                  <ChevronRight size={14} className="text-white/20 group-hover:text-white/40" />
-                </div>
-             </button>
+                {isPro && (
+                  <div className={`transition-transform duration-300 ${isSwitcherOpen ? 'rotate-180' : ''}`}>
+                    <ChevronRight size={14} className="text-white/20 group-hover:text-white/40" />
+                  </div>
+                )}
+             </div>
 
              <AnimatePresence>
-               {isSwitcherOpen && (
+               {isPro && isSwitcherOpen && (
                  <>
                    <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setIsSwitcherOpen(false)} />
                    <motion.div
@@ -340,6 +347,21 @@ export function DashboardSidebar({
                 <MessageSquare size={18} />
               </div>
               <span className="text-sm font-bold">Feedback</span>
+            </button>
+
+            <button
+              onClick={() => openModal(setIsLinktreeRefactorOpen)}
+              className="w-full flex items-center gap-3 rounded-2xl p-3 text-white/40 transition-all hover:bg-white/5 hover:text-white"
+            >
+              <div className="rounded-lg bg-white/5 p-2">
+                <Link2 size={18} />
+              </div>
+              <div className="flex-1 text-left">
+                <div className="text-sm font-bold">Refactorizar con Linktree</div>
+                <div className="text-[10px] font-mono text-white/25">
+                  Rehace el board por 1 cr&#233;dito IA
+                </div>
+              </div>
             </button>
 
             <button

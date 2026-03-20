@@ -1,13 +1,12 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { type LinktreeImportData } from "@/lib/linktree-import";
 import {
   STEPS,
   type AccentColor,
   type GitHubData,
-  type LayoutOption,
   type OnboardingCompletionData,
   type OnboardingState,
   type Role,
@@ -19,8 +18,8 @@ import {
 } from "@/lib/onboarding-utils";
 import { OnboardingShell } from "@/components/onboarding/OnboardingShell";
 import { StepRole } from "@/components/onboarding/StepRole";
+import { StepLinktree } from "@/components/onboarding/StepLinktree";
 import { StepGitHub } from "@/components/onboarding/StepGitHub";
-import { StepLayout } from "@/components/onboarding/StepLayout";
 import { StepAccent } from "@/components/onboarding/StepAccent";
 import { StepUsername } from "@/components/onboarding/StepUsername";
 import { OnboardingDone } from "@/components/onboarding/OnboardingDone";
@@ -67,6 +66,22 @@ export function OnboardingExperience({
   const update = (patch: Partial<OnboardingState>) =>
     setState((prev) => ({ ...prev, ...patch }));
 
+  useEffect(() => {
+    if (!initialState?.username) return;
+
+    const normalizedUsername = initialState.username.toLowerCase().replace(/[^a-z0-9_]/g, "");
+
+    setState((prev) => {
+      if (prev.username === normalizedUsername) return prev;
+
+      return {
+        ...prev,
+        username: normalizedUsername,
+        usernameAvailable: normalizedUsername ? true : prev.usernameAvailable,
+      };
+    });
+  }, [initialState?.username]);
+
   const next = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
 
   const handleFinish = async () => {
@@ -84,11 +99,11 @@ export function OnboardingExperience({
 
       if (mode === "create") {
         const profileName =
-          completion.githubData?.name || completion.linktreeData?.displayName || displayName;
+          completion.linktreeData?.displayName || completion.githubData?.name || displayName;
         const profileTagline =
-          completion.githubData?.bio || completion.linktreeData?.bio || tagline;
+          completion.linktreeData?.bio || completion.githubData?.bio || tagline;
         const profileImage =
-          completion.githubData?.avatarUrl || completion.linktreeData?.avatarUrl || avatarUrl;
+          completion.linktreeData?.avatarUrl || completion.githubData?.avatarUrl || avatarUrl;
 
         const response = await fetch("/api/profile/create", {
           method: "POST",
@@ -99,50 +114,11 @@ export function OnboardingExperience({
             tagline: profileTagline,
             image: profileImage,
             accentColor: completion.accentColor,
-            layout: completion.layout,
             roles: completion.roles,
             githubHandle: completion.githubHandle,
             githubData: completion.githubData,
             linktreeData: completion.linktreeData,
             referredBy: referredBy || undefined,
-            blocks: blocks.map((block) => ({
-              type: block.type,
-              order: block.order,
-              colSpan: block.col_span,
-              rowSpan: block.row_span,
-              visible: block.visible,
-              data:
-                block.type === "hero"
-                  ? {
-                      name: block.name,
-                      tagline: block.tagline,
-                      avatarUrl: block.avatarUrl,
-                      status: block.status,
-                      location: block.location,
-                      description: block.description,
-                      roles: block.roles,
-                    }
-                  : block.type === "github"
-                  ? {
-                      username: block.username,
-                      stats: block.stats,
-                      showAdvanced: block.showAdvanced,
-                    }
-                  : block.type === "social"
-                  ? { links: block.links }
-                  : block.type === "metric"
-                  ? { label: block.label, value: block.value, icon: block.icon }
-                  : block.type === "stack"
-                  ? { items: block.items }
-                  : block.type === "custom"
-                  ? {
-                      label: block.label,
-                      title: block.title,
-                      description: block.description,
-                      link: block.link,
-                    }
-                  : {},
-            })),
           }),
         });
 
@@ -150,6 +126,10 @@ export function OnboardingExperience({
 
         if (!response.ok) {
           throw new Error(data.error || "Error al crear perfil");
+        }
+
+        if (typeof window !== "undefined") {
+          window.localStorage.removeItem("huevsite_pending_claim");
         }
 
         setDone(true);
@@ -194,23 +174,19 @@ export function OnboardingExperience({
       )}
 
       {step === 1 && (
-        <StepGitHub
+        <StepLinktree
           state={state}
-          onConnect={(data: GitHubData) =>
-            update({ githubConnected: true, githubData: data })
-          }
-          onImportLinktree={(data: LinktreeImportData) =>
-            update({ linktreeData: data })
-          }
-          onSkip={next}
+          onImport={(data: LinktreeImportData) => update({ linktreeData: data })}
           onNext={next}
         />
       )}
 
       {step === 2 && (
-        <StepLayout
+        <StepGitHub
           state={state}
-          onChange={(layout: LayoutOption) => update({ layout })}
+          onConnect={(data: GitHubData) =>
+            update({ githubConnected: true, githubData: data })
+          }
           onNext={next}
         />
       )}

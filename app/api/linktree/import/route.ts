@@ -12,7 +12,11 @@ export const maxDuration = 60;
 export const runtime = "nodejs";
 
 function isAllowedLinktreeHost(hostname: string) {
-  return /(^|\.)linktr\.ee$/i.test(hostname) || /(^|\.)linktree\.com$/i.test(hostname);
+  return (
+    /(^|\.)linktr\.ee$/i.test(hostname) ||
+    /(^|\.)linktree\.com$/i.test(hostname) ||
+    /(^|\.)bio\.site$/i.test(hostname)
+  );
 }
 
 export async function POST(request: NextRequest) {
@@ -33,7 +37,7 @@ export async function POST(request: NextRequest) {
     const url = ensureAbsoluteUrl((rawUrl || "").trim());
 
     if (!url) {
-      return NextResponse.json({ error: "Falta la URL de Linktree." }, { status: 400 });
+      return NextResponse.json({ error: "Falta la URL de Linktree o Bio Site." }, { status: 400 });
     }
 
     let parsedUrl: URL;
@@ -45,7 +49,7 @@ export async function POST(request: NextRequest) {
 
     if (!isAllowedLinktreeHost(parsedUrl.hostname)) {
       return NextResponse.json(
-        { error: "Por ahora sólo soportamos links de Linktree." },
+        { error: "Por ahora solo soportamos links de Linktree o Bio Site." },
         { status: 400 }
       );
     }
@@ -108,6 +112,10 @@ export async function POST(request: NextRequest) {
             normalizeText(anchor.textContent) ||
             normalizeText(anchor.getAttribute("aria-label")) ||
             normalizeText(anchor.getAttribute("title")),
+          imageUrl:
+            (anchor.querySelector("img") as HTMLImageElement | null)?.src ||
+            (anchor.querySelector('[style*="background-image"]') as HTMLElement | null)?.style.backgroundImage?.match(/url\(["']?(.*?)["']?\)/)?.[1] ||
+            "",
         }))
         .filter((item) => item.url && item.title);
 
@@ -115,7 +123,7 @@ export async function POST(request: NextRequest) {
         displayName:
           headingCandidates[0] ||
           normalizeText(getMeta("og:title")) ||
-          normalizeText(document.title.replace(/\s*\|\s*Linktree.*$/i, "")),
+          normalizeText(document.title.replace(/\s*\|\s*(Linktree|Bio Site).*$/i, "")),
         bio: bioCandidates[0] || normalizeText(getMeta("description", "name")),
         avatarUrl: avatar || "",
         links: anchors,
@@ -124,14 +132,15 @@ export async function POST(request: NextRequest) {
 
     const filteredLinks = dedupeImportedLinks(
       imported.links
-        .map((link: { url: string; title: string }) =>
-          normalizeImportedLink(link.url, link.title)
+        .map((link: { url: string; title: string; imageUrl?: string }) =>
+          normalizeImportedLink(link.url, link.title, link.imageUrl)
         )
         .filter((link: ImportedLinktreeLink | null): link is ImportedLinktreeLink => {
           if (!link) return false;
 
           const normalized = link.url.toLowerCase();
           if (normalized.includes("linktr.ee/") || normalized.includes("linktree.com/")) return false;
+          if (normalized.includes("bio.site/")) return false;
           if (normalized.includes("/signin") || normalized.includes("/login")) return false;
           if (normalized.includes("/privacy") || normalized.includes("/terms")) return false;
 
@@ -149,7 +158,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Linktree import error:", error);
     return NextResponse.json(
-      { error: "No pudimos leer ese Linktree. Revisá la URL y reintentá." },
+      { error: "No pudimos leer ese Linktree o Bio Site. Revisa la URL y reintenta." },
       { status: 500 }
     );
   } finally {

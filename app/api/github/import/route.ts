@@ -18,6 +18,32 @@ interface CommitActivity {
   week: number
 }
 
+function getGitHubHandleFromUser(user: any) {
+  const directCandidates = [
+    user?.user_metadata?.user_name,
+    user?.user_metadata?.preferred_username,
+    user?.user_metadata?.userName,
+    user?.app_metadata?.user_name,
+    user?.app_metadata?.preferred_username,
+  ].filter(Boolean);
+
+  if (directCandidates.length > 0) {
+    return directCandidates[0] as string;
+  }
+
+  const identities = Array.isArray(user?.identities) ? user.identities : [];
+  const githubIdentity = identities.find((identity: any) => identity?.provider === "github");
+  const identityData = githubIdentity?.identity_data || {};
+
+  return (
+    identityData.user_name ||
+    identityData.preferred_username ||
+    identityData.userName ||
+    identityData.login ||
+    null
+  );
+}
+
 export async function GET(request: NextRequest) {
   try {
     const supabase = createClient()
@@ -36,7 +62,8 @@ export async function GET(request: NextRequest) {
     // getSession() es aceptable AQUÍ solo para extraer el token, habiendo validado antes con getUser()
     const { data: { session } } = await supabase.auth.getSession()
     const providerToken = session?.provider_token
-    const githubHandle = user.user_metadata.user_name
+    const requestedUsername = request.nextUrl.searchParams.get("username")?.trim()
+    const githubHandle = requestedUsername || getGitHubHandleFromUser(user)
 
     if (!githubHandle) {
       return NextResponse.json(
@@ -49,14 +76,14 @@ export async function GET(request: NextRequest) {
       'Accept': 'application/vnd.github.v3+json',
     }
 
-    if (providerToken) {
+    if (providerToken && !requestedUsername) {
       headers['Authorization'] = `Bearer ${providerToken}`
     } else {
       console.warn('// Importando GitHub sin token (fallback a data pública)');
     }
 
     // 1. Obtener repos públicos (del usuario directamente si no hay token, o del /user/repos si lo hay)
-    const reposUrl = providerToken
+    const reposUrl = providerToken && !requestedUsername
       ? 'https://api.github.com/user/repos?type=owner&sort=updated&per_page=100'
       : `https://api.github.com/users/${githubHandle}/repos?type=owner&sort=updated&per_page=100`;
 
@@ -65,7 +92,7 @@ export async function GET(request: NextRequest) {
 
     if (!reposResponse.ok) {
       // Si falla, intentamos una vez más sin headers por si el token estaba vencido
-      if (providerToken) {
+      if (providerToken && !requestedUsername) {
         const retryResponse = await fetch(`https://api.github.com/users/${githubHandle}/repos?type=owner&sort=updated&per_page=100`, {
           headers: { 'Accept': 'application/vnd.github.v3+json' }
         });

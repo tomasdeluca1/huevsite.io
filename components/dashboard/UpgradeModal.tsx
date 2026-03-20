@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Sparkles, CheckCircle2, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { createPortal } from "react-dom";
+import { lemonCheckoutUrl } from "@/lib/lemon-checkout-url";
 
 interface Props {
   isOpen: boolean;
@@ -68,7 +69,7 @@ export function UpgradeModal({ isOpen, onClose, accentColor }: Props) {
             </div>
 
             <button
-              onClick={() => window.location.href = "/api/checkout"}
+              onClick={() => window.location.href = lemonCheckoutUrl}
               className="btn btn-accent w-full py-4 text-base font-bold shadow-[0_0_20px_rgba(200,255,0,0.15)] flex justify-center items-center"
               style={{ backgroundColor: accentColor, color: "black" }}
             >

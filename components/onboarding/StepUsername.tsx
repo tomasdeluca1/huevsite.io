@@ -15,11 +15,24 @@ interface StepUsernameProps {
 
 export function StepUsername({ state, onChange, onFinish, creating = false, error = null }: StepUsernameProps) {
   const [checking, setChecking] = useState(false);
-  const [available, setAvailable] = useState<boolean | null>(null);
+  const [available, setAvailable] = useState<boolean | null>(state.usernameAvailable ?? null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const accent = state.accentColor;
 
   const validate = (val: string) => /^[a-z0-9_]{3,20}$/.test(val);
+
+  useEffect(() => {
+    setAvailable(state.usernameAvailable ?? null);
+  }, [state.usernameAvailable]);
+
+  useEffect(() => {
+    if (!state.username || !validate(state.username) || state.usernameAvailable !== true) {
+      return;
+    }
+
+    setAvailable(true);
+    setChecking(false);
+  }, [state.username, state.usernameAvailable]);
 
   const handleChange = async (val: string) => {
     const clean = val.toLowerCase().replace(/[^a-z0-9_]/g, "");
@@ -66,18 +79,22 @@ export function StepUsername({ state, onChange, onFinish, creating = false, erro
 
       <div className="space-y-4 mb-10">
         <div className="relative">
-          <div className="absolute left-6 top-1/2 -translate-y-1/2 font-mono text-[var(--text-muted)] text-lg pointer-events-none">
-            huevsite.io/
-          </div>
-          <input
-            type="text"
-            value={state.username}
-            onChange={(e) => handleChange(e.target.value)}
-            placeholder="tu-nombre"
-            className="w-full bg-[var(--surface2)] border border-[var(--border-bright)] rounded-2xl py-6 pl-[110px] pr-12 font-mono text-xl text-white outline-none focus:border-[var(--accent)] transition-all"
+          <div
+            className="flex items-center gap-3 w-full bg-[var(--surface2)] border border-[var(--border-bright)] rounded-2xl px-6 py-5 focus-within:border-[var(--accent)] transition-all"
             style={{ '--accent': accent } as any}
-            autoFocus
-          />
+          >
+            <span className="shrink-0 font-mono text-[var(--text-muted)] text-base sm:text-lg">
+              huevsite.io/
+            </span>
+            <input
+              type="text"
+              value={state.username}
+              onChange={(e) => handleChange(e.target.value)}
+              placeholder="tu-nombre"
+              className="min-w-0 flex-1 bg-transparent border-none font-mono text-xl text-white outline-none p-0 placeholder:text-[var(--text-muted)]/50"
+              autoFocus
+            />
+          </div>
           <div className="absolute right-6 top-1/2 -translate-y-1/2">
             {checking && <Loader2 className="animate-spin text-[var(--text-dim)]" size={20} />}
             {!checking && available === true && <Check className="text-[var(--accent)]" size={24} style={{ color: accent }} />}

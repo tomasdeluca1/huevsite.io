@@ -4,8 +4,6 @@ import LandingPageClient from "@/components/landing/LandingPageClient";
 import { SITE_URL } from "@/lib/site-url";
 
 export const dynamic = "force-dynamic";
-const OG_IMAGE_VERSION = "20260318a";
-const HOME_OG_IMAGE_URL = `${SITE_URL}/api/og?username=huevsite&title=${encodeURIComponent("huevsite.io")}&tagline=${encodeURIComponent("Mostra lo que buildeas")}&color=${encodeURIComponent("#C8FF00")}&v=${OG_IMAGE_VERSION}`;
 
 export const metadata: Metadata = {
   title: "huevsite.io | Mostrá lo que buildeás",
@@ -17,7 +15,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: HOME_OG_IMAGE_URL,
+        url: "/opengraph-image.png",
         width: 1200,
         height: 630,
         alt: "huevsite.io",
@@ -28,7 +26,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "huevsite.io | Mostrá lo que buildeás",
     description: "Red social y portfolio para builders de Argentina y LATAM.",
-    images: [HOME_OG_IMAGE_URL],
+    images: ["/opengraph-image.png"],
   },
 };
 

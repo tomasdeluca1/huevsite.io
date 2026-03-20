@@ -1,12 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { buildOnboardingBlocks, selectOnboardingLayout } from '@/lib/onboarding-utils'
 import { checkAndPostCommunityMilestone } from '@/lib/twitter'
 import { type LinktreeImportData } from '@/lib/linktree-import'
+import { scoreService } from '@/lib/score-service'
 
 export const dynamic = 'force-dynamic'
 
 const USERNAME_REGEX = /^[a-z0-9_]{3,20}$/
 const LINKTREE_BONUS_BLOCKS = 3
+
+function getGitHubHandleFromUser(user: any) {
+  const directCandidates = [
+    user?.user_metadata?.user_name,
+    user?.user_metadata?.preferred_username,
+    user?.user_metadata?.userName,
+    user?.app_metadata?.user_name,
+    user?.app_metadata?.preferred_username,
+  ].filter(Boolean);
+
+  if (directCandidates.length > 0) {
+    return directCandidates[0] as string;
+  }
+
+  const identities = Array.isArray(user?.identities) ? user.identities : [];
+  const githubIdentity = identities.find((identity: any) => identity?.provider === "github");
+  const identityData = githubIdentity?.identity_data || {};
+
+  return (
+    identityData.user_name ||
+    identityData.preferred_username ||
+    identityData.userName ||
+    identityData.login ||
+    null
+  );
+}
 
 interface CreateProfileRequest {
   username: string
@@ -14,21 +42,12 @@ interface CreateProfileRequest {
   tagline?: string
   image?: string
   accentColor: string
-  layout: string
   roles: string[]
   location?: string
   githubHandle?: string
   referredBy?: string // Referral code
   githubData?: any
   linktreeData?: LinktreeImportData | null
-  blocks?: Array<{
-    type: string
-    order: number
-    colSpan: number
-    rowSpan: number
-    data: any
-    visible: boolean
-  }>
 }
 
 export async function POST(request: NextRequest) {
@@ -46,6 +65,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body: CreateProfileRequest = await request.json()
+    const inferredGitHubHandle = getGitHubHandleFromUser(user)
 
     // Validaciones
     if (!body.username || !USERNAME_REGEX.test(body.username)) {
@@ -55,7 +75,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!body.accentColor || !body.layout || !body.roles || body.roles.length === 0) {
+    if (!body.accentColor || !body.roles || body.roles.length === 0) {
       return NextResponse.json(
         { error: 'Datos incompletos' },
         { status: 400 }
@@ -92,6 +112,8 @@ export async function POST(request: NextRequest) {
 
     // Crear perfil
     const hasImportedLinktree = !!body.linktreeData?.links?.length
+    const selectedLayout = selectOnboardingLayout(body.username)
+    const githubHandle = body.githubHandle || body.githubData?.username || inferredGitHubHandle || null
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
@@ -101,9 +123,9 @@ export async function POST(request: NextRequest) {
         name: body.name || user.user_metadata.full_name || null,
         email: user.email || null,
         image: body.image || user.user_metadata.avatar_url || null,
-        github_handle: body.githubHandle || user.user_metadata.user_name || null,
+        github_handle: githubHandle,
         accent_color: body.accentColor,
-        layout: body.layout,
+        layout: selectedLayout,
         roles: body.roles,
         tagline: body.tagline || null,
         location: body.location || null,
@@ -122,83 +144,75 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Crear bloques iniciales si se proveen o si tiene handle de GitHub
-    const blocksToInsert = [];
+    const generatedBlocks = buildOnboardingBlocks({
+      state: {
+        username: body.username,
+        accentColor: body.accentColor as any,
+        layout: selectedLayout,
+        roles: body.roles as any,
+        githubHandle: githubHandle || undefined,
+        githubData: body.githubData || null,
+        linktreeData: body.linktreeData || null,
+      },
+      displayName: body.name || user.user_metadata.full_name || undefined,
+      avatarUrl: body.image || user.user_metadata.avatar_url || undefined,
+      tagline: body.tagline || undefined,
+    })
 
-    if (body.blocks && body.blocks.length > 0) {
-      blocksToInsert.push(...body.blocks.map(block => ({
-        user_id: user.id,
-        type: block.type,
-        order: block.order,
-        col_span: block.colSpan,
-        row_span: block.rowSpan,
-        data: block.data,
-        visible: block.visible,
-      })));
-    }
-
-    // Si no hay bloque de GitHub en body.blocks y tenemos un githubHandle, agregarlo automáticamente
-    const hasGithubBlock = blocksToInsert.some(b => b.type === 'github');
-    const githubHandle = body.githubHandle || user.user_metadata.user_name;
-
-    if (!hasGithubBlock && githubHandle) {
-      let stats = {
-        stars: 0,
-        repos: 0,
-        followers: 0,
-        topLanguages: [] as any[]
-      };
-
-      if (body.githubData) {
-        stats = {
-          stars: body.githubData.topRepos?.reduce((acc: number, r: any) => acc + (r.stars || 0), 0) || 0,
-          repos: body.githubData.publicRepos || 0,
-          followers: body.githubData.followers || 0,
-          topLanguages: body.githubData.topLanguages?.map((l: string) => ({ name: l, percent: 33 })) || [],
-        };
-      } else {
-        // Fallback: Intentar obtener stats reales del API si no vinieron en el body
-        try {
-          console.log(`// Fetching GitHub stats for ${githubHandle} (on-create fallback)`);
-          const reposRes = await fetch(`https://api.github.com/users/${githubHandle}/repos?type=owner&per_page=100`, {
-            headers: { 'Accept': 'application/vnd.github.v3+json' }
-          });
-
-          if (reposRes.ok) {
-            const repos = await reposRes.json();
-            const userDataRes = await fetch(`https://api.github.com/users/${githubHandle}`, {
-              headers: { 'Accept': 'application/vnd.github.v3+json' }
-            });
-            const userData = userDataRes.ok ? await userDataRes.json() : {};
-
-            stats = {
-              stars: repos.reduce((acc: number, r: any) => acc + (r.stargazers_count || 0), 0) || 0,
-              repos: repos.length || 0,
-              followers: userData.followers || 0,
-              topLanguages: Array.from(new Set(repos.map((r: any) => r.language).filter(Boolean)))
-                .slice(0, 3)
-                .map(l => ({ name: l, percent: 33 }))
-            };
+    const blocksToInsert = generatedBlocks.map((block) => ({
+      user_id: user.id,
+      type: block.type,
+      order: block.order,
+      col_span: block.col_span,
+      row_span: block.row_span,
+      visible: block.visible,
+      data: block.type === 'hero'
+        ? {
+            name: block.name,
+            tagline: block.tagline,
+            avatarUrl: block.avatarUrl,
+            status: block.status,
+            location: block.location,
+            description: block.description,
+            roles: block.roles,
           }
-        } catch (e) {
-          console.error('// Fallback github sync error:', e);
-        }
-      }
-
-      blocksToInsert.push({
-        user_id: user.id,
-        type: 'github',
-        order: blocksToInsert.length,
-        col_span: 1,
-        row_span: 2,
-        data: {
-          username: githubHandle,
-          stats,
-          showAdvanced: true
-        },
-        visible: true,
-      });
-    }
+        : block.type === 'github'
+          ? {
+              username: block.username,
+              stats: block.stats,
+              showAdvanced: block.showAdvanced,
+            }
+          : block.type === 'social'
+            ? { links: block.links }
+            : block.type === 'stack'
+              ? { items: block.items }
+              : block.type === 'project'
+                ? {
+                    title: block.title,
+                    description: block.description,
+                    imageUrl: block.imageUrl,
+                    metrics: block.metrics,
+                    link: block.link,
+                    stack: block.stack,
+                  }
+                : block.type === 'writing'
+                  ? { posts: block.posts }
+                  : block.type === 'media'
+                    ? {
+                        url: block.url,
+                        title: block.title,
+                        description: block.description,
+                        link: block.link,
+                      }
+                    : block.type === 'custom'
+                      ? {
+                          label: block.label,
+                          title: block.title,
+                          description: block.description,
+                          link: block.link,
+                        }
+                      : {},
+    }))
 
     if (blocksToInsert.length > 0) {
       const { error: blocksError } = await supabase
@@ -220,6 +234,11 @@ export async function POST(request: NextRequest) {
 
     // Check for community milestones (e.g. 100, 150, 200...)
     await checkAndPostCommunityMilestone(supabase);
+
+    const newScore = await scoreService.recomputeScore(user.id);
+    if (profile) {
+      profile.builder_score = newScore;
+    }
 
     return NextResponse.json({
       success: true,

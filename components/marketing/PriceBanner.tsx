@@ -7,19 +7,32 @@ import { clsx } from "clsx";
 
 interface PriceBannerProps {
   className?: string;
+  userId: string;
 }
 
-export function PriceBanner({ className }: PriceBannerProps) {
-  const [isVisible, setIsVisible] = useState(true);
+export function PriceBanner({ className, userId }: PriceBannerProps) {
+  const [isVisible, setIsVisible] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
+    const sessionKey = `huevsite_launch_offer_session_seen:${userId}`;
+    const countKey = `huevsite_launch_offer_session_count:${userId}`;
+
+    if (!sessionStorage.getItem(sessionKey)) {
+      const nextCount = Number(localStorage.getItem(countKey) || "0") + 1;
+      localStorage.setItem(countKey, String(nextCount));
+      sessionStorage.setItem(sessionKey, "true");
+      setIsVisible(nextCount >= 2);
+    } else {
+      setIsVisible(Number(localStorage.getItem(countKey) || "0") >= 2);
+    }
+
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [userId]);
 
   if (!isVisible) return null;
 

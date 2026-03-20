@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Twitter, Sparkles, Loader2, CheckCircle2 } from "lucide-react";
 import { useState, useRef } from "react";
 import { createPortal } from "react-dom";
+import { lemonCheckoutUrl } from "@/lib/lemon-checkout-url";
 
 interface Props {
   isOpen: boolean;
@@ -102,7 +103,7 @@ export function ShareModal({ isOpen, onClose, accentColor, username, onUnlocked 
                 setTweetUrlInput={setTweetUrlInput}
                 onTweet={handleTweet}
                 onConfirm={handleConfirmTweet}
-                onUpgrade={() => window.location.href = "/api/checkout"}
+                onUpgrade={() => window.location.href = lemonCheckoutUrl}
               />
             )}
           </div>

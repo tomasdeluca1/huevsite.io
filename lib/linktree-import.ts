@@ -6,6 +6,7 @@ export interface ImportedLinktreeLink {
   platform: SocialPlatformKey | "website";
   hostname: string;
   category: ImportedLinkCategory;
+  imageUrl?: string;
 }
 
 export type ImportedLinkCategory =
@@ -58,7 +59,8 @@ export function classifyLinkPlatform(url: string): ImportedLinktreeLink["platfor
 
 export function normalizeImportedLink(
   url: string,
-  title?: string | null
+  title?: string | null,
+  imageUrl?: string | null
 ): ImportedLinktreeLink | null {
   try {
     const normalizedUrl = ensureAbsoluteUrl(url).trim();
@@ -79,6 +81,7 @@ export function normalizeImportedLink(
       platform: classifyLinkPlatform(absoluteUrl),
       hostname,
       category: inferImportedLinkCategory(absoluteUrl, cleanTitle || hostname),
+      imageUrl: imageUrl?.trim() || undefined,
     };
   } catch {
     return null;
@@ -114,6 +117,23 @@ export function getImportedLinkLabel(link: ImportedLinktreeLink) {
   }
 
   return link.hostname.replace(/\.[a-z]{2,}$/i, "").replace(/[-_]/g, " ");
+}
+
+export function extractGitHubProfileUsername(url: string) {
+  try {
+    const parsed = new URL(ensureAbsoluteUrl(url));
+    const hostname = parsed.hostname.replace(/^www\./, "").toLowerCase();
+
+    if (hostname !== "github.com") return null;
+
+    const [username, maybeRepo] = parsed.pathname.split("/").filter(Boolean);
+    if (!username || maybeRepo) return null;
+    if (username.toLowerCase() === "features") return null;
+
+    return username;
+  } catch {
+    return null;
+  }
 }
 
 export function inferImportedLinkCategory(url: string, title?: string) {

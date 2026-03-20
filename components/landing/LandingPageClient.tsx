@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { WinnerSection } from "@/components/landing/WinnerSection";
 import { supabase } from "@/lib/supabase";
+import { lemonCheckoutUrl } from "@/lib/lemon-checkout-url";
 import { User } from "@supabase/supabase-js";
 import { Activity, Compass, Users, PlusCircle, Layout, Check, BookOpen, Globe, Link2, BarChart3, TrendingUp, Loader2, ArrowRight, Sparkles } from "lucide-react";
 
@@ -96,7 +97,7 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
 
   const currentHero = heroExperiment[heroVariant];
   const normalizedClaim = claimInput.trim().toLowerCase();
-  const claimPath = normalizedClaim ? `/welcome?claim=${encodeURIComponent(normalizedClaim)}` : "/welcome";
+  const claimPath = normalizedClaim ? `/onboarding?claim=${encodeURIComponent(normalizedClaim)}` : "/onboarding";
   const claimHref = user ? claimPath : `/login?next=${encodeURIComponent(claimPath)}`;
 
   const trackLandingEvent = (eventName: string, payload: Record<string, any>) => {
@@ -106,6 +107,7 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
 
   const submitClaim = () => {
     if (claimStatus !== "available") return;
+    window.localStorage.setItem("huevsite_pending_claim", normalizedClaim);
     trackLandingEvent("landing_claim_submit", { variant: heroVariant, username: normalizedClaim });
     window.location.href = claimHref;
   };
@@ -480,15 +482,15 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
               <div className="step">
                 <div className="step-num">2</div>
                 <div className="step-content">
-                  <div className="step-title">Conectás GitHub (opcional)</div>
-                  <div className="step-desc">Importamos tus proyectos, lenguajes y actividad automáticamente. Cero copia-pega.</div>
+                  <div className="step-title">Importás Linktree o GitHub</div>
+                  <div className="step-desc">Traemos señal real para arrancar sin bloques vacíos ni mock data.</div>
                 </div>
               </div>
               <div className="step">
                 <div className="step-num">3</div>
                 <div className="step-content">
-                  <div className="step-title">Elegís tu layout</div>
-                  <div className="step-desc">Te sugerimos un huevsite armado según tu perfil. Drag & drop para reordenar.</div>
+                  <div className="step-title">Elegís color y username</div>
+                  <div className="step-desc">El sistema te crea un board base prolijo y vos sólo lo afinás después.</div>
                 </div>
               </div>
               <div className="step">
@@ -692,7 +694,7 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
                   </ul>
 
                   <Link
-                    href={user ? "/api/checkout" : "/login?redirect=/api/checkout"}
+                    href={lemonCheckoutUrl}
                     className="btn btn-accent w-full !py-5 !text-base !font-bold !rounded-2xl shadow-xl shadow-[var(--accent)]/5 hover:shadow-[var(--accent)]/20 transition-all"
                   >
                     {user ? "Mejorar mi huevsite →" : "Hacerme PRO ahora →"}

@@ -25,6 +25,23 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("subscription_tier, pro_since")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      console.error("Insights profile lookup error:", profileError);
+      return NextResponse.json({ error: "No se pudo validar el plan" }, { status: 500 });
+    }
+
+    const isPro = profile?.subscription_tier === "pro" || !!profile?.pro_since;
+
+    if (!isPro) {
+      return NextResponse.json({ error: "Insights es una feature PRO." }, { status: 403 });
+    }
+
     const rangeParam = req.nextUrl.searchParams.get('range');
     const startDate = req.nextUrl.searchParams.get('start');
     const endDate = req.nextUrl.searchParams.get('end');

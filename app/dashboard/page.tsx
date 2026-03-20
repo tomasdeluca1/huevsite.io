@@ -51,6 +51,10 @@ import { PriceBanner } from "@/components/marketing/PriceBanner";
 import { ReferralDashboard } from "@/components/dashboard/ReferralDashboard";
 import { GitHubData, OnboardingCompletionData, Role, LayoutOption } from "@/lib/onboarding-types";
 import { DeleteAccountModal } from "@/components/dashboard/DeleteAccountModal";
+import { LinktreeRefactorModal } from "@/components/dashboard/LinktreeRefactorModal";
+
+const DASHBOARD_TABS = ["board", "insights", "subsites", "domain", "transfer"] as const;
+const PRO_ONLY_TABS = ["insights", "subsites", "domain", "transfer"] as const;
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -66,7 +70,9 @@ export default function DashboardPage() {
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [isCreateSubSiteOpen, setIsCreateSubSiteOpen] = useState(false);
   const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
+  const [isLinktreeRefactorOpen, setIsLinktreeRefactorOpen] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [isRefactoringFromLinktree, setIsRefactoringFromLinktree] = useState(false);
   const [tempProfileData, setTempProfileData] = useState({
     username: '',
     display_name: '',
@@ -88,6 +94,8 @@ export default function DashboardPage() {
   const [isTabMenuOpen, setIsTabMenuOpen] = useState(false);
   const supabase = createClient();
   const referralsSectionRef = useRef<HTMLDivElement | null>(null);
+  const isPro = profile?.subscriptionTier === "pro";
+  const availableTabs = isPro ? DASHBOARD_TABS : (["board"] as const);
 
   const normalizeDomainInput = (value: string) =>
     value.trim().replace(/^(?:https?:\/\/)?/i, "").replace(/^www\./i, "").split("/")[0].toLowerCase();
@@ -200,13 +208,49 @@ export default function DashboardPage() {
     }
   };
 
+  const handleLinktreeRefactor = async (url: string) => {
+    setIsRefactoringFromLinktree(true);
+
+    try {
+      const response = await fetch("/api/profile/refactor-linktree", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.error || "No se pudo refactorizar el board");
+      }
+
+      await fetchProfile();
+      setProfile((prev) =>
+        prev
+          ? {
+              ...prev,
+              aiCredits: data.aiCredits ?? prev.aiCredits,
+              builderScore: data.builderScore ?? prev.builderScore,
+            }
+          : prev
+      );
+      setIsLinktreeRefactorOpen(false);
+    } catch (error: any) {
+      alert(error.message || "No se pudo refactorizar el board");
+    } finally {
+      setIsRefactoringFromLinktree(false);
+    }
+  };
+
   const fetchProfile = async () => {
     try {
       const response = await fetch('/api/profile');
 
       if (!response.ok) {
         if (response.status === 404) {
-          window.location.href = '/welcome';
+          window.location.href = '/onboarding';
           return;
         }
         throw new Error(`Failed to fetch profile: ${response.status}`);
@@ -285,10 +329,21 @@ export default function DashboardPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
-    if (tab === "insights" || tab === "subsites" || tab === "domain" || tab === "transfer" || tab === "board") {
-      setActiveTab(tab);
+    if (tab === "board") {
+      setActiveTab("board");
+      return;
     }
-  }, []);
+
+    if (tab && PRO_ONLY_TABS.includes(tab as typeof PRO_ONLY_TABS[number]) && isPro) {
+      setActiveTab(tab as typeof PRO_ONLY_TABS[number]);
+    }
+  }, [isPro]);
+
+  useEffect(() => {
+    if (!isPro && activeTab !== "board") {
+      setActiveTab("board");
+    }
+  }, [activeTab, isPro]);
 
   useEffect(() => {
     if (!profile) return;
@@ -806,9 +861,12 @@ export default function DashboardPage() {
 
   const handleOnboardingComplete = async (data: OnboardingCompletionData & { blocks: BlockData[] }) => {
     const managedBlockTypes = new Set(["hero", "github", "social", "metric", "stack"]);
-    const nextDisplayName = data.githubData?.name || profile?.displayName || data.username;
-    const nextTagline = data.githubData?.bio || profile?.tagline || "";
-    const nextAvatar = data.githubData?.avatarUrl || profile?.avatarUrl || "";
+    const nextDisplayName =
+      data.linktreeData?.displayName || data.githubData?.name || profile?.displayName || data.username;
+    const nextTagline =
+      data.linktreeData?.bio || data.githubData?.bio || profile?.tagline || "";
+    const nextAvatar =
+      data.linktreeData?.avatarUrl || data.githubData?.avatarUrl || profile?.avatarUrl || "";
 
     // Optimistic update
     setProfile(prev => prev ? {
@@ -1009,6 +1067,7 @@ export default function DashboardPage() {
           setIsUpgradeModalOpen={setIsUpgradeModalOpen}
           setIsFeedbackOpen={setIsFeedbackOpen}
           setIsDeleteAccountOpen={setIsDeleteAccountOpen}
+          setIsLinktreeRefactorOpen={setIsLinktreeRefactorOpen}
           setTempProfileData={setTempProfileData}
           addBlock={addBlock}
         handleColorChange={handleColorChange}
@@ -1035,7 +1094,7 @@ export default function DashboardPage() {
           <div className="absolute inset-x-6 top-0 h-24 md:h-32 bg-[radial-gradient(circle,rgba(var(--accent-rgb),0.12)_0%,transparent_72%)] blur-3xl pointer-events-none opacity-70" />
           {profile.subscriptionTier !== 'pro' && (
             <div className="relative z-20 mb-6 md:mb-8 lg:mb-10">
-              <PriceBanner className="top-0 sm:top-2" />
+              <PriceBanner className="top-0 sm:top-2" userId={profile.id || profile.username} />
             </div>
           )}
 
@@ -1064,9 +1123,10 @@ export default function DashboardPage() {
 
         <div className="max-w-[1600px] mx-auto pb-32">
           {/* DESKTOP TABS */}
+          {isPro && (
           <div className="hidden md:flex relative mb-16 z-20 items-center justify-center">
             <div className="flex items-center gap-1 bg-white/[0.03] p-1.5 rounded-[2.5rem] border border-white/5 backdrop-blur-md shadow-2xl overflow-x-auto scrollbar-none max-w-full w-fit">
-              {(['board', 'insights', 'subsites', 'domain', 'transfer'] as const).map((t) => (
+              {availableTabs.map((t) => (
                 <button 
                   key={t} 
                   onClick={() => setActiveTab(t)} 
@@ -1084,8 +1144,10 @@ export default function DashboardPage() {
               ))}
             </div>
           </div>
+          )}
 
           {/* MOBILE DROPDOWN */}
+          {isPro && (
           <div className="md:hidden relative mb-10 z-30 px-4">
              <button 
                 onClick={() => setIsTabMenuOpen(!isTabMenuOpen)}
@@ -1124,7 +1186,7 @@ export default function DashboardPage() {
                          exit={{ opacity: 0, scale: 0.95, y: -10 }}
                          className="relative bg-[#121214] border border-white/10 rounded-[2.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden backdrop-blur-xl p-3"
                       >
-                         {(['board', 'insights', 'subsites', 'domain', 'transfer'] as const).map((t) => (
+                         {availableTabs.map((t) => (
                             <button
                                key={t}
                                onClick={() => { setActiveTab(t); setIsTabMenuOpen(false); }}
@@ -1147,6 +1209,7 @@ export default function DashboardPage() {
                 )}
              </AnimatePresence>
           </div>
+          )}
 
           <AnimatePresence mode="wait">
             {activeTab === 'board' && (
@@ -1387,6 +1450,18 @@ export default function DashboardPage() {
         accentColor={profile.accentColor}
         onConfirm={handleDeleteAccount}
         isDeleting={isDeletingAccount}
+      />
+      <LinktreeRefactorModal
+        isOpen={isLinktreeRefactorOpen}
+        onClose={() => {
+          if (!isRefactoringFromLinktree) {
+            setIsLinktreeRefactorOpen(false);
+          }
+        }}
+        accentColor={profile.accentColor}
+        aiCredits={profile.aiCredits ?? 0}
+        isSubmitting={isRefactoringFromLinktree}
+        onConfirm={handleLinktreeRefactor}
       />
       {isUpgradeModalOpen && <UpgradeModal isOpen={isUpgradeModalOpen} onClose={() => setIsUpgradeModalOpen(false)} accentColor={profile.accentColor} />}
     </div>

@@ -1,5 +1,6 @@
 import { BlockData } from "@/lib/profile-types";
 import {
+  extractGitHubProfileUsername,
   type ImportedLinktreeLink,
   getImportedLinkLabel,
 } from "@/lib/linktree-import";
@@ -48,7 +49,7 @@ export function buildInitialOnboardingState({
     ...INITIAL_STATE,
     username: username || "",
     accentColor: (accentColor as OnboardingState["accentColor"]) || INITIAL_STATE.accentColor,
-    layout: layout || null,
+    layout: layout || (username ? selectOnboardingLayout(username) : null),
     roles: roles || [],
     githubConnected: !!githubData,
     githubData: githubData || null,
@@ -60,19 +61,23 @@ export function buildInitialOnboardingState({
 export function buildOnboardingCompletionData(
   state: OnboardingState
 ): OnboardingCompletionData {
-  if (!state.layout) {
-    throw new Error("Onboarding incompleto: falta layout.");
-  }
+  const selectedLayout = state.layout || selectOnboardingLayout(state.username);
 
   return {
     username: state.username,
     accentColor: state.accentColor,
-    layout: state.layout,
+    layout: selectedLayout,
     roles: state.roles,
     githubHandle: state.githubData?.username,
     githubData: state.githubData,
     linktreeData: state.linktreeData,
   };
+}
+
+export function selectOnboardingLayout(seed?: string | null): OnboardingCompletionData["layout"] {
+  const source = (seed || "huevsite").trim().toLowerCase();
+  const score = Array.from(source).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return score % 2 === 0 ? "dev_heavy" : "minimal";
 }
 
 export function buildOnboardingBlocks({
@@ -81,41 +86,28 @@ export function buildOnboardingBlocks({
   avatarUrl,
   tagline,
 }: BuildBlocksParams): BlockData[] {
+  const template = resolveBoardTemplate(state.layout);
   const name =
-    state.githubData?.name || state.linktreeData?.displayName || displayName || state.username;
-  const bio = state.githubData?.bio || state.linktreeData?.bio || tagline || "";
-  const image = state.githubData?.avatarUrl || state.linktreeData?.avatarUrl || avatarUrl || "";
+    state.linktreeData?.displayName || state.githubData?.name || displayName || state.username;
+  const bio = state.linktreeData?.bio || state.githubData?.bio || tagline || "";
+  const image = state.linktreeData?.avatarUrl || state.githubData?.avatarUrl || avatarUrl || "";
   const stackItems = state.githubData?.topLanguages?.slice(0, 5) || [];
-  const linktreeLinks = state.linktreeData?.links || [];
-  const hasLinktreeImport = linktreeLinks.length > 0;
-  const dedupeByUrl = <T extends { url: string }>(items: T[]) =>
-    items.filter(
-      (item, index, all) =>
-        all.findIndex(
-          (candidate) =>
-            candidate.url.replace(/\/$/, "").toLowerCase() ===
-            item.url.replace(/\/$/, "").toLowerCase()
-        ) === index
-    );
+  const linktreeLinks = sanitizeImportedLinks(state.linktreeData?.links || []);
+  const githubHandle =
+    state.githubHandle ||
+    state.githubData?.username ||
+    linktreeLinks.map((link) => extractGitHubProfileUsername(link.url)).find(Boolean) ||
+    undefined;
 
   const socialSourceLinks = dedupeByUrl(
-    [
-      ...(state.githubHandle
-        ? [
-            {
-              title: "GitHub",
-              url: `https://github.com/${state.githubHandle}`,
-              platform: "github" as const,
-              hostname: "github.com",
-              category: "social" as const,
-            },
-          ]
-        : []),
-      ...linktreeLinks.filter((link) => link.category === "social" || link.category === "community"),
-    ]
+    linktreeLinks.filter(
+      (link) =>
+        (link.category === "social" || link.category === "community") &&
+        !(githubHandle && link.platform === "github")
+    )
   );
 
-  const socialLinks = socialSourceLinks.map((link) => ({
+  const socialLinks = socialSourceLinks.slice(0, 5).map((link) => ({
     platform: link.platform,
     url: link.url,
     label: link.title,
@@ -125,40 +117,32 @@ export function buildOnboardingBlocks({
   const mediaLinks = linktreeLinks.filter((link) => link.category === "media").slice(0, 2);
   const projectLinks = linktreeLinks
     .filter((link) => link.category === "project")
+    .filter((link) => !(githubHandle && link.platform === "github"))
     .filter((link) => !writingLinks.some((writing) => writing.url === link.url))
     .filter((link) => !mediaLinks.some((media) => media.url === link.url));
   const utilityLinks = linktreeLinks.filter((link) => link.category === "other");
   const featuredLinks = [...projectLinks, ...utilityLinks].slice(0, 4);
 
-  const githubStats = state.githubData
+  const githubStats = hasUsefulGitHubData(state.githubData)
     ? {
         stars:
-          state.githubData.topRepos?.reduce((acc, repo) => acc + (repo.stars || 0), 0) || 0,
-        repos: state.githubData.publicRepos || 0,
-        followers: state.githubData.followers || 0,
+          state.githubData!.topRepos?.reduce((acc, repo) => acc + (repo.stars || 0), 0) || 0,
+        repos: state.githubData!.publicRepos || 0,
+        followers: state.githubData!.followers || 0,
         topLanguages:
-          state.githubData.topLanguages?.slice(0, 3).map((lang) => ({
+          state.githubData!.topLanguages?.slice(0, 3).map((lang, index, all) => ({
             name: lang,
-            percent: 33,
+            percent: Math.max(20, Math.round(100 / Math.max(all.length, 1))),
           })) || [],
       }
     : null;
-
-  const roleMetricValue =
-    state.roles[0] === "founder"
-      ? "Founder"
-      : state.roles[0] === "designer"
-      ? "Designer"
-      : state.roles[0] === "indie_hacker"
-      ? "Indie"
-      : "Builder";
 
   const heroBlock: Extract<BlockData, { type: "hero" }> = {
     id: "hero-onboarding",
     type: "hero",
     order: 0,
-    col_span: state.layout === "creative" ? 1 : 2,
-    row_span: state.layout === "minimal" ? 1 : 2,
+    col_span: 2,
+    row_span: 1,
     visible: true,
     name,
     avatarUrl: image,
@@ -170,15 +154,15 @@ export function buildOnboardingBlocks({
   };
 
   const githubBlock: Extract<BlockData, { type: "github" }> | null =
-    githubStats && state.githubHandle
+    githubStats && githubHandle
       ? {
           id: "github-onboarding",
           type: "github",
           order: 1,
           col_span: 1,
-          row_span: 2,
+          row_span: 1,
           visible: true,
-          username: state.githubHandle,
+          username: githubHandle,
           showAdvanced: true,
           stats: githubStats,
         }
@@ -190,8 +174,8 @@ export function buildOnboardingBlocks({
           id: "social-onboarding",
           type: "social",
           order: 2,
-          col_span: socialLinks.length >= 4 || state.layout === "minimal" ? 2 : 1,
-          row_span: socialLinks.length >= 5 ? 2 : 1,
+          col_span: 1,
+          row_span: 1,
           visible: true,
           links: socialLinks,
         }
@@ -210,33 +194,6 @@ export function buildOnboardingBlocks({
         }
       : null;
 
-  const modeMetricBlock: Extract<BlockData, { type: "metric" }> = {
-    id: "metric-onboarding",
-    type: "metric",
-    order: 4,
-    col_span: 1,
-    row_span: 1,
-    visible: true,
-    label: "MODE",
-    value: roleMetricValue,
-    icon: "sparkles",
-  };
-
-  const linkCountMetricBlock: Extract<BlockData, { type: "metric" }> | null =
-    hasLinktreeImport
-      ? {
-          id: "metric-link-count-onboarding",
-          type: "metric",
-          order: 5,
-          col_span: 1,
-          row_span: 1,
-          visible: true,
-          label: "LINKS",
-          value: String(linktreeLinks.length),
-          icon: "globe",
-        }
-      : null;
-
   const writingBlock: Extract<BlockData, { type: "writing" }> | null =
     writingLinks.length > 0
       ? {
@@ -244,7 +201,7 @@ export function buildOnboardingBlocks({
           type: "writing",
           order: 6,
           col_span: 1,
-          row_span: Math.min(2, Math.max(1, writingLinks.length > 2 ? 2 : 1)),
+          row_span: 1,
           visible: true,
           posts: writingLinks.map((link) => ({
             title: link.title,
@@ -278,11 +235,11 @@ export function buildOnboardingBlocks({
     type: "project",
     order: 10 + index,
     col_span: index === 0 ? 2 : 1,
-    row_span: index === 0 ? 2 : 1,
+    row_span: 1,
     visible: true,
     title: link.title,
     description: buildProjectDescription(link),
-    imageUrl: "",
+    imageUrl: link.imageUrl || "",
     metrics: "",
     link: link.url,
     stack: [],
@@ -309,63 +266,144 @@ export function buildOnboardingBlocks({
     .filter((link) => !primaryProjects.some((project) => project.link === link.url))
     .map(buildCustomBlock);
 
-  const orderedBlocks: BlockData[] = [
-    heroBlock,
-    ...primaryProjects,
-    ...(socialBlock ? [socialBlock] : []),
-    ...(writingBlock ? [writingBlock] : []),
-    ...(mediaBlock ? [mediaBlock] : []),
-    ...(githubBlock ? [githubBlock] : []),
-    ...(stackBlock ? [stackBlock] : []),
-    ...(hasLinktreeImport && linkCountMetricBlock ? [linkCountMetricBlock] : []),
-    ...secondaryCustoms,
-    ...(hasLinktreeImport
-      ? [
-          buildCustomBlock(
-            {
-              title: "Origen importado",
-              url: state.linktreeData?.sourceUrl || "",
-              platform: "website",
-              hostname: "linktree",
-              category: "other",
-            },
-            99
-          ),
-        ]
-      : []),
-    modeMetricBlock,
-  ].filter((block) => {
-    if (block.type === "custom" || block.type === "project" || block.type === "media") {
-      return !!block.link;
-    }
-    return true;
-  });
+  const secondaryProject = primaryProjects[1] || null;
+  const primaryProject = primaryProjects[0] || null;
+  const supportPool: Array<BlockData | null> = [
+    secondaryProject,
+    writingBlock,
+    mediaBlock,
+    secondaryCustoms[0] || null,
+    secondaryCustoms[1] || null,
+    stackBlock,
+  ];
+  const supportBlocks = supportPool.filter((block): block is BlockData => !!block);
+  const maxSupportBlocks = githubBlock ? 2 : 3;
 
-  const uniqueBlocks = orderedBlocks.filter(
+  const templateBlocks =
+    template === "minimal"
+      ? [heroBlock, githubBlock, socialBlock, primaryProject, ...supportBlocks.slice(0, maxSupportBlocks)]
+      : [heroBlock, primaryProject, socialBlock, githubBlock, ...supportBlocks.slice(0, maxSupportBlocks)];
+
+  const uniqueBlocks = templateBlocks
+    .filter(Boolean)
+    .filter((block): block is BlockData => !!block)
+    .filter((block) => {
+      if (block.type === "custom" || block.type === "project" || block.type === "media") {
+        return !!block.link;
+      }
+      if (block.type === "github") {
+        return !!block.username && hasMeaningfulGithubStats(block.stats);
+      }
+      if (block.type === "social") {
+        return block.links.length > 0;
+      }
+      return true;
+    })
+    .filter(
+      (block, index, all) =>
+        all.findIndex((candidate) => {
+          if ("link" in candidate && "link" in block) {
+            return candidate.type === block.type && candidate.link === block.link;
+          }
+          return candidate.id === block.id;
+        }) === index
+    );
+
+  const normalizedBlocks = uniqueBlocks.map((block) => normalizeBlockForTemplate(block, template));
+
+  return normalizedBlocks.map((block, order) => ({ ...block, order }));
+}
+
+function normalizeBlockForTemplate(
+  block: BlockData,
+  template: "dev_heavy" | "minimal"
+): BlockData {
+  if (block.type === "hero") {
+    return {
+      ...block,
+      col_span: 2,
+      row_span: 1,
+    };
+  }
+
+  if (block.type === "project") {
+    return {
+      ...block,
+      col_span: template === "dev_heavy" ? 2 : 1,
+      row_span: 1,
+    };
+  }
+
+  if (block.type === "github" || block.type === "social" || block.type === "writing" || block.type === "media" || block.type === "custom" || block.type === "stack") {
+    return {
+      ...block,
+      col_span: 1,
+      row_span: 1,
+    };
+  }
+
+  return block;
+}
+
+function sanitizeImportedLinks(links: ImportedLinktreeLink[]) {
+  return dedupeByUrl(
+    links.filter((link) => {
+      const hostname = link.hostname.replace(/^www\./, "").toLowerCase();
+      return hostname !== "linktr.ee" && hostname !== "linktree.com" && hostname !== "bio.site";
+    })
+  );
+}
+
+function dedupeByUrl<T extends { url: string }>(items: T[]) {
+  return items.filter(
     (block, index, all) =>
       all.findIndex((candidate) => {
-        if ("link" in candidate && "link" in block) {
-          return candidate.type === block.type && candidate.link === block.link;
-        }
-        return candidate.id === block.id;
+        return (
+          candidate.url.replace(/\/$/, "").toLowerCase() ===
+          block.url.replace(/\/$/, "").toLowerCase()
+        );
       }) === index
   );
-
-  const compactBlocks = uniqueBlocks.slice(0, hasLinktreeImport ? 8 : 5);
-
-  return compactBlocks.map((block, order) => ({ ...block, order }));
 }
 
 function buildProjectDescription(link: ImportedLinktreeLink) {
   if (link.category === "project") {
-    return `Entrada principal a ${link.hostname} desde tu board.`;
+    return `Proyecto destacado importado desde ${link.hostname}.`;
   }
 
   if (link.category === "media") {
     return `Contenido destacado publicado en ${link.hostname}.`;
   }
 
-  return `Abrí ${link.hostname} sin salir del contexto de tu board.`;
+  return `Acceso directo a ${link.hostname} desde tu board.`;
+}
+
+function resolveBoardTemplate(layout: OnboardingCompletionData["layout"]) {
+  return layout === "minimal" || layout === "creative" ? "minimal" : "dev_heavy";
+}
+
+function hasUsefulGitHubData(githubData: GitHubData | null | undefined) {
+  if (!githubData?.username) return false;
+
+  return (
+    githubData.publicRepos > 0 ||
+    githubData.followers > 0 ||
+    githubData.topLanguages.length > 0 ||
+    githubData.topRepos.length > 0
+  );
+}
+
+function hasMeaningfulGithubStats(
+  stats: Extract<BlockData, { type: "github" }>["stats"] | null | undefined
+) {
+  if (!stats) return false;
+
+  return (
+    stats.repos > 0 ||
+    stats.followers > 0 ||
+    stats.stars > 0 ||
+    (stats.topLanguages?.length || 0) > 0
+  );
 }
 
 function buildCustomDescription(link: ImportedLinktreeLink) {

@@ -30,7 +30,7 @@ export interface OnboardingState {
   githubConnected: boolean;
   githubData: GitHubData | null;
   linktreeData: LinktreeImportData | null;
-  // Step 3
+  // Internal layout seed, now chosen automatically
   layout: LayoutOption | null;
   // Step 4
   accentColor: AccentColor;
@@ -62,8 +62,8 @@ export const INITIAL_STATE: OnboardingState = {
 
 export const STEPS = [
   { id: "role", label: "Quién sos" },
+  { id: "linktree", label: "Links" },
   { id: "github", label: "GitHub" },
-  { id: "layout", label: "Layout" },
   { id: "accent", label: "Estilo" },
   { id: "username", label: "Username" },
 ] as const;

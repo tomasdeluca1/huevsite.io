@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Trophy, Settings, ArrowLeft, Copy, Check, Globe, Activity, 
   Compass, Save, LogOut, MessageSquare, Layout as LayoutIcon, 
-  Sparkles, ArrowUpRight, Lock, ChevronRight, User, PlusCircle
+  Sparkles, ArrowUpRight, Lock, ChevronRight, User, PlusCircle, Trash2
 } from "lucide-react";
 import Link from "next/link";
 import { ProfileData, BlockType } from "@/lib/profile-types";
@@ -27,6 +27,7 @@ interface SidebarProps {
   setIsCreateSubSiteOpen: (open: boolean) => void;
   setIsUpgradeModalOpen: (open: boolean) => void;
   setIsFeedbackOpen: (open: boolean) => void;
+  setIsDeleteAccountOpen: (open: boolean) => void;
   setTempProfileData: (data: any) => void;
   addBlock: (type: BlockType) => void;
   handleColorChange: (color: string, confirmed: boolean) => void;
@@ -52,6 +53,7 @@ export function DashboardSidebar({
   setIsCreateSubSiteOpen,
   setIsUpgradeModalOpen,
   setIsFeedbackOpen,
+  setIsDeleteAccountOpen,
   setTempProfileData,
   addBlock,
   handleColorChange,
@@ -338,6 +340,16 @@ export function DashboardSidebar({
                 <MessageSquare size={18} />
               </div>
               <span className="text-sm font-bold">Feedback</span>
+            </button>
+
+            <button
+              onClick={() => openModal(setIsDeleteAccountOpen)}
+              className="w-full flex items-center gap-3 p-3 rounded-2xl text-red-300/75 transition-all hover:bg-red-500/8 hover:text-red-200"
+            >
+              <div className="rounded-lg bg-red-500/10 p-2 text-red-400">
+                <Trash2 size={18} />
+              </div>
+              <span className="text-sm font-bold">Eliminar cuenta</span>
             </button>
           </div>
         </div>

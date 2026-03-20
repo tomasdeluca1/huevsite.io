@@ -50,6 +50,7 @@ import { TwitterWarning } from "@/components/dashboard/TwitterWarning";
 import { PriceBanner } from "@/components/marketing/PriceBanner";
 import { ReferralDashboard } from "@/components/dashboard/ReferralDashboard";
 import { GitHubData, OnboardingCompletionData, Role, LayoutOption } from "@/lib/onboarding-types";
+import { DeleteAccountModal } from "@/components/dashboard/DeleteAccountModal";
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -64,6 +65,8 @@ export default function DashboardPage() {
   const [isScoreInfoOpen, setIsScoreInfoOpen] = useState(false);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [isCreateSubSiteOpen, setIsCreateSubSiteOpen] = useState(false);
+  const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [tempProfileData, setTempProfileData] = useState({
     username: '',
     display_name: '',
@@ -158,6 +161,42 @@ export default function DashboardPage() {
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Error al copiar:', err);
+    }
+  };
+
+  const handleDeleteAccount = async (confirmation: string) => {
+    setIsDeletingAccount(true);
+
+    try {
+      const response = await fetch("/api/account", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ confirmation }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.error || "No se pudo eliminar la cuenta");
+      }
+
+      localStorage.removeItem("huevsite_autosave");
+      localStorage.removeItem("huevsite_onboarding_seen");
+      localStorage.removeItem("huevsite_explore_last_activity");
+      localStorage.removeItem("huevsite_explore_sort");
+      localStorage.removeItem("huevsite_explore_category");
+      localStorage.removeItem("huevsite_explore_search");
+      sessionStorage.removeItem("huevsite_explore_list");
+      sessionStorage.removeItem("huevsite_from_explore");
+
+      await supabase.auth.signOut();
+      window.location.href = "/?accountDeleted=1";
+    } catch (error: any) {
+      console.error("Error deleting account:", error);
+      alert(error.message || "No se pudo eliminar la cuenta");
+      setIsDeletingAccount(false);
     }
   };
 
@@ -954,10 +993,10 @@ export default function DashboardPage() {
         )}
       </AnimatePresence>
 
-      <DashboardSidebar
-        profile={profile}
-        selectedSubSiteId={selectedSubSiteId}
-        setSelectedSubSiteId={setSelectedSubSiteId}
+        <DashboardSidebar
+          profile={profile}
+          selectedSubSiteId={selectedSubSiteId}
+          setSelectedSubSiteId={setSelectedSubSiteId}
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
         isSaving={isSaving}
@@ -967,10 +1006,11 @@ export default function DashboardPage() {
         setIsProfileModalOpen={setIsProfileModalOpen}
         setIsScoreInfoOpen={setIsScoreInfoOpen}
         setIsCreateSubSiteOpen={setIsCreateSubSiteOpen}
-        setIsUpgradeModalOpen={setIsUpgradeModalOpen}
-        setIsFeedbackOpen={setIsFeedbackOpen}
-        setTempProfileData={setTempProfileData}
-        addBlock={addBlock}
+          setIsUpgradeModalOpen={setIsUpgradeModalOpen}
+          setIsFeedbackOpen={setIsFeedbackOpen}
+          setIsDeleteAccountOpen={setIsDeleteAccountOpen}
+          setTempProfileData={setTempProfileData}
+          addBlock={addBlock}
         handleColorChange={handleColorChange}
         toggleAutoSave={toggleAutoSave}
         autoSaveEnabled={autoSaveEnabled}
@@ -1336,6 +1376,17 @@ export default function DashboardPage() {
         accentColor={profile.accentColor}
         onAddSubSite={handleAddSubSite}
         username={profile.username}
+      />
+      <DeleteAccountModal
+        isOpen={isDeleteAccountOpen}
+        onClose={() => {
+          if (!isDeletingAccount) {
+            setIsDeleteAccountOpen(false);
+          }
+        }}
+        accentColor={profile.accentColor}
+        onConfirm={handleDeleteAccount}
+        isDeleting={isDeletingAccount}
       />
       {isUpgradeModalOpen && <UpgradeModal isOpen={isUpgradeModalOpen} onClose={() => setIsUpgradeModalOpen(false)} accentColor={profile.accentColor} />}
     </div>

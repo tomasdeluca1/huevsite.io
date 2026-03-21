@@ -78,7 +78,6 @@ export async function middleware(request: NextRequest) {
   // 3. Protecciones de la plataforma (Dashboard / Login / Welcome)
   // Estas solo aplican cuando estamos en el dominio principal o si la reescritura no ocurrió
   const isDashboard = url.pathname.startsWith('/dashboard')
-  const isWelcome = url.pathname.startsWith('/welcome')
   const isLogin = url.pathname.startsWith('/login')
 
   if (isDashboard && !user) {
@@ -89,23 +88,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  // Solo verificar perfil en rutas que requieren configuración (evitar query extra en landing pública)
-  if (user && (isDashboard || isWelcome)) {
-     const { data: profile } = await supabase
-       .from('profiles')
-       .select('username')
-       .eq('id', user.id)
-       .maybeSingle()
-     
-     if (!profile && !isWelcome) {
-       return NextResponse.redirect(new URL('/welcome', request.url))
-     }
-  }
-
   return response
 }
 
 export const config = {
   matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 }
-

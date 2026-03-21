@@ -26,7 +26,7 @@ export function LinktreeRefactorModal({
 
   const handleConfirm = async () => {
     if (!url.trim()) {
-      setError("Pegá una URL de Linktree para seguir.");
+      setError("Pegá una URL de Linktree o Bio Site para seguir.");
       return;
     }
 
@@ -57,10 +57,10 @@ export function LinktreeRefactorModal({
             <div className="mb-8 text-center">
               <div className="section-label mx-auto mb-2 w-fit">// refactor con linktree</div>
               <h3 className="text-2xl font-black tracking-tighter text-white">
-                Rehacer board desde Linktree
+                Rehacer board desde Linktree o Bio Site
               </h3>
               <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/55">
-                huevsite va a escanear tu perfil de Linktree y reconstruir el board principal
+                huevsite va a escanear tu perfil de Linktree o Bio Site y reconstruir el board principal
                 priorizando esa data para nombre, tagline y links destacados.
               </p>
             </div>
@@ -90,7 +90,7 @@ export function LinktreeRefactorModal({
             <div className="space-y-4">
               <label className="block space-y-2">
                 <span className="px-1 text-[10px] font-mono uppercase tracking-[0.2em] text-white/35">
-                  URL de Linktree
+                  URL de Linktree o Bio Site
                 </span>
                 <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/25 px-4 py-4 focus-within:border-[var(--accent)]">
                   <Link2 size={18} className="text-[var(--accent)]" />
@@ -98,7 +98,7 @@ export function LinktreeRefactorModal({
                     type="url"
                     value={url}
                     onChange={(event) => setUrl(event.target.value)}
-                    placeholder="https://linktr.ee/tuusuario"
+                    placeholder="https://linktr.ee/tuusuario o https://bio.site/tuusuario"
                     className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/25"
                   />
                 </div>

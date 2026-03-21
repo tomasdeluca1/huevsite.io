@@ -17,7 +17,11 @@ export const runtime = "nodejs";
 const LINKTREE_REFACTOR_COST = 1;
 
 function isAllowedLinktreeHost(hostname: string) {
-  return /(^|\.)linktr\.ee$/i.test(hostname) || /(^|\.)linktree\.com$/i.test(hostname);
+  return (
+    /(^|\.)linktr\.ee$/i.test(hostname) ||
+    /(^|\.)linktree\.com$/i.test(hostname) ||
+    /(^|\.)bio\.site$/i.test(hostname)
+  );
 }
 
 async function scrapeLinktree(url: string) {
@@ -105,6 +109,7 @@ async function scrapeLinktree(url: string) {
 
           const normalized = link.url.toLowerCase();
           if (normalized.includes("linktr.ee/") || normalized.includes("linktree.com/")) return false;
+          if (normalized.includes("bio.site/")) return false;
           if (normalized.includes("/signin") || normalized.includes("/login")) return false;
           if (normalized.includes("/privacy") || normalized.includes("/terms")) return false;
 
@@ -140,7 +145,7 @@ export async function POST(request: NextRequest) {
     const url = ensureAbsoluteUrl((rawUrl || "").trim());
 
     if (!url) {
-      return NextResponse.json({ error: "Falta la URL de Linktree." }, { status: 400 });
+      return NextResponse.json({ error: "Falta la URL de Linktree o Bio Site." }, { status: 400 });
     }
 
     let parsedUrl: URL;
@@ -152,7 +157,7 @@ export async function POST(request: NextRequest) {
 
     if (!isAllowedLinktreeHost(parsedUrl.hostname)) {
       return NextResponse.json(
-        { error: "Por ahora sólo soportamos links de Linktree." },
+        { error: "Por ahora sólo soportamos links de Linktree o Bio Site." },
         { status: 400 }
       );
     }
@@ -170,7 +175,7 @@ export async function POST(request: NextRequest) {
     const currentCredits = profile.ai_credits || 0;
     if (currentCredits < LINKTREE_REFACTOR_COST) {
       return NextResponse.json(
-        { error: "No te quedan créditos IA para refactorizar con Linktree." },
+        { error: "No te quedan créditos IA para refactorizar con Linktree o Bio Site." },
         { status: 403 }
       );
     }

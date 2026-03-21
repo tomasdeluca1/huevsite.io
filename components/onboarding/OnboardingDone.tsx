@@ -13,6 +13,8 @@ interface OnboardingDoneProps {
 export function OnboardingDone({ state }: OnboardingDoneProps) {
   const [copied, setCopied] = useState(false);
   const accent = state.accentColor;
+  const displayName = state.linktreeData?.displayName || state.githubData?.name || state.username || "builder";
+  const firstName = displayName.split(" ")[0] || "builder";
 
   const copyLink = () => {
     navigator.clipboard.writeText(`huevsite.io/${state.username}`);
@@ -43,13 +45,13 @@ export function OnboardingDone({ state }: OnboardingDoneProps) {
           className="w-24 h-24 rounded-[2rem] flex items-center justify-center text-black font-black text-4xl mb-8 shadow-2xl"
           style={{ background: accent, boxShadow: `0 0 50px ${accent}30` }}
         >
-          {state.githubData?.name?.[0] ?? "✓"}
+          {displayName[0]?.toUpperCase() ?? "✓"}
         </motion.div>
 
         <div className="mb-10">
           <div className="section-label mb-2" style={{ color: accent }}>// publicado ✓</div>
           <h1 className="ou-q !text-4xl tracking-tight">
-            ¡Salió andando, <span style={{ color: accent }}>{state.githubData?.name?.split(" ")[0] ?? "chabón"}</span>!
+            ¡Salió andando, <span style={{ color: accent }}>{firstName}</span>!
           </h1>
           <p className="ou-sub !text-base mt-2">
             Tu huevsite ya está live en la internet. Compartí tu laburo, que se note el esfuerzo.

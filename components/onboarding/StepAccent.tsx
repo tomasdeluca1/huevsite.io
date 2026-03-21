@@ -20,11 +20,12 @@ interface StepAccentProps {
 
 export function StepAccent({ state, onChange, onNext }: StepAccentProps) {
   const accent = state.accentColor;
+  const previewName = state.linktreeData?.displayName || state.githubData?.name || "Tu Nombre";
 
   return (
     <div className="onboard-ui !max-w-xl !p-10">
       <div className="mb-10">
-        <div className="section-label mb-2" style={{ color: accent }}>// paso 04</div>
+        <div className="section-label mb-2" style={{ color: accent }}>// paso 03</div>
         <h1 className="ou-q !text-4xl">
           Elegí tu <span style={{ color: accent }}>color de guerra</span>
         </h1>
@@ -41,10 +42,10 @@ export function StepAccent({ state, onChange, onNext }: StepAccentProps) {
             className="w-14 h-14 rounded-2xl flex items-center justify-center text-black font-black text-2xl shadow-lg transition-all duration-500"
             style={{ background: accent }}
           >
-            {state.githubData?.name?.[0] ?? "U"}
+            {previewName[0] ?? "U"}
           </div>
           <div>
-            <div className="text-xl font-bold">{state.githubData?.name ?? "Tu Nombre"}</div>
+            <div className="text-xl font-bold">{previewName}</div>
             <div className="font-mono text-sm tracking-tight" style={{ color: accent }}>
               // vibe: {COLORS.find((c) => c.value === accent)?.name}
             </div>

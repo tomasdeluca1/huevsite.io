@@ -1745,8 +1745,8 @@ nav {
 
 .linktree-cta-shell {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
-  gap: 28px;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  gap: 22px;
   align-items: stretch;
 }
 
@@ -1762,17 +1762,43 @@ nav {
 }
 
 .linktree-cta-copy {
-  padding: 36px;
+  padding: 30px;
 }
 
 .linktree-cta-copy .section-sub {
-  max-width: 560px;
+  max-width: 540px;
+}
+
+.linktree-cta-kicker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.linktree-cta-mini-badge {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(200, 255, 0, 0.16);
+  background: rgba(200, 255, 0, 0.08);
+  color: #efffc4;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
 }
 
 .linktree-cta-points {
   display: grid;
   gap: 14px;
-  margin-top: 34px;
+  margin-top: 24px;
+}
+
+.linktree-cta-points.compact {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .linktree-cta-point {
@@ -1786,6 +1812,12 @@ nav {
   background: rgba(255, 255, 255, 0.025);
 }
 
+.linktree-cta-points.compact .linktree-cta-point {
+  grid-template-columns: 1fr;
+  gap: 10px;
+  padding: 12px;
+}
+
 .linktree-cta-point-icon {
   display: flex;
   align-items: center;
@@ -1797,6 +1829,12 @@ nav {
   color: var(--accent);
 }
 
+.linktree-cta-points.compact .linktree-cta-point-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+}
+
 .linktree-cta-point-title {
   font-size: 15px;
   font-weight: 800;
@@ -1804,11 +1842,20 @@ nav {
   color: var(--text);
 }
 
+.linktree-cta-points.compact .linktree-cta-point-title {
+  font-size: 13px;
+}
+
 .linktree-cta-point-copy {
   margin-top: 4px;
   font-size: 13px;
   line-height: 1.6;
   color: var(--text-dim);
+}
+
+.linktree-cta-points.compact .linktree-cta-point-copy {
+  font-size: 11px;
+  line-height: 1.45;
 }
 
 .linktree-cta-actions {
@@ -1826,18 +1873,18 @@ nav {
 }
 
 .linktree-cta-card {
-  padding: 28px;
+  padding: 24px;
   background:
     radial-gradient(circle at 85% 10%, rgba(200, 255, 0, 0.14), transparent 26%),
     linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
 }
 
-.linktree-cta-card-top {
+.linktree-cta-card-flow {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: 14px;
-  margin-bottom: 24px;
+  gap: 12px;
+  margin: 18px 0;
 }
 
 .linktree-cta-card-label {
@@ -1848,16 +1895,38 @@ nav {
   color: var(--text-muted);
 }
 
-.linktree-cta-card-title {
-  margin-top: 4px;
-  font-size: 24px;
+.linktree-cta-card-node {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.linktree-cta-card-node.accent {
+  border-color: rgba(200, 255, 0, 0.2);
+  background: rgba(200, 255, 0, 0.08);
+}
+
+.linktree-cta-card-node-title {
+  font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.04em;
   color: var(--text);
 }
 
-.linktree-cta-card-title.accent {
+.linktree-cta-card-node.accent .linktree-cta-card-node-title {
   color: var(--accent);
+}
+
+.linktree-cta-card-node-sub {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-muted);
 }
 
 .linktree-cta-card-arrow {
@@ -1872,28 +1941,33 @@ nav {
   background: rgba(200, 255, 0, 0.08);
 }
 
+.linktree-cta-card-arrow.compact {
+  width: 36px;
+  height: 36px;
+}
+
 .linktree-cta-compare {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
 }
 
-.linktree-cta-compare-col {
-  display: grid;
-  gap: 10px;
+.linktree-cta-compare.compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .linktree-cta-compare-chip {
-  padding: 14px 16px;
-  border-radius: 18px;
+  padding: 11px 12px;
+  border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.06);
   background: rgba(0, 0, 0, 0.22);
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 12px;
+  line-height: 1.4;
   color: var(--text-dim);
 }
 
-.linktree-cta-compare-col.accent .linktree-cta-compare-chip {
+.linktree-cta-compare.compact .linktree-cta-compare-chip:nth-child(even) {
   border-color: rgba(200, 255, 0, 0.22);
   background: rgba(200, 255, 0, 0.08);
   color: #efffc4;
@@ -2148,6 +2222,15 @@ footer {
   .linktree-cta-card {
     padding: 24px;
     border-radius: 28px;
+  }
+
+  .linktree-cta-kicker {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .linktree-cta-points.compact {
+    grid-template-columns: 1fr;
   }
 
   .linktree-cta-actions {

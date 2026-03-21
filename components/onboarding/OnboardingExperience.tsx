@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { type LinktreeImportData } from "@/lib/linktree-import";
+import { createClient } from "@/lib/supabase/client";
 import {
   STEPS,
   type AccentColor,
@@ -52,6 +53,7 @@ export function OnboardingExperience({
   const [done, setDone] = useState(false);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasGitHubIdentity, setHasGitHubIdentity] = useState(false);
   const [state, setState] = useState<OnboardingState>(() =>
     buildInitialOnboardingState({
       username: initialState?.username,
@@ -81,6 +83,31 @@ export function OnboardingExperience({
       };
     });
   }, [initialState?.username]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const resolveAuthProviders = async () => {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        const identities = Array.isArray(user?.identities) ? user.identities : [];
+        const githubIdentityFound = identities.some((identity: any) => identity?.provider === "github");
+
+        if (!cancelled) {
+          setHasGitHubIdentity(githubIdentityFound);
+        }
+      } catch (providerError) {
+        console.error("Error checking auth providers for onboarding:", providerError);
+      }
+    };
+
+    resolveAuthProviders();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const next = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
 
@@ -184,6 +211,7 @@ export function OnboardingExperience({
       {step === 2 && (
         <StepGitHub
           state={state}
+          hasGitHubIdentity={hasGitHubIdentity}
           onConnect={(data: GitHubData) =>
             update({ githubConnected: true, githubData: data })
           }

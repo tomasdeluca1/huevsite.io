@@ -99,6 +99,7 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
   const normalizedClaim = claimInput.trim().toLowerCase();
   const claimPath = normalizedClaim ? `/onboarding?claim=${encodeURIComponent(normalizedClaim)}` : "/onboarding";
   const claimHref = user ? claimPath : `/login?next=${encodeURIComponent(claimPath)}`;
+  const linktreeMigrationHref = user ? "/dashboard" : `/login?next=${encodeURIComponent("/onboarding")}`;
 
   const trackLandingEvent = (eventName: string, payload: Record<string, any>) => {
     if (typeof window === "undefined") return;
@@ -530,6 +531,102 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
             </div>
             <button className="ou-next">Seguir →</button>
             <div className="ou-skip">también podés conectar GitHub directamente</div>
+          </div>
+        </div>
+      </section>
+
+      <section className="linktree-cta-section">
+        <div className="linktree-cta-shell">
+          <div className="linktree-cta-copy">
+            <div className="section-label">// migrá desde linktree</div>
+            <h2 className="section-title">
+              Si ya usás <span style={{ color: "var(--accent)" }}>Linktree</span>, venite con todo a huevsite.
+            </h2>
+            <p className="section-sub">
+              No arranques de cero. Importamos tus links visibles, tu bio y tu avatar para convertir ese hub
+              estático en un perfil que muestra lo que construís.
+            </p>
+
+            <div className="linktree-cta-points">
+              {[
+                {
+                  icon: Link2,
+                  title: "Traé tus links sin copiarlos uno por uno",
+                  copy: "Pegás la URL y usamos lo que ya tenés publicado para armar una base útil.",
+                },
+                {
+                  icon: Globe,
+                  title: "Pasá de lista de links a perfil con contexto",
+                  copy: "Sumás identidad, proyectos, señal y una URL más tuya para compartir.",
+                },
+                {
+                  icon: BarChart3,
+                  title: "Dejá espacio para crecer",
+                  copy: "Después podés sumar GitHub, sub-sites, métricas y todo lo que Linktree no cuenta de vos.",
+                },
+              ].map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div key={item.title} className="linktree-cta-point">
+                    <div className="linktree-cta-point-icon">
+                      <Icon size={18} />
+                    </div>
+                    <div>
+                      <div className="linktree-cta-point-title">{item.title}</div>
+                      <p className="linktree-cta-point-copy">{item.copy}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="linktree-cta-actions">
+              <Link
+                href={linktreeMigrationHref}
+                className="btn btn-accent !px-8 !py-4 text-base"
+                onClick={() => trackLandingEvent("landing_linktree_cta_click", {
+                  variant: heroVariant,
+                  href: linktreeMigrationHref,
+                  loggedIn: Boolean(user),
+                })}
+              >
+                {user ? "Traer mi Linktree al dashboard" : "Traer mi Linktree a huevsite"}
+              </Link>
+              <span className="linktree-cta-footnote">Importás en minutos y después afinás el perfil a tu manera.</span>
+            </div>
+          </div>
+
+          <div className="linktree-cta-card">
+            <div className="linktree-cta-card-top">
+              <div>
+                <div className="linktree-cta-card-label">Antes</div>
+                <div className="linktree-cta-card-title">Linktree</div>
+              </div>
+              <div className="linktree-cta-card-arrow">
+                <ArrowRight size={18} />
+              </div>
+              <div>
+                <div className="linktree-cta-card-label">Después</div>
+                <div className="linktree-cta-card-title accent">huevsite</div>
+              </div>
+            </div>
+
+            <div className="linktree-cta-compare">
+              <div className="linktree-cta-compare-col">
+                <div className="linktree-cta-compare-chip">links sueltos</div>
+                <div className="linktree-cta-compare-chip">misma estructura que todos</div>
+                <div className="linktree-cta-compare-chip">poco contexto</div>
+              </div>
+              <div className="linktree-cta-compare-col accent">
+                <div className="linktree-cta-compare-chip">perfil con identidad</div>
+                <div className="linktree-cta-compare-chip">proyectos y señal real</div>
+                <div className="linktree-cta-compare-chip">más razones para quedarse</div>
+              </div>
+            </div>
+
+            <div className="linktree-cta-card-note">
+              Importamos lo visible para darte un punto de partida sólido. El resto lo terminás de hacer tuyo dentro de huevsite.
+            </div>
           </div>
         </div>
       </section>

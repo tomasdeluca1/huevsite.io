@@ -6,11 +6,12 @@ import { type OnboardingState, type GitHubData } from "@/lib/onboarding-types";
 
 interface StepGitHubProps {
   state: OnboardingState;
+  hasGitHubIdentity?: boolean;
   onConnect: (data: GitHubData) => void;
   onNext: () => void;
 }
 
-export function StepGitHub({ state, onConnect, onNext }: StepGitHubProps) {
+export function StepGitHub({ state, hasGitHubIdentity = false, onConnect, onNext }: StepGitHubProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -94,13 +95,20 @@ export function StepGitHub({ state, onConnect, onNext }: StepGitHubProps) {
     );
   }
 
+  const title = hasGitHubIdentity ? "Traé tu GitHub" : "¿Querés sumar GitHub?";
+  const description = hasGitHubIdentity
+    ? "Como entraste con GitHub, podemos traer repos, followers y lenguajes para que el board nazca con señal técnica real."
+    : "Si tenés GitHub, podés conectarlo ahora para sumar repos, followers y lenguajes. Si no, seguí y lo hacés más tarde.";
+  const buttonLabel = hasGitHubIdentity ? "Traer mi GitHub" : "Conectar GitHub ahora";
+  const helperLabel = hasGitHubIdentity ? "Lo usamos para completar tu perfil técnico." : "Opcional, pero útil si querés mostrar señal técnica.";
+
   return (
     <div className="onboard-ui !max-w-xl !p-10">
       <div className="mb-10">
         <div className="section-label mb-2">// paso 03</div>
-        <h1 className="ou-q !text-4xl">Conectá GitHub</h1>
+        <h1 className="ou-q !text-4xl">{title}</h1>
         <p className="ou-sub !text-base">
-          Traemos repos, followers y lenguajes para que el board nazca con señal técnica real.
+          {description}
         </p>
       </div>
 
@@ -111,7 +119,7 @@ export function StepGitHub({ state, onConnect, onNext }: StepGitHubProps) {
           className="w-full flex items-center justify-center gap-4 py-5 rounded-2xl bg-white text-black font-bold text-lg hover:bg-[var(--accent)] transition-all shadow-xl disabled:opacity-60"
         >
           {loading ? <Loader2 size={22} className="animate-spin" /> : <Github size={22} />}
-          {loading ? "Trayendo data..." : "Traer mi GitHub"}
+          {loading ? "Trayendo data..." : buttonLabel}
         </button>
 
         {error && (
@@ -136,6 +144,10 @@ export function StepGitHub({ state, onConnect, onNext }: StepGitHubProps) {
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 text-xs text-[var(--text-muted)]">
+          {helperLabel}
         </div>
 
         <button onClick={onNext} className="ou-skip !mt-8 block w-full">

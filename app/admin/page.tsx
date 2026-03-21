@@ -35,6 +35,16 @@ interface Feedback {
   created_at: string;
 }
 
+interface AdminAccountLookup {
+  id: string;
+  username: string;
+  name: string | null;
+  image: string | null;
+  customDomain: string | null;
+  email: string | null;
+  createdAt: string | null;
+}
+
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
   const [checking, setChecking] = useState(true);
@@ -47,6 +57,11 @@ export default function AdminPage() {
   const [postingLeaderboard, setPostingLeaderboard] = useState(false);
   const [postingNonProLeaderboard, setPostingNonProLeaderboard] = useState(false);
   const [postingWeeklyReport, setPostingWeeklyReport] = useState(false);
+  const [deleteUsername, setDeleteUsername] = useState("");
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [accountLookup, setAccountLookup] = useState<AdminAccountLookup | null>(null);
+  const [lookingUpAccount, setLookingUpAccount] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
   
   // Preview states
   const [previewText, setPreviewText] = useState<string | null>(null);
@@ -223,6 +238,75 @@ export default function AdminPage() {
       setFeedbackMsg({ type: "err", msg: "Error de conexión" });
     } finally {
       setIsConfirming(false);
+    }
+  };
+
+  const normalizedDeleteUsername = deleteUsername.trim().replace(/^@+/, "").toLowerCase();
+  const expectedDeleteConfirmation = normalizedDeleteUsername ? `Eliminar @${normalizedDeleteUsername}` : "";
+
+  const handleLookupAccount = async () => {
+    if (!normalizedDeleteUsername) {
+      setFeedbackMsg({ type: "err", msg: "Escribí un @username para buscar la cuenta." });
+      setAccountLookup(null);
+      return;
+    }
+
+    setLookingUpAccount(true);
+    setDeleteConfirmation("");
+    try {
+      const res = await fetch(`/api/admin/users/delete?username=${encodeURIComponent(normalizedDeleteUsername)}`);
+      const json = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setAccountLookup(null);
+        throw new Error(json.error || "No se pudo buscar la cuenta.");
+      }
+
+      setAccountLookup(json.user);
+      setFeedbackMsg(null);
+    } catch (error: any) {
+      setAccountLookup(null);
+      setFeedbackMsg({ type: "err", msg: error.message || "No se pudo buscar la cuenta." });
+    } finally {
+      setLookingUpAccount(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!accountLookup) return;
+
+    setDeletingAccount(true);
+    try {
+      const res = await fetch("/api/admin/users/delete", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: accountLookup.username,
+          confirmation: deleteConfirmation,
+        }),
+      });
+
+      const json = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(json.error || "No se pudo eliminar la cuenta.");
+      }
+
+      setFeedbackMsg({
+        type: "ok",
+        msg: `Cuenta @${accountLookup.username} eliminada correctamente.`,
+      });
+      setDeleteUsername("");
+      setDeleteConfirmation("");
+      setAccountLookup(null);
+      await fetchData();
+      await fetchFeedbacks();
+    } catch (error: any) {
+      setFeedbackMsg({ type: "err", msg: error.message || "No se pudo eliminar la cuenta." });
+    } finally {
+      setDeletingAccount(false);
     }
   };
 
@@ -408,6 +492,114 @@ export default function AdminPage() {
               {postingWeeklyReport ? <Loader2 size={12} className="animate-spin" /> : <Share2 size={12} />}
               Publicar Reporte
             </button>
+          </div>
+
+          <div className="rounded-[1.75rem] border border-red-500/20 bg-red-500/5 p-6">
+            <div className="mb-5 flex items-start gap-4">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-red-500/10 text-red-400">
+                <Trash2 size={20} />
+              </div>
+              <div>
+                <div className="section-label !mb-2 !text-red-400">// zona de peligro</div>
+                <h2 className="text-xl font-black tracking-tight text-white">Borrar una cuenta</h2>
+                <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/60">
+                  Buscá un usuario por username, verificá que sea la cuenta correcta y confirmá manualmente antes de eliminarla.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3 md:flex-row">
+              <input
+                value={deleteUsername}
+                onChange={(event) => {
+                  setDeleteUsername(event.target.value);
+                  setAccountLookup(null);
+                  setDeleteConfirmation("");
+                }}
+                placeholder="@username"
+                autoComplete="off"
+                spellCheck={false}
+                className="flex-1 rounded-2xl border border-white/10 bg-black/30 px-4 py-4 text-sm text-white outline-none transition-colors placeholder:text-white/25 focus:border-red-400/50"
+              />
+              <button
+                onClick={handleLookupAccount}
+                disabled={lookingUpAccount}
+                className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-sm font-bold text-white transition-all hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {lookingUpAccount ? <Loader2 size={16} className="animate-spin" /> : "Buscar cuenta"}
+              </button>
+            </div>
+
+            {accountLookup && (
+              <div className="mt-5 space-y-5 rounded-[1.5rem] border border-red-500/15 bg-black/25 p-5">
+                <div className="flex items-center gap-4">
+                  {accountLookup.image ? (
+                    <img
+                      src={accountLookup.image}
+                      alt={accountLookup.username}
+                      className="h-14 w-14 rounded-2xl object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-red-500/10 text-lg font-black text-red-300">
+                      {(accountLookup.name ?? accountLookup.username)[0]?.toUpperCase()}
+                    </div>
+                  )}
+
+                  <div className="min-w-0 flex-1">
+                    <div className="text-lg font-black text-white">
+                      {accountLookup.name || `@${accountLookup.username}`}
+                    </div>
+                    <div className="truncate text-sm font-mono text-white/45">@{accountLookup.username}</div>
+                    {accountLookup.email && (
+                      <div className="truncate text-xs text-white/40">{accountLookup.email}</div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-3">
+                  <div className="rounded-2xl border border-white/5 bg-white/5 p-4">
+                    <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-white/35">User ID</div>
+                    <div className="mt-2 break-all text-xs text-white/70">{accountLookup.id}</div>
+                  </div>
+                  <div className="rounded-2xl border border-white/5 bg-white/5 p-4">
+                    <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-white/35">Custom domain</div>
+                    <div className="mt-2 text-xs text-white/70">{accountLookup.customDomain || "Sin dominio"}</div>
+                  </div>
+                  <div className="rounded-2xl border border-white/5 bg-white/5 p-4">
+                    <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-white/35">Creada</div>
+                    <div className="mt-2 text-xs text-white/70">
+                      {accountLookup.createdAt ? new Date(accountLookup.createdAt).toLocaleString() : "Sin dato"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-[1.25rem] border border-amber-500/15 bg-amber-500/10 p-4 text-sm leading-relaxed text-amber-100/80">
+                  Esta acción elimina acceso, perfil, bloques, sub-sites y assets. Para seguir, escribí exactamente:
+                  <div className="mt-3 rounded-xl bg-black/25 px-3 py-2 font-mono text-xs text-white">
+                    {expectedDeleteConfirmation}
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3 md:flex-row">
+                  <input
+                    value={deleteConfirmation}
+                    onChange={(event) => setDeleteConfirmation(event.target.value)}
+                    placeholder={expectedDeleteConfirmation}
+                    autoComplete="off"
+                    spellCheck={false}
+                    className="flex-1 rounded-2xl border border-white/10 bg-black/30 px-4 py-4 text-sm text-white outline-none transition-colors placeholder:text-white/20 focus:border-red-400/50"
+                  />
+                  <button
+                    onClick={handleDeleteUser}
+                    disabled={deletingAccount || deleteConfirmation !== expectedDeleteConfirmation}
+                    className="flex items-center justify-center gap-2 rounded-2xl bg-red-500 px-5 py-4 text-sm font-black text-white transition-all hover:bg-red-400 disabled:cursor-not-allowed disabled:bg-red-500/30 disabled:text-white/40"
+                  >
+                    {deletingAccount ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                    {deletingAccount ? "Eliminando..." : "Eliminar cuenta"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Winner(s) actual(es) */}

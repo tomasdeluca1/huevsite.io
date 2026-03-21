@@ -6,6 +6,7 @@ import {
   type ImportedLinktreeLink,
   normalizeImportedLink,
 } from "@/lib/linktree-import";
+import { launchChromiumBrowser } from "@/lib/server/playwright";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -54,10 +55,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const playwright = await import("playwright");
-    browser = await playwright.chromium.launch({
-      headless: true,
-    });
+    browser = await launchChromiumBrowser();
 
     const page = await browser.newPage({
       viewport: { width: 1440, height: 1800 },

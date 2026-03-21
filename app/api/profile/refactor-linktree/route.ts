@@ -8,6 +8,7 @@ import {
   normalizeImportedLink,
 } from "@/lib/linktree-import";
 import { scoreService } from "@/lib/score-service";
+import { launchChromiumBrowser } from "@/lib/server/playwright";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -20,8 +21,7 @@ function isAllowedLinktreeHost(hostname: string) {
 }
 
 async function scrapeLinktree(url: string) {
-  const playwright = await import("playwright");
-  const browser = await playwright.chromium.launch({ headless: true });
+  const browser = await launchChromiumBrowser();
 
   try {
     const page = await browser.newPage({

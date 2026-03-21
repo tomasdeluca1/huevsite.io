@@ -185,7 +185,7 @@ function LoginContent() {
           <div className="mt-10 flex items-start gap-3 p-4 bg-white/[0.02] rounded-2xl border border-[var(--border-bright)]">
             <Info size={18} className="text-[var(--accent)] shrink-0 mt-0.5" />
             <p className="text-[11px] text-[var(--text-dim)] leading-relaxed">
-              <strong>Importante:</strong> Ingresá con el mismo mail que usás en GitHub para sincronizar tus proyectos automáticamente.
+              <strong>Tip:</strong> Si entrás con GitHub, después podemos traer tu perfil técnico más fácil. Si entrás por magic link, también podés sumar GitHub más adelante.
             </p>
           </div>
         </motion.div>

@@ -72,7 +72,7 @@ export function StepUsername({ state, onChange, onFinish, creating = false, erro
   return (
     <div className="onboard-ui !max-w-xl !p-10">
       <div className="mb-10">
-        <div className="section-label mb-2" style={{ color: accent }}>// paso 05 — el final</div>
+        <div className="section-label mb-2" style={{ color: accent }}>// paso 04 — el final</div>
         <h1 className="ou-q !text-4xl">Elegí tu username</h1>
         <p className="ou-sub !text-base">Tu huevsite vivirá en esta URL por los siglos de los siglos.</p>
       </div>

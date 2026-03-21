@@ -32,9 +32,9 @@ export interface OnboardingState {
   linktreeData: LinktreeImportData | null;
   // Internal layout seed, now chosen automatically
   layout: LayoutOption | null;
-  // Step 4
+  // Step 3
   accentColor: AccentColor;
-  // Step 5
+  // Step 4
   username: string;
   usernameAvailable: boolean | null;
 }
@@ -63,7 +63,6 @@ export const INITIAL_STATE: OnboardingState = {
 export const STEPS = [
   { id: "role", label: "Quién sos" },
   { id: "linktree", label: "Links" },
-  { id: "github", label: "GitHub" },
   { id: "accent", label: "Estilo" },
   { id: "username", label: "Username" },
 ] as const;

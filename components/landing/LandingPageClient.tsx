@@ -7,13 +7,13 @@ import { WinnerSection } from "@/components/landing/WinnerSection";
 import { supabase } from "@/lib/supabase";
 import { lemonCheckoutUrl } from "@/lib/lemon-checkout-url";
 import { User } from "@supabase/supabase-js";
-import { Activity, Compass, Users, PlusCircle, Layout, Check, BookOpen, Globe, Link2, BarChart3, TrendingUp, Loader2, ArrowRight, Sparkles } from "lucide-react";
+import { Activity, Compass, Users, PlusCircle, Layout, Check, BookOpen, Globe, Link2, BarChart3, TrendingUp, Loader2, ArrowRight, Sparkles, Zap, Star, LayoutGrid, Eye } from "lucide-react";
 
 interface LandingPageClientProps {
   showcaseData: any;
 }
 
-type HeroVariant = "claim" | "social";
+type HeroVariant = "claim" | "social" | "product";
 
 declare global {
   interface Window {
@@ -43,7 +43,7 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
           internet.
         </>
       ),
-      description: "Probá tu username, confirmá si está libre y entrá al flujo con una acción concreta. Menos rebote, más intención real.",
+      description: "Tu URL única, lista en 3 minutos. Probá si tu username está libre ahora mismo — sin crear cuenta todavía.",
       primaryHref: "/explore",
       primaryLabel: "Ver cómo se ve uno bueno",
       secondaryHref: "/explore",
@@ -58,11 +58,26 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
           construyendo ahora.
         </>
       ),
-      description: "Perfil público, lanzamientos, score, sub-sites y señales de vida en una sola URL que invita a seguir mirando.",
+      description: "No es un CV ni un bio link. Es tu espacio como builder — con proyectos reales, código en vivo y actividad genuina.",
       primaryHref: "/feed",
       primaryLabel: "Entrar por el feed",
       secondaryHref: user ? "/dashboard" : "/login",
       secondaryLabel: user ? "Ir a mi dashboard" : "Crear el mío",
+    },
+    product: {
+      eyebrow: "Así luce tu perfil en producción",
+      title: (
+        <>
+          Tu perfil. <span className="accent">Vivo</span>. <br className="hidden md:block" />
+          Listo para <br className="hidden md:block" />
+          compartir.
+        </>
+      ),
+      description: "Un bento grid con tus proyectos, GitHub y stack. Una URL que dice más que cualquier CV en dos líneas.",
+      primaryHref: "/explore",
+      primaryLabel: "Ver perfiles reales →",
+      secondaryHref: user ? "/dashboard" : "/login",
+      secondaryLabel: user ? "Ir a mi dashboard" : "Crear el mío gratis",
     },
   } satisfies Record<HeroVariant, {
     eyebrow: string;
@@ -141,13 +156,14 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
         window.location.href = `/auth/callback?code=${code}`;
       }
 
-      const storedVariant = window.localStorage.getItem("hs_lp_hero_variant_v2") as HeroVariant | null;
-      if (storedVariant === "claim" || storedVariant === "social") {
+      const storedVariant = window.localStorage.getItem("hs_lp_hero_variant_v3") as HeroVariant | null;
+      if (storedVariant === "claim" || storedVariant === "social" || storedVariant === "product") {
         setHeroVariant(storedVariant);
         trackLandingEvent("landing_hero_variant_seen", { variant: storedVariant });
       } else {
-        const assignedVariant: HeroVariant = Math.random() > 0.5 ? "claim" : "social";
-        window.localStorage.setItem("hs_lp_hero_variant_v2", assignedVariant);
+        const r = Math.random();
+        const assignedVariant: HeroVariant = r < 0.33 ? "claim" : r < 0.66 ? "social" : "product";
+        window.localStorage.setItem("hs_lp_hero_variant_v3", assignedVariant);
         setHeroVariant(assignedVariant);
         trackLandingEvent("landing_hero_variant_seen", { variant: assignedVariant });
       }
@@ -305,7 +321,7 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
 
       {/* HERO */}
       <section className="hero">
-        <div className={`hero-shell ${user ? "hero-shell--solo" : "hero-shell--with-claim"}`}>
+        <div className={`hero-shell ${(user && heroVariant !== "product") ? "hero-shell--solo" : "hero-shell--with-claim"}`}>
           <div className="hero-copy">
             <div className="badge">
               <span className="dot"></span>
@@ -348,7 +364,58 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
             </div>
           </div>
 
-          {!user && (
+          {heroVariant === "product" && (
+            <div className="hero-product-preview">
+              <div className="hpp-badge">
+                <Eye size={12} />
+                Vista previa real
+              </div>
+              <div className="hpp-card">
+                <div className="hpp-header">
+                  <div className="hpp-avatar">B</div>
+                  <div className="hpp-info">
+                    <div className="hpp-name">Builder Name</div>
+                    <div className="hpp-role">Developer · Indie Hacker</div>
+                  </div>
+                  <div className="hpp-score">847 pts</div>
+                </div>
+                <div className="hpp-tagline">"Construyendo cosas que no existían ayer."</div>
+                <div className="hpp-grid">
+                  <div className="hpp-block hpp-block--span2">
+                    <div className="hpp-block-label">Building now</div>
+                    <div className="hpp-block-title">SaaS en progreso</div>
+                    <div className="hpp-block-tech">Next.js · Supabase · TypeScript</div>
+                  </div>
+                  <div className="hpp-block hpp-block--accent">
+                    <div className="hpp-block-label">Score</div>
+                    <div className="hpp-block-num">847</div>
+                  </div>
+                  <div className="hpp-block">
+                    <div className="hpp-block-label">Stack</div>
+                    <div className="hpp-stack-tags">
+                      <span>React</span><span>Node</span><span>Figma</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="hpp-url">
+                  <span className="hpp-url-prefix">huevsite.io/</span>
+                  <span style={{ color: 'var(--accent)', fontWeight: 700 }}>tu_username</span>
+                </div>
+              </div>
+              <div className="hpp-metrics">
+                <div className="hpp-metric">
+                  <strong>~3 min</strong>
+                  <span>para publicar</span>
+                </div>
+                <div className="hpp-metric">
+                  <strong>gratis</strong>
+                  <span>para empezar</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!user && heroVariant !== "product" && (
             <div className={`hero-claim-panel hero-claim-panel--${claimStatus}`}>
               <div className="hero-claim-orb" aria-hidden="true" />
               <div className="hero-claim-eyebrow">
@@ -630,108 +697,6 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
         </div>
       </section>
 
-      {/* DESIGN TOKENS SECTION */}
-      <section className="tokens-section">
-        <div className="section-label">// sistema de diseño</div>
-        <h2 className="section-title">Tokens de diseño</h2>
-        <p className="section-sub">Una identidad visual moderna y directa, para destacar tu trabajo.</p>
-
-        <div className="tokens-grid">
-          <div className="token-card">
-            <h3>Paleta de colores</h3>
-            <div className="color-swatches">
-              {[
-                { n: "Acid Green — Accent", v: "#C8FF00", c: "#C8FF00" },
-                { n: "Void — Background", v: "#080808", c: "#080808" },
-                { n: "Surface", v: "#111111", c: "#111111" },
-                { n: "Electric Blue", v: "#4D9FFF", c: "#4D9FFF" },
-                { n: "Crypto Purple", v: "#A855F7", c: "#A855F7" },
-                { n: "Productividad Orange", v: "#FF7A00", c: "#FF7A00" }
-              ].map((s, i) => (
-                <div key={i} className="swatch">
-                  <div className="swatch-color" style={{ background: s.c, border: s.c === '#C8FF00' ? '1px solid #555' : 'none' }}></div>
-                  <div className="swatch-info">
-                    <div className="swatch-name">{s.n}</div>
-                    <div className="swatch-val">{s.v}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="token-card">
-            <h3>Tipografía</h3>
-            <div className="type-sample">
-              <div className="ts-item">
-                <div className="ts-label">Display — Bricolage Grotesque</div>
-                <div style={{ fontSize: '28px', fontWeight: 800, letterSpacing: '-1px', lineHeight: 1 }}>Crear, luego existir.</div>
-              </div>
-              <div className="ts-item">
-                <div className="ts-label">Body — Bricolage Grotesque 400</div>
-                <div style={{ fontSize: '14px', lineHeight: 1.6, color: 'var(--text-dim)' }}>Una identidad visual pensada para la comunidad de LATAM.</div>
-              </div>
-              <div className="ts-item">
-                <div className="ts-label">Mono — JetBrains Mono</div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--accent)' }}>// huevsite.io/tunombre</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="token-card">
-            <h3>Radios & Espaciado</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
-              {[
-                { r: '8px', n: 'sm', d: 'pills, inputs, stacks' },
-                { r: '14px', n: 'md', d: 'bloques, cards' },
-                { r: '28px', n: 'xl', d: 'containers, modales' }
-              ].map((rad, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '40px', height: '40px', background: 'var(--accent-dim)', border: '1px solid var(--accent)', borderRadius: rad.r, flexShrink: 0 }}></div>
-                  <div>
-                    <div style={{ fontSize: '13px', fontWeight: 600 }}>{rad.n} — {rad.r}</div>
-                    <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>{rad.d}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Grid — 8pt base</div>
-            <div style={{ display: 'flex', gap: '4px' }}>
-              {[2, 4, 6, 8, 10].map((v, i) => (
-                <div key={i} style={{ height: '4px', background: 'var(--accent)', borderRadius: '2px', flex: i + 1, opacity: (i + 1) * 0.2 }}></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* MICROCOPY SECTION */}
-      <section className="microcopy-section">
-        <div className="microcopy-inner">
-          <div className="section-label">// microcopy</div>
-          <h2 className="section-title">Tono de voz</h2>
-          <p className="section-sub">Español de LATAM. Claro, directo y cercano.</p>
-
-          <div className="microcopy-grid">
-            {[
-              { c: "Empty state — Proyectos", t: "Aún no hay proyectos cargados.", s: "Agregá tu primer proyecto para empezar a mostrar tu trabajo.", a: "+ Agregar proyecto" },
-              { c: "Empty state — GitHub", t: "¿Qué estás construyendo?", s: "Conectá tu GitHub para mostrar tus repositorios más recientes.", a: "Conectar →" },
-              { c: "Onboarding — Step 2", t: "¿Cuál es tu stack?", s: "Elegí las tecnologías que mejor manejás para destacarlas en tu perfil." },
-              { c: "Onboarding — Bienvenida", t: "Hola. Vamos a armar tu perfil ideal.", s: "En pocos pasos vas a tener listo tu espacio para mostrar tus creaciones." },
-              { c: "CTA — Perfil público", t: "Mostrá de qué sos capaz.", s: "Tu experiencia y tus proyectos, todo en un solo lugar fácil de compartir." },
-              { c: "Error — GitHub desconectado", t: "No pudimos conectar con GitHub.", s: "Revisá permisos o agregá manualmente tus repositorios.", a: "Reintentar" }
-            ].map((m, i) => (
-              <div key={i} className="mc-card">
-                <div className="mc-context">{m.c}</div>
-                <div className="mc-text">{m.t}</div>
-                <div className="mc-sub">
-                  {m.s} {m.a && <span className="mc-accent">{m.a}</span>}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* PRO FEATURES PROMO */}
       <section className="pro-promo-section" style={{ padding: '100px 40px', background: 'linear-gradient(180deg, transparent 0%, rgba(200,255,0,0.03) 100%)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
@@ -739,21 +704,26 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
           <h2 className="section-title">Llevá tu marca al <span style={{ color: 'var(--accent)' }}>próximo nivel.</span></h2>
           <p className="section-sub" style={{ marginBottom: '60px' }}>Features avanzadas para builders que quieren destacar y ser descubiertos.</p>
 
-          <div style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', display: 'grid', gap: '24px' }}>
+          <div style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', display: 'grid', gap: '20px' }}>
             {[
-              { icon: '🌐', title: 'Tu propio dominio', desc: 'Conectá dominio.com en segundos. Dale a tu portfolio la autoridad que merece con una URL 100% tuya.' },
-              { icon: '🔭', title: 'Insights de Builder', desc: 'No vueles a ciegas. Mirá quién te visita, de dónde vienen y qué es lo que más les gusta de tu trabajo.' },
-              { icon: '⚡', title: 'Explosión de Visibilidad', desc: 'Sumá puntos extra a tu Builder Score automáticamente. Tracción real para aparecer antes que nadie en el feed.' },
-              { icon: '🍱', title: 'Sub-sitios ilimitados', desc: '¿Tenés un SaaS? ¿Un newsletter? ¿Un curso? Creá landing pages específicas para cada proyecto bajo un mismo techo.' },
-              { icon: '🏗️', title: 'Grid Expandido', desc: 'Hasta 32 bloques para que no falte nada. El doble de espacio para tus proyectos, links y obsesiones.' },
-              { icon: '👑', title: 'Estatus de Elite', desc: 'El badge de Verificado no es solo estética: es confianza inmediata para recruiters y clientes.' }
-            ].map((f, i) => (
-              <div key={i} style={{ padding: '32px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', transition: 'all 0.3s' }} className="group hover:border-[var(--accent)]/30">
-                <div style={{ fontSize: '32px', marginBottom: '20px' }}>{f.icon}</div>
-                <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '12px', letterSpacing: '-0.5px' }}>{f.title}</h3>
-                <p style={{ fontSize: '14px', color: 'var(--text-dim)', lineHeight: 1.6 }}>{f.desc}</p>
-              </div>
-            ))}
+              { icon: Globe, title: 'Tu propio dominio', desc: 'Conectá dominio.com en segundos. Dale a tu portfolio la autoridad que merece con una URL 100% tuya.' },
+              { icon: BarChart3, title: 'Insights de Builder', desc: 'No vueles a ciegas. Mirá quién te visita, de dónde vienen y qué es lo que más les gusta de tu trabajo.' },
+              { icon: Zap, title: 'Explosión de Visibilidad', desc: 'Sumá puntos extra a tu Builder Score automáticamente. Tracción real para aparecer antes que nadie en el feed.' },
+              { icon: LayoutGrid, title: 'Sub-sitios ilimitados', desc: '¿Tenés un SaaS? ¿Un newsletter? ¿Un curso? Creá landing pages específicas para cada proyecto bajo un mismo techo.' },
+              { icon: Layout, title: 'Grid Expandido', desc: 'Hasta 32 bloques para que no falte nada. El doble de espacio para tus proyectos, links y obsesiones.' },
+              { icon: Star, title: 'Estatus de Elite', desc: 'El badge de Verificado no es solo estética: es confianza inmediata para recruiters y clientes.' }
+            ].map((f, i) => {
+              const Icon = f.icon;
+              return (
+                <div key={i} className="pro-feature-card group">
+                  <div className="pro-feature-icon">
+                    <Icon size={20} />
+                  </div>
+                  <h3 className="pro-feature-title">{f.title}</h3>
+                  <p className="pro-feature-desc">{f.desc}</p>
+                </div>
+              );
+            })}
           </div>
 
           {/* Pricing Section (Only for Login users) */}
@@ -807,27 +777,40 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
       </section>
 
       {/* FINAL CTA */}
-      <section style={{ textAlign: 'center', padding: '100px 40px', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 50% 50%, rgba(200,255,0,0.06), transparent 60%)', pointerEvents: 'none' }}></div>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '16px' }}>// para builders de verdad</div>
-        <h2 style={{ fontSize: 'clamp(40px, 6vw, 72px)', fontWeight: 800, letterSpacing: '-3px', lineHeight: 0.95, marginBottom: '20px' }}>
-          Tu obra.<br /><span style={{ color: 'var(--accent)' }}>Tu URL.</span>
-        </h2>
-        <p style={{ fontSize: '16px', color: 'var(--text-dim)', maxWidth: '400px', margin: '0 auto 36px', lineHeight: 1.6 }}>
-          Gratis para empezar. Pasate a PRO cuando necesites romper los límites.
-        </p>
-        <Link href={user ? "/dashboard" : "/login"} className="btn btn-accent" style={{ fontSize: '17px', padding: '16px 36px', display: 'inline-block' }}>
-          {user ? (
-            <>
-              <Layout size={18} className="mr-2 inline" />
-              <span>Mi huevsite</span>
-            </>
-          ) : (
-            <span>Crear mi huevsite →</span>
-          )}
-        </Link>
-        <div style={{ marginTop: '16px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--text-muted)' }}>
-          Hecho por y para builders.
+      <section className="final-cta-section">
+        <div className="final-cta-glow" aria-hidden="true" />
+        <div className="final-cta-inner">
+          <div className="section-label" style={{ justifyContent: 'center' }}>// para builders de verdad</div>
+          <h2 className="final-cta-title">
+            Tu obra.<br /><span style={{ color: 'var(--accent)' }}>Tu URL.</span>
+          </h2>
+          <p className="final-cta-sub">
+            Gratis para empezar.<br />Pasate a PRO cuando necesites romper los límites.
+          </p>
+          <div className="final-cta-actions">
+            <Link href={user ? "/dashboard" : "/login"} className="btn btn-accent" style={{ fontSize: '17px', padding: '16px 40px' }}>
+              {user ? (
+                <>
+                  <Layout size={18} className="mr-2 inline" />
+                  <span>Mi huevsite</span>
+                </>
+              ) : (
+                <span>Crear mi huevsite →</span>
+              )}
+            </Link>
+            {!user && (
+              <Link href="/explore" className="btn btn-ghost" style={{ fontSize: '15px', padding: '16px 28px' }}>
+                Ver ejemplos primero
+              </Link>
+            )}
+          </div>
+          <div className="final-cta-meta">
+            <span>Sin tarjeta de crédito</span>
+            <span className="final-cta-dot">·</span>
+            <span>Listo en 3 minutos</span>
+            <span className="final-cta-dot">·</span>
+            <span>Hecho por y para builders</span>
+          </div>
         </div>
       </section>
 

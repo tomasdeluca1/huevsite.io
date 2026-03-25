@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { MetricBlockData, SocialBlockData, CVBlockData, getContrastColor } from "@/lib/profile-types";
 import { SOCIAL_PLATFORMS, SocialPlatformKey } from "@/lib/social-platforms";
 import { Download, Instagram, Youtube, Github, Linkedin, Twitter, MessageSquare, Send, Globe, Mail } from "lucide-react";
+import { useBlockPreview } from "@/lib/block-preview-context";
 
 interface MetricProps {
   data: MetricBlockData;
@@ -12,6 +13,7 @@ interface MetricProps {
 }
 
 export function MetricBlock({ data, accentColor }: MetricProps) {
+  const isPreview = useBlockPreview();
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -22,13 +24,13 @@ export function MetricBlock({ data, accentColor }: MetricProps) {
         className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none"
         style={{ background: `radial-gradient(circle at center, ${accentColor} 0%, transparent 70%)` }}
       />
-      <div className="block-label opacity-40 uppercase tracking-[0.2em] text-[10px] mb-2">{data.label}</div>
-      <div className="text-3xl md:text-5xl font-black text-white title-tracking mb-1" style={{ color: accentColor }}>
+      <div className={`block-label opacity-40 uppercase tracking-[0.2em] text-left ${isPreview ? 'text-[10px] mb-1' : 'text-[10px] mb-2'}`}>{data.label}</div>
+      <div className={`font-black text-white title-tracking text-left ${isPreview ? 'text-3xl mb-0' : 'text-3xl md:text-5xl mb-1'}`} style={{ color: accentColor }}>
         {data.value}
       </div>
       <div className="flex items-center gap-2 mt-2">
-        <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
-        <span className="text-[10px] uppercase font-bold tracking-widest text-[var(--text-muted)] opacity-60">En tiempo real</span>
+        <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+        <span className="text-[9px] uppercase font-bold tracking-widest text-[var(--text-muted)] opacity-60">En tiempo real</span>
       </div>
     </motion.div>
   );
@@ -40,6 +42,7 @@ interface SocialProps {
 }
 
 export function SocialBlock({ data, accentColor }: SocialProps) {
+  const isPreview = useBlockPreview();
   const links = data.links || [];
 
   const getIcon = (platform: string, color: string) => {
@@ -81,9 +84,9 @@ export function SocialBlock({ data, accentColor }: SocialProps) {
       className="huevsite-block block-social h-full flex flex-col justify-between group"
       style={{ "--accent": accentColor } as React.CSSProperties}
     >
-      <div className="block-label opacity-40 uppercase tracking-[0.2em] text-[10px] mb-4">Conectemos</div>
-      <div className="flex flex-col gap-2 mt-auto">
-        {links.filter(l => l.url).map((l, i) => {
+      <div className="block-label opacity-40 uppercase tracking-[0.2em] text-[10px] text-left mb-3">Conectemos</div>
+      <div className="flex flex-col gap-1.5 mt-auto">
+        {links.filter(l => l.url).slice(0, isPreview ? 3 : undefined).map((l, i) => {
           const pData = getPlatformData(l.platform);
           const brandColor = (pData as any)?.brandColor || "#ffffff";
 
@@ -102,13 +105,15 @@ export function SocialBlock({ data, accentColor }: SocialProps) {
               <span className="shrink-0 transition-transform group-hover/item:scale-110 duration-300">
                 {getIcon(l.platform, brandColor)}
               </span>
-              <div className="flex flex-col min-w-0">
-                <span className="font-bold text-xs md:text-sm text-white transition-colors line-clamp-1">
+              <div className="flex flex-col min-w-0 text-left">
+                <span className="font-bold text-white line-clamp-1 text-xs md:text-sm">
                   {getLabel(l)}
                 </span>
-                <span className="text-[9px] md:text-[10px] text-[var(--text-muted)] truncate opacity-50 font-mono">
-                  {l.url.replace('https://', '').replace('http://', '').split('?')[0]}
-                </span>
+                {!isPreview && (
+                  <span className="text-[9px] md:text-[10px] text-[var(--text-muted)] truncate opacity-50 font-mono">
+                    {l.url.replace('https://', '').replace('http://', '').split('?')[0]}
+                  </span>
+                )}
               </div>
             </a>
           );

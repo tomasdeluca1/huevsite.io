@@ -1,9 +1,11 @@
 "use client";
 
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { WinnerSection } from "@/components/landing/WinnerSection";
+import { ProfileGrid } from "@/components/profile/ProfileGrid";
+import { BlockPreviewContext } from "@/lib/block-preview-context";
 import { supabase } from "@/lib/supabase";
 import { lemonCheckoutUrl } from "@/lib/lemon-checkout-url";
 import { User } from "@supabase/supabase-js";
@@ -32,6 +34,31 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
   const [claimInput, setClaimInput] = useState("");
   const [claimStatus, setClaimStatus] = useState<"idle" | "checking" | "available" | "taken" | "invalid" | "error">("idle");
   const [claimSuggestions, setClaimSuggestions] = useState<string[]>([]);
+  const [heroSliderIndex, setHeroSliderIndex] = useState(0);
+
+  const heroProfiles = useMemo(() => {
+    if (!showcaseData) return [];
+    const transformUser = (rawUser: any) => {
+      if (!rawUser) return null;
+      const transformedBlocks = (rawUser.blocks || []).map((block: any) => {
+        const { id, type, order, col_span, row_span, visible, ...cleanData } = block.data || {};
+        return {
+          id: block.id, type: block.type, order: block.order,
+          col_span: block.col_span || col_span || 1,
+          row_span: block.row_span || row_span || 1,
+          visible: block.visible, ...cleanData,
+        };
+      });
+      return { ...rawUser, blocks: transformedBlocks };
+    };
+    if (showcaseData.randoms?.length > 0) {
+      return showcaseData.randoms.map((r: any) => transformUser(r)).filter(Boolean);
+    }
+    if (showcaseData.winners?.length > 0) {
+      return showcaseData.winners.map((w: any) => transformUser(w.user)).filter(Boolean);
+    }
+    return [];
+  }, [showcaseData]);
 
   const heroExperiment = {
     claim: {
@@ -46,8 +73,8 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
       description: "Tu URL única, lista en 3 minutos. Probá si tu username está libre ahora mismo — sin crear cuenta todavía.",
       primaryHref: "/explore",
       primaryLabel: "Ver cómo se ve uno bueno",
-      secondaryHref: "/explore",
-      secondaryLabel: "Explorar builders",
+      secondaryHref: "/onboarding",
+      secondaryLabel: "Crear el mío gratis",
     },
     social: {
       eyebrow: "Entrá por tracción real, no por promesas vacías",
@@ -187,11 +214,11 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
       // Siempre lo ocultamos al movernos para evitar ruido
       setShowMobileNav(false);
       clearTimeout(scrollTimeout);
-      
+
       // Lo mostramos al frenar el scroll
       scrollTimeout = setTimeout(() => {
         setShowMobileNav(true);
-      }, 400); 
+      }, 400);
     };
 
     // Mostrarlo inicialmente si estamos quietos
@@ -246,6 +273,15 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
       window.clearTimeout(timer);
     };
   }, [normalizedClaim]);
+
+  // Auto-advance hero profile slider
+  useEffect(() => {
+    if (heroProfiles.length <= 1) return;
+    const interval = setInterval(() => {
+      setHeroSliderIndex(prev => (prev + 1) % heroProfiles.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [heroProfiles.length]);
 
   // Price Section - Show to everyone
   const showPricing = true;
@@ -354,54 +390,123 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
 
             <div className="social-proof">
               <div className="avatars">
-                <div className="avatar a1">F</div>
-                <div className="avatar a2">M</div>
-                <div className="avatar a3">S</div>
-                <div className="avatar a4">L</div>
-                <div className="avatar a5">P</div>
+                {(() => {
+                  const pool = [
+                    ...(showcaseData.randoms || []),
+                    ...(showcaseData.winners?.map((w: any) => w.user).filter(Boolean) || []),
+                  ];
+                  const withImage = pool.filter((p: any) => p?.image).slice(0, 5);
+                  const slots = Array.from({ length: 5 }, (_, i) => withImage[i] ?? null);
+                  const fallbackLetters = ["F", "M", "S", "L", "P"];
+                  const fallbackClasses = ["a1", "a2", "a3", "a4", "a5"];
+                  return slots.map((p, i) =>
+                    p?.image ? (
+                      <div key={i} className="avatar" style={{ padding: 0, overflow: "hidden" }}>
+                        <img src={p.image} alt={p.name || p.username} className="w-full h-full object-cover" />
+                      </div>
+                    ) : (
+                      <div key={i} className={`avatar ${fallbackClasses[i]}`}>{fallbackLetters[i]}</div>
+                    )
+                  );
+                })()}
               </div>
               <span className="social-proof-text"><strong>+{(Math.floor((showcaseData.total_builders || 50) / 10) * 10).toLocaleString()} builders</strong> ya armaron su huevsite</span>
             </div>
           </div>
 
-          {heroVariant === "product" && (
+          {(
             <div className="hero-product-preview">
               <div className="hpp-badge">
                 <Eye size={12} />
                 Vista previa real
               </div>
-              <div className="hpp-card">
-                <div className="hpp-header">
-                  <div className="hpp-avatar">B</div>
-                  <div className="hpp-info">
-                    <div className="hpp-name">Builder Name</div>
-                    <div className="hpp-role">Developer · Indie Hacker</div>
+              {heroProfiles.length > 0 ? (
+                <div className="hpp-browser">
+                  <div className="hpp-browser-bar">
+                    <div className="hpp-browser-dots">
+                      <span /><span /><span />
+                    </div>
+                    <AnimatePresence mode="wait">
+                      <motion.span
+                        key={heroProfiles[heroSliderIndex]?.username}
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="hpp-browser-url"
+                      >
+                        huevsite.io/{heroProfiles[heroSliderIndex]?.username}
+                      </motion.span>
+                    </AnimatePresence>
+                    {heroProfiles.length > 1 && (
+                      <div className="hpp-nav-dots">
+                        {heroProfiles.map((_: any, i: number) => (
+                          <button
+                            key={i}
+                            onClick={() => setHeroSliderIndex(i)}
+                            className={`hpp-nav-dot${i === heroSliderIndex ? ' hpp-nav-dot--active' : ''}`}
+                            aria-label={`Ver perfil ${i + 1}`}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <div className="hpp-score">847 pts</div>
+                  <div className="hpp-browser-content">
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={heroSliderIndex}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="hpp-profile-scaler"
+                      >
+                        <BlockPreviewContext.Provider value={true}>
+                          <div className="hpp-profile-inner hpp-preview-grid">
+                            <ProfileGrid
+                              blocks={heroProfiles[heroSliderIndex]?.blocks}
+                              accentColor={heroProfiles[heroSliderIndex]?.accent_color}
+                              displayName={heroProfiles[heroSliderIndex]?.name || heroProfiles[heroSliderIndex]?.username}
+                              tagline={heroProfiles[heroSliderIndex]?.tagline || undefined}
+                            />
+                          </div>
+                        </BlockPreviewContext.Provider>
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
                 </div>
-                <div className="hpp-tagline">"Construyendo cosas que no existían ayer."</div>
-                <div className="hpp-grid">
-                  <div className="hpp-block hpp-block--span2">
-                    <div className="hpp-block-label">Building now</div>
-                    <div className="hpp-block-title">SaaS en progreso</div>
-                    <div className="hpp-block-tech">Next.js · Supabase · TypeScript</div>
+              ) : (
+                <div className="hpp-card">
+                  <div className="hpp-header">
+                    <div className="hpp-avatar">B</div>
+                    <div className="hpp-info">
+                      <div className="hpp-name">Builder Name</div>
+                      <div className="hpp-role">Developer · Indie Hacker</div>
+                    </div>
+                    <div className="hpp-score">847 pts</div>
                   </div>
-                  <div className="hpp-block hpp-block--accent">
-                    <div className="hpp-block-label">Score</div>
-                    <div className="hpp-block-num">847</div>
-                  </div>
-                  <div className="hpp-block">
-                    <div className="hpp-block-label">Stack</div>
-                    <div className="hpp-stack-tags">
-                      <span>React</span><span>Node</span><span>Figma</span>
+                  <div className="hpp-tagline">"Construyendo cosas que no existían ayer."</div>
+                  <div className="hpp-grid">
+                    <div className="hpp-block hpp-block--span2">
+                      <div className="hpp-block-label">Building now</div>
+                      <div className="hpp-block-title">SaaS en progreso</div>
+                      <div className="hpp-block-tech">Next.js · Supabase · TypeScript</div>
+                    </div>
+                    <div className="hpp-block hpp-block--accent">
+                      <div className="hpp-block-label">Score</div>
+                      <div className="hpp-block-num">847</div>
+                    </div>
+                    <div className="hpp-block">
+                      <div className="hpp-block-label">Stack</div>
+                      <div className="hpp-stack-tags">
+                        <span>React</span><span>Node</span><span>Figma</span>
+                      </div>
                     </div>
                   </div>
+                  <div className="hpp-url">
+                    <span className="hpp-url-prefix">huevsite.io/</span>
+                    <span style={{ color: 'var(--accent)', fontWeight: 700 }}>tu_username</span>
+                  </div>
                 </div>
-                <div className="hpp-url">
-                  <span className="hpp-url-prefix">huevsite.io/</span>
-                  <span style={{ color: 'var(--accent)', fontWeight: 700 }}>tu_username</span>
-                </div>
-              </div>
+              )}
               <div className="hpp-metrics">
                 <div className="hpp-metric">
                   <strong>~3 min</strong>
@@ -415,7 +520,7 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
             </div>
           )}
 
-          {!user && heroVariant !== "product" && (
+          {false && (
             <div className={`hero-claim-panel hero-claim-panel--${claimStatus}`}>
               <div className="hero-claim-orb" aria-hidden="true" />
               <div className="hero-claim-eyebrow">
@@ -475,18 +580,18 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
                 <div className="hero-claim-suggestions-wrap">
                   <div className="hero-claim-suggestions-label">Probá alguna de estas</div>
                   <div className="hero-claim-suggestions">
-                  {claimSuggestions.map((suggestion) => (
-                    <button
-                      key={suggestion}
-                      onClick={() => {
-                        setClaimInput(suggestion);
-                        trackLandingEvent("landing_claim_suggestion_click", { variant: heroVariant, suggestion });
-                      }}
-                      className="hero-claim-chip"
-                    >
-                      {suggestion}
-                    </button>
-                  ))}
+                    {claimSuggestions.map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        onClick={() => {
+                          setClaimInput(suggestion);
+                          trackLandingEvent("landing_claim_suggestion_click", { variant: heroVariant, suggestion });
+                        }}
+                        className="hero-claim-chip"
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}

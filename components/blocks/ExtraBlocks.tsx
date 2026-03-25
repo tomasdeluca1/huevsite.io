@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { StackBlockData, CommunityBlockData, WritingBlockData } from "@/lib/profile-types";
+import { useBlockPreview } from "@/lib/block-preview-context";
 
 export function StackBlock({ data, accentColor }: { data: StackBlockData; accentColor: string }) {
   const items = data.items || [];
@@ -85,6 +86,7 @@ export function CommunityBlock({ data, accentColor }: { data: CommunityBlockData
 }
 
 export function WritingBlock({ data, accentColor }: { data: WritingBlockData; accentColor: string }) {
+  const isPreview = useBlockPreview();
   const [readingPost, setReadingPost] = useState<any | null>(null);
   const posts = data.posts || [];
 
@@ -113,10 +115,12 @@ export function WritingBlock({ data, accentColor }: { data: WritingBlockData; ac
                 <div
                   key={i}
                   onClick={() => {
+                    if (isPreview) return;
                     if (hasInternalContent) setReadingPost(post);
                     else if (validUrl !== "#") window.open(validUrl, '_blank');
                   }}
-                  className="writing-post block cursor-pointer transition-all p-4 hover:bg-white/[0.03] rounded-2xl border border-transparent hover:border-white/5 mb-3 group/post"
+                  className="writing-post block transition-all p-4 hover:bg-white/[0.03] rounded-2xl border border-transparent hover:border-white/5 mb-3 group/post"
+                  style={{ cursor: isPreview ? 'default' : 'pointer' }}
                 >
                   <div className="flex flex-col gap-1.5">
                     <h4 className="wp-title font-bold text-white leading-snug group-hover/post:text-[var(--accent)] transition-colors" style={{ '--accent': accentColor } as any}>

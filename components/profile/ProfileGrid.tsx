@@ -10,6 +10,7 @@ import { StackBlock, CommunityBlock, WritingBlock } from "@/components/blocks/Ex
 import { MediaBlock, CertificationBlock, AchievementBlock, CustomBlock, CollabBlock, EcosystemBlock } from "@/components/blocks/NewBlocks"
 import type { BlockData } from "@/lib/profile-types"
 import { trackClick } from "@/components/analytics/AnalyticsTracker"
+import { useBlockPreview } from "@/lib/block-preview-context"
 
 interface ProfileGridProps {
   blocks: BlockData[]
@@ -26,6 +27,7 @@ interface ProfileGridProps {
 }
 
 export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscriptionTier, userId, subSiteId, isWinner = false, subSites = [], username, isCustomDomain = false }: ProfileGridProps) {
+  const isPreview = useBlockPreview()
   // Filtrar solo bloques visibles y ordenar
   const visibleBlocks = blocks
     .filter(block => block.visible)
@@ -105,9 +107,9 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscri
           animate={{ opacity: 1, y: 0 }}
           className="col-2"
         >
-          <div className="huevsite-block flex flex-col justify-center p-8 bg-[var(--surface)] border border-[var(--border)] rounded-[2rem]">
-            <h1 className="text-3xl font-extrabold text-white mb-1">{displayName}</h1>
-            <p className="text-sm text-[var(--text-dim)] font-mono">// {tagline || 'builder'}</p>
+          <div className={`huevsite-block flex flex-col justify-center text-left bg-[var(--surface)] border border-[var(--border)] rounded-[2rem] ${isPreview ? 'p-3' : 'p-8'}`}>
+            <h1 className={`font-extrabold text-white mb-1 truncate ${isPreview ? 'text-xs' : 'text-3xl'}`}>{displayName}</h1>
+            <p className={`text-[var(--text-dim)] font-mono truncate ${isPreview ? 'text-[9px]' : 'text-sm'}`}>// {tagline || 'builder'}</p>
           </div>
         </motion.div>
       )}

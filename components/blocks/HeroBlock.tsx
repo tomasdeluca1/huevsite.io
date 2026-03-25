@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { BadgeCheck, Trophy } from "lucide-react";
 import { HeroBlockData, getContrastColor } from "@/lib/profile-types";
+import { useBlockPreview } from "@/lib/block-preview-context";
 
 interface Props {
   data: HeroBlockData;
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = false }: Props) {
+  const isPreview = useBlockPreview();
   const roles = data.roles || [];
   const name = data.name || "Usuario";
   const tagline = data.tagline || "Builder en huevsite.io";
@@ -19,6 +21,58 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
   const location = data.location || "";
   const avatarUrl = data.avatarUrl || "";
   const rowSpan = (data as any).row_span || 2;
+
+  if (isPreview) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="huevsite-block block-hero h-full flex flex-col overflow-hidden p-4 text-left"
+        style={{ '--accent': accentColor } as any}
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="shrink-0 relative">
+            <div className="absolute inset-0 rounded-full blur-md opacity-40" style={{ backgroundColor: accentColor }} />
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center font-black overflow-hidden relative z-10 border"
+              style={{
+                background: avatarUrl ? 'transparent' : `linear-gradient(135deg, ${accentColor}, #00FF88)`,
+                borderColor: `${accentColor}60`,
+                color: getContrastColor(accentColor),
+              }}
+            >
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-sm">{name.charAt(0).toUpperCase()}</span>
+              )}
+            </div>
+          </div>
+          <div className="flex flex-col justify-center min-w-0 text-left ml-2 mt-4">
+            <h1 className="!text-[28px] font-black !tracking-wide text-white truncate !mb-3">{name}</h1>
+            <p className="text-[11px] font-mono opacity-70 truncate !pt-0 !mt-0" style={{ color: accentColor }}>
+              {tagline}
+            </p>
+          </div>
+        </div>
+        {(status || location) && (
+          <div className="mt-3 flex flex-wrap gap-1">
+            {status && (
+              <span className="flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-[var(--accent-dim)] border border-[var(--accent-mid)] truncate max-w-full" style={{ color: accentColor }}>
+                <div className="w-1 h-1 rounded-full bg-current shrink-0" />
+                <span className="truncate">{status}</span>
+              </span>
+            )}
+            {location && (
+              <span className="bg-white/5 border border-white/10 text-[var(--text-muted)] text-[9px] font-bold px-2 py-0.5 rounded-full truncate max-w-full">
+                {location}
+              </span>
+            )}
+          </div>
+        )}
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -39,7 +93,7 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
             />
             <div
               className={`hero-avatar w-14 h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 border-2 shadow-xl rounded-full flex items-center justify-center font-black overflow-hidden relative z-10 ${isWinner ? 'border-[var(--accent)]' : 'border-white/10'}`}
-              style={{ 
+              style={{
                 background: avatarUrl ? 'transparent' : `linear-gradient(135deg, ${accentColor}, #00FF88)`,
                 color: getContrastColor(accentColor)
               }}

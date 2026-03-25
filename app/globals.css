@@ -1071,6 +1071,44 @@ nav {
   overflow: hidden !important;
 }
 
+/* ─── Hero preview grid: always 2 columns regardless of viewport ─────── */
+.hpp-preview-grid .huevsite-grid {
+  grid-template-columns: repeat(2, 1fr) !important;
+  grid-auto-rows: minmax(100px, auto) !important;
+  gap: 10px !important;
+  padding: 0 !important;
+}
+
+/* col-span normalisation: 3 and 4 collapse to full width (2) */
+.hpp-preview-grid .col-span-1  { grid-column: span 1 !important; }
+.hpp-preview-grid .col-span-2,
+.hpp-preview-grid .col-span-3,
+.hpp-preview-grid .col-span-4  { grid-column: span 2 !important; }
+.hpp-preview-grid .col-2       { grid-column: span 2 !important; }
+
+/* row-span normalisation: cap at 2 to avoid huge empty gaps */
+.hpp-preview-grid .row-span-1  { grid-row: span 1 !important; }
+.hpp-preview-grid .row-span-2  { grid-row: span 2 !important; }
+.hpp-preview-grid .row-span-3,
+.hpp-preview-grid .row-span-4  { grid-row: span 2 !important; }
+
+/* Prevent any block from overflowing */
+.hpp-preview-grid .huevsite-grid > * {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+/* Block-level tweaks for preview size */
+.hpp-preview-grid .block-hero   { padding: 16px !important; }
+.hpp-preview-grid .building-name { font-size: 14px !important; }
+.hpp-preview-grid .building-desc { font-size: 11px !important; }
+.hpp-preview-grid .stack-pill   { font-size: 9px !important; padding: 2px 8px !important; }
+.hpp-preview-grid .block-label  { font-size: 9px !important; margin-bottom: 8px !important; }
+.hpp-preview-grid .project-name { font-size: 13px !important; }
+.hpp-preview-grid .project-desc { font-size: 10px !important; }
+.hpp-preview-grid .wp-title     { font-size: 11px !important; }
+
 
 /* Block Specifics from HTML */
 .block-hero {
@@ -2669,6 +2707,98 @@ footer {
 .hpp-metric span {
   font-size: 11px;
   color: var(--text-muted);
+}
+
+/* ─── Hero Profile Browser Slider ───────────────────────────────────── */
+
+.hpp-browser {
+  border-radius: 12px;
+  border: 1px solid var(--border-bright);
+  overflow: hidden;
+  background: var(--bg);
+  flex: 1;
+  min-height: 0;
+}
+
+.hpp-browser-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  height: 32px;
+}
+
+.hpp-browser-dots {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.hpp-browser-dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.hpp-browser-dots span:nth-child(1) { background: #ff5f57; }
+.hpp-browser-dots span:nth-child(2) { background: #febc2e; }
+.hpp-browser-dots span:nth-child(3) { background: #28c840; }
+
+.hpp-browser-url {
+  flex: 1;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hpp-nav-dots {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.hpp-nav-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--border-bright);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.25s;
+}
+
+.hpp-nav-dot--active {
+  background: var(--accent);
+  width: 10px;
+  border-radius: 3px;
+}
+
+.hpp-browser-content {
+  overflow: hidden;
+  height: 340px;
+  position: relative;
+  background: var(--bg);
+}
+
+.hpp-profile-scaler {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.hpp-profile-inner {
+  width: 200%;
+  transform: scale(0.5);
+  transform-origin: top left;
+  padding: 16px;
+  pointer-events: none;
 }
 
 /* ─── Pro Feature Cards ──────────────────────────────────────────────── */

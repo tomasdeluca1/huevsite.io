@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { GitHubBlockData } from "@/lib/profile-types";
 import { useEffect, useState } from "react";
-
+import { useBlockPreview } from "@/lib/block-preview-context";
 import { ExternalLink } from "lucide-react";
 
 interface Props {
@@ -12,12 +12,14 @@ interface Props {
 }
 
 export function GitHubBlock({ data, accentColor }: Props) {
+  const isPreview = useBlockPreview();
   const [heatmap, setHeatmap] = useState<string[]>([]);
 
   const stats = data.stats || { stars: 0, repos: 0, followers: 0 };
   const username = data.username || "usuario";
 
   useEffect(() => {
+    if (isPreview) return;
     if (data.stats.heatmap && data.stats.heatmap.length > 0) {
       setHeatmap(data.stats.heatmap.map(val => val === 0 ? "" : `hm-${val}`));
     } else {
@@ -32,7 +34,40 @@ export function GitHubBlock({ data, accentColor }: Props) {
       }
       setHeatmap(cells);
     }
-  }, [data.stats.heatmap]);
+  }, [data.stats.heatmap, isPreview]);
+
+  if (isPreview) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="huevsite-block block-github h-full flex flex-col justify-center relative text-left"
+      >
+        <div className="block-label mb-3 uppercase tracking-[0.2em] text-left text-[10px]">GITHUB</div>
+        <div className="flex gap-5">
+          <div className="flex flex-col items-start">
+            <span className="text-xl font-black tracking-tight">{stats.stars}</span>
+            <span className="text-[9px] uppercase tracking-widest text-[var(--text-muted)]">STARS</span>
+          </div>
+          <div className="flex flex-col items-start">
+            <span className="text-xl font-black tracking-tight" style={{ color: accentColor }}>{stats.repos}</span>
+            <span className="text-[9px] uppercase tracking-widest text-[var(--text-muted)]">REPOS</span>
+          </div>
+          <div className="flex flex-col items-start">
+            <span className="text-xl font-black tracking-tight" style={{ color: '#4A90E2' }}>{stats.followers}</span>
+            <span className="text-[9px] uppercase tracking-widest text-[var(--text-muted)]">FOLLOWS</span>
+          </div>
+        </div>
+        {stats.topLanguages && stats.topLanguages.length > 0 && (
+          <div className="mt-3 flex h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+            {stats.topLanguages.map((lang, idx) => (
+              <div key={idx} style={{ width: `${lang.percent}%`, backgroundColor: idx === 0 ? accentColor : idx === 1 ? '#4A90E2' : '#8B5CF6' }} />
+            ))}
+          </div>
+        )}
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div

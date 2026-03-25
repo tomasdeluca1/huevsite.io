@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MediaBlockData,
@@ -13,10 +13,10 @@ import {
 } from "@/lib/profile-types";
 import { ExternalLink, Award, Trophy, Star, Sparkles, Globe, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
-
-import { useEffect } from "react";
+import { useBlockPreview } from "@/lib/block-preview-context";
 
 export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accentColor: string }) {
+  const isPreview = useBlockPreview();
   const [isZoomed, setIsZoomed] = useState(false);
   const isDirectVideo = data.url.match(/\.(mp4|webm|ogg)$/i);
   const isYouTube = data.url.includes("youtube.com") || data.url.includes("youtu.be");
@@ -25,15 +25,16 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
   const externalLink = data.link?.trim() || ((!data.url.includes('supabase.co') && !data.url.startsWith('/storage')) ? data.url : "");
   const hasExternalLink = externalLink.length > 0;
 
-  // Lock scroll when zoomed
+  // Lock scroll when zoomed (disabled in preview)
   useEffect(() => {
+    if (isPreview) return;
     if (isZoomed) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
     }
     return () => { document.body.style.overflow = 'unset'; };
-  }, [isZoomed]);
+  }, [isZoomed, isPreview]);
 
   const getEmbedUrl = (url: string) => {
     if (isYouTube) {
@@ -50,9 +51,9 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
   return (
     <>
       <motion.div
-        className="huevsite-block block-media h-full p-0 overflow-hidden relative group cursor-zoom-in border"
-        style={{ borderColor: isDarkColor(accentColor) ? 'rgba(255,255,255,0.1)' : 'var(--border)' }}
-        onClick={() => setIsZoomed(true)}
+        className="huevsite-block block-media h-full p-0 overflow-hidden relative group border"
+        style={{ borderColor: isDarkColor(accentColor) ? 'rgba(255,255,255,0.1)' : 'var(--border)', cursor: isPreview ? 'default' : 'zoom-in' }}
+        onClick={() => !isPreview && setIsZoomed(true)}
       >
         {isYouTube || isVimeo ? (
           <iframe

@@ -102,34 +102,58 @@ export async function getShowcaseData(requestedWeek?: string | null) {
       .slice(0, 5)
       .map(([userId, data]) => ({ userId, count: data.count, user: data.user }));
 
-    let randoms: any[] = [];
-    if (winners.length === 0) {
-      const { data: randomData } = await supabase
-        .from("profiles")
-        .select(`
-          id, username, name, image, accent_color, tagline,
-          blocks:blocks (*),
-          sub_sites:sub_sites (*)
-        `)
-        // No traemos el auth.uid, traemos cualquiera activo
-        .order("updated_at", { ascending: false })
-        .limit(20);
+    const { data: randomData } = await supabase
+      .from("profiles")
+      .select(`
+        id, username, name, image, accent_color, tagline,
+        blocks:blocks (*),
+        sub_sites:sub_sites (*)
+      `)
+      .gte("builder_score", 300)
+      .order("builder_score", { ascending: false })
+      .limit(50);
 
-      if (randomData) {
-        // Filtrar los que tienen al menos un bloque (de su perfil principal)
-        const parsedProfiles = randomData.map((p: any) => {
-           if (p.blocks) {
-             p.blocks = p.blocks.filter((b: any) => b.sub_site_id === null);
-           }
-           if (p.sub_sites) {
-             p.sub_sites = normalizeSubSites(p.sub_sites);
-           }
-           return p;
-        });
-        const validProfiles = parsedProfiles.filter((p: any) => p.blocks && p.blocks.length > 0);
-        // Shuffle them
-        randoms = validProfiles.sort(() => 0.5 - Math.random()).slice(0, 5);
-      }
+    let randoms: any[] = [];
+    if (randomData) {
+      const parsedProfiles = randomData.map((p: any) => {
+        if (p.blocks) {
+          p.blocks = p.blocks.filter((b: any) => b.sub_site_id === null);
+        }
+        if (p.sub_sites) {
+          p.sub_sites = normalizeSubSites(p.sub_sites);
+        }
+        return p;
+      });
+      const GENERIC_BUILDING = ["proyecto sin nombre", "tu proyecto", "mi primer proyecto", ""];
+      const GENERIC_PROJECT  = ["proyecto", "mi proyecto", ""];
+
+      const validProfiles = parsedProfiles.filter((p: any) => {
+        if (!p.blocks || p.blocks.length === 0) return false;
+
+        const buildingBlocks = p.blocks.filter((b: any) => b.type === "building" && b.visible);
+        const projectBlocks  = p.blocks.filter((b: any) => b.type === "project"  && b.visible);
+
+        // Si tiene building blocks, al menos uno debe tener nombre real
+        if (buildingBlocks.length > 0) {
+          const hasRealBuilding = buildingBlocks.some((b: any) => {
+            const project = (b.project || b.data?.project || "").trim().toLowerCase();
+            return project && !GENERIC_BUILDING.includes(project);
+          });
+          if (!hasRealBuilding) return false;
+        }
+
+        // Si tiene project blocks, al menos uno debe tener título real
+        if (projectBlocks.length > 0) {
+          const hasRealProject = projectBlocks.some((b: any) => {
+            const title = (b.title || b.data?.title || "").trim().toLowerCase();
+            return title && !GENERIC_PROJECT.includes(title);
+          });
+          if (!hasRealProject) return false;
+        }
+
+        return true;
+      });
+      randoms = validProfiles.sort(() => 0.5 - Math.random()).slice(0, 7);
     }
 
     const { count: totalBuilders } = await supabase

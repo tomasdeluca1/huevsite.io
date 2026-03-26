@@ -18,6 +18,11 @@ interface DomainGuide {
 interface VerificationResult {
   isValid: boolean;
   message: string;
+  needsTxtVerification?: boolean;
+  txtRecord?: {
+    host: string;
+    value: string;
+  };
 }
 
 interface Props {
@@ -326,6 +331,48 @@ export function DomainConnectionCard({
           </div>
         </div>
 
+        {verificationResult?.needsTxtVerification && verificationResult.txtRecord && (
+          <div className="rounded-[1.85rem] border border-amber-500/20 bg-amber-500/5 p-5 md:p-6 space-y-4">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">Verificación de ownership</p>
+              <h5 className="mt-2 text-lg font-[900] tracking-tight text-white">Tu dominio está en otra cuenta de Vercel.</h5>
+              <p className="mt-2 text-sm text-white/50 leading-relaxed">
+                Para reclamar el ownership, agregá este registro TXT en tu proveedor DNS y luego corré el check nuevamente.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <button
+                onClick={() => copy(verificationResult.txtRecord!.host)}
+                className="rounded-[1.4rem] border border-white/8 bg-black/20 p-4 text-left hover:bg-white/[0.04] transition-all"
+              >
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">Tipo / Host</p>
+                <div className="mt-2 flex items-start justify-between gap-3">
+                  <div>
+                    <code className="block text-xs font-mono text-amber-300 mb-1">TXT</code>
+                    <code className="block break-all text-sm md:text-base font-mono text-white">{verificationResult.txtRecord.host}</code>
+                  </div>
+                  <Copy size={14} className="text-white/30 shrink-0 mt-1" />
+                </div>
+              </button>
+              <button
+                onClick={() => copy(verificationResult.txtRecord!.value)}
+                className="rounded-[1.4rem] border border-white/8 bg-black/20 p-4 text-left hover:bg-white/[0.04] transition-all"
+              >
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">Valor</p>
+                <div className="mt-2 flex items-start justify-between gap-3">
+                  <code className="block break-all text-sm md:text-base font-mono text-white">{verificationResult.txtRecord.value}</code>
+                  <Copy size={14} className="text-white/30 shrink-0" />
+                </div>
+              </button>
+            </div>
+
+            <p className="text-xs text-white/40 leading-relaxed">
+              Una vez que el registro TXT propague (puede tardar unos minutos), volvé a correr el check.
+            </p>
+          </div>
+        )}
+
         <div className="rounded-[1.85rem] border border-white/8 bg-black/20 p-5 md:p-6 space-y-4">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -353,9 +400,11 @@ export function DomainConnectionCard({
             <div className="rounded-[1.25rem] border border-white/8 bg-white/[0.02] p-4">
               <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">Siguiente paso</p>
               <p className="mt-2 text-sm text-white/60 leading-relaxed">
-                {hasSavedDomain
-                  ? "Corré el check. Si da OK y no abre, esperá un poco más por SSL."
-                  : "Guardá el dominio y después configurá el DNS."}
+                {verificationResult?.needsTxtVerification
+                  ? "Agregá el registro TXT de arriba en tu DNS y corré el check de nuevo."
+                  : hasSavedDomain
+                    ? "Corré el check. Si da OK y no abre, esperá un poco más por SSL."
+                    : "Guardá el dominio y después configurá el DNS."}
               </p>
             </div>
           </div>

@@ -7,18 +7,25 @@ const VERCEL_TOKEN = process.env.VERCEL_TOKEN;
 const PROJECT_ID = process.env.VERCEL_PROJECT_ID;
 const TEAM_ID = process.env.VERCEL_TEAM_ID;
 const ACCEPTED_VERCEL_A_RECORDS = ['216.150.1.1', '76.76.21.21'];
-const ACCEPTED_VERCEL_CNAME_TARGETS = ['cname.vercel-dns.com', 'vercel.pub', 'huevsite.io'];
+
+function isVercelCname(record: string) {
+    return (
+        record.includes('vercel-dns') ||   // cname.vercel-dns.com, *.vercel-dns-016.com, etc.
+        record.includes('vercel.pub') ||
+        record.includes('huevsite.io')
+    );
+}
 
 export async function POST(req: NextRequest) {
     try {
         const { domain } = await req.json();
-        
+
         if (!domain) {
             return NextResponse.json({ error: 'Dominio requerido' }, { status: 400 });
         }
 
         const cleanDomain = domain.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").split('/')[0];
-        
+
         // 1. Verificar primero con Vercel API (más preciso)
         if (VERCEL_TOKEN && PROJECT_ID) {
             try {
@@ -26,15 +33,32 @@ export async function POST(req: NextRequest) {
                 const res = await fetch(url, {
                     headers: { Authorization: `Bearer ${VERCEL_TOKEN}` }
                 });
-                
+
                 if (res.ok) {
                     const data = await res.json();
-                    
+
+                    // Dominio verificado y activo
                     if (data.verified && data.configuredBy) {
                         return NextResponse.json({
                             isValid: true,
                             method: 'Vercel API',
                             message: '¡Dominio correctamente configurado y verificado en Vercel!'
+                        });
+                    }
+
+                    // Dominio en el proyecto pero necesita verificación de ownership (otra cuenta Vercel)
+                    const txtVerification = (data.verification || []).find(
+                        (v: any) => v.type === 'TXT' && v.reason === 'pending_domain_verification'
+                    );
+                    if (txtVerification) {
+                        return NextResponse.json({
+                            isValid: false,
+                            needsTxtVerification: true,
+                            txtRecord: {
+                                host: txtVerification.domain,   // e.g. _vercel.azanello.com
+                                value: txtVerification.value,   // vc-domain-verify=...
+                            },
+                            message: 'El dominio está vinculado a otra cuenta de Vercel. Agregá el registro TXT para verificar ownership.'
                         });
                     }
                 }
@@ -46,11 +70,11 @@ export async function POST(req: NextRequest) {
         // 2. Fallback a DNS manual (si Vercel aún no lo ve o no hay tokens)
         let resolved = false;
         let method = '';
-        
+
         // Intento CNAME
         try {
             const cnameRecords = await dns.resolveCname(cleanDomain);
-            if (cnameRecords.some(r => ACCEPTED_VERCEL_CNAME_TARGETS.some(target => r.includes(target)))) {
+            if (cnameRecords.some(isVercelCname)) {
                 resolved = true;
                 method = 'CNAME';
             }
@@ -71,8 +95,8 @@ export async function POST(req: NextRequest) {
             isValid: resolved,
             method,
             domain: cleanDomain,
-            message: resolved 
-                ? `Los registros DNS parecen estar bien (${method}), pero Vercel aún está procesando el SSL. Esperá unos minutos.` 
+            message: resolved
+                ? `Los registros DNS parecen estar bien (${method}), pero Vercel aún está procesando el SSL. Esperá unos minutos.`
                 : 'No se detectaron los registros DNS. Asegurate de haber configurado el CNAME o el registro A correctamente.'
         });
 

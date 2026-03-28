@@ -11,7 +11,7 @@ interface ReferralDashboardProps {
 
 export function ReferralDashboard({ profile }: ReferralDashboardProps) {
   const [copied, setCopied] = useState(false);
-  const referralLink = `https://huevsite.io/onboarding?ref=${profile.referralCode}`;
+  const referralLink = `https://huevsite.io/login?ref=${profile.referralCode}`;
   const referralCount = profile.proReferralsCount || 0;
   const target = 3;
   const progress = Math.min((referralCount / target) * 100, 100);

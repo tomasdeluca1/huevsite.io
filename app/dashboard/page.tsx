@@ -52,6 +52,10 @@ import { ReferralDashboard } from "@/components/dashboard/ReferralDashboard";
 import { GitHubData, OnboardingCompletionData, Role, LayoutOption } from "@/lib/onboarding-types";
 import { DeleteAccountModal } from "@/components/dashboard/DeleteAccountModal";
 import { LinktreeRefactorModal } from "@/components/dashboard/LinktreeRefactorModal";
+import { getFreeTrialState, hasProAccess } from "@/lib/pro-access";
+import { getProfileBadges, ALL_BADGE_KEYS, BADGE_CATALOG } from "@/lib/profile-badges";
+import { BadgeItem } from "@/components/profile/BadgeItem";
+import { ProFeatureTour } from "@/components/dashboard/ProFeatureTour";
 
 const DASHBOARD_TABS = ["board", "insights", "subsites", "domain", "transfer"] as const;
 const PRO_ONLY_TABS = ["insights", "subsites", "domain", "transfer"] as const;
@@ -71,6 +75,8 @@ export default function DashboardPage() {
   const [isCreateSubSiteOpen, setIsCreateSubSiteOpen] = useState(false);
   const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
   const [isLinktreeRefactorOpen, setIsLinktreeRefactorOpen] = useState(false);
+  const [isClaimingTrial, setIsClaimingTrial] = useState(false);
+  const [isProTourOpen, setIsProTourOpen] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [isRefactoringFromLinktree, setIsRefactoringFromLinktree] = useState(false);
   const [tempProfileData, setTempProfileData] = useState({
@@ -81,11 +87,13 @@ export default function DashboardPage() {
     githubHandle: ''
   });
   const [copied, setCopied] = useState(false);
+  const [referralCopied, setReferralCopied] = useState(false);
   const [selectedSubSiteId, setSelectedSubSiteId] = useState<string | null>(null);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(() => (typeof window !== "undefined" ? localStorage.getItem("huevsite_autosave") === "true" : false));
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedVersionRef = useRef<string>("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [badgesCollapsed, setBadgesCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<'board' | 'insights' | 'subsites' | 'domain' | 'transfer'>('board');
   const [domain, setDomain] = useState("");
   const [transferEmail, setTransferEmail] = useState("");
@@ -94,8 +102,12 @@ export default function DashboardPage() {
   const [isTabMenuOpen, setIsTabMenuOpen] = useState(false);
   const supabase = createClient();
   const referralsSectionRef = useRef<HTMLDivElement | null>(null);
-  const isPro = profile?.subscriptionTier === "pro";
-  const availableTabs = isPro ? DASHBOARD_TABS : (["board"] as const);
+  const isPro = profile?.hasProAccess === true;
+  const availableTabs = isPro
+    ? DASHBOARD_TABS
+    : profile?.freeTrial?.canUseLastInsightsView
+      ? (["board", "insights"] as const)
+      : (["board"] as const);
 
   const normalizeDomainInput = (value: string) =>
     value.trim().replace(/^(?:https?:\/\/)?/i, "").replace(/^www\./i, "").split("/")[0].toLowerCase();
@@ -266,6 +278,7 @@ export default function DashboardPage() {
         roles: data.profile.roles || [],
         layout: data.profile.layout || null,
         subscriptionTier: (data.profile.subscription_tier === 'pro' || !!data.profile.pro_since) ? 'pro' : 'free',
+        hasProAccess: hasProAccess(data.profile),
         extraBlocksFromShare: data.profile.extra_blocks_from_share || 0,
         twitterShareUnlocked: data.profile.twitter_share_unlocked || false,
         hasSeenUpdateFeb25: data.profile.has_seen_update_feb25 || false,
@@ -280,6 +293,14 @@ export default function DashboardPage() {
         referredBy: data.profile.referred_by || "",
         proReferralsCount: data.profile.pro_referrals_count || 0,
         referralRewardExpiresAt: data.profile.referral_reward_expires_at || null,
+        isProfileVerified: data.profile.is_profile_verified || false,
+        hasGoodReputation: data.profile.has_good_reputation || false,
+        isTopMatchmaker: data.profile.is_top_matchmaker || false,
+        freeTrialClaimedAt: data.profile.free_trial_claimed_at || null,
+        freeTrialStartedAt: data.profile.free_trial_started_at || null,
+        freeTrialEndsAt: data.profile.free_trial_ends_at || null,
+        freeTrialLastInsightsViewedAt: data.profile.free_trial_last_insights_viewed_at || null,
+        freeTrial: getFreeTrialState(data.profile),
         subSites: normalizeSubSites(data.subSites || []),
         blocks: data.blocks.map((block: any) => {
           const { id: _, type: __, order: ___, col_span: ____, row_span: _____, visible: ______, ...cleanData } = block.data || {};
@@ -292,7 +313,11 @@ export default function DashboardPage() {
             visible: block.visible,
             ...cleanData
           };
-        })
+        }),
+        badges: getProfileBadges(data.profile, {
+          blockCount: (data.blocks || []).length,
+          hasWonBuilderOfTheWeek: !!data.hasWonBuilderOfTheWeek,
+        }),
       };
 
       setProfile(transformedProfile);
@@ -321,6 +346,26 @@ export default function DashboardPage() {
     }
   };
 
+  const handleClaimFreeTrial = async () => {
+    setIsClaimingTrial(true);
+    try {
+      const response = await fetch("/api/trial/claim", { method: "POST" });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.error || "No se pudo activar la prueba gratis");
+      }
+
+      await fetchProfile();
+      setIsUpgradeModalOpen(false);
+      setIsProTourOpen(true);
+    } catch (error: any) {
+      alert(error.message || "No se pudo activar la prueba gratis");
+    } finally {
+      setIsClaimingTrial(false);
+    }
+  };
+
   // Fetch profile on mount
   useEffect(() => {
     fetchProfile();
@@ -334,16 +379,24 @@ export default function DashboardPage() {
       return;
     }
 
+    if (tab === "insights" && (isPro || profile?.freeTrial?.canUseLastInsightsView)) {
+      setActiveTab("insights");
+      return;
+    }
+
     if (tab && PRO_ONLY_TABS.includes(tab as typeof PRO_ONLY_TABS[number]) && isPro) {
       setActiveTab(tab as typeof PRO_ONLY_TABS[number]);
     }
-  }, [isPro]);
+  }, [isPro, profile?.freeTrial?.canUseLastInsightsView]);
 
   useEffect(() => {
-    if (!isPro && activeTab !== "board") {
+    if (!isPro && !profile?.freeTrial?.canUseLastInsightsView && activeTab !== "board") {
       setActiveTab("board");
     }
-  }, [activeTab, isPro]);
+    if (!isPro && profile?.freeTrial?.canUseLastInsightsView && !["board", "insights"].includes(activeTab)) {
+      setActiveTab("board");
+    }
+  }, [activeTab, isPro, profile?.freeTrial?.canUseLastInsightsView]);
 
   useEffect(() => {
     if (!profile) return;
@@ -714,6 +767,19 @@ export default function DashboardPage() {
     }
   };
 
+  const handleBorderRadiusChange = async (value: string) => {
+    setProfile(prev => prev ? { ...prev, borderRadius: value } : null);
+    try {
+      await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ border_radius: value }),
+      });
+    } catch (e) {
+      console.error('Error saving border radius:', e);
+    }
+  };
+
   const handleSave = async () => {
     if (!profile) return;
     setIsSaving(true);
@@ -1071,6 +1137,7 @@ export default function DashboardPage() {
           setTempProfileData={setTempProfileData}
           addBlock={addBlock}
         handleColorChange={handleColorChange}
+        handleBorderRadiusChange={handleBorderRadiusChange}
         toggleAutoSave={toggleAutoSave}
         autoSaveEnabled={autoSaveEnabled}
         activeTab={activeTab}
@@ -1081,20 +1148,101 @@ export default function DashboardPage() {
       />
 
       <main className={`flex-1 min-w-0 h-full overflow-y-auto p-4 md:px-8 lg:px-10 relative z-0 custom-scrollbar ${
-        profile.subscriptionTier === 'pro'
+        isPro
           ? 'pt-6 md:pb-8 md:pt-6 lg:pb-10 lg:pt-8'
           : 'md:pb-8 md:pt-0 lg:pb-10'
       }`}>
         <style dangerouslySetInnerHTML={{
-          __html: `:root { --accent: ${profile.accentColor}; --accent-dim: ${profile.accentColor}1f; --btn-border: ${isDarkColor(profile.accentColor) ? 'rgba(255,255,255,0.15)' : 'transparent'}; }`
+          __html: `:root { --accent: ${profile.accentColor}; --accent-dim: ${profile.accentColor}1f; --btn-border: ${isDarkColor(profile.accentColor) ? 'rgba(255,255,255,0.15)' : 'transparent'}; --dashboard-radius: ${profile.borderRadius || '1.5rem'}; }`
         }} />
         <div className="absolute top-0 right-0 w-full lg:w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(var(--accent-rgb),0.03)_0%,transparent_70%)] pointer-events-none" />
 
         <div className="max-w-[1600px] mx-auto relative">
           <div className="absolute inset-x-6 top-0 h-24 md:h-32 bg-[radial-gradient(circle,rgba(var(--accent-rgb),0.12)_0%,transparent_72%)] blur-3xl pointer-events-none opacity-70" />
-          {profile.subscriptionTier !== 'pro' && (
+          {!isPro && (
             <div className="relative z-20 mb-6 md:mb-8 lg:mb-10">
               <PriceBanner className="top-0 sm:top-2" userId={profile.id || profile.username} />
+            </div>
+          )}
+
+          {profile.freeTrial?.eligible && (
+            <div className="relative z-20 mb-6 border border-[var(--accent)]/20 bg-[linear-gradient(135deg,rgba(200,255,0,0.12),rgba(255,255,255,0.02))] p-5 md:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.18)]" style={{ borderRadius: "var(--dashboard-radius)" }}>
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent)]">14 días gratis</div>
+                  <h3 className="mt-2 text-xl font-black text-white">Claim free trial de Huevsite Pro</h3>
+                  <p className="mt-2 max-w-2xl text-sm text-white/65">
+                    Desbloqueá todo Pro por 14 días. Empezá por Insights, después aprovechá más bloques y análisis avanzados.
+                  </p>
+                </div>
+                <button
+                  onClick={handleClaimFreeTrial}
+                  disabled={isClaimingTrial}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl px-6 py-4 text-sm font-black text-black transition-all disabled:opacity-60"
+                  style={{ backgroundColor: profile.accentColor, color: getContrastColor(profile.accentColor) }}
+                >
+                  {isClaimingTrial ? <Sparkles size={16} className="animate-spin" /> : <BadgeCheck size={16} />}
+                  Claim free trial
+                </button>
+              </div>
+            </div>
+          )}
+
+          {profile.freeTrial?.active && (
+            <div className="relative z-20 mb-6 border border-white/10 bg-white/[0.03] p-5 md:p-6" style={{ borderRadius: "var(--dashboard-radius)" }}>
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent)]">Trial activo</div>
+                  <h3 className="mt-2 text-lg font-black text-white">Tu prueba Pro está corriendo</h3>
+                  <p className="mt-1 text-sm text-white/60">
+                    Te quedan {profile.freeTrial.daysRemaining} día{profile.freeTrial.daysRemaining === 1 ? "" : "s"}. Lo más importante: abrí tus Insights y entendé mejor tu perfil.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setActiveTab("insights")}
+                    className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white/80 transition-all hover:bg-white/10"
+                  >
+                    Ver Insights
+                  </button>
+                  <button
+                    onClick={() => setIsUpgradeModalOpen(true)}
+                    className="rounded-2xl px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-black"
+                    style={{ backgroundColor: profile.accentColor, color: getContrastColor(profile.accentColor) }}
+                  >
+                    Seguir en Pro
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {profile.freeTrial?.canUseLastInsightsView && !profile.freeTrial?.active && (
+            <div className="relative z-20 mb-6 border border-white/10 bg-white/[0.03] p-5 md:p-6" style={{ borderRadius: "var(--dashboard-radius)" }}>
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent)]">Última vista</div>
+                  <h3 className="mt-2 text-lg font-black text-white">Tu prueba terminó</h3>
+                  <p className="mt-1 text-sm text-white/60">
+                    Volviste al plan free, pero todavía podés abrir una última vez tus Insights en modo lectura antes de bloquearlos detrás de Pro.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setActiveTab("insights")}
+                    className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white/80 transition-all hover:bg-white/10"
+                  >
+                    Ver última vez
+                  </button>
+                  <button
+                    onClick={() => setIsUpgradeModalOpen(true)}
+                    className="rounded-2xl px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-black"
+                    style={{ backgroundColor: profile.accentColor, color: getContrastColor(profile.accentColor) }}
+                  >
+                    Seguir con Pro
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 
@@ -1122,20 +1270,128 @@ export default function DashboardPage() {
         </div>
 
         <div className="max-w-[1600px] mx-auto pb-32">
+          {/* Badges */}
+          {(() => {
+            const earnedBadges = (profile.badges || []);
+            const earnedCount = earnedBadges.length;
+            const totalCount = ALL_BADGE_KEYS.length;
+            return (
+              <div className="mb-8 px-2 md:px-0">
+                <div
+                  className="border border-white/[0.06] overflow-hidden"
+                  style={{ background: "rgba(255,255,255,0.015)", borderRadius: "var(--dashboard-radius)" }}
+                >
+                  {/* Toggle header */}
+                  <button
+                    onClick={() => setBadgesCollapsed(c => !c)}
+                    className="w-full flex items-center gap-3 px-5 py-4 group hover:bg-white/[0.02] transition-colors"
+                  >
+                    {/* Label + count */}
+                    <span className="text-[10px] font-black text-white/25 uppercase tracking-[0.22em] shrink-0">Badges</span>
+                    <span className="text-[9px] font-black text-white/15 font-mono shrink-0">{earnedCount}/{totalCount}</span>
+
+                    {/* Mini badges — always visible, earned first */}
+                    <div className="flex items-center gap-1.5 flex-1 overflow-hidden">
+                      {ALL_BADGE_KEYS.map((key) => {
+                        const earned = earnedBadges.some((b) => b.key === key);
+                        const badge = { key, ...BADGE_CATALOG[key] };
+                        return (
+                          <motion.div
+                            key={key}
+                            animate={{ opacity: earned ? 1 : (badgesCollapsed ? 0.2 : 0), scale: earned ? 1 : (badgesCollapsed ? 0.8 : 0), width: badgesCollapsed ? "auto" : 0 }}
+                            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                            className="shrink-0 overflow-hidden"
+                            style={{ originX: 0 }}
+                          >
+                            <BadgeItem badge={badge} earned={earned} size="sm" />
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+
+                    <ChevronDown
+                      size={14}
+                      className={`shrink-0 text-white/20 group-hover:text-white/40 transition-transform duration-300 ${badgesCollapsed ? "" : "rotate-180"}`}
+                    />
+                  </button>
+
+                  {/* Expandable content */}
+                  <AnimatePresence initial={false}>
+                    {!badgesCollapsed && (
+                      <motion.div
+                        key="badge-content"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                        className="overflow-hidden"
+                      >
+                        <div className="px-5 pb-5 border-t border-white/[0.04]">
+                          <div className="flex flex-wrap gap-x-6 gap-y-5 pt-5">
+                            {ALL_BADGE_KEYS.map((key) => {
+                              const earned = earnedBadges.some((b) => b.key === key);
+                              const badge = { key, ...BADGE_CATALOG[key] };
+                              return <BadgeItem key={key} badge={badge} earned={earned} size="md" />;
+                            })}
+                          </div>
+
+                          {/* Referral link */}
+                          {profile.referralCode && (
+                            <div className="mt-5 pt-4 border-t border-white/[0.05] flex items-center justify-between gap-4">
+                              <div className="min-w-0">
+                                <div className="text-[9px] font-black text-white/25 uppercase tracking-[0.22em] mb-0.5">Tu link de referido</div>
+                                <div className="text-[11px] text-white/40 font-mono truncate">
+                                  huevsite.io/login?ref=<span className="text-white/60">{profile.referralCode}</span>
+                                </div>
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator.clipboard.writeText(`https://huevsite.io/login?ref=${profile.referralCode}`);
+                                  setReferralCopied(true);
+                                  setTimeout(() => setReferralCopied(false), 2000);
+                                }}
+                                className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.06] transition-all text-[10px] font-black uppercase tracking-[0.12em] text-white/50 hover:text-white/80"
+                              >
+                                {referralCopied ? <Check size={12} className="text-[var(--accent)]" /> : <Copy size={12} />}
+                                {referralCopied ? "Copiado" : "Copiar"}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+            );
+          })()}
+
+          <button
+            onClick={() => setIsFeedbackOpen(true)}
+            className="fixed bottom-5 right-5 z-[180] flex items-center gap-2 border border-white/10 bg-[#09090b]/90 px-4 py-3 text-[11px] font-black uppercase tracking-[0.16em] text-white shadow-[0_20px_50px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-all hover:border-[var(--accent)]/30 hover:text-[var(--accent)]"
+            style={{ borderRadius: "calc(var(--dashboard-radius) + 0.5rem)" }}
+          >
+            <MessageSquare size={16} />
+            Feedback
+          </button>
+
           {/* DESKTOP TABS */}
           {isPro && (
           <div className="hidden md:flex relative mb-16 z-20 items-center justify-center">
-            <div className="flex items-center gap-1 bg-white/[0.03] p-1.5 rounded-[2.5rem] border border-white/5 backdrop-blur-md shadow-2xl overflow-x-auto scrollbar-none max-w-full w-fit">
+            <div className="flex items-center gap-1 bg-white/[0.03] p-1.5 border border-white/5 backdrop-blur-md shadow-2xl overflow-x-auto scrollbar-none max-w-full w-fit" style={{ borderRadius: "calc(var(--dashboard-radius) + 0.75rem)" }}>
               {availableTabs.map((t) => (
                 <button 
                   key={t} 
                   onClick={() => setActiveTab(t)} 
-                  className={`px-4 lg:px-8 py-3 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.18em] transition-all relative shrink-0 ${activeTab === t ? 'text-black' : 'text-white/20 hover:text-white/60 hover:bg-white/[0.03]'}`}
+                  className={`px-4 lg:px-8 py-3 text-[10px] font-black uppercase tracking-[0.18em] transition-all relative shrink-0 ${activeTab === t ? 'text-black' : 'text-white/20 hover:text-white/60 hover:bg-white/[0.03]'}`}
+                  style={{ borderRadius: "calc(var(--dashboard-radius) + 0.25rem)" }}
                 >
                   {activeTab === t && (
                     <motion.div 
                       layoutId="activeTabSel" 
-                      className="absolute inset-0 bg-[var(--accent)] rounded-[2rem] shadow-[0_0_20px_rgba(var(--accent-rgb),0.3)]" 
+                      className="absolute inset-0 bg-[var(--accent)] shadow-[0_0_20px_rgba(var(--accent-rgb),0.3)]" 
+                      style={{ borderRadius: "calc(var(--dashboard-radius) + 0.25rem)" }}
                       transition={{ type: "spring", bounce: 0.2, duration: 0.6 }} 
                     />
                   )}
@@ -1151,7 +1407,8 @@ export default function DashboardPage() {
           <div className="md:hidden relative mb-10 z-30 px-4">
              <button 
                 onClick={() => setIsTabMenuOpen(!isTabMenuOpen)}
-                className="w-full bg-white/[0.05] border border-white/10 p-5 rounded-[2rem] flex items-center justify-between text-white group active:scale-95 transition-all"
+                className="w-full bg-white/[0.05] border border-white/10 p-5 flex items-center justify-between text-white group active:scale-95 transition-all"
+                style={{ borderRadius: "var(--dashboard-radius)" }}
              >
                 <div className="flex items-center gap-3">
                    <div className="w-10 h-10 rounded-xl bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)] border border-[var(--accent)]/20 shadow-[0_0_15px_rgba(var(--accent-rgb),0.2)]">
@@ -1184,7 +1441,8 @@ export default function DashboardPage() {
                          initial={{ opacity: 0, scale: 0.95, y: -10 }}
                          animate={{ opacity: 1, scale: 1, y: 0 }}
                          exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                         className="relative bg-[#121214] border border-white/10 rounded-[2.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden backdrop-blur-xl p-3"
+                         className="relative bg-[#121214] border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden backdrop-blur-xl p-3"
+                         style={{ borderRadius: "calc(var(--dashboard-radius) + 0.75rem)" }}
                       >
                          {availableTabs.map((t) => (
                             <button
@@ -1215,13 +1473,13 @@ export default function DashboardPage() {
             {activeTab === 'board' && (
               <motion.div key="board" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }}>
                 <div className="mb-6 md:mb-8 lg:mb-10 grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_auto] gap-4 items-start">
-                  <div className="rounded-[2rem] border border-white/[0.06] bg-[linear-gradient(135deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))] px-5 py-4 md:px-6 md:py-5 shadow-[0_20px_60px_rgba(0,0,0,0.18)]">
+                  <div className="border border-white/[0.06] bg-[linear-gradient(135deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))] px-5 py-4 md:px-6 md:py-5 shadow-[0_20px_60px_rgba(0,0,0,0.18)]" style={{ borderRadius: "var(--dashboard-radius)" }}>
                     <p className="text-[10px] uppercase tracking-[0.22em] font-black text-white/25 mb-2">Board Editor</p>
                     <p className="text-sm md:text-base text-white/65 max-w-3xl text-balance">
                       Arrastrá bloques, ajustá su tamaño y ordená la composición para que el board se sienta consistente en mobile, tablet y desktop.
                     </p>
                   </div>
-                  <div className="hidden xl:flex items-center gap-2 rounded-[2rem] border border-white/[0.06] bg-white/[0.02] px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+                  <div className="hidden xl:flex items-center gap-2 border border-white/[0.06] bg-white/[0.02] px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white/35" style={{ borderRadius: "var(--dashboard-radius)" }}>
                     <span className="inline-flex h-2.5 w-2.5 rounded-full" style={{ backgroundColor: profile.accentColor }} />
                     {profile.blocks.length} bloques activos
                   </div>
@@ -1229,7 +1487,7 @@ export default function DashboardPage() {
 
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                   <SortableContext items={profile.blocks.map(b => b.id)} strategy={rectSortingStrategy}>
-                    <div className="dashboard-board-grid huevsite-grid min-h-[560px] md:min-h-[620px] p-3 sm:p-6 lg:p-8 xl:p-10 rounded-[2rem] md:rounded-[2.5rem] border border-dashed border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.008))] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                    <div className="dashboard-board-grid huevsite-grid min-h-[560px] md:min-h-[620px] p-3 sm:p-6 lg:p-8 xl:p-10 border border-dashed border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.008))] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]" style={{ borderRadius: "calc(var(--dashboard-radius) + 0.5rem)" }}>
                       {profile.blocks.length === 0 ? (
                         <div className="col-span-full flex flex-col items-center justify-center py-40 text-center text-white/20 font-bold uppercase tracking-widest text-sm">
                           <Plus className="mb-4 opacity-30" size={40} />
@@ -1253,7 +1511,7 @@ export default function DashboardPage() {
                   </SortableContext>
                 </DndContext>
 
-                {profile.subscriptionTier !== 'pro' && (
+                {!isPro && (
                   <div ref={referralsSectionRef} className="mt-12 max-w-[1200px] mx-auto scroll-mt-28">
                      <ReferralDashboard profile={profile} />
                   </div>
@@ -1267,6 +1525,14 @@ export default function DashboardPage() {
                   accentColor={profile.accentColor}
                   blocks={profile.blocks}
                   onOptimizeBoard={() => setActiveTab('board')}
+                  onLastTrialViewConsumed={() => {
+                    setProfile((prev) => prev ? {
+                      ...prev,
+                      freeTrial: prev.freeTrial ? { ...prev.freeTrial, canUseLastInsightsView: false } : prev.freeTrial,
+                      freeTrialLastInsightsViewedAt: new Date().toISOString(),
+                      hasProAccess: false,
+                    } : prev);
+                  }}
                 />
               </motion.div>
             )}
@@ -1299,12 +1565,12 @@ export default function DashboardPage() {
                  </div>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {profile.subSites.length === 0 ? (
-                      <div className="col-span-full py-20 text-center bg-white/[0.01] border border-dashed border-white/5 rounded-[2.5rem]">
+                      <div className="col-span-full py-20 text-center bg-white/[0.01] border border-dashed border-white/5" style={{ borderRadius: "calc(var(--dashboard-radius) + 0.75rem)" }}>
                         <p className="text-white/20 font-black uppercase text-[10px] tracking-[0.2em]">No tenés sub-sites creados aún.</p>
                       </div>
                     ) : (
                       profile.subSites.map(site => (
-                        <div key={site.id} className="p-5 md:p-6 rounded-[2rem] md:rounded-[2.5rem] bg-white/[0.02] border border-white/5 flex items-center justify-between group">
+                        <div key={site.id} className="p-5 md:p-6 bg-white/[0.02] border border-white/5 flex items-center justify-between group" style={{ borderRadius: "calc(var(--dashboard-radius) + 0.5rem)" }}>
                           <div className="flex items-center gap-3 md:gap-4 min-w-0">
                             <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center shrink-0 overflow-hidden">
                               {site.avatarUrl ? <img src={site.avatarUrl} className="w-full h-full object-cover" /> : <Globe2 size={24} className="text-white/20" />}
@@ -1463,7 +1729,25 @@ export default function DashboardPage() {
         isSubmitting={isRefactoringFromLinktree}
         onConfirm={handleLinktreeRefactor}
       />
-      {isUpgradeModalOpen && <UpgradeModal isOpen={isUpgradeModalOpen} onClose={() => setIsUpgradeModalOpen(false)} accentColor={profile.accentColor} />}
+      {isUpgradeModalOpen && (
+        <UpgradeModal
+          isOpen={isUpgradeModalOpen}
+          onClose={() => setIsUpgradeModalOpen(false)}
+          accentColor={profile.accentColor}
+          freeTrial={profile.freeTrial}
+          onClaimTrial={profile.freeTrial?.eligible ? handleClaimFreeTrial : undefined}
+          isClaimingTrial={isClaimingTrial}
+        />
+      )}
+      <ProFeatureTour
+        isOpen={isProTourOpen}
+        onClose={() => setIsProTourOpen(false)}
+        accentColor={profile.accentColor}
+        onFinish={() => {
+          setIsProTourOpen(false);
+          setActiveTab("insights");
+        }}
+      />
     </div>
   );
 }

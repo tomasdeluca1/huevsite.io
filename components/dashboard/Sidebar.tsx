@@ -8,7 +8,7 @@ import {
   Sparkles, ArrowUpRight, Lock, ChevronRight, User, PlusCircle, Trash2, Link2
 } from "lucide-react";
 import Link from "next/link";
-import { ProfileData, BlockType } from "@/lib/profile-types";
+import { ProfileData, BlockType, PRESET_BORDER_RADIUS } from "@/lib/profile-types";
 import { ColorPicker } from "./ColorPicker";
 import { BlockSelector } from "./BlockSelector";
 
@@ -32,6 +32,7 @@ interface SidebarProps {
   setTempProfileData: (data: any) => void;
   addBlock: (type: BlockType) => void;
   handleColorChange: (color: string, confirmed: boolean) => void;
+  handleBorderRadiusChange: (value: string) => void;
   toggleAutoSave: () => void;
   autoSaveEnabled: boolean;
   activeTab: 'board' | 'insights' | 'subsites' | 'domain' | 'transfer';
@@ -59,6 +60,7 @@ export function DashboardSidebar({
   setTempProfileData,
   addBlock,
   handleColorChange,
+  handleBorderRadiusChange,
   toggleAutoSave,
   autoSaveEnabled,
   activeTab,
@@ -85,7 +87,7 @@ export function DashboardSidebar({
   const currentBoardTitle = selectedSubSiteId ? currentSubSite?.title : "Perfil Principal";
   const currentBoardSlug = selectedSubSiteId ? `/${profile.username}/${currentSubSite?.slug}` : `/${profile.username}`;
   const currentBoardAvatar = selectedSubSiteId ? currentSubSite?.avatarUrl : profile.avatarUrl;
-  const isPro = profile.subscriptionTier === "pro";
+  const isPro = profile.hasProAccess === true;
 
   return (
     <>
@@ -204,7 +206,7 @@ export function DashboardSidebar({
                           </div>
                         )}
 
-                        {profile.subscriptionTier === 'pro' && (
+                        {isPro && (
                           <button 
                             onClick={() => { openModal(setIsCreateSubSiteOpen); setIsSwitcherOpen(false); }}
                             className="w-full mt-2 p-3 rounded-xl border border-dashed border-white/10 hover:border-[var(--accent)]/30 transition-all flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[var(--accent)]"
@@ -230,14 +232,37 @@ export function DashboardSidebar({
             <ColorPicker
               value={profile.accentColor}
               onChange={handleColorChange}
-              subscriptionTier={profile.subscriptionTier}
+              subscriptionTier={isPro ? "pro" : profile.subscriptionTier}
             />
+
+            {/* Border Radius Selector */}
+            <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+              <div className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-2.5">Redondeo</div>
+              <div className="flex gap-1.5">
+                {PRESET_BORDER_RADIUS.map(({ label, value }) => {
+                  const isActive = (profile.borderRadius || '1.5rem') === value;
+                  return (
+                    <button
+                      key={value}
+                      onClick={() => handleBorderRadiusChange(value)}
+                      title={label}
+                      className={`flex-1 h-8 border transition-all ${
+                        isActive
+                          ? 'border-[var(--accent)] bg-[var(--accent)]/10'
+                          : 'border-white/10 bg-white/[0.03] hover:border-white/20'
+                      }`}
+                      style={{ borderRadius: value }}
+                    />
+                  );
+                })}
+              </div>
+            </div>
 
             <BlockSelector
               onAdd={addBlock}
               accentColor={profile.accentColor}
               currentBlockCount={profile.blocks.length}
-              subscriptionTier={profile.subscriptionTier}
+              subscriptionTier={isPro ? "pro" : profile.subscriptionTier}
               username={profile.username}
               twitterShareUnlocked={profile.twitterShareUnlocked}
               extraBlocksFromShare={profile.extraBlocksFromShare}
@@ -249,7 +274,8 @@ export function DashboardSidebar({
           <motion.div
             initial={false}
             onClick={() => openModal(setIsScoreInfoOpen)}
-            className="group/score z-0 p-5 rounded-[2rem] bg-gradient-to-br from-white/[0.03] to-white/[0.01] border border-white/[0.05] hover:border-[var(--accent)]/30 transition-all cursor-pointer relative overflow-hidden"
+            className="group/score z-0 p-5 bg-gradient-to-br from-white/[0.03] to-white/[0.01] border border-white/[0.05] hover:border-[var(--accent)]/30 transition-all cursor-pointer relative overflow-hidden"
+            style={{ borderRadius: `calc(${profile.borderRadius || '1.5rem'} + 0.5rem)` }}
           >
             <div className="absolute top-0 right-0 w-24 h-24 bg-[var(--accent)]/10 blur-[30px] -translate-y-1/2 translate-x-1/2" />
             
@@ -280,7 +306,10 @@ export function DashboardSidebar({
           </motion.div>
           
           {/* AI Credits Card */}
-          <div className="p-4 rounded-3xl bg-white/[0.02] border border-white/[0.05] flex items-center justify-between group">
+          <div
+            className="p-4 bg-white/[0.02] border border-white/[0.05] flex items-center justify-between group"
+            style={{ borderRadius: `calc(${profile.borderRadius || '1.5rem'} + 0.75rem)` }}
+          >
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 group-hover:bg-purple-500/20 transition-all">
                 <Sparkles size={14} />
@@ -290,9 +319,9 @@ export function DashboardSidebar({
                 <span className="text-xs font-bold text-white/60">{profile.aiCredits ?? 0} disponibles</span>
               </div>
             </div>
-            {profile.subscriptionTier !== 'pro' && (
-               <button 
-                  onClick={() => openModal(setIsUpgradeModalOpen)}
+            {!isPro && (
+                  <button 
+                    onClick={() => openModal(setIsUpgradeModalOpen)}
                   className="text-[8px] font-black text-purple-400 uppercase tracking-widest bg-purple-400/10 px-2 py-1 rounded-md hover:bg-purple-400/20 transition-all border border-purple-400/20"
                >
                  + PRO

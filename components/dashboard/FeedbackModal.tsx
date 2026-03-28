@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { MessageSquare, Send, X, Loader2, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { FileUpload } from "./FileUpload";
 
 export function FeedbackModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [content, setContent] = useState("");
   const [category, setCategory] = useState("general");
+  const [screenshotUrl, setScreenshotUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
@@ -22,12 +24,13 @@ export function FeedbackModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
       const res = await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content, category }),
+        body: JSON.stringify({ content, category, screenshotUrl: screenshotUrl || null }),
       });
 
       if (res.ok) {
         setSent(true);
         setContent("");
+        setScreenshotUrl("");
         setTimeout(() => {
           setSent(false);
           onClose();
@@ -123,6 +126,16 @@ export function FeedbackModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
                     onChange={(e) => setContent(e.target.value)}
                     placeholder="Contanos qué podemos mejorar, qué feature te gustaría ver o reportá un bicho..."
                     className="w-full h-40 bg-[var(--surface2)] border border-[var(--border-bright)] rounded-2xl p-4 text-sm text-white placeholder:text-white/20 focus:border-[var(--accent)] outline-none resize-none transition-colors shadow-inner"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[11px] font-mono text-[var(--text-muted)] uppercase tracking-widest px-1">Screenshot opcional</label>
+                  <FileUpload
+                    value={screenshotUrl}
+                    onChange={setScreenshotUrl}
+                    folder="feedback"
+                    accept="image/*"
                   />
                 </div>
 

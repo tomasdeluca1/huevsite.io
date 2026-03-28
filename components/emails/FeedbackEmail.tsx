@@ -6,6 +6,7 @@ interface FeedbackEmailProps {
   category: string;
   content: string;
   userId: string;
+  screenshotUrl?: string;
 }
 
 export const FeedbackEmail: React.FC<Readonly<FeedbackEmailProps>> = ({
@@ -13,6 +14,7 @@ export const FeedbackEmail: React.FC<Readonly<FeedbackEmailProps>> = ({
   category,
   content,
   userId,
+  screenshotUrl,
 }) => (
   <EmailLayout previewText={`Nuevo feedback de ${userEmail}`}>
     <div style={{
@@ -59,6 +61,15 @@ export const FeedbackEmail: React.FC<Readonly<FeedbackEmailProps>> = ({
           {content}
         </p>
       </div>
+
+      {screenshotUrl ? (
+        <div style={{ marginTop: '24px' }}>
+          <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#71717a', textTransform: 'uppercase' }}>Screenshot</p>
+          <a href={screenshotUrl} style={{ color: '#C8FF00', fontSize: '14px' }}>
+            Ver screenshot adjunto
+          </a>
+        </div>
+      ) : null}
 
       <p style={{ fontSize: '10px', color: '#52525b', marginTop: '24px', fontFamily: 'monospace' }}>
         USER_ID: {userId}

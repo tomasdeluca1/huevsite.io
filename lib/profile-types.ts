@@ -3,13 +3,53 @@ import { AccentColor, Role } from "./onboarding-types";
 export type SubscriptionTier = "free" | "pro";
 
 export const MAX_FREE_BLOCKS = 5;
-export const MAX_PRO_BLOCKS = 32; // Limit lowered from 100 per user request // Effectively "Unlimited" for PRO
+export const MAX_PRO_BLOCKS = 22;
+
+export type ProfileBadgeKey =
+  | "profile_complete"
+  | "profile_validated"
+  | "good_reputation"
+  | "active_this_week"
+  | "top_matchmaker"
+  | "builder_of_the_week"
+  | "premium"
+  | "ambassador"
+  | "twitter_connected";
+
+export interface ProfileBadge {
+  key: ProfileBadgeKey;
+  label: string;
+  shortLabel: string;
+  description: string;
+  hint: string;
+  icon: string;
+  tone: "trust" | "activity" | "achievement" | "premium" | "community";
+}
+
+export interface FreeTrialState {
+  eligible: boolean;
+  active: boolean;
+  claimed: boolean;
+  expiresAt?: string | null;
+  claimedAt?: string | null;
+  daysRemaining?: number;
+  canUseLastInsightsView: boolean;
+  lastInsightsViewedAt?: string | null;
+}
 
 export type TaglineStatus =
   | "disponible para proyectos"
   | "trabajando a full"
   | "buscando laburo"
   | "modo zen";
+
+export const PRESET_BORDER_RADIUS = [
+  { label: 'Sharp', value: '0px' },
+  { label: 'Subtle', value: '0.5rem' },
+  { label: 'Rounded', value: '1rem' },
+  { label: 'Soft', value: '1.5rem' },
+  { label: 'Pill', value: '2.5rem' },
+];
 
 export const PRESET_COLORS = [
   "#C8FF00", // Acid Green
@@ -255,6 +295,7 @@ export interface ProfileData {
   roles?: Role[];
   layout?: string;
   subscriptionTier: "free" | "pro";
+  hasProAccess?: boolean;
   twitterShareUnlocked: boolean;
   extraBlocksFromShare: number;
   hasSeenUpdateFeb25?: boolean;
@@ -272,10 +313,20 @@ export interface ProfileData {
   referredBy?: string;
   proReferralsCount?: number;
   referralRewardExpiresAt?: string;
-  parentProfile?: { 
-    username: string; 
-    displayName: string; 
-    avatarUrl?: string; 
-    tagline?: string 
+  isProfileVerified?: boolean;
+  hasGoodReputation?: boolean;
+  isTopMatchmaker?: boolean;
+  freeTrialClaimedAt?: string | null;
+  freeTrialStartedAt?: string | null;
+  freeTrialEndsAt?: string | null;
+  freeTrialLastInsightsViewedAt?: string | null;
+  freeTrial?: FreeTrialState;
+  badges?: ProfileBadge[];
+  borderRadius?: string;
+  parentProfile?: {
+    username: string;
+    displayName: string;
+    avatarUrl?: string;
+    tagline?: string
   };
 }

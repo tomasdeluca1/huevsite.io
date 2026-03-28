@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { hasProAccess } from '@/lib/pro-access'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,11 +17,11 @@ export async function POST(request: NextRequest) {
         // Solo PRO pueden crear sub-sites
         const { data: profile } = await supabase
             .from('profiles')
-            .select('subscription_tier, pro_since')
+            .select('subscription_tier, pro_since, referral_reward_expires_at, free_trial_claimed_at, free_trial_started_at, free_trial_ends_at, free_trial_last_insights_viewed_at')
             .eq('id', user.id)
             .single()
 
-        const isPro = profile?.subscription_tier === 'pro' || !!profile?.pro_since
+        const isPro = !!profile && hasProAccess(profile)
 
         if (!isPro) {
             return NextResponse.json({ error: 'Necesitas ser PRO para crear sub-sites' }, { status: 403 })

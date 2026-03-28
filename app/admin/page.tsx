@@ -32,6 +32,7 @@ interface Feedback {
   content: string;
   category: string;
   status: string;
+  screenshot_url?: string | null;
   created_at: string;
 }
 
@@ -57,6 +58,7 @@ export default function AdminPage() {
   const [postingLeaderboard, setPostingLeaderboard] = useState(false);
   const [postingNonProLeaderboard, setPostingNonProLeaderboard] = useState(false);
   const [postingWeeklyReport, setPostingWeeklyReport] = useState(false);
+  const [postingTrialLaunch, setPostingTrialLaunch] = useState(false);
   const [deleteUsername, setDeleteUsername] = useState("");
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [accountLookup, setAccountLookup] = useState<AdminAccountLookup | null>(null);
@@ -65,7 +67,7 @@ export default function AdminPage() {
   
   // Preview states
   const [previewText, setPreviewText] = useState<string | null>(null);
-  const [currentAction, setCurrentAction] = useState<{ type: 'general' | 'non-pro' | 'weekly', url: string } | null>(null);
+  const [currentAction, setCurrentAction] = useState<{ type: 'general' | 'non-pro' | 'weekly' | 'trial-launch', url: string } | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
 
   const fetchData = async () => {
@@ -218,6 +220,24 @@ export default function AdminPage() {
       setFeedbackMsg({ type: "err", msg: "Error de conexión" });
     } finally {
       setPostingWeeklyReport(false);
+    }
+  };
+
+  const handlePostTrialLaunch = async () => {
+    setPostingTrialLaunch(true);
+    try {
+      const res = await fetch("/api/admin/twitter/post-free-trial-campaign?variant=launch&preview=true", { method: "POST" });
+      const json = await res.json();
+      if (res.ok && json.preview) {
+        setPreviewText(json.preview);
+        setCurrentAction({ type: 'trial-launch', url: "/api/admin/twitter/post-free-trial-campaign?variant=launch" });
+      } else {
+        setFeedbackMsg({ type: "err", msg: json.error || "Error al generar preview" });
+      }
+    } catch (error) {
+      setFeedbackMsg({ type: "err", msg: "Error de conexión" });
+    } finally {
+      setPostingTrialLaunch(false);
     }
   };
 
@@ -494,6 +514,26 @@ export default function AdminPage() {
             </button>
           </div>
 
+          <div className="flex gap-4 p-5 rounded-2xl bg-[var(--surface)] border border-dashed border-[var(--accent)]/30 items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)]">
+                <Share2 size={20} />
+              </div>
+              <div>
+                <p className="font-bold text-sm text-[var(--accent)]">Campaña Free Trial</p>
+                <p className="text-[10px] text-[var(--text-dim)] font-mono">Tweet principal para lanzar la prueba gratis de 14 días</p>
+              </div>
+            </div>
+            <button
+              onClick={handlePostTrialLaunch}
+              disabled={postingTrialLaunch}
+              className="px-4 py-2 rounded-xl bg-[var(--accent)]/10 hover:bg-[var(--accent)]/20 text-xs font-bold transition-all flex items-center gap-2 border border-[var(--accent)]/20 text-[var(--accent)]"
+            >
+              {postingTrialLaunch ? <Loader2 size={12} className="animate-spin" /> : <Share2 size={12} />}
+              Publicar Launch
+            </button>
+          </div>
+
           <div className="rounded-[1.75rem] border border-red-500/20 bg-red-500/5 p-6">
             <div className="mb-5 flex items-start gap-4">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-red-500/10 text-red-400">
@@ -742,6 +782,16 @@ export default function AdminPage() {
                         </div>
                       </div>
                       <p className="text-sm leading-relaxed text-white/90 whitespace-pre-wrap">{fb.content}</p>
+                      {fb.screenshot_url && (
+                        <a
+                          href={fb.screenshot_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 text-xs font-mono text-[var(--accent)] hover:text-white transition-colors"
+                        >
+                          Ver screenshot adjunto
+                        </a>
+                      )}
                       <div className="flex items-center justify-between mt-4">
                         <div className="text-[10px] text-[var(--text-muted)] font-mono">
                           {new Date(fb.created_at).toLocaleString()}
@@ -787,6 +837,16 @@ export default function AdminPage() {
                           </div>
                         </div>
                         <p className="text-sm leading-relaxed text-white/40 whitespace-pre-wrap">{fb.content}</p>
+                        {fb.screenshot_url && (
+                          <a
+                            href={fb.screenshot_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-xs font-mono text-white/50 hover:text-white transition-colors"
+                          >
+                            Ver screenshot adjunto
+                          </a>
+                        )}
                       </div>
                     ))}
                   </div>

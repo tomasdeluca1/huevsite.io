@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { ArrowRight, Search, Loader2, Sparkles, X, Trophy } from "lucide-react";
+import { ArrowRight, Search, Loader2, Sparkles, X, Trophy, ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
@@ -74,6 +74,27 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [isScoreInfoOpen, setIsScoreInfoOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
+
+  const SORT_OPTIONS = [
+    { value: "score", label: "Builder Score 🔥" },
+    { value: "created_at", label: "Nuevos builders ⚡" },
+    { value: "updated_at", label: "Más recientes 🔄" },
+    { value: "followers", label: "Más populares 📈" },
+    { value: "nominations", label: "Más votados 🏆" },
+    { value: "endorsements", label: "Más recomendados 💬" },
+  ];
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setIsSortOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
@@ -147,11 +168,11 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
   return (
     <div className="flex flex-col gap-10 font-display">
       {/* Refined Toolbar - Slide down entrance */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex flex-col lg:flex-row gap-6 items-center justify-between w-full"
+        className="relative z-10 flex flex-col lg:flex-row gap-6 items-center justify-between w-full"
       >
         {/* Search Bar Group */}
         <div className="flex items-center gap-3 flex-1 w-full max-w-2xl">
@@ -194,30 +215,32 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
         <div className="flex items-center gap-4 w-full lg:w-auto shrink-0 bg-[var(--surface2)]/40 p-1.5 pl-6 rounded-[32px] border border-[var(--border)] backdrop-blur-sm">
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-black font-mono text-[var(--text-muted)] uppercase tracking-[0.2em] hidden sm:block opacity-50">Ordenar por:</span>
-            <div className="relative w-48 sm:w-64">
-              <select
-                value={sort}
-                onChange={(e) => {
-                  const newSort = e.target.value;
-                  setSort(newSort);
-                  setCategory(newSort);
-                }}
-                className="w-full bg-white/5 text-[11px] font-bold uppercase tracking-widest border border-transparent hover:border-white/10 rounded-2xl px-5 py-3 text-white outline-none focus:bg-white/10 transition-all cursor-pointer appearance-none pr-10"
-                style={{
-                  backgroundImage:
-                    'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23666\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")',
-                  backgroundRepeat: "no-repeat",
-                  backgroundPosition: "right 1rem center",
-                  backgroundSize: "1.1em",
-                }}
+            <div className="relative" ref={sortRef}>
+              <button
+                onClick={() => setIsSortOpen((o) => !o)}
+                className="flex items-center gap-2 bg-white/5 text-[11px] font-bold uppercase tracking-widest border border-transparent hover:border-white/10 rounded-2xl px-5 py-3 text-white transition-all cursor-pointer whitespace-nowrap"
+                suppressHydrationWarning
               >
-                <option value="score">Destacados por Builder Score 🔥</option>
-                <option value="created_at">Nuevos Builders en la comunidad ⚡</option>
-                <option value="updated_at">Actividad más reciente 🔄</option>
-                <option value="followers">Tendencias y más populares 📈</option>
-                <option value="nominations">Más votados por la comunidad 🏆</option>
-                <option value="endorsements">Perfiles con más recomendaciones 💬</option>
-              </select>
+                {SORT_OPTIONS.find((o) => o.value === sort)?.label}
+                <ChevronDown size={14} className={`transition-transform ${isSortOpen ? "rotate-180" : ""}`} />
+              </button>
+              {isSortOpen && (
+                <div className="absolute right-0 top-full mt-2 z-[9999] bg-[var(--surface2)] border border-[var(--border)] rounded-2xl overflow-hidden shadow-2xl min-w-full">
+                  {SORT_OPTIONS.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => {
+                        setSort(option.value);
+                        setCategory(option.value);
+                        setIsSortOpen(false);
+                      }}
+                      className={`w-full text-left px-5 py-3 text-[11px] font-bold uppercase tracking-widest whitespace-nowrap transition-colors hover:bg-white/10 ${sort === option.value ? "text-[var(--accent)]" : "text-white"}`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MediaBlockData,
@@ -11,7 +12,7 @@ import {
   EcosystemBlockData,
   isDarkColor
 } from "@/lib/profile-types";
-import { ExternalLink, Award, Trophy, Star, Sparkles, Globe, ArrowUpRight } from "lucide-react";
+import { ExternalLink, Award, Trophy, Star, Globe, ArrowUpRight, ZoomIn } from "lucide-react";
 import Link from "next/link";
 import { useBlockPreview } from "@/lib/block-preview-context";
 
@@ -96,7 +97,7 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
         {/* Zoom icon on hover */}
         <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all pointer-events-none transform translate-y-2 group-hover:translate-y-0">
           <div className="w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-2xl">
-            <Sparkles size={16} style={{ color: accentColor }} />
+            <ZoomIn size={16} />
           </div>
         </div>
 
@@ -110,9 +111,9 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
         )}
       </motion.div>
 
-      {/* Lightbox Modal */}
+      {/* Lightbox Modal — rendered in body via portal to escape framer-motion stacking context */}
       <AnimatePresence>
-        {isZoomed && (
+        {isZoomed && createPortal(
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -193,7 +194,7 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
               </div>
             </motion.div>
           </motion.div>
-        )}
+        , document.body)}
       </AnimatePresence>
     </>
   );

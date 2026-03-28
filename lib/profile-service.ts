@@ -2,6 +2,8 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { ProfileData, BlockData, getAdjustedAccentColor } from './profile-types';
 import { scoreService } from './score-service';
+import { getProfileBadges } from './profile-badges';
+import { getFreeTrialState, hasProAccess } from './pro-access';
 
 async function getServerClient() {
   const cookieStore = await cookies();
@@ -34,7 +36,7 @@ export const profileService = {
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('id, username, name, tagline, image, github_handle, accent_color, subscription_tier, pro_since, extra_blocks_from_share, twitter_share_unlocked, builder_score, ai_credits, custom_domain, referral_code, referred_by, pro_referrals_count, referral_reward_expires_at, is_onboarding_test_user')
+      .select('id, username, name, tagline, image, github_handle, accent_color, border_radius, subscription_tier, pro_since, extra_blocks_from_share, twitter_share_unlocked, builder_score, ai_credits, custom_domain, referral_code, referred_by, pro_referrals_count, referral_reward_expires_at, is_onboarding_test_user, is_profile_verified, has_good_reputation, is_top_matchmaker, free_trial_claimed_at, free_trial_started_at, free_trial_ends_at, free_trial_last_insights_viewed_at, updated_at')
       .eq('username', username)
       .single();
 
@@ -110,10 +112,15 @@ export const profileService = {
       !!userWinnerData &&
       !!latestWinnerData &&
       userWinnerData.week === latestWinnerData.week;
+    transformed.badges = getProfileBadges(profile, {
+      blockCount: transformed.blocks.length,
+      hasWonBuilderOfTheWeek: !!userWinnerData,
+    });
     transformed.ogImageVersion = [
       "botw",
       latestWinnerData?.week || "none",
       transformed.isWinner ? "winner" : "default",
+      `b${transformed.badges?.length ?? 0}`,
     ].join("-");
     
     return transformed;
@@ -124,7 +131,7 @@ export const profileService = {
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('id, username, name, tagline, image, github_handle, accent_color, subscription_tier, pro_since, extra_blocks_from_share, twitter_share_unlocked, builder_score, ai_credits, custom_domain, referral_code, referred_by, pro_referrals_count, referral_reward_expires_at, is_onboarding_test_user')
+      .select('id, username, name, tagline, image, github_handle, accent_color, border_radius, subscription_tier, pro_since, extra_blocks_from_share, twitter_share_unlocked, builder_score, ai_credits, custom_domain, referral_code, referred_by, pro_referrals_count, referral_reward_expires_at, is_onboarding_test_user, is_profile_verified, has_good_reputation, is_top_matchmaker, free_trial_claimed_at, free_trial_started_at, free_trial_ends_at, free_trial_last_insights_viewed_at, updated_at')
       .eq('username', username)
       .single();
 
@@ -161,6 +168,10 @@ export const profileService = {
     if (blocksError) return null;
 
     const transformed = this._transformProfile(profile, blocks || []);
+    transformed.badges = getProfileBadges(profile, {
+      blockCount: transformed.blocks.length,
+      hasWonBuilderOfTheWeek: false,
+    });
 
     let subSitesWithAvatar = (subSites || []).map(s => ({
       ...s,
@@ -227,6 +238,7 @@ export const profileService = {
         }
         return 'free';
       })(),
+      hasProAccess: hasProAccess(profile),
       extraBlocksFromShare: profile.extra_blocks_from_share || 0,
       twitterShareUnlocked: profile.twitter_share_unlocked || false,
       builderScore: profile.builder_score || 0,
@@ -236,6 +248,15 @@ export const profileService = {
       referredBy: profile.referred_by || "",
       proReferralsCount: profile.pro_referrals_count || 0,
       referralRewardExpiresAt: profile.referral_reward_expires_at || null,
+      isProfileVerified: profile.is_profile_verified || false,
+      hasGoodReputation: profile.has_good_reputation || false,
+      isTopMatchmaker: profile.is_top_matchmaker || false,
+      freeTrialClaimedAt: profile.free_trial_claimed_at || null,
+      freeTrialStartedAt: profile.free_trial_started_at || null,
+      freeTrialEndsAt: profile.free_trial_ends_at || null,
+      freeTrialLastInsightsViewedAt: profile.free_trial_last_insights_viewed_at || null,
+      freeTrial: getFreeTrialState(profile),
+      borderRadius: profile.border_radius || '1.5rem',
       isOnboardingTestUser: profile.is_onboarding_test_user || false,
       subSites: [], // Initially empty, filled by API if needed
       blocks: (blocks || []).map(b => {

@@ -2,17 +2,19 @@
 
 import { motion } from "framer-motion";
 import { BadgeCheck, Trophy } from "lucide-react";
-import { HeroBlockData, getContrastColor } from "@/lib/profile-types";
+import { HeroBlockData, ProfileBadge, getContrastColor } from "@/lib/profile-types";
 import { useBlockPreview } from "@/lib/block-preview-context";
+import { BadgeItem } from "@/components/profile/BadgeItem";
 
 interface Props {
   data: HeroBlockData;
   accentColor: string;
   subscriptionTier?: "free" | "pro";
   isWinner?: boolean;
+  badges?: ProfileBadge[];
 }
 
-export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = false }: Props) {
+export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = false, badges = [] }: Props) {
   const isPreview = useBlockPreview();
   const roles = data.roles || [];
   const name = data.name || "Usuario";
@@ -141,6 +143,13 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
 
         {/* ROW 2: Descripción (con un espacio según el diagrama) */}
         <div className="mt-6 flex-1 min-w-0">
+          {badges.length > 0 && (
+            <div className="mb-4 flex items-end gap-3">
+              {badges.map((badge) => (
+                <BadgeItem key={badge.key} badge={badge} earned size="sm" />
+              ))}
+            </div>
+          )}
           {data.description && (
             <p className="text-sm md:text-base text-[var(--text-dim)] leading-relaxed break-words font-medium">
               {data.description}

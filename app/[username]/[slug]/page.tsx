@@ -96,6 +96,7 @@ export default async function SubSitePage({ params }: Props) {
             --accent-dim: ${profile.accentColor}1f;
             --accent-mid: ${profile.accentColor}4d;
             --white: #F2F2F2;
+            --radius-xl: ${profile.borderRadius || '1.5rem'};
           }
         `}} />
 
@@ -155,6 +156,7 @@ export default async function SubSitePage({ params }: Props) {
                         subscriptionTier={profile.subscriptionTier}
                         userId={profile.id}
                         subSiteId={profile.subSiteId}
+                        badges={profile.badges}
                         subSites={profile.subSites}
                         username={profile.username}
                         isCustomDomain={isCustomDomain}

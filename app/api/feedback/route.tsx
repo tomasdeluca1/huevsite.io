@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    const { content, category = 'general' } = await req.json();
+    const { content, category = 'general', screenshotUrl = null } = await req.json();
 
     if (!content) {
       return NextResponse.json({ error: "El contenido es requerido" }, { status: 400 });
@@ -47,7 +47,8 @@ export async function POST(req: NextRequest) {
         user_id: user.id,
         user_email: user.email,
         content,
-        category
+        category,
+        screenshot_url: screenshotUrl
       });
 
     if (dbError) {
@@ -69,6 +70,7 @@ export async function POST(req: NextRequest) {
             category={category}
             content={content}
             userId={user.id}
+            screenshotUrl={screenshotUrl || undefined}
           />,
         });
       } catch (emailError) {

@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { analyticsService } from '@/lib/analytics-service';
+import { canUseLastInsightsView, hasProAccess } from '@/lib/pro-access';
 
 export async function GET(req: NextRequest) {
   try {
@@ -27,7 +28,7 @@ export async function GET(req: NextRequest) {
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("subscription_tier, pro_since")
+      .select("subscription_tier, pro_since, referral_reward_expires_at, free_trial_claimed_at, free_trial_started_at, free_trial_ends_at, free_trial_last_insights_viewed_at")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -36,9 +37,10 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "No se pudo validar el plan" }, { status: 500 });
     }
 
-    const isPro = profile?.subscription_tier === "pro" || !!profile?.pro_since;
+    const isPro = !!profile && hasProAccess(profile);
+    const canPreviewOneLastTime = !!profile && canUseLastInsightsView(profile);
 
-    if (!isPro) {
+    if (!isPro && !canPreviewOneLastTime) {
       return NextResponse.json({ error: "Insights es una feature PRO." }, { status: 403 });
     }
 
@@ -54,7 +56,17 @@ export async function GET(req: NextRequest) {
       endDate,
     });
 
-    return NextResponse.json(insights);
+    if (!isPro && canPreviewOneLastTime) {
+      await supabase
+        .from("profiles")
+        .update({ free_trial_last_insights_viewed_at: new Date().toISOString() })
+        .eq("id", user.id);
+    }
+
+    return NextResponse.json({
+      ...insights,
+      lastTrialInsightsView: !isPro && canPreviewOneLastTime,
+    });
   } catch (error: any) {
     console.error('Insights error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

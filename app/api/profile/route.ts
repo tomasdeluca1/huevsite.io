@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { scoreService } from '@/lib/score-service'
 import { vercelService } from '@/lib/vercel-service'
+import { hasProAccess } from '@/lib/pro-access'
 
 export const dynamic = 'force-dynamic'
 
@@ -79,12 +80,23 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // Obtener sub_sites
-    const { data: subSites, error: subSitesError } = await supabase
-      .from('sub_sites')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
+    // Obtener sub_sites y check BOTW en paralelo
+    const [
+      { data: subSites, error: subSitesError },
+      { data: botwWin },
+    ] = await Promise.all([
+      supabase
+        .from('sub_sites')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('showcase_winners')
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1)
+        .maybeSingle(),
+    ])
 
     if (subSitesError) {
       console.error('Error fetching subSites:', subSitesError)
@@ -94,6 +106,7 @@ export async function GET(request: NextRequest) {
       profile,
       blocks: normalizedBlocks,
       subSites: subSites || [],
+      hasWonBuilderOfTheWeek: !!botwWin,
     })
 
   } catch (error) {
@@ -135,6 +148,7 @@ export async function PATCH(request: NextRequest) {
       'image',
       'has_seen_update_feb25',
       'custom_domain',
+      'border_radius',
       'is_onboarding_test_user',
     ]
 
@@ -146,7 +160,7 @@ export async function PATCH(request: NextRequest) {
         .eq('id', user.id)
         .single();
       
-      const isPro = profile && (profile.subscription_tier === 'pro' || !!profile.pro_since);
+      const isPro = profile && hasProAccess(profile);
       if (!isPro && body.custom_domain !== "") {
         return NextResponse.json(
           { error: 'Para usar un dominio custom necesitás huevsite PRO.' },

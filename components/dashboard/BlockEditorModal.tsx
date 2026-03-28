@@ -740,7 +740,10 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
               />
             </div>
             <div className="space-y-2">
-              <div className="section-label !text-[9px] px-1">// título (opcional)</div>
+              <div className="flex items-center justify-between section-label !text-[9px] px-1">
+                <span>// título (opcional)</span>
+                <AIRewriteButton text={formData.title || ""} onSelect={(v) => handleChange("title", v)} accentColor={accentColor} />
+              </div>
               <input
                 value={formData.title || ""}
                 onChange={(e) => handleChange("title", e.target.value)}
@@ -758,7 +761,10 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
               />
             </div>
             <div className="space-y-2">
-              <div className="section-label !text-[9px] px-1">// descripción (opcional)</div>
+              <div className="flex items-center justify-between section-label !text-[9px] px-1">
+                <span>// descripción (opcional)</span>
+                <AIRewriteButton text={formData.description || ""} onSelect={(v) => handleChange("description", v)} accentColor={accentColor} />
+              </div>
               <textarea
                 value={formData.description || ""}
                 onChange={(e) => handleChange("description", e.target.value)}

@@ -22,6 +22,19 @@ export async function GET(
     const score = profile.builderScore || 0;
     const isWinner = profile.isWinner || false;
     const avatarUrl = profile.avatarUrl;
+    const earnedBadges = (profile.badges || []).slice(0, 5);
+
+    const BADGE_OG_VISUALS: Record<string, { bg: string }> = {
+      profile_complete:     { bg: "linear-gradient(135deg, #3b82f6, #6366f1, #8b5cf6)" },
+      profile_validated:    { bg: "linear-gradient(135deg, #22d3ee, #3b82f6, #6366f1)" },
+      good_reputation:      { bg: "linear-gradient(135deg, #a855f7, #7c3aed, #6366f1)" },
+      active_this_week:     { bg: "linear-gradient(135deg, #10b981, #34d399, #6ee7b7)" },
+      top_matchmaker:       { bg: "linear-gradient(135deg, #0ea5e9, #38bdf8, #7dd3fc)" },
+      builder_of_the_week:  { bg: "linear-gradient(135deg, #f59e0b, #fbbf24, #fde68a)" },
+      premium:              { bg: "linear-gradient(135deg, #84cc16, #C8FF00, #bef264)" },
+      ambassador:           { bg: "linear-gradient(135deg, #ec4899, #a855f7, #d946ef)" },
+      twitter_connected:    { bg: "linear-gradient(135deg, #1d9bf0, #0ea5e9, #38bdf8)" },
+    };
 
     return new ImageResponse(
       (
@@ -185,12 +198,38 @@ export async function GET(
                   fontSize: 28,
                   color: 'rgba(255,255,255,0.6)',
                   lineHeight: 1.4,
-                  margin: '0 0 32px 0',
+                  margin: '0 0 24px 0',
                   maxWidth: 600,
                 }}
               >
                 {tagline}
               </p>
+
+              {earnedBadges.length > 0 && (
+                <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
+                  {earnedBadges.map((badge) => {
+                    const v = BADGE_OG_VISUALS[badge.key];
+                    return (
+                      <div
+                        key={badge.key}
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: '50%',
+                          background: v?.bg || '#555',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: 18,
+                          border: '1.5px solid rgba(255,255,255,0.15)',
+                        }}
+                      >
+                        {badge.icon}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
               <div style={{ display: 'flex', gap: 12 }}>
                 {roles.map((role: string) => (

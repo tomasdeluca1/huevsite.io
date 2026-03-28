@@ -190,6 +190,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
             --accent-dim: ${profile.accentColor}1f;
             --accent-mid: ${profile.accentColor}4d;
             --white: #F2F2F2;
+            --radius-xl: ${profile.borderRadius || '1.5rem'};
           }
           ::selection {
             background-color: ${profile.accentColor};
@@ -233,6 +234,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
           currentUserId={currentUserId}
           isEnabledSocialNetwork={isEnabled("socialNetwork")}
           subscriptionTier={profile.subscriptionTier}
+          borderRadius={profile.borderRadius}
           subSites={profile.subSites}
           blocks={profile.blocks}
           username={profile.username}
@@ -250,6 +252,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
             subscriptionTier={profile.subscriptionTier}
             userId={profile.id}
             isWinner={profile.isWinner}
+            badges={profile.badges}
             subSites={profile.subSites}
             username={username}
             isCustomDomain={isCustomDomain}

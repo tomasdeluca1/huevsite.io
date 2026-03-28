@@ -28,6 +28,7 @@ interface Props {
   blocks?: BlockData[];
   isCustomDomain?: boolean;
   isWinner?: boolean;
+  borderRadius?: string;
 }
 
 export function ProfileHeader({
@@ -47,6 +48,7 @@ export function ProfileHeader({
   username,
   isCustomDomain = false,
   isWinner = false,
+  borderRadius = "1.5rem",
 }: Props) {
   const [modalType, setModalType] = useState<"followers" | "following" | null>(null);
   const [localFollowersCount, setLocalFollowersCount] = useState(followersCount);
@@ -155,7 +157,9 @@ export function ProfileHeader({
 
       {/* Stats and Social Actions Bar */}
       {(isEnabledSocialNetwork || showFollowButton) && (
-        <div className="huevsite-block !p-3 sm:!p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6 !rounded-[2.5rem]">
+        <div
+          className="overflow-visible px-3 sm:px-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6"
+        >
           {isEnabledSocialNetwork && profileId && (
             <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-2 w-full lg:w-auto">
               <button
@@ -247,7 +251,7 @@ export function ProfileHeader({
       )}
 
       {subscriptionTier === "pro" && subSites.length > 0 && !hideHeaderEcosystem && (
-        <div className="mt-8 md:mt-12 backdrop-blur-xl bg-white/[0.02] border border-white/[0.05] rounded-[2rem] p-5 sm:p-6 overflow-hidden relative group">
+        <div className="mt-8 md:mt-12 backdrop-blur-xl bg-white/[0.02] border border-white/[0.05] p-5 sm:p-6 overflow-hidden relative group" style={{ borderRadius: `calc(${borderRadius} + 0.5rem)` }}>
           <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent)]/10 via-transparent to-transparent opacity-0 group-hover:opacity-50 transition-opacity duration-700 pointer-events-none" />
           
           <div className="flex items-center justify-between mb-5 relative z-10">

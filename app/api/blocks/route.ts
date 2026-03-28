@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { scoreService } from '@/lib/score-service'
 import { checkAndPostWelcomeTweet } from '@/lib/twitter'
+import { hasProAccess } from '@/lib/pro-access'
 
 export const dynamic = 'force-dynamic'
 
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
     // Limit logic
     const { data: profileData } = await supabase
       .from('profiles')
-      .select('subscription_tier, extra_blocks_from_share')
+      .select('subscription_tier, pro_since, referral_reward_expires_at, free_trial_claimed_at, free_trial_started_at, free_trial_ends_at, free_trial_last_insights_viewed_at, extra_blocks_from_share')
       .eq('id', user.id)
       .single()
 
@@ -68,8 +69,8 @@ export async function POST(request: NextRequest) {
       .eq('user_id', user.id)
 
     const MAX_BASE_FREE = 5
-    const MAX_PRO = 32 // Consistente con MAX_PRO_BLOCKS en el frontend
-    const effectiveLimit = profileData?.subscription_tier === 'pro'
+    const MAX_PRO = 22 // Consistente con MAX_PRO_BLOCKS en el frontend
+    const effectiveLimit = profileData && hasProAccess(profileData)
       ? MAX_PRO
       : MAX_BASE_FREE + (profileData?.extra_blocks_from_share || 0)
 

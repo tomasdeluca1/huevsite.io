@@ -15,7 +15,8 @@ function LoginContent() {
   const [sent, setSent] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const nextParam = searchParams.get("next");
+  const refParam = searchParams.get("ref");
+  const nextParam = searchParams.get("next") ?? (refParam ? `/onboarding?ref=${refParam}` : null);
 
   useEffect(() => {
     const error = searchParams.get("error");

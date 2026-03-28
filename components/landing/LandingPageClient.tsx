@@ -9,7 +9,7 @@ import { BlockPreviewContext } from "@/lib/block-preview-context";
 import { supabase } from "@/lib/supabase";
 import { lemonCheckoutUrl } from "@/lib/lemon-checkout-url";
 import { User } from "@supabase/supabase-js";
-import { Activity, Compass, Users, PlusCircle, Layout, Check, BookOpen, Globe, Link2, BarChart3, TrendingUp, Loader2, ArrowRight, Sparkles, Zap, Star, LayoutGrid, Eye } from "lucide-react";
+import { Activity, Compass, Users, PlusCircle, Layout, Check, BookOpen, Globe, BarChart3, Loader2, ArrowRight, Sparkles, Zap, Star, LayoutGrid, Eye } from "lucide-react";
 
 interface LandingPageClientProps {
   showcaseData: any;
@@ -141,8 +141,6 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
   const normalizedClaim = claimInput.trim().toLowerCase();
   const claimPath = normalizedClaim ? `/onboarding?claim=${encodeURIComponent(normalizedClaim)}` : "/onboarding";
   const claimHref = user ? claimPath : `/login?next=${encodeURIComponent(claimPath)}`;
-  const linktreeMigrationHref = user ? "/dashboard" : `/login?next=${encodeURIComponent("/onboarding")}`;
-
   const trackLandingEvent = (eventName: string, payload: Record<string, any>) => {
     if (typeof window === "undefined") return;
     window.umami?.track(eventName, payload);
@@ -703,101 +701,6 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
             </div>
             <button className="ou-next">Seguir →</button>
             <div className="ou-skip">también podés conectar GitHub directamente</div>
-          </div>
-        </div>
-      </section>
-
-      <section className="linktree-cta-section">
-        <div className="linktree-cta-shell">
-          <div className="linktree-cta-copy">
-            <div className="linktree-cta-kicker">
-              <div className="section-label !mb-0">// migrá desde linktree</div>
-              <div className="linktree-cta-mini-badge">importación en minutos</div>
-            </div>
-            <h2 className="section-title">
-              Dejá la lista de links. <span style={{ color: "var(--accent)" }}>Mostrá quién sos.</span>
-            </h2>
-            <p className="section-sub">
-              Pegás tu Linktree y arrancás con links, bio y avatar ya puestos. Después lo convertís en un perfil con más contexto, identidad y profundidad.
-            </p>
-
-            <div className="linktree-cta-points compact">
-              {[
-                {
-                  icon: Link2,
-                  title: "Importá lo que ya tenés",
-                  copy: "Sin copiar uno por uno.",
-                },
-                {
-                  icon: Globe,
-                  title: "Sumá contexto e identidad",
-                  copy: "No solo botones sueltos.",
-                },
-                {
-                  icon: BarChart3,
-                  title: "Escalá después",
-                  copy: "GitHub, sub-sites y métricas.",
-                },
-              ].map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div key={item.title} className="linktree-cta-point">
-                    <div className="linktree-cta-point-icon">
-                      <Icon size={18} />
-                    </div>
-                    <div>
-                      <div className="linktree-cta-point-title">{item.title}</div>
-                      <p className="linktree-cta-point-copy">{item.copy}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="linktree-cta-actions">
-              <Link
-                href={linktreeMigrationHref}
-                className="btn btn-accent !px-8 !py-4 text-base"
-                onClick={() => trackLandingEvent("landing_linktree_cta_click", {
-                  variant: heroVariant,
-                  href: linktreeMigrationHref,
-                  loggedIn: Boolean(user),
-                })}
-              >
-                {user ? "Traer mi Linktree al dashboard" : "Traer mi Linktree a huevsite"}
-              </Link>
-              <span className="linktree-cta-footnote">Importás primero. Afinás después.</span>
-            </div>
-          </div>
-
-          <div className="linktree-cta-card">
-            <div className="linktree-cta-card-label">antes / después</div>
-
-            <div className="linktree-cta-card-flow">
-              <div className="linktree-cta-card-node">
-                <span className="linktree-cta-card-node-title">Linktree</span>
-                <span className="linktree-cta-card-node-sub">hub estático</span>
-              </div>
-              <div className="linktree-cta-card-arrow compact">
-                <ArrowRight size={18} />
-              </div>
-              <div className="linktree-cta-card-node accent">
-                <span className="linktree-cta-card-node-title">huevsite</span>
-                <span className="linktree-cta-card-node-sub">perfil vivo</span>
-              </div>
-            </div>
-
-            <div className="linktree-cta-compare compact">
-              <div className="linktree-cta-compare-chip">links sueltos</div>
-              <div className="linktree-cta-compare-chip">bio + avatar</div>
-              <div className="linktree-cta-compare-chip">proyectos</div>
-              <div className="linktree-cta-compare-chip">señal real</div>
-              <div className="linktree-cta-compare-chip">más profundidad</div>
-            </div>
-
-            <div className="linktree-cta-card-note">
-              Importamos lo visible para darte una base sólida y publicar más rápido.
-            </div>
           </div>
         </div>
       </section>

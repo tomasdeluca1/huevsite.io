@@ -78,6 +78,7 @@ interface Props {
   accentColor: string;
   blocks: any[];
   onOptimizeBoard?: () => void;
+  onLastTrialViewConsumed?: () => void;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -595,7 +596,7 @@ function StatCard({
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export function InsightsTab({ accentColor, blocks, onOptimizeBoard }: Props) {
+export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialViewConsumed }: Props) {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<InsightsData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -620,6 +621,9 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard }: Props) {
       if (!res.ok) throw new Error("Error al cargar las métricas");
       const insights = await res.json();
       setData(insights);
+      if (insights.lastTrialInsightsView) {
+        onLastTrialViewConsumed?.();
+      }
       setVisitorPage(1);
       setSelectedVisitorId(null);
     } catch (err: any) {

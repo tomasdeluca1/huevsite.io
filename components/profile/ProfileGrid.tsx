@@ -8,7 +8,7 @@ import { ProjectBlock } from "@/components/blocks/ProjectBlock"
 import { MetricBlock, SocialBlock, CVBlock } from "@/components/blocks/Widgets"
 import { StackBlock, CommunityBlock, WritingBlock } from "@/components/blocks/ExtraBlocks"
 import { MediaBlock, CertificationBlock, AchievementBlock, CustomBlock, CollabBlock, EcosystemBlock } from "@/components/blocks/NewBlocks"
-import type { BlockData } from "@/lib/profile-types"
+import type { BlockData, ProfileBadge } from "@/lib/profile-types"
 import { trackClick } from "@/components/analytics/AnalyticsTracker"
 import { useBlockPreview } from "@/lib/block-preview-context"
 
@@ -21,12 +21,13 @@ interface ProfileGridProps {
   userId?: string
   subSiteId?: string
   isWinner?: boolean
+  badges?: ProfileBadge[]
   subSites?: any[]
   username?: string
   isCustomDomain?: boolean
 }
 
-export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscriptionTier, userId, subSiteId, isWinner = false, subSites = [], username, isCustomDomain = false }: ProfileGridProps) {
+export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscriptionTier, userId, subSiteId, isWinner = false, badges = [], subSites = [], username, isCustomDomain = false }: ProfileGridProps) {
   const isPreview = useBlockPreview()
   // Filtrar solo bloques visibles y ordenar
   const visibleBlocks = blocks
@@ -51,7 +52,7 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscri
 
     switch (block.type) {
       case "hero":
-        return <HeroBlock {...props} subscriptionTier={subscriptionTier} isWinner={isWinner} />
+        return <HeroBlock {...props} subscriptionTier={subscriptionTier} isWinner={isWinner} badges={badges} />
       case "building":
         return <BuildingBlock {...props} />
       case "github":

@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { hasProAccess } from '@/lib/pro-access'
 
 export async function middleware(request: NextRequest) {
   const url = request.nextUrl
@@ -61,12 +62,12 @@ export async function middleware(request: NextRequest) {
       
       const { data: profile } = await supabase
         .from('profiles')
-        .select('username, subscription_tier, pro_since')
+        .select('username, subscription_tier, pro_since, referral_reward_expires_at, free_trial_claimed_at, free_trial_started_at, free_trial_ends_at, free_trial_last_insights_viewed_at')
         .in('custom_domain', possibleDomains)
         .maybeSingle()
 
       // Verificamos que el perfil exista y sea PRO
-      const isPro = profile && (profile.subscription_tier === 'pro' || !!profile.pro_since)
+      const isPro = profile && hasProAccess(profile)
 
       if (profile && isPro) {
         // Reescribimos domain.com/path -> huevsite.io/username/path

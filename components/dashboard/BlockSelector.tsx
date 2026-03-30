@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Plus, X, Layout as LayoutIcon, MessageSquare, Rocket, Github, Star, Layers, Users, BookOpen, Sparkles, FileText, Image, Award, Trophy, PenTool, Globe } from "lucide-react";
+import { Plus, X, Layout as LayoutIcon, MessageSquare, Rocket, Github, Star, Layers, Users, BookOpen, Sparkles, FileText, Image, Award, Trophy, PenTool, Globe, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BlockType, MAX_FREE_BLOCKS, MAX_PRO_BLOCKS, isDarkColor } from "@/lib/profile-types";
 import { UpgradeModal } from "@/components/dashboard/UpgradeModal";
@@ -60,7 +60,7 @@ export function BlockSelector({
         { type: "building", icon: <Rocket size={18} />, label: "Building", desc: "¿Qué estás buildando ahora?" },
         { type: "achievement", icon: <Trophy size={18} />, label: "Logro", desc: "Hitos y victorias importantes" },
         { type: "certification", icon: <Award size={18} />, label: "Certificación", desc: "Cursos y certificados" },
-        { type: "ecosystem", icon: <Globe size={18} />, label: "Ecosistema", desc: "Tus sub-sites en un bloque" },
+        { type: "ecosystem", icon: <Globe size={18} />, label: "Ecosistema", desc: "Tus sub-sites en un bloque", proOnly: true },
         { type: "stack", icon: <Layers size={18} />, label: "Tech Stack", desc: "Tus herramientas favoritas" },
       ],
     },
@@ -77,9 +77,13 @@ export function BlockSelector({
     },
   ];
 
-  const handleBlockClick = (type: BlockType) => {
+  const handleBlockClick = (type: BlockType, proOnly?: boolean) => {
+    if (proOnly && subscriptionTier !== "pro") {
+      setIsUpgradeModalOpen(true);
+      setIsOpen(false);
+      return;
+    }
     if (atLimit) {
-      // Si ya usó el share, ir directo a upgrade; si no, ofrecer share primero
       if (twitterShareUnlocked) {
         setIsUpgradeModalOpen(true);
       } else {
@@ -151,12 +155,20 @@ export function BlockSelector({
                       <div key={i}>
                         <h4 className="text-[11px] uppercase font-mono tracking-[0.2em] text-[var(--accent)] mb-5 px-2 font-black italic shadow-[var(--accent)]/10 text-glow">{cat.name}</h4>
                         <div className="grid grid-cols-2 gap-3">
-                          {cat.blocks.map((block) => (
+                          {cat.blocks.map((block) => {
+                            const isLocked = block.proOnly && subscriptionTier !== "pro";
+                            return (
                             <button
                               key={block.type}
-                              onClick={() => handleBlockClick(block.type as BlockType)}
-                              className="flex items-start gap-4 p-4 rounded-3xl hover:bg-[var(--surface2)] border border-transparent hover:border-[var(--border-bright)] transition-all group text-left"
+                              onClick={() => handleBlockClick(block.type as BlockType, block.proOnly)}
+                              className={`flex items-start gap-4 p-4 rounded-3xl hover:bg-[var(--surface2)] border border-transparent hover:border-[var(--border-bright)] transition-all group text-left relative ${isLocked ? "opacity-60" : ""}`}
                             >
+                              {isLocked && (
+                                <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30">
+                                  <Lock size={10} className="text-amber-500" />
+                                  <span className="text-[9px] font-black text-amber-500 uppercase tracking-wider">Pro</span>
+                                </div>
+                              )}
                               <div
                                 className="p-3.5 rounded-2xl bg-[var(--surface2)] text-[var(--text-dim)] group-hover:text-black group-hover:bg-[var(--accent)] transition-all flex-shrink-0 shadow-lg"
                                 style={{ "--accent": accentColor } as React.CSSProperties}
@@ -168,7 +180,8 @@ export function BlockSelector({
                                 <p className="text-[12px] text-[var(--text-dim)] leading-relaxed font-medium">{block.desc}</p>
                               </div>
                             </button>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     ))}

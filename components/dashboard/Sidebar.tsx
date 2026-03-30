@@ -235,9 +235,20 @@ export function DashboardSidebar({
               subscriptionTier={isPro ? "pro" : profile.subscriptionTier}
             />
 
-            {/* Border Radius Selector */}
-            <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-              <div className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-2.5">Redondeo</div>
+            {/* Border Radius Selector — Pro only */}
+            <div className={`p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06] relative ${!isPro ? 'opacity-50 pointer-events-none' : ''}`}>
+              <div className="flex items-center justify-between mb-2.5">
+                <div className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Redondeo</div>
+                {!isPro && (
+                  <button
+                    onClick={() => openModal(setIsUpgradeModalOpen)}
+                    className="pointer-events-auto flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30"
+                  >
+                    <Lock size={10} className="text-amber-500" />
+                    <span className="text-[9px] font-black text-amber-500 uppercase tracking-wider">Pro</span>
+                  </button>
+                )}
+              </div>
               <div className="flex gap-1.5">
                 {PRESET_BORDER_RADIUS.map(({ label, value }) => {
                   const isActive = (profile.borderRadius || '1.5rem') === value;

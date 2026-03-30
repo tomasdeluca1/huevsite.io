@@ -9,14 +9,14 @@ const BADGE_VISUALS: Record<
   { bg: string; glow: string; border: string }
 > = {
   profile_complete:     { bg: "linear-gradient(135deg, #3b82f6, #6366f1, #8b5cf6)", glow: "rgba(99,102,241,0.55)",  border: "rgba(129,140,248,0.45)" },
-  profile_validated:    { bg: "linear-gradient(135deg, #22d3ee, #3b82f6, #6366f1)", glow: "rgba(6,182,212,0.55)",   border: "rgba(34,211,238,0.45)"  },
-  good_reputation:      { bg: "linear-gradient(135deg, #a855f7, #7c3aed, #6366f1)", glow: "rgba(168,85,247,0.55)",  border: "rgba(196,181,253,0.45)" },
   active_this_week:     { bg: "linear-gradient(135deg, #10b981, #34d399, #6ee7b7)", glow: "rgba(52,211,153,0.55)",  border: "rgba(110,231,183,0.45)" },
-  top_matchmaker:       { bg: "linear-gradient(135deg, #0ea5e9, #38bdf8, #7dd3fc)", glow: "rgba(14,165,233,0.55)",  border: "rgba(125,211,252,0.45)" },
+  twitter_connected:    { bg: "linear-gradient(135deg, #1d9bf0, #0ea5e9, #38bdf8)", glow: "rgba(29,155,240,0.55)",  border: "rgba(56,189,248,0.45)"  },
+  github_linked:        { bg: "linear-gradient(135deg, #6e7681, #8b949e, #c9d1d9)", glow: "rgba(139,148,158,0.55)", border: "rgba(201,209,217,0.45)" },
+  multi_block:          { bg: "linear-gradient(135deg, #a855f7, #7c3aed, #6366f1)", glow: "rgba(168,85,247,0.55)",  border: "rgba(196,181,253,0.45)" },
+  rising_builder:       { bg: "linear-gradient(135deg, #f59e0b, #f97316, #ef4444)", glow: "rgba(249,115,22,0.55)",  border: "rgba(251,191,36,0.45)"  },
   builder_of_the_week:  { bg: "linear-gradient(135deg, #f59e0b, #fbbf24, #fde68a)", glow: "rgba(251,191,36,0.65)",  border: "rgba(252,211,77,0.55)"  },
   premium:              { bg: "linear-gradient(135deg, #84cc16, #C8FF00, #bef264)", glow: "rgba(200,255,0,0.6)",    border: "rgba(200,255,0,0.45)"   },
   ambassador:           { bg: "linear-gradient(135deg, #ec4899, #a855f7, #d946ef)", glow: "rgba(217,70,239,0.55)",  border: "rgba(240,171,252,0.45)" },
-  twitter_connected:    { bg: "linear-gradient(135deg, #1d9bf0, #0ea5e9, #38bdf8)", glow: "rgba(29,155,240,0.55)",  border: "rgba(56,189,248,0.45)"  },
 };
 
 interface BadgeItemProps {

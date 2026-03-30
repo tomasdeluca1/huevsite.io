@@ -19,12 +19,12 @@ import {
 import {
   Save, Eye, Layout as LayoutIcon, Settings, LogOut, Plus, Sparkles, MessageSquare,
   Activity, Compass, Trash2, Copy, Check, Trophy, ArrowUpRight, BadgeCheck, ArrowLeft, Lock, Globe, ChevronRight,
-  Globe2, AlertCircle, SendHorizontal, ChevronDown
+  Globe2, AlertCircle, SendHorizontal, ChevronDown, X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { MOCK_PROFILE } from "@/lib/mock-profile";
-import { BlockData, BlockType, ProfileData, PRESET_COLORS, getContrastColor, isDarkColor } from "@/lib/profile-types";
+import { BlockData, BlockType, ProfileData, PRESET_COLORS, getContrastColor, isDarkColor, MAX_FREE_BLOCKS } from "@/lib/profile-types";
 import { HeroBlock } from "@/components/blocks/HeroBlock";
 import { BuildingBlock } from "@/components/blocks/BuildingBlock";
 import { GitHubBlock } from "@/components/blocks/GitHubBlock";
@@ -56,6 +56,7 @@ import { getFreeTrialState, hasProAccess } from "@/lib/pro-access";
 import { getProfileBadges, ALL_BADGE_KEYS, BADGE_CATALOG } from "@/lib/profile-badges";
 import { BadgeItem } from "@/components/profile/BadgeItem";
 import { ProFeatureTour } from "@/components/dashboard/ProFeatureTour";
+import { TrialExpiredBlockChooser } from "@/components/dashboard/TrialExpiredBlockChooser";
 
 const DASHBOARD_TABS = ["board", "insights", "subsites", "domain", "transfer"] as const;
 const PRO_ONLY_TABS = ["insights", "subsites", "domain", "transfer"] as const;
@@ -76,12 +77,15 @@ export default function DashboardPage() {
   const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
   const [isLinktreeRefactorOpen, setIsLinktreeRefactorOpen] = useState(false);
   const [isClaimingTrial, setIsClaimingTrial] = useState(false);
+  const [trialBannerDismissed, setTrialBannerDismissed] = useState(false);
+  const [blockChooserResolved, setBlockChooserResolved] = useState(false);
   const [isProTourOpen, setIsProTourOpen] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [isRefactoringFromLinktree, setIsRefactoringFromLinktree] = useState(false);
   const [tempProfileData, setTempProfileData] = useState({
     username: '',
     display_name: '',
+    email: '',
     tagline: '',
     avatarUrl: '',
     githubHandle: ''
@@ -93,7 +97,7 @@ export default function DashboardPage() {
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedVersionRef = useRef<string>("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [badgesCollapsed, setBadgesCollapsed] = useState(false);
+  const [badgesCollapsed, setBadgesCollapsed] = useState(true);
   const [activeTab, setActiveTab] = useState<'board' | 'insights' | 'subsites' | 'domain' | 'transfer'>('board');
   const [domain, setDomain] = useState("");
   const [transferEmail, setTransferEmail] = useState("");
@@ -274,6 +278,7 @@ export default function DashboardPage() {
         id: data.profile.id,
         username: data.profile.username,
         displayName: data.profile.name || data.profile.username,
+        email: data.profile.email || "",
         accentColor: data.profile.accent_color,
         roles: data.profile.roles || [],
         layout: data.profile.layout || null,
@@ -317,6 +322,7 @@ export default function DashboardPage() {
         badges: getProfileBadges(data.profile, {
           blockCount: (data.blocks || []).length,
           hasWonBuilderOfTheWeek: !!data.hasWonBuilderOfTheWeek,
+          blocks: (data.blocks || []).map((b: any) => ({ type: b.type, data: b.data, links: b.data?.links })),
         }),
       };
 
@@ -324,6 +330,7 @@ export default function DashboardPage() {
       setTempProfileData({
         username: transformedProfile.username,
         display_name: transformedProfile.displayName,
+        email: transformedProfile.email || '',
         tagline: transformedProfile.tagline || '',
         avatarUrl: transformedProfile.avatarUrl || '',
         githubHandle: transformedProfile.githubHandle || ''
@@ -497,6 +504,29 @@ export default function DashboardPage() {
         blocks: prev.blocks.filter(b => b.id !== id)
       };
     });
+  };
+
+  const handleBlockChooserConfirm = async (keepBlockIds: string[]) => {
+    if (!profile) return;
+    const hideIds = profile.blocks.filter(b => !keepBlockIds.includes(b.id)).map(b => b.id);
+    try {
+      await Promise.all(
+        hideIds.map(id =>
+          fetch(`/api/blocks/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ visible: false }),
+          })
+        )
+      );
+      setProfile(prev => prev ? {
+        ...prev,
+        blocks: prev.blocks.filter(b => keepBlockIds.includes(b.id)),
+      } : prev);
+    } catch (err) {
+      console.error("Error hiding blocks:", err);
+    }
+    setBlockChooserResolved(true);
   };
 
   const addBlock = async (type: BlockType) => {
@@ -1051,6 +1081,7 @@ export default function DashboardPage() {
           setTempProfileData({
             username: site.slug || '',
             display_name: site.title || '',
+            email: profile.email || '',
             tagline: site.description || '',
             avatarUrl: site.avatarUrl || '',
             githubHandle: ''
@@ -1062,6 +1093,7 @@ export default function DashboardPage() {
       setTempProfileData({
         username: profile.username || '',
         display_name: profile.displayName || '',
+        email: profile.email || '',
         tagline: profile.tagline || '',
         avatarUrl: profile.avatarUrl || '',
         githubHandle: profile.githubHandle || ''
@@ -1153,13 +1185,13 @@ export default function DashboardPage() {
           : 'md:pb-8 md:pt-0 lg:pb-10'
       }`}>
         <style dangerouslySetInnerHTML={{
-          __html: `:root { --accent: ${profile.accentColor}; --accent-dim: ${profile.accentColor}1f; --btn-border: ${isDarkColor(profile.accentColor) ? 'rgba(255,255,255,0.15)' : 'transparent'}; --dashboard-radius: ${profile.borderRadius || '1.5rem'}; }`
+          __html: `:root { --accent: ${profile.accentColor}; --accent-dim: ${profile.accentColor}1f; --btn-border: ${isDarkColor(profile.accentColor) ? 'rgba(255,255,255,0.15)' : 'transparent'}; --dashboard-radius: ${profile.borderRadius || '1.5rem'}; --radius-xl: ${profile.borderRadius || '1.5rem'}; }`
         }} />
         <div className="absolute top-0 right-0 w-full lg:w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(var(--accent-rgb),0.03)_0%,transparent_70%)] pointer-events-none" />
 
         <div className="max-w-[1600px] mx-auto relative">
           <div className="absolute inset-x-6 top-0 h-24 md:h-32 bg-[radial-gradient(circle,rgba(var(--accent-rgb),0.12)_0%,transparent_72%)] blur-3xl pointer-events-none opacity-70" />
-          {!isPro && (
+          {!isPro && !profile.freeTrial?.eligible && !profile.freeTrial?.active && (
             <div className="relative z-20 mb-6 md:mb-8 lg:mb-10">
               <PriceBanner className="top-0 sm:top-2" userId={profile.id || profile.username} />
             </div>
@@ -1188,8 +1220,14 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {profile.freeTrial?.active && (
+          {profile.freeTrial?.active && !trialBannerDismissed && (
             <div className="relative z-20 mb-6 border border-white/10 bg-white/[0.03] p-5 md:p-6" style={{ borderRadius: "var(--dashboard-radius)" }}>
+              <button
+                onClick={() => setTrialBannerDismissed(true)}
+                className="absolute top-3 right-3 w-7 h-7 rounded-xl flex items-center justify-center bg-white/5 border border-white/10 text-white/30 hover:text-white hover:bg-white/10 transition-all"
+              >
+                <X size={14} />
+              </button>
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
                   <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent)]">Trial activo</div>
@@ -1248,7 +1286,14 @@ export default function DashboardPage() {
 
           <header className="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-6 lg:gap-8 mb-8 md:mb-12 items-center lg:text-left text-center px-2 md:px-0 relative z-[999]">
           <div className="w-full md:w-auto relative">
-            <TwitterWarning blocks={profile.blocks} isSubSite={Boolean(selectedSubSiteId)} />
+            <TwitterWarning blocks={profile.blocks} isSubSite={Boolean(selectedSubSiteId)} onAddTwitter={() => {
+              const socialBlock = profile.blocks.find(b => b.type === 'social');
+              if (socialBlock) {
+                setEditingBlock(socialBlock);
+              } else {
+                addBlock('social');
+              }
+            }} />
             <div className="mb-3 hidden md:block"><div className="section-label">// dashboard / {activeTab}</div></div>
             <h2 className="text-3xl md:text-4xl xl:text-5xl font-[950] tracking-tighter leading-[0.94] text-balance">
               {activeTab === 'board' ? <>Armá tu <span style={{ color: profile.accentColor }}>{selectedSubSiteId ? (profile.subSites.find(s => s.id === selectedSubSiteId)?.title || "Board") : "huevsite"}</span>.</> :
@@ -1472,16 +1517,13 @@ export default function DashboardPage() {
           <AnimatePresence mode="wait">
             {activeTab === 'board' && (
               <motion.div key="board" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }}>
-                <div className="mb-6 md:mb-8 lg:mb-10 grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_auto] gap-4 items-start">
-                  <div className="border border-white/[0.06] bg-[linear-gradient(135deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))] px-5 py-4 md:px-6 md:py-5 shadow-[0_20px_60px_rgba(0,0,0,0.18)]" style={{ borderRadius: "var(--dashboard-radius)" }}>
-                    <p className="text-[10px] uppercase tracking-[0.22em] font-black text-white/25 mb-2">Board Editor</p>
-                    <p className="text-sm md:text-base text-white/65 max-w-3xl text-balance">
-                      Arrastrá bloques, ajustá su tamaño y ordená la composición para que el board se sienta consistente en mobile, tablet y desktop.
-                    </p>
-                  </div>
-                  <div className="hidden xl:flex items-center gap-2 border border-white/[0.06] bg-white/[0.02] px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white/35" style={{ borderRadius: "var(--dashboard-radius)" }}>
-                    <span className="inline-flex h-2.5 w-2.5 rounded-full" style={{ backgroundColor: profile.accentColor }} />
-                    {profile.blocks.length} bloques activos
+                <div className="mb-6 md:mb-8 flex items-center justify-between gap-4 px-1">
+                  <p className="text-[11px] text-white/30 font-medium">
+                    Arrastrá, redimensioná y hacé click en cada bloque para editarlo.
+                  </p>
+                  <div className="hidden md:flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/25 shrink-0">
+                    <span className="inline-flex h-2 w-2 rounded-full" style={{ backgroundColor: profile.accentColor }} />
+                    {profile.blocks.length} bloques
                   </div>
                 </div>
 
@@ -1660,7 +1702,7 @@ export default function DashboardPage() {
         onComplete={handleOnboardingComplete}
       />
       <AnimatePresence>{isDeletingId && <div className="fixed inset-0 z-[500] flex items-center justify-center p-4"><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setIsDeletingId(null)} /><motion.div initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }} className="relative w-full max-w-sm bg-[var(--surface)] border border-red-500/30 rounded-[2rem] shadow-2xl p-8 z-[510] text-center"><div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-6 text-red-500"><Trash2 size={32} /></div><h3 className="text-2xl font-black mb-3 text-white">¿Borrar bloque?</h3><p className="text-[var(--text-dim)] mb-8 text-sm leading-relaxed">Esta acción no se puede deshacer.</p><div className="flex gap-3"><button onClick={() => setIsDeletingId(null)} className="flex-1 py-3.5 rounded-2xl bg-[var(--surface2)] font-bold text-sm text-white">Cancelar</button><button onClick={() => { removeBlock(isDeletingId); setIsDeletingId(null); }} className="flex-1 py-3.5 rounded-2xl bg-red-500 font-bold text-sm text-white transition-all">Eliminar</button></div></motion.div></div>}</AnimatePresence>
-      <AnimatePresence>{isProfileModalOpen && <div className="fixed inset-0 z-[500] flex items-center justify-center p-4"><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsProfileModalOpen(false)} className="absolute inset-0 bg-black/80 backdrop-blur-md" /><motion.div initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }} className="relative w-full max-w-md bg-[var(--surface)] border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden z-[510] p-8 pt-10"><div className="text-center mb-8"><div className="section-label mb-2 mx-auto w-fit">// identidad {selectedSubSiteId ? '(sub-site)' : ''}</div><h3 className="text-2xl font-black tracking-tighter">Editar {selectedSubSiteId ? 'Sub-site' : 'Perfil'}</h3></div><div className="space-y-6"><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1">URL del {selectedSubSiteId ? 'Sub-site' : 'Perfil'}</label><div className="flex items-center gap-2 p-4 rounded-2xl bg-black/40 border border-white/10 focus-within:border-[var(--accent)] transition-all font-mono"><span className="text-xs text-white/20">huevsite.io/{selectedSubSiteId ? `${profile.username}/` : ''}</span><input value={tempProfileData.username} onChange={(e) => setTempProfileData(p => ({ ...p, username: e.target.value.toLowerCase() }))} className="bg-transparent border-none outline-none text-sm font-black text-[var(--accent)] flex-1 p-0" /></div></div><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">Foto (URL)</label><input value={tempProfileData.avatarUrl} onChange={(e) => setTempProfileData(p => ({ ...p, avatarUrl: e.target.value }))} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-white/60 focus:border-[var(--accent)] transition-all font-mono" /></div><div className="space-y-4 pt-2"><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">Nombre</label><input value={tempProfileData.display_name} onChange={(e) => setTempProfileData(p => ({ ...p, display_name: e.target.value }))} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm font-black text-white focus:border-[var(--accent)] transition-all" /></div><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">{selectedSubSiteId ? 'Descripción' : 'Tagline'}</label><input value={tempProfileData.tagline} onChange={(e) => setTempProfileData(p => ({ ...p, tagline: e.target.value }))} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-white/60 focus:border-[var(--accent)] transition-all" /></div></div></div><div className="flex gap-4 mt-10"><button onClick={() => setIsProfileModalOpen(false)} className="flex-1 py-4 text-sm font-bold text-white/30 hover:text-white transition-colors">Cancelar</button><button onClick={async () => { 
+      <AnimatePresence>{isProfileModalOpen && <div className="fixed inset-0 z-[500] flex items-center justify-center p-4"><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsProfileModalOpen(false)} className="absolute inset-0 bg-black/80 backdrop-blur-md" /><motion.div initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }} className="relative w-full max-w-md bg-[var(--surface)] border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden z-[510] p-8 pt-10"><div className="text-center mb-8"><div className="section-label mb-2 mx-auto w-fit">// identidad {selectedSubSiteId ? '(sub-site)' : ''}</div><h3 className="text-2xl font-black tracking-tighter">Editar {selectedSubSiteId ? 'Sub-site' : 'Perfil'}</h3></div><div className="space-y-6"><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1">URL del {selectedSubSiteId ? 'Sub-site' : 'Perfil'}</label><div className="flex items-center gap-2 p-4 rounded-2xl bg-black/40 border border-white/10 focus-within:border-[var(--accent)] transition-all font-mono"><span className="text-xs text-white/20">huevsite.io/{selectedSubSiteId ? `${profile.username}/` : ''}</span><input value={tempProfileData.username} onChange={(e) => setTempProfileData(p => ({ ...p, username: e.target.value.toLowerCase() }))} className="bg-transparent border-none outline-none text-sm font-black text-[var(--accent)] flex-1 p-0" /></div></div><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">Foto (URL)</label><input value={tempProfileData.avatarUrl} onChange={(e) => setTempProfileData(p => ({ ...p, avatarUrl: e.target.value }))} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-white/60 focus:border-[var(--accent)] transition-all font-mono" /></div><div className="space-y-4 pt-2"><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">Nombre</label><input value={tempProfileData.display_name} onChange={(e) => setTempProfileData(p => ({ ...p, display_name: e.target.value }))} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm font-black text-white focus:border-[var(--accent)] transition-all" /></div><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">{selectedSubSiteId ? 'Descripción' : 'Tagline'}</label><input value={tempProfileData.tagline} onChange={(e) => setTempProfileData(p => ({ ...p, tagline: e.target.value }))} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-white/60 focus:border-[var(--accent)] transition-all" /></div>{!selectedSubSiteId && <div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">E-mail</label><input type="email" value={tempProfileData.email} onChange={(e) => setTempProfileData(p => ({ ...p, email: e.target.value }))} placeholder="tu@email.com" className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-white/60 focus:border-[var(--accent)] transition-all font-mono" /><p className="text-[10px] text-white/25 px-1">Acá te llegará el newsletter y las comunicaciones de huevsite.</p></div>}</div></div><div className="flex gap-4 mt-10"><button onClick={() => setIsProfileModalOpen(false)} className="flex-1 py-4 text-sm font-bold text-white/30 hover:text-white transition-colors">Cancelar</button><button onClick={async () => { 
         if (selectedSubSiteId) {
           setProfile(prev => prev ? {
             ...prev,
@@ -1686,6 +1728,7 @@ export default function DashboardPage() {
             ...prev,
             username: tempProfileData.username,
             displayName: tempProfileData.display_name,
+            email: tempProfileData.email,
             tagline: tempProfileData.tagline,
             avatarUrl: tempProfileData.avatarUrl,
             blocks: prev.blocks.map(block =>
@@ -1694,7 +1737,7 @@ export default function DashboardPage() {
                 : block
             )
           } : null); 
-          await fetch('/api/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: tempProfileData.username, name: tempProfileData.display_name, tagline: tempProfileData.tagline, image: tempProfileData.avatarUrl }) });
+          await fetch('/api/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: tempProfileData.username, name: tempProfileData.display_name, tagline: tempProfileData.tagline, image: tempProfileData.avatarUrl, email: tempProfileData.email }) });
         }
         setIsProfileModalOpen(false); 
       }} className="flex-[2] py-4 rounded-2xl bg-[var(--accent)] text-black font-black text-sm shadow-xl" style={{ backgroundColor: profile.accentColor, color: getContrastColor(profile.accentColor) }}>Guardar</button></div></motion.div></div>}</AnimatePresence>
@@ -1748,6 +1791,21 @@ export default function DashboardPage() {
           setActiveTab("insights");
         }}
       />
+
+      {/* Trial expired: let user choose which blocks to keep */}
+      {!isPro && !blockChooserResolved && profile.freeTrial?.claimed && !profile.freeTrial?.active &&
+        profile.blocks.length > MAX_FREE_BLOCKS + (profile.extraBlocksFromShare || 0) && (
+        <TrialExpiredBlockChooser
+          blocks={profile.blocks}
+          extraBlocksFromShare={profile.extraBlocksFromShare || 0}
+          accentColor={profile.accentColor}
+          onConfirm={handleBlockChooserConfirm}
+          onUpgrade={() => {
+            setBlockChooserResolved(true);
+            setIsUpgradeModalOpen(true);
+          }}
+        />
+      )}
     </div>
   );
 }

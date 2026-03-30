@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { ProfileData, BlockData, getAdjustedAccentColor } from './profile-types';
+import { ProfileData, BlockData, getAdjustedAccentColor, MAX_FREE_BLOCKS } from './profile-types';
 import { scoreService } from './score-service';
 import { getProfileBadges } from './profile-badges';
 import { getFreeTrialState, hasProAccess } from './pro-access';
@@ -115,6 +115,7 @@ export const profileService = {
     transformed.badges = getProfileBadges(profile, {
       blockCount: transformed.blocks.length,
       hasWonBuilderOfTheWeek: !!userWinnerData,
+      blocks: transformed.blocks,
     });
     transformed.ogImageVersion = [
       "botw",
@@ -122,7 +123,17 @@ export const profileService = {
       transformed.isWinner ? "winner" : "default",
       `b${transformed.badges?.length ?? 0}`,
     ].join("-");
-    
+
+    // Enforce free-tier limits on public profile
+    if (!hasProAccess(profile)) {
+      const effectiveLimit = MAX_FREE_BLOCKS + (profile.extra_blocks_from_share || 0);
+      if (transformed.blocks.length > effectiveLimit) {
+        transformed.blocks = transformed.blocks.slice(0, effectiveLimit);
+      }
+      // Sub-sites are a Pro feature — hide from public view
+      transformed.subSites = [];
+    }
+
     return transformed;
   },
 
@@ -171,6 +182,7 @@ export const profileService = {
     transformed.badges = getProfileBadges(profile, {
       blockCount: transformed.blocks.length,
       hasWonBuilderOfTheWeek: false,
+      blocks: transformed.blocks,
     });
 
     let subSitesWithAvatar = (subSites || []).map(s => ({

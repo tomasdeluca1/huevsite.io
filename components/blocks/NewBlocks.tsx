@@ -19,6 +19,8 @@ import { useBlockPreview } from "@/lib/block-preview-context";
 export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accentColor: string }) {
   const isPreview = useBlockPreview();
   const [isZoomed, setIsZoomed] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const isDirectVideo = data.url.match(/\.(mp4|webm|ogg)$/i);
   const isYouTube = data.url.includes("youtube.com") || data.url.includes("youtu.be");
   const isVimeo = data.url.includes("vimeo.com");
@@ -111,91 +113,92 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
         )}
       </motion.div>
 
-      {/* Lightbox Modal — rendered in body via portal to escape framer-motion stacking context */}
-      <AnimatePresence>
-        {isZoomed && createPortal(
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/98 p-4 md:p-12 cursor-zoom-out backdrop-blur-sm"
-            onClick={() => setIsZoomed(false)}
-          >
+      {/* Lightbox Modal — portal to body so it escapes framer-motion stacking context */}
+      {mounted && createPortal(
+        <AnimatePresence>
+          {isZoomed && (
             <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="relative max-w-7xl max-h-full w-full flex flex-col items-center"
-              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/98 p-4 md:p-12 cursor-zoom-out backdrop-blur-sm"
+              onClick={() => setIsZoomed(false)}
             >
-              <div className="relative w-full aspect-video md:aspect-auto flex justify-center bg-black/40 rounded-3xl overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-white/10 group/modal">
-                {isYouTube || isVimeo ? (
-                  <iframe
-                    src={isYouTube
-                      ? `https://www.youtube.com/embed/${data.url.includes("youtu.be") ? data.url.split("/").pop() : new URL(data.url).searchParams.get("v")}?autoplay=1`
-                      : `https://player.vimeo.com/video/${data.url.split("/").pop()}?autoplay=1`
-                    }
-                    className="w-full aspect-video max-h-[75vh] md:max-h-[80vh]"
-                    frameBorder="0"
-                    allowFullScreen
-                    allow="autoplay; fullscreen"
-                  />
-                ) : isDirectVideo ? (
-                  <video
-                    src={data.url}
-                    className="max-w-full max-h-[75vh] md:max-h-[80vh] rounded-2xl"
-                    controls
-                    autoPlay
-                  />
-                ) : (
-                  <img
-                    src={data.url}
-                    alt={data.title}
-                    className="max-w-full max-h-[75vh] md:max-h-[80vh] rounded-2xl object-contain shadow-2xl"
-                  />
-                )}
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                className="relative max-w-7xl max-h-full w-full flex flex-col items-center"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="relative w-full aspect-video md:aspect-auto flex justify-center bg-black/40 rounded-3xl overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-white/10 group/modal">
+                  {isYouTube || isVimeo ? (
+                    <iframe
+                      src={isYouTube
+                        ? `https://www.youtube.com/embed/${data.url.includes("youtu.be") ? data.url.split("/").pop() : new URL(data.url).searchParams.get("v")}?autoplay=1`
+                        : `https://player.vimeo.com/video/${data.url.split("/").pop()}?autoplay=1`
+                      }
+                      className="w-full aspect-video max-h-[75vh] md:max-h-[80vh]"
+                      frameBorder="0"
+                      allowFullScreen
+                      allow="autoplay; fullscreen"
+                    />
+                  ) : isDirectVideo ? (
+                    <video
+                      src={data.url}
+                      className="max-w-full max-h-[75vh] md:max-h-[80vh] rounded-2xl"
+                      controls
+                      autoPlay
+                    />
+                  ) : (
+                    <img
+                      src={data.url}
+                      alt={data.title}
+                      className="max-w-full max-h-[75vh] md:max-h-[80vh] rounded-2xl object-contain shadow-2xl"
+                    />
+                  )}
 
-                {/* Overlay link button inside media if external */}
-                {hasExternalLink && (
-                  <a
-                    href={externalLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="absolute top-6 right-6 p-4 rounded-2xl bg-black/60 backdrop-blur-md border border-white/20 text-white hover:bg-white hover:text-black transition-all flex items-center gap-2 font-bold text-sm shadow-xl"
-                  >
-                    Visitar enlace <ExternalLink size={16} />
-                  </a>
-                )}
-              </div>
-
-              <div className="mt-10 text-center max-w-3xl">
-                {data.title && <h3 className="text-white text-3xl md:text-4xl font-black tracking-tighter mb-4">{data.title}</h3>}
-                {data.description && <p className="text-white/60 text-lg leading-relaxed font-medium mb-8">{data.description}</p>}
-
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                  <button
-                    className="w-full sm:w-auto px-10 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold text-sm transition-all"
-                    onClick={() => setIsZoomed(false)}
-                  >
-                    Esc para cerrar
-                  </button>
                   {hasExternalLink && (
                     <a
                       href={externalLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full sm:w-auto px-10 py-4 rounded-2xl font-bold text-sm transition-all shadow-lg active:scale-95"
-                      style={{ backgroundColor: accentColor, color: isDarkColor(accentColor) ? 'white' : 'black' }}
+                      className="absolute top-6 right-6 p-4 rounded-2xl bg-black/60 backdrop-blur-md border border-white/20 text-white hover:bg-white hover:text-black transition-all flex items-center gap-2 font-bold text-sm shadow-xl"
                     >
-                      Abrir original
+                      Visitar enlace <ExternalLink size={16} />
                     </a>
                   )}
                 </div>
-              </div>
+
+                <div className="mt-10 text-center max-w-3xl">
+                  {data.title && <h3 className="text-white text-3xl md:text-4xl font-black tracking-tighter mb-4">{data.title}</h3>}
+                  {data.description && <p className="text-white/60 text-lg leading-relaxed font-medium mb-8">{data.description}</p>}
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <button
+                      className="w-full sm:w-auto px-10 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold text-sm transition-all"
+                      onClick={() => setIsZoomed(false)}
+                    >
+                      Esc para cerrar
+                    </button>
+                    {hasExternalLink && (
+                      <a
+                        href={externalLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full sm:w-auto px-10 py-4 rounded-2xl font-bold text-sm transition-all shadow-lg active:scale-95"
+                        style={{ backgroundColor: accentColor, color: isDarkColor(accentColor) ? 'white' : 'black' }}
+                      >
+                        Abrir original
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        , document.body)}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </>
   );
 }

@@ -138,6 +138,7 @@ export async function PATCH(request: NextRequest) {
     const allowedFields = [
       'name',
       'username',
+      'email',
       'tagline',
       'accent_color',
       'layout',

@@ -1198,7 +1198,7 @@ export default function DashboardPage() {
           )}
 
           {profile.freeTrial?.eligible && (
-            <div className="relative z-20 mb-6 border border-[var(--accent)]/20 bg-[linear-gradient(135deg,rgba(200,255,0,0.12),rgba(255,255,255,0.02))] p-5 md:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.18)]" style={{ borderRadius: "var(--dashboard-radius)" }}>
+            <div className="relative z-20 mt-6 md:mt-8 mb-6 border border-[var(--accent)]/20 bg-[linear-gradient(135deg,rgba(200,255,0,0.12),rgba(255,255,255,0.02))] p-5 md:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.18)]" style={{ borderRadius: "var(--dashboard-radius)" }}>
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                   <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent)]">14 días gratis</div>

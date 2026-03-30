@@ -65,8 +65,6 @@ export default async function SubSitePage({ params }: Props) {
     const host = headersList.get("host") || "";
     const isCustomDomain = host === profile.customDomain && !!profile.customDomain;
 
-    // En sub-sites por ahora no mostramos endorsements a menos que sea necesario
-    // Se renderiza el grid con los bloques asociados a este sub-site
     let currentUserId: string | null = null;
 
     try {
@@ -75,6 +73,11 @@ export default async function SubSitePage({ params }: Props) {
         currentUserId = user?.id ?? null;
     } catch {
         // ignore auth error
+    }
+
+    // Sub-sites are a Pro feature — only the owner can view them when not Pro
+    if (!profile.hasProAccess && currentUserId !== profile.id) {
+        notFound();
     }
 
     return (

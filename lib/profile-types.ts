@@ -7,14 +7,14 @@ export const MAX_PRO_BLOCKS = 22;
 
 export type ProfileBadgeKey =
   | "profile_complete"
-  | "profile_validated"
-  | "good_reputation"
   | "active_this_week"
-  | "top_matchmaker"
+  | "twitter_connected"
+  | "github_linked"
+  | "multi_block"
+  | "rising_builder"
   | "builder_of_the_week"
   | "premium"
-  | "ambassador"
-  | "twitter_connected";
+  | "ambassador";
 
 export interface ProfileBadge {
   key: ProfileBadgeKey;
@@ -288,6 +288,7 @@ export interface ProfileData {
   id?: string;
   username: string;
   displayName: string;
+  email?: string;
   tagline?: string;
   avatarUrl?: string;
   githubHandle?: string;

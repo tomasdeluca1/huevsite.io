@@ -244,7 +244,7 @@ export function DomainConnectionCard({
             <input
               value={domain}
               onChange={(e) => onDomainChange(e.target.value)}
-              placeholder="huevsite.azanello.com"
+              placeholder="midominio.com"
               className="w-full bg-white/[0.03] border border-white/10 rounded-[1.5rem] pl-14 pr-5 py-5 text-lg md:text-xl font-bold focus:outline-none focus:border-[var(--accent)] transition-all"
             />
           </div>

@@ -94,6 +94,9 @@ export const WinnerEmail: React.FC<Readonly<WinnerEmailProps>> = ({
       }}>
         Agendar entrevista de 15 min →
       </a>
+      <p style={{ fontSize: '13px', color: '#a1a1aa', marginTop: '16px', lineHeight: '1.6' }}>
+        <strong style={{ color: '#e4e4e7' }}>¿Qué te van a preguntar?</strong> Tu camino profesional, en qué proyecto estás laburando, qué stack usás, y consejos para otros builders. Es una charla informal de 15 min — no hace falta preparar nada formal.
+      </p>
       <p style={{ fontSize: '12px', color: '#52525b', marginTop: '12px' }}>
         100% opcional. Si no podés, no pasa nada.
       </p>

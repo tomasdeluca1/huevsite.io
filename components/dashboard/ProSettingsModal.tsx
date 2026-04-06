@@ -50,7 +50,7 @@ export function ProSettingsModal({
     const [editValues, setEditValues] = useState({ title: "", slug: "", description: "", avatarUrl: "" });
     const [copiedFeedback, setCopiedFeedback] = useState(false);
     const [verifying, setVerifying] = useState(false);
-    const [verificationResult, setVerificationResult] = useState<{ isValid: boolean; message: string } | null>(null);
+    const [verificationResult, setVerificationResult] = useState<{ isValid: boolean; message: string; needsTxtVerification?: boolean; txtRecord?: { host: string; value: string } } | null>(null);
 
     // Sync domain state if customDomain prop changes (important for first load or external updates)
     useEffect(() => {
@@ -71,7 +71,7 @@ export function ProSettingsModal({
                 body: JSON.stringify({ domain })
             });
             const data = await res.json();
-            setVerificationResult({ isValid: data.isValid, message: data.message });
+            setVerificationResult(data);
         } catch (error) {
             setVerificationResult({ isValid: false, message: "Error al verificar" });
         } finally {

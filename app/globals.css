@@ -3458,7 +3458,6 @@ footer {
 .lt-steps-section {
   padding: 100px 24px;
   background: var(--surface);
-  border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
 }
 

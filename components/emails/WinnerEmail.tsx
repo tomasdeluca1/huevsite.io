@@ -12,7 +12,7 @@ export const WinnerEmail: React.FC<Readonly<WinnerEmailProps>> = ({
   username,
   week,
 }) => (
-  <EmailLayout previewText={`¡Felicidaces ${name}, sos el builder de la semana!`}>
+  <EmailLayout previewText={`¡Felicitaciones ${name}, sos el builder de la semana!`}>
     <div style={{
       background: 'linear-gradient(180deg, rgba(200, 255, 0, 0.1) 0%, transparent 100%)',
       padding: '40px',
@@ -61,6 +61,42 @@ export const WinnerEmail: React.FC<Readonly<WinnerEmailProps>> = ({
       }}>
         Ver mi board en la home →
       </a>
+    </div>
+
+    {/* Interview invitation */}
+    <div style={{
+      marginTop: '40px',
+      padding: '32px',
+      borderRadius: '16px',
+      border: '1px solid rgba(200, 255, 0, 0.15)',
+      background: 'rgba(200, 255, 0, 0.04)',
+      textAlign: 'center',
+    }}>
+      <div style={{ fontSize: '28px', marginBottom: '12px' }}>🎙️</div>
+      <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 8px 0' }}>
+        ¿Te sumás a una entrevista?
+      </h3>
+      <p style={{ fontSize: '15px', lineHeight: '1.6', color: '#a1a1aa', margin: '0 0 20px 0' }}>
+        Cada semana entrevistamos al builder destacado. Es una charla corta de 15 min
+        donde contás qué estás buildeando y tu proceso. Después lo publicamos en el blog,
+        LinkedIn, X e Instagram.
+      </p>
+      <a href="https://cal.com/tomas-deluca-iko3up/15min" style={{
+        backgroundColor: 'transparent',
+        color: '#C8FF00',
+        padding: '14px 28px',
+        borderRadius: '10px',
+        fontWeight: 'bold',
+        textDecoration: 'none',
+        display: 'inline-block',
+        fontSize: '15px',
+        border: '2px solid #C8FF00',
+      }}>
+        Agendar entrevista de 15 min →
+      </a>
+      <p style={{ fontSize: '12px', color: '#52525b', marginTop: '12px' }}>
+        100% opcional. Si no podés, no pasa nada.
+      </p>
     </div>
   </EmailLayout>
 );

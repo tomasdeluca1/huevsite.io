@@ -102,7 +102,7 @@ export default function DashboardPage() {
   const [domain, setDomain] = useState("");
   const [transferEmail, setTransferEmail] = useState("");
   const [verifying, setVerifying] = useState(false);
-  const [verificationResult, setVerificationResult] = useState<{ isValid: boolean; message: string } | null>(null);
+  const [verificationResult, setVerificationResult] = useState<{ isValid: boolean; message: string; needsTxtVerification?: boolean; txtRecord?: { host: string; value: string } } | null>(null);
   const [isTabMenuOpen, setIsTabMenuOpen] = useState(false);
   const supabase = createClient();
   const referralsSectionRef = useRef<HTMLDivElement | null>(null);
@@ -868,7 +868,7 @@ export default function DashboardPage() {
         body: JSON.stringify({ domain: normalizeDomainInput(domain) })
       });
       const data = await res.json();
-      setVerificationResult({ isValid: data.isValid, message: data.message });
+      setVerificationResult(data);
     } catch (error) {
       setVerificationResult({ isValid: false, message: "No pudimos verificar el dominio en este momento." });
     } finally {

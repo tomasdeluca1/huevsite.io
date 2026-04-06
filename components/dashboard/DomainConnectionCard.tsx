@@ -329,6 +329,13 @@ export function DomainConnectionCard({
               ? <>En subdominios usá el host exacto. Ej: <code className="font-mono">huevsite</code>, no <code className="font-mono">@</code>.</>
               : <>Si querés sumar <code className="font-mono">www</code>, agregá un <code className="font-mono">CNAME</code> a <code className="font-mono">cname.vercel-dns.com</code>.</>}
           </div>
+
+          {/* Proactive TXT notice */}
+          {!verificationResult?.needsTxtVerification && (
+            <div className="text-[11px] text-white/30 leading-relaxed mt-3 border-t border-white/5 pt-3">
+              💡 Si tu dominio ya está conectado a otra cuenta de Vercel, vas a necesitar un registro TXT adicional para verificar ownership. Hacé click en <strong className="text-white/50">Verificar</strong> después de configurar el DNS y te mostramos los detalles.
+            </div>
+          )}
         </div>
 
         {verificationResult?.needsTxtVerification && verificationResult.txtRecord && (

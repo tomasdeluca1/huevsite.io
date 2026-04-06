@@ -42,14 +42,17 @@ export async function postBuilderOfTheWeek(
   const profileUrl = isUrl ? mention : `${process.env.NEXT_PUBLIC_SITE_URL}/${mention.replace('@', '')}`;
   const mentionText = isUrl ? displayName : mention;
 
-  let text = `🏆 ¡Atención builders! \n\nFelicitaciones a ${mentionText} (${displayName}) por ser el Builder de la Semana (${week}) en Huevsite! 🥚✨\n\nMirá lo que está buildiando acá:\n${profileUrl}`;
+  // When mention is a URL, mentionText and displayName are the same — avoid "Lucas (Lucas)"
+  const winnerLabel = (mentionText === displayName) ? mentionText : `${mentionText} (${displayName})`;
+
+  let text = `🏆 ¡Atención builders! \n\nFelicitaciones a ${winnerLabel} por ser el Builder de la Semana (${week}) en Huevsite! 🥚✨\n\nMirá lo que está buildiando acá:\n${profileUrl}`;
 
   if (finalists && finalists.length > 0) {
-    text += `\n\nEstuvo peleado! El top 3 fue:\n`;
+    text += `\n\nLos finalistas:\n`;
     finalists.slice(0, 3).forEach((f, i) => {
       const fIsUrl = f.mention.startsWith('http');
       const fMentionText = fIsUrl ? (f.mention.split('/').pop() || 'builder') : f.mention;
-      text += `${i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'} ${fMentionText} (${f.count} votos)\n`;
+      text += `${i === 0 ? '🥈' : i === 1 ? '🥉' : '🔹'} ${fMentionText} (${f.count} votos)\n`;
     });
   }
 

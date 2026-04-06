@@ -224,7 +224,7 @@ async function handlePickWinner(request: NextRequest) {
             count: f.count
           }));
 
-        await postBuilderOfTheWeek(winnerMention, week, winnerProfile.name || undefined, otherFinalists);
+        await postBuilderOfTheWeek(winnerMention, week, winnerProfile.name || winnerProfile.username, otherFinalists);
         console.log(`✅ Tweet enviado para ${winnerProfile.username}`);
       }
     } catch (twitterErr: any) {

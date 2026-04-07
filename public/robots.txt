@@ -47,15 +47,35 @@ Allow: /
 # Anthropic / Claude
 User-agent: Claude-Web
 Allow: /
+User-agent: Claude-SearchBot
+Allow: /
+User-agent: Claude-User
+Allow: /
 User-agent: anthropic-ai
 Allow: /
 User-agent: ClaudeBot
 Allow: /
 
-# Otros bots de IA, Datasets y Motores Semánticos
-User-agent: OmgiliBot
+# Apple
+User-agent: Applebot-Extended
+Allow: /
+
+# Meta / Facebook
+User-agent: meta-externalagent
 Allow: /
 User-agent: FacebookBot
+Allow: /
+
+# Amazon
+User-agent: Amazonbot
+Allow: /
+
+# ByteDance / TikTok
+User-agent: Bytespider
+Allow: /
+
+# Otros bots de IA, Datasets y Motores Semánticos
+User-agent: OmgiliBot
 Allow: /
 User-agent: CCBot
 Allow: /
@@ -65,6 +85,11 @@ User-agent: Cohere-ai
 Allow: /
 User-agent: YouBot
 Allow: /
+
+# Acceso explícito a archivos LLM
+Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /llm.txt
 
 # Sitemap para descubrimiento acelerado
 Sitemap: https://huevsite.io/sitemap.xml

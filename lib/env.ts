@@ -4,9 +4,14 @@
  * a clear error with the variable name if any are missing.
  */
 
+const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build';
+
 function requireEnv(name: string): string {
   const value = process.env[name];
   if (!value || value.trim() === '') {
+    if (isBuildTime) {
+      return '';
+    }
     throw new Error(`Missing required environment variable: ${name}`);
   }
   return value;

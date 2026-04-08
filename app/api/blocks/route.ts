@@ -1,8 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { scoreService } from '@/lib/score-service'
 import { checkAndPostWelcomeTweet } from '@/lib/twitter'
 import { hasProAccess } from '@/lib/pro-access'
+import { rateLimit, getIdentifier } from '@/lib/rate-limit'
+
+const blockCreateSchema = z.object({
+  type: z.string().min(1),
+  data: z.record(z.unknown()),
+  order: z.number().int().nonnegative().optional(),
+  colSpan: z.number().int().min(1).max(4).optional(),
+  rowSpan: z.number().int().min(1).max(4).optional(),
+  visible: z.boolean().optional(),
+  sub_site_id: z.string().uuid().nullable().optional(),
+})
+
+const blockCreateLimiter = rateLimit({ interval: 60_000, uniqueTokenPerInterval: 500 })
 
 export const dynamic = 'force-dynamic'
 
@@ -44,14 +58,24 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Rate limit: 20 block creations per minute per user
+    const rl = blockCreateLimiter.check(20, getIdentifier(request, user.id))
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: 'Demasiadas solicitudes. Esperá un momento.' },
+        { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.reset - Date.now()) / 1000)) } }
+      )
+    }
+
     const body = await request.json()
     console.log('POST /api/blocks - body:', body)
 
     // Validaciones
-    if (!body.type || !body.data) {
-      console.error('POST - Missing type or data')
+    const parsed = blockCreateSchema.safeParse(body)
+    if (!parsed.success) {
+      console.error('POST - Validation error:', parsed.error.flatten())
       return NextResponse.json(
-        { error: 'Tipo y datos son requeridos' },
+        { error: 'Datos inválidos', details: parsed.error.flatten().fieldErrors },
         { status: 400 }
       )
     }

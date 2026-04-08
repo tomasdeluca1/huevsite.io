@@ -36,7 +36,7 @@ export function rateLimit(options: RateLimitOptions) {
 
     // Evict expired entries if map is getting large
     if (tokenMap.size >= uniqueTokenPerInterval) {
-      for (const [key, state] of tokenMap.entries()) {
+      for (const [key, state] of Array.from(tokenMap.entries())) {
         if (now >= state.resetAt) {
           tokenMap.delete(key)
         }

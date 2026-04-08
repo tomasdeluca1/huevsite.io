@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { scoreService } from "@/lib/score-service";
+import { rateLimit, getIdentifier } from "@/lib/rate-limit";
+
+const followLimiter = rateLimit({ interval: 60_000, uniqueTokenPerInterval: 500 });
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +15,15 @@ export async function POST(request: NextRequest) {
 
     if (authError || !user) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    }
+
+    // Rate limit: 30 follow actions per minute per user
+    const rl = followLimiter.check(30, getIdentifier(request, user.id));
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: "Demasiadas solicitudes. Esperá un momento." },
+        { status: 429, headers: { "Retry-After": String(Math.ceil((rl.reset - Date.now()) / 1000)) } }
+      );
     }
 
     const { followingId } = await request.json();

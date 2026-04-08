@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { scoreService } from "@/lib/score-service";
+import { rateLimit, getIdentifier } from "@/lib/rate-limit";
+
+const endorsementLimiter = rateLimit({ interval: 60_000, uniqueTokenPerInterval: 500 });
 
 export const dynamic = "force-dynamic";
 

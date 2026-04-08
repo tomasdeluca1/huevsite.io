@@ -1,3 +1,4 @@
+import "@/lib/env";
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, JetBrains_Mono } from "next/font/google";
 import Script from "next/script";

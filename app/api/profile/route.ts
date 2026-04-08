@@ -1,8 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { scoreService } from '@/lib/score-service'
 import { vercelService } from '@/lib/vercel-service'
 import { hasProAccess } from '@/lib/pro-access'
+import { rateLimit, getIdentifier } from '@/lib/rate-limit'
+
+const profilePatchSchema = z.object({
+  name: z.string().max(100).optional(),
+  username: z.string().min(1).max(50).regex(/^[a-zA-Z0-9_-]+$/, 'Username solo puede tener letras, números, guiones y guiones bajos').optional(),
+  email: z.string().email().optional(),
+  tagline: z.string().max(200).optional(),
+  accent_color: z.string().max(20).optional(),
+  layout: z.string().optional(),
+  roles: z.array(z.string()).optional(),
+  location: z.string().max(100).optional(),
+  available: z.boolean().optional(),
+  github_handle: z.string().max(50).optional(),
+  image: z.string().url().or(z.literal('')).optional(),
+  has_seen_update_feb25: z.boolean().optional(),
+  custom_domain: z.string().max(253).optional(),
+  border_radius: z.string().optional(),
+  is_onboarding_test_user: z.boolean().optional(),
+})
+
+const profileUpdateLimiter = rateLimit({ interval: 60_000, uniqueTokenPerInterval: 500 })
 
 export const dynamic = 'force-dynamic'
 
@@ -132,7 +154,24 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
+    // Rate limit: 30 profile updates per minute per user
+    const rl = profileUpdateLimiter.check(30, getIdentifier(request, user.id))
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: 'Demasiadas solicitudes. Esperá un momento.' },
+        { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.reset - Date.now()) / 1000)) } }
+      )
+    }
+
     const body = await request.json()
+
+    const parsed = profilePatchSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Datos inválidos', details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      )
+    }
 
     // Campos actualizables
     const allowedFields = [

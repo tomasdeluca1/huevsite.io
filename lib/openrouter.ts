@@ -19,6 +19,12 @@ interface InterviewData {
   quickfireWhereToFind: string;
 }
 
+export interface CarouselSlide {
+  heading: string;
+  body: string;
+  footer?: string;
+}
+
 interface GeneratedContent {
   blogMarkdown: string;
   blogTitle: string;
@@ -27,11 +33,12 @@ interface GeneratedContent {
   linkedinPost: string;
   twitterPost: string;
   instagramCaption: string;
+  instagramCarousel: CarouselSlide[];
 }
 
 const SYSTEM_PROMPT = `Sos un redactor de contenido para huevsite.io, una plataforma de builders que construyen productos en público.
 
-Tu tarea es procesar las respuestas de una entrevista escrita al "Builder de la Semana" y generar 4 piezas de contenido.
+Tu tarea es procesar las respuestas de una entrevista escrita al "Builder de la Semana" y generar 5 piezas de contenido.
 
 REGLAS:
 - Todo en español argentino (usá "vos", no "tú")
@@ -48,8 +55,49 @@ FORMATO DE RESPUESTA (JSON estricto):
   "blogMarkdown": "Post completo en Markdown con esta estructura:\\n> Quote potente del builder\\n\\n## Quién es [nombre]\\n(2-3 párrafos)\\n\\n## Lo que está construyendo\\n(3-4 párrafos sobre proyecto, problema, solución, stack)\\n\\n## El momento clave\\n(1-2 párrafos sobre el desafío más grande)\\n\\n## Para la comunidad\\n(1-2 párrafos con consejos y visión)\\n\\n## Dónde encontrarlo\\n- huevsite: huevsite.io/username\\n- links del builder\\n\\n---\\n*Esta entrevista es parte de la serie Builder de la Semana de huevsite.io.*",
   "linkedinPost": "Post para LinkedIn (máx 1300 chars). Hook fuerte, 2-3 párrafos cortos, quote, CTA al blog. Hashtags: #buildinpublic #huevsite",
   "twitterPost": "Tweet único (máx 270 chars). Nombre, quote corta, qué construye, link al blog. #buildinpublic #huevsite",
-  "instagramCaption": "Caption para IG (máx 2200 chars). Storytelling con saltos de línea, emojis moderados, hashtags al final"
-}`;
+  "instagramCaption": "Caption para IG (máx 2200 chars). Storytelling con saltos de línea, emojis moderados, hashtags al final",
+  "instagramCarousel": [
+    {
+      "heading": "SLIDE 1 — COVER. Nombre del builder en grande. Subtítulo: Builder de la Semana. Frase corta de enganche.",
+      "body": "Texto principal del slide",
+      "footer": "Texto chico al pie (opcional)"
+    },
+    {
+      "heading": "SLIDE 2 — QUIÉN ES. Nombre + una línea de contexto (de dónde es, qué hace).",
+      "body": "2-3 oraciones sobre su background y cómo arrancó a buildear. Directo, sin relleno."
+    },
+    {
+      "heading": "SLIDE 3 — QUÉ CONSTRUYE. Nombre del proyecto principal.",
+      "body": "2-3 oraciones: qué problema resuelve, para quién, qué stack usa. Que se entienda sin ser dev."
+    },
+    {
+      "heading": "SLIDE 4 — QUOTE. La frase más potente del builder entre comillas.",
+      "body": "Solo la quote. Nada más. Que pegue."
+    },
+    {
+      "heading": "SLIDE 5 — EL DESAFÍO. Momento más difícil o aprendizaje clave.",
+      "body": "2-3 oraciones sobre qué le costó y qué aprendió. Lo que humaniza la historia."
+    },
+    {
+      "heading": "SLIDE 6 — CONSEJO. Un tip directo para otros builders.",
+      "body": "El mejor consejo que dio en la entrevista. Corto y memorable."
+    },
+    {
+      "heading": "SLIDE 7 — CTA. Conocé a @username en huevsite.io.",
+      "body": "Link al perfil + redes. Footer: 'Leé la entrevista completa en huevsite.io/blog'",
+      "footer": "huevsite.io"
+    }
+  ]
+}
+
+REGLAS PARA EL CARRUSEL:
+- 7 slides exactos
+- Cada slide tiene heading (título grande), body (texto principal), footer (opcional, pie de slide)
+- Estética: dark (#0a0a0a), acento verde lima (#C8FF00), tipografía bold sans-serif
+- Heading: máximo 8 palabras. Body: máximo 40 palabras por slide. Footer: máximo 5 palabras
+- Slide 1 es la tapa, slide 7 es el CTA. Los del medio cuentan la historia
+- Tono: directo, informal argentino, como un reel contando una historia
+- La quote del slide 4 debe ser textual de las respuestas del builder`;
 
 function formatInterviewForAI(data: InterviewData): string {
   return `ENTREVISTA — Builder de la Semana

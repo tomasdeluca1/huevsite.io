@@ -22,7 +22,7 @@ async function isAdmin() {
     .eq('id', user.id)
     .single();
 
-  return profile?.username === 'huevsite';
+  return profile?.username === 'tomi_delu';
 }
 
 export async function POST(req: NextRequest) {

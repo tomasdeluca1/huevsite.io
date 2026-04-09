@@ -52,7 +52,7 @@ async function isAdmin(request: NextRequest, secret: string | null) {
       .eq('id', user.id)
       .single();
 
-    if (profile?.username === 'huevsite') {
+    if (profile?.username === 'tomi_delu') {
       console.log("Authenticated via user session:", profile.username);
       return true;
     }

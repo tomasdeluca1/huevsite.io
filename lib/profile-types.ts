@@ -188,6 +188,7 @@ export interface SocialLink {
   platform: string;
   url: string;
   label?: string;
+  favicon?: string;
 }
 
 export interface SocialBlockData extends BaseBlock {

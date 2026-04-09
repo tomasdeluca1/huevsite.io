@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const filter = searchParams.get('filter'); // 'non-pro' or null
+    const filter = searchParams.get('filter'); // 'non-pro', 'twitter-only', or null
     const preview = searchParams.get('preview') === 'true';
 
     // Fetch top candidates (let the Twitter service decide how many fit)
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       .from('profiles')
       .select('username, builder_score, subscription_tier')
       .order('builder_score', { ascending: false })
-      .limit(30);
+      .limit(filter === 'twitter-only' ? 100 : 30);
 
     if (filter === 'non-pro') {
       query = query.eq('subscription_tier', 'free');
@@ -46,15 +46,46 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No profiles found" }, { status: 404 });
     }
 
-    const usernames = topProfiles.map(p => p.username);
+    let filteredProfiles = topProfiles;
+
+    // For twitter-only: keep only profiles that have a twitter link in their social blocks
+    if (filter === 'twitter-only') {
+      const usernames = topProfiles.map(p => p.username);
+      const { data: socialBlocks } = await supabase
+        .from('blocks')
+        .select('user_id, data, profiles!inner(username)')
+        .eq('type', 'social')
+        .in('profiles.username', usernames);
+
+      const usernamesWithTwitter = new Set<string>();
+      for (const block of socialBlocks || []) {
+        const links = block.data?.links || [];
+        const hasTwitter = links.some((l: any) => l.platform === 'twitter' && (l.url || l.handle));
+        if (hasTwitter) {
+          usernamesWithTwitter.add((block as any).profiles?.username);
+        }
+      }
+
+      filteredProfiles = topProfiles.filter(p => usernamesWithTwitter.has(p.username)).slice(0, 30);
+    }
+
+    if (filteredProfiles.length === 0) {
+      return NextResponse.json({ error: "No profiles found with that filter" }, { status: 404 });
+    }
+
+    const usernames = filteredProfiles.map(p => p.username);
     const mentionsMap = await resolveXHandles(usernames);
 
-    const leaderboardData = topProfiles.map(p => ({
+    const leaderboardData = filteredProfiles.map(p => ({
       mention: mentionsMap[p.username] || `@${p.username}`,
       score: p.builder_score || 0
     }));
 
-    const title = filter === 'non-pro' ? '🔥 TOP BUILDERS (Non Pro Only)' : '🔥 TOP BUILDERS';
+    const title = filter === 'non-pro'
+      ? '🔥 TOP BUILDERS (Non Pro Only)'
+      : filter === 'twitter-only'
+        ? '🔥 TOP BUILDERS (Twitter Connected)'
+        : '🔥 TOP BUILDERS';
     const result = await postLeaderboard(leaderboardData, preview, title);
 
     return NextResponse.json({ 

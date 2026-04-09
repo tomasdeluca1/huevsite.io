@@ -45,7 +45,7 @@ export function SocialBlock({ data, accentColor }: SocialProps) {
   const isPreview = useBlockPreview();
   const links = data.links || [];
 
-  const getIcon = (platform: string, color: string) => {
+  const getIcon = (platform: string, color: string, favicon?: string) => {
     const size = 20;
     switch (platform) {
       case "instagram": return <Instagram size={size} style={{ color }} />;
@@ -55,7 +55,9 @@ export function SocialBlock({ data, accentColor }: SocialProps) {
       case "twitter": return <span className="ml-1 text-xl">𝕏</span>
       case "discord": return <MessageSquare size={size} style={{ color }} />;
       case "telegram": return <Send size={size} style={{ color }} />;
-      case "website": return <Globe size={size} style={{ color }} />;
+      case "website": return favicon
+        ? <img src={favicon} alt="" width={size} height={size} className="rounded-sm" />
+        : <Globe size={size} style={{ color }} />;
       default: return <span className="text-lg md:text-xl">{SOCIAL_PLATFORMS[platform as SocialPlatformKey]?.icon || "🔗"}</span>;
     }
   };
@@ -103,7 +105,7 @@ export function SocialBlock({ data, accentColor }: SocialProps) {
                 style={{ backgroundColor: brandColor }}
               />
               <span className="shrink-0 transition-transform group-hover/item:scale-110 duration-300">
-                {getIcon(l.platform, brandColor)}
+                {getIcon(l.platform, brandColor, l.favicon)}
               </span>
               <div className="flex flex-col min-w-0 text-left">
                 <span className="font-bold text-white line-clamp-1 text-xs md:text-sm">

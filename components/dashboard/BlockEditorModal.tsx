@@ -354,7 +354,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                         value={platform}
                         onChange={(e) => {
                           const newLinks = [...formData.links];
-                          newLinks[index] = { ...newLinks[index], platform: e.target.value, handle: "", url: "" };
+                          newLinks[index] = { ...newLinks[index], platform: e.target.value, handle: "", url: "", favicon: undefined };
                           handleChange("links", newLinks);
                         }}
                         className="w-full p-3 rounded-xl bg-black/40 border border-white/5 focus:border-[var(--accent)] outline-none transition-all text-sm font-medium"
@@ -369,10 +369,21 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                           onChange={(e) => {
                             const newHandle = e.target.value;
                             const newLinks = [...formData.links];
+                            const url = buildSocialUrl(platform, newHandle);
+                            let favicon = newLinks[index].favicon;
+                            if (platform === "website" && newHandle.trim()) {
+                              try {
+                                const domain = new URL(newHandle.startsWith('http') ? newHandle : `https://${newHandle}`).hostname;
+                                favicon = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+                              } catch { /* invalid URL, skip favicon */ }
+                            } else if (platform !== "website") {
+                              favicon = undefined;
+                            }
                             newLinks[index] = {
                               ...newLinks[index],
                               handle: newHandle,
-                              url: buildSocialUrl(platform, newHandle),
+                              url,
+                              favicon,
                             };
                             handleChange("links", newLinks);
                           }}

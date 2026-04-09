@@ -23,7 +23,7 @@ async function isAdmin() {
     .eq('id', user.id)
     .single();
 
-  return profile?.username === 'huevsite';
+  return profile?.username === 'tomi_delu';
 }
 
 // POST /api/admin/showcase-winner — alternar winner de la semana

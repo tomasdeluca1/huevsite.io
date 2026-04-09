@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BLOG_POSTS, BlogPost } from "@/lib/blog-data";
+import { BLOG_POSTS, BlogPost, getAllBlogPosts } from "@/lib/blog-data";
 import Image from "next/image";
 import { SITE_URL } from "@/lib/site-url";
 
@@ -31,17 +31,18 @@ export const metadata = {
   }
 };
 
-export default function BlogIndexPage({
+export default async function BlogIndexPage({
   searchParams,
 }: {
   searchParams: { tag?: string };
 }) {
+  const allPosts = await getAllBlogPosts();
   const activeTag = searchParams.tag;
   const filteredPosts = activeTag
-    ? BLOG_POSTS.filter((post) => post.tags.includes(activeTag))
-    : BLOG_POSTS;
+    ? allPosts.filter((post) => post.tags.includes(activeTag))
+    : allPosts;
 
-  const allTags = Array.from(new Set(BLOG_POSTS.flatMap(post => post.tags)));
+  const allTags = Array.from(new Set(allPosts.flatMap(post => post.tags)));
 
   return (
     <main className="min-h-screen bg-[var(--bg)] font-display py-12 px-4 max-w-4xl mx-auto">

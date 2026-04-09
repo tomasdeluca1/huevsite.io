@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ShareButtons } from "@/components/blog/ShareButtons";
 import { RelatedPosts } from "@/components/blog/RelatedPosts";
-import { getPostBySlug, BLOG_POSTS } from "@/lib/blog-data";
+import { getPostBySlug, getPostBySlugAsync, getAllBlogPosts, BLOG_POSTS } from "@/lib/blog-data";
 import { Metadata } from "next";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -17,7 +17,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }> 
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPostBySlugAsync(slug);
   if (!post) {
     return { title: 'Post no encontrado' };
   }
@@ -62,19 +62,20 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }> 
 }) {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPostBySlugAsync(slug);
 
   if (!post) {
     notFound();
   }
 
-  // Find index for navigation
-  const currentIndex = BLOG_POSTS.findIndex(p => p.slug === post.slug);
-  const prevPost = currentIndex < BLOG_POSTS.length - 1 ? BLOG_POSTS[currentIndex + 1] : null; // Older
-  const nextPost = currentIndex > 0 ? BLOG_POSTS[currentIndex - 1] : null; // Newer
+  // Use all posts (hardcoded + DB) for navigation
+  const allPosts = await getAllBlogPosts();
+  const currentIndex = allPosts.findIndex(p => p.slug === post.slug);
+  const prevPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null; // Older
+  const nextPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null; // Newer
 
   // Find related posts (same tags, excluding current post)
-  const relatedPosts = BLOG_POSTS.filter(
+  const relatedPosts = allPosts.filter(
     (p) =>
       p.slug !== post.slug &&
       p.tags.some((tag) => post.tags.includes(tag))

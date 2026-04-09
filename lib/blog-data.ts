@@ -1,4 +1,5 @@
 import { calculateReadingTime } from "./utils";
+import { createClient } from "@supabase/supabase-js";
 
 export interface BlogPost {
   slug: string;
@@ -24,7 +25,7 @@ const RAW_BLOG_POSTS: Omit<BlogPost, 'readingTime'>[] = [
     tags: ["onboarding", "linktree", "feature"],
     author: {
       name: "Tomas Deluca",
-      username: "huevsite",
+      username: "tomi_delu",
       avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
     },
     content: `
@@ -95,7 +96,7 @@ Ese orden es mucho mejor para publicar rápido.
     tags: ["pro", "dominios", "feature"],
     author: {
       name: "Tomas Deluca",
-      username: "huevsite",
+      username: "tomi_delu",
       avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
     },
     content: `
@@ -155,7 +156,7 @@ La mejora acá no es solo técnica. Es psicológica:
     tags: ["cuenta", "privacidad", "update"],
     author: {
       name: "Tomas Deluca",
-      username: "huevsite",
+      username: "tomi_delu",
       avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
     },
     content: `
@@ -209,7 +210,7 @@ Porque transmite algo simple:
     tags: ["onboarding", "feature", "perfil"],
     author: {
       name: "Tomas Deluca",
-      username: "huevsite",
+      username: "tomi_delu",
       avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
     },
     content: `
@@ -265,7 +266,7 @@ El objetivo no es que pases una hora “configurando”. Es que puedas salir con
     tags: ["comunidad", "social", "feature"],
     author: {
       name: "Tomas Deluca",
-      username: "huevsite",
+      username: "tomi_delu",
       avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
     },
     content: `
@@ -330,7 +331,7 @@ Tu proyecto deja de ser “algo que subiste” y pasa a ser:
     tags: ["sub-sites", "portfolio", "tips"],
     author: {
       name: "Tomas Deluca",
-      username: "huevsite",
+      username: "tomi_delu",
       avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
     },
     content: `
@@ -406,7 +407,7 @@ Si tu perfil principal ya está empezando a parecer un depósito de cosas, proba
     tags: ["comunidad", "referidos", "pro"],
     author: {
       name: "Tomas Deluca",
-      username: "huevsite",
+      username: "tomi_delu",
       avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
     },
     content: `
@@ -440,7 +441,7 @@ Esta es nuestra forma de devolverle algo a los builders que están ayudando a qu
     tags: ["twitter", "automatizacion", "admin"],
     author: {
       name: "Tomas Deluca",
-      username: "huevsite",
+      username: "tomi_delu",
       avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
     },
     content: `
@@ -473,7 +474,7 @@ Para que nuestra comunicación sea impecable, hemos implementado un sistema de *
     tags: ["analytics", "pro", "feature"],
     author: {
       name: "Tomas Deluca",
-      username: "huevsite",
+      username: "tomi_delu",
       avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
     },
     content: `
@@ -504,7 +505,7 @@ Mejoramos la detección de fuentes para que sepas exactamente si vienen de un li
     tags: ["comunidad", "showcase", "Twitter"],
     author: {
       name: "Tomas Deluca",
-      username: "huevsite",
+      username: "tomi_delu",
       avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
     },
     content: `
@@ -536,7 +537,7 @@ El proceso no cambió, pero ahora es más dinámico. Los builders con más nomin
     tags: ["feature", "analytics", "design"],
     author: {
       name: "Tomas Deluca",
-      username: "huevsite",
+      username: "tomi_delu",
       avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
     },
     content: `
@@ -570,7 +571,7 @@ Seguimos cumpliendo nuestra promesa: métricas potentes sin cookies invasivas ni
     tags: ["gamification", "comunidad", "ranking"],
     author: {
       name: "Tomas Deluca",
-      username: "huevsite",
+      username: "tomi_delu",
       avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
     },
     content: `
@@ -620,7 +621,7 @@ Aparecer arriba en el **Explore** no es solo vanidad. Es visibilidad ante reclut
     tags: ["feature", "analytics", "pro"],
     author: {
       name: "Tomas Deluca",
-      username: "huevsite",
+      username: "tomi_delu",
       avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
     },
     content: `
@@ -658,7 +659,7 @@ Si notás que mucha gente entra a tu perfil pero nadie hace clic en tu botón de
     tags: ["feature", "perfil", "update"],
     author: {
       name: "Tomas Deluca",
-      username: "huevsite",
+      username: "tomi_delu",
       avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
     },
     content: `
@@ -696,7 +697,7 @@ Si por algún motivo no habías subido todavía una foto de perfil, ¡no te preo
     tags: ["design", "tips", "portfolio"],
     author: {
       name: "Tomas Deluca",
-      username: "huevsite",
+      username: "tomi_delu",
       avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
     },
     content: `
@@ -734,7 +735,7 @@ El bloque **Building** es tu feed de actividad. No tiene que ser un proyecto ter
     tags: ["feature", "pro", "portfolio"],
     author: {
       name: "Tomas Deluca",
-      username: "huevsite",
+      username: "tomi_delu",
       avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
     },
     content: `
@@ -780,7 +781,7 @@ Es, literalmente, un constructor de sitios estáticos profesional disfrazado de 
     tags: ["ai", "pro", "feature"],
     author: {
       name: "Tomas Deluca",
-      username: "huevsite",
+      username: "tomi_delu",
       avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg", // placeholder
     },
     content: `
@@ -818,7 +819,7 @@ Siendo usuario PRO ya podés entrar a tus ajustes (PRO Settings -> Sub-sites) y 
     tags: ["feed", "launches", "feature"],
     author: {
       name: "Tomas Deluca",
-      username: "huevsite",
+      username: "tomi_delu",
       avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
     },
     content: `
@@ -883,7 +884,7 @@ Si los builders mejoran sus blocks, el feed mejora solo.
     tags: ["feed", "social", "feature"],
     author: {
       name: "Tomas Deluca",
-      username: "huevsite",
+      username: "tomi_delu",
       avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
     },
     content: `
@@ -954,7 +955,7 @@ La meta es que un builder entre a huevsite y en segundos pueda responder:
     tags: ["perfil", "sub-sites", "update"],
     author: {
       name: "Tomas Deluca",
-      username: "huevsite",
+      username: "tomi_delu",
       avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
     },
     content: `
@@ -1022,7 +1023,7 @@ A veces son las que hacen que el producto se sienta más sólido, más coherente
     tags: ["comunidad", "vision", "startup"],
     author: {
       name: "Tomas Deluca",
-      username: "huevsite",
+      username: "tomi_delu",
       avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
     },
     content: `
@@ -1054,4 +1055,76 @@ export const BLOG_POSTS: BlogPost[] = RAW_BLOG_POSTS.map(post => ({
 
 export function getPostBySlug(slug: string): BlogPost | undefined {
   return BLOG_POSTS.find((p) => p.slug.toLowerCase() === slug.toLowerCase());
+}
+
+// ─── Supabase blog posts (Builder de la Semana + future dynamic posts) ────────
+
+function getServiceClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
+
+export async function getDBBlogPosts(): Promise<BlogPost[]> {
+  const supabase = getServiceClient();
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .select("*")
+    .eq("is_published", true)
+    .order("date", { ascending: false });
+
+  if (error || !data) return [];
+
+  return data.map((p) => ({
+    slug: p.slug,
+    title: p.title,
+    excerpt: p.excerpt,
+    content: p.content,
+    date: p.date,
+    tags: p.tags ?? [],
+    readingTime: calculateReadingTime(p.content),
+    author: {
+      name: p.author_name,
+      username: p.author_username,
+      avatarUrl: p.author_avatar_url,
+    },
+  }));
+}
+
+export async function getAllBlogPosts(): Promise<BlogPost[]> {
+  const dbPosts = await getDBBlogPosts();
+  return [...BLOG_POSTS, ...dbPosts].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+}
+
+export async function getPostBySlugAsync(slug: string): Promise<BlogPost | undefined> {
+  const hardcoded = getPostBySlug(slug);
+  if (hardcoded) return hardcoded;
+
+  const supabase = getServiceClient();
+  const { data } = await supabase
+    .from("blog_posts")
+    .select("*")
+    .ilike("slug", slug)
+    .eq("is_published", true)
+    .maybeSingle();
+
+  if (!data) return undefined;
+
+  return {
+    slug: data.slug,
+    title: data.title,
+    excerpt: data.excerpt,
+    content: data.content,
+    date: data.date,
+    tags: data.tags ?? [],
+    readingTime: calculateReadingTime(data.content),
+    author: {
+      name: data.author_name,
+      username: data.author_username,
+      avatarUrl: data.author_avatar_url,
+    },
+  };
 }

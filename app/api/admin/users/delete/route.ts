@@ -18,7 +18,7 @@ async function isAdmin() {
     .eq("id", user.id)
     .single();
 
-  return profile?.username === "huevsite";
+  return profile?.username === "tomi_delu";
 }
 
 function normalizeUsername(value: string | null) {
@@ -86,7 +86,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Falta username." }, { status: 400 });
     }
 
-    if (username === "huevsite") {
+    if (username === "tomi_delu") {
       return NextResponse.json({ error: "No podés borrar la cuenta admin desde este panel." }, { status: 400 });
     }
 

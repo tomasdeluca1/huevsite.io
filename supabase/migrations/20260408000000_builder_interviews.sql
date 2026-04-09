@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS public.builder_interviews (
   generated_linkedin_post TEXT,
   generated_twitter_post TEXT,
   generated_instagram_caption TEXT,
+  generated_instagram_carousel JSONB,
   generation_error TEXT,
 
   -- Typefully draft refs

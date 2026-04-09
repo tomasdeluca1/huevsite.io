@@ -1070,9 +1070,40 @@ export default function AdminPage() {
                               )}
                               {selectedInterview.generated_instagram_caption && (
                                 <div>
-                                  <div className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-widest mb-2">Instagram</div>
+                                  <div className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-widest mb-2">Instagram Caption</div>
                                   <div className="p-4 bg-black/30 rounded-xl border border-white/5 text-sm text-zinc-300 whitespace-pre-wrap">
                                     {selectedInterview.generated_instagram_caption}
+                                  </div>
+                                </div>
+                              )}
+                              {selectedInterview.generated_instagram_carousel && (
+                                <div>
+                                  <div className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-widest mb-3">Instagram Carrusel (7 slides)</div>
+                                  <div className="flex gap-3 overflow-x-auto pb-3 -mx-1 px-1">
+                                    {(Array.isArray(selectedInterview.generated_instagram_carousel) ? selectedInterview.generated_instagram_carousel : []).map((slide: any, i: number) => (
+                                      <div
+                                        key={i}
+                                        className="shrink-0 w-[220px] h-[220px] rounded-2xl border border-white/10 p-5 flex flex-col justify-between"
+                                        style={{ background: i === 0 ? 'linear-gradient(135deg, #0a0a0a 0%, #1a1a0a 100%)' : '#0a0a0a' }}
+                                      >
+                                        <div>
+                                          <div className="text-[9px] font-mono text-[#C8FF00]/60 uppercase tracking-widest mb-2">
+                                            {i + 1} / 7
+                                          </div>
+                                          <div className="text-sm font-extrabold text-white leading-tight mb-2">
+                                            {slide.heading}
+                                          </div>
+                                          <div className="text-[11px] text-zinc-400 leading-relaxed line-clamp-4">
+                                            {slide.body}
+                                          </div>
+                                        </div>
+                                        {slide.footer && (
+                                          <div className="text-[10px] text-[#C8FF00] font-mono mt-auto pt-2">
+                                            {slide.footer}
+                                          </div>
+                                        )}
+                                      </div>
+                                    ))}
                                   </div>
                                 </div>
                               )}

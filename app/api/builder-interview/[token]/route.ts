@@ -144,6 +144,7 @@ export async function POST(
         generated_linkedin_post: generated.linkedinPost,
         generated_twitter_post: generated.twitterPost,
         generated_instagram_caption: generated.instagramCaption,
+        generated_instagram_carousel: generated.instagramCarousel,
       })
       .eq("id", interview.id);
 

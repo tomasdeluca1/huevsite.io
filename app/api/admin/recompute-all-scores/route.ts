@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { ADMIN_USERNAME } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
             .eq('id', user.id)
             .single();
 
-        if (profile?.username !== 'huevsite') {
+        if (profile?.username !== ADMIN_USERNAME) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 

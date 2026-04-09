@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { sendTweet } from "@/lib/twitter";
 import { FREE_TRIAL_TWEETS, FreeTrialTweetVariant } from "@/lib/free-trial-campaign";
+import { ADMIN_USERNAME } from "@/lib/constants";
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
       .eq("id", user.id)
       .single();
 
-    if (profile?.username !== "huevsite") {
+    if (profile?.username !== ADMIN_USERNAME) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

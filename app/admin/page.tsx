@@ -78,8 +78,6 @@ export default function AdminPage() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [invitingBuilder, setInvitingBuilder] = useState(false);
   const [interviewMsg, setInterviewMsg] = useState<{ type: "ok" | "err"; msg: string } | null>(null);
-  const [selectedInterview, setSelectedInterview] = useState<any | null>(null);
-  const [loadingDetail, setLoadingDetail] = useState(false);
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -161,17 +159,6 @@ export default function AdminPage() {
     }
   };
 
-  const handleViewInterview = async (id: string) => {
-    setLoadingDetail(true);
-    try {
-      const res = await fetch(`/api/admin/builder-interview/${id}`);
-      const json = await res.json();
-      if (res.ok) setSelectedInterview(json);
-    } finally {
-      setLoadingDetail(false);
-    }
-  };
-
   const handleApproveInterview = async (id: string) => {
     setApprovingId(id);
     try {
@@ -179,7 +166,6 @@ export default function AdminPage() {
       const json = await res.json();
       if (res.ok) {
         setInterviewMsg({ type: "ok", msg: "Blog publicado 🎉" });
-        setSelectedInterview(null);
         fetchInterviews();
       } else {
         setInterviewMsg({ type: "err", msg: json.error || "Error al publicar." });
@@ -1018,12 +1004,13 @@ export default function AdminPage() {
                                 in Ver draft
                               </a>
                             )}
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleViewInterview(iv.id); }}
+                            <Link
+                              href={`/admin/interviews/${iv.id}`}
+                              onClick={(e) => e.stopPropagation()}
                               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-mono text-[var(--text-muted)] hover:text-white hover:bg-white/10 transition-colors"
                             >
-                              <Eye size={12} /> Preview completo
-                            </button>
+                              <Eye size={12} /> Editar / Preview
+                            </Link>
                             {iv.status === "ready" && (
                               <button
                                 onClick={(e) => { e.stopPropagation(); handleApproveInterview(iv.id); }}
@@ -1040,79 +1027,6 @@ export default function AdminPage() {
                               </span>
                             )}
                           </div>
-
-                          {/* Inline previews */}
-                          {selectedInterview?.id === iv.id ? (
-                            <div className="space-y-4">
-                              {selectedInterview.generated_blog_markdown && (
-                                <div>
-                                  <div className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-widest mb-2">Blog Post</div>
-                                  <div className="p-4 bg-black/30 rounded-xl border border-white/5 text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap max-h-[250px] overflow-y-auto">
-                                    {selectedInterview.generated_blog_markdown}
-                                  </div>
-                                </div>
-                              )}
-                              {selectedInterview.generated_twitter_post && (
-                                <div>
-                                  <div className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-widest mb-2">Tweet</div>
-                                  <div className="p-4 bg-black/30 rounded-xl border border-white/5 text-sm text-zinc-300">
-                                    {selectedInterview.generated_twitter_post}
-                                  </div>
-                                </div>
-                              )}
-                              {selectedInterview.generated_linkedin_post && (
-                                <div>
-                                  <div className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-widest mb-2">LinkedIn</div>
-                                  <div className="p-4 bg-black/30 rounded-xl border border-white/5 text-sm text-zinc-300 whitespace-pre-wrap">
-                                    {selectedInterview.generated_linkedin_post}
-                                  </div>
-                                </div>
-                              )}
-                              {selectedInterview.generated_instagram_caption && (
-                                <div>
-                                  <div className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-widest mb-2">Instagram Caption</div>
-                                  <div className="p-4 bg-black/30 rounded-xl border border-white/5 text-sm text-zinc-300 whitespace-pre-wrap">
-                                    {selectedInterview.generated_instagram_caption}
-                                  </div>
-                                </div>
-                              )}
-                              {selectedInterview.generated_instagram_carousel && (
-                                <div>
-                                  <div className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-widest mb-3">Instagram Carrusel (7 slides)</div>
-                                  <div className="flex gap-3 overflow-x-auto pb-3 -mx-1 px-1">
-                                    {(Array.isArray(selectedInterview.generated_instagram_carousel) ? selectedInterview.generated_instagram_carousel : []).map((slide: any, i: number) => (
-                                      <div
-                                        key={i}
-                                        className="shrink-0 w-[220px] h-[220px] rounded-2xl border border-white/10 p-5 flex flex-col justify-between"
-                                        style={{ background: i === 0 ? 'linear-gradient(135deg, #0a0a0a 0%, #1a1a0a 100%)' : '#0a0a0a' }}
-                                      >
-                                        <div>
-                                          <div className="text-[9px] font-mono text-[#C8FF00]/60 uppercase tracking-widest mb-2">
-                                            {i + 1} / 7
-                                          </div>
-                                          <div className="text-sm font-extrabold text-white leading-tight mb-2">
-                                            {slide.heading}
-                                          </div>
-                                          <div className="text-[11px] text-zinc-400 leading-relaxed line-clamp-4">
-                                            {slide.body}
-                                          </div>
-                                        </div>
-                                        {slide.footer && (
-                                          <div className="text-[10px] text-[#C8FF00] font-mono mt-auto pt-2">
-                                            {slide.footer}
-                                          </div>
-                                        )}
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          ) : loadingDetail ? (
-                            <div className="text-center py-6">
-                              <Loader2 size={16} className="animate-spin text-[var(--accent)] mx-auto" />
-                            </div>
-                          ) : null}
                         </div>
                       )}
                     </div>

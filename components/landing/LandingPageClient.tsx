@@ -288,26 +288,7 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
     <div className="landing">
       {/* NAV */}
       <nav>
-        <Link href="/" className="logo" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-          <span>huev<span style={{ color: 'var(--accent)' }}>site</span>.io</span>
-          <span
-            style={{
-              fontSize: '9px',
-              fontFamily: 'var(--font-mono)',
-              fontWeight: 700,
-              letterSpacing: '0.12em',
-              color: 'var(--accent)',
-              padding: '2px 6px',
-              border: '1px solid var(--accent-dim)',
-              borderRadius: '4px',
-              background: 'var(--accent-dim)',
-              textTransform: 'uppercase',
-              lineHeight: 1,
-            }}
-          >
-            by Studio
-          </span>
-        </Link>
+        <Link href="/" className="logo">huev<span style={{ color: 'var(--accent)' }}>site</span>.io</Link>
         <div className="nav-right hidden md:flex">
           <Link href="/feed" className="btn btn-ghost">
             <span>Lanzamientos</span>
@@ -842,65 +823,27 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
       </section>
 
       {/* FOOTER */}
-      <footer style={{ flexDirection: 'column', alignItems: 'stretch', gap: '24px' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: '24px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <div className="logo">huev<span style={{ color: 'var(--accent)' }}>site</span>.io</div>
-            <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Mostrá lo que buildeás.</div>
-          </div>
-          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-            <Link href="/blog" style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textDecoration: 'none' }}>Blog</Link>
-            <Link href="https://x.com/i/communities/2026312282527932637" target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textDecoration: 'none' }}>X Community</Link>
-            <Link href="https://discord.gg/qE4CWG6D" target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textDecoration: 'none' }}>Discord Community</Link>
-            <Link href="https://github.com/tomasdeluca1" target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textDecoration: 'none' }}>GitHub</Link>
+      <footer>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div className="logo">huev<span style={{ color: 'var(--accent)' }}>site</span>.io</div>
+          <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+            Mostrá lo que buildeás. A project by{' '}
+            <a
+              href="https://huevsite.studio"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: 'var(--text-muted)', textDecoration: 'underline', textDecorationColor: 'var(--border)', textUnderlineOffset: '2px' }}
+            >
+              Huevsite Studio
+            </a>
+            .
           </div>
         </div>
-
-        {/* Huevsite Studio credit bar */}
-        <div
-          style={{
-            paddingTop: '20px',
-            borderTop: '1px solid var(--border)',
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '12px',
-          }}
-        >
-          <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
-            © {new Date().getFullYear()} huevsite.io
-          </div>
-          <a
-            href="https://huevsite.studio"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontSize: '12px',
-              fontFamily: 'var(--font-mono)',
-              color: 'var(--text-muted)',
-              textDecoration: 'none',
-              padding: '8px 14px',
-              border: '1px solid var(--border)',
-              borderRadius: '999px',
-              transition: 'all 0.2s ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = 'var(--accent)';
-              e.currentTarget.style.color = 'var(--accent)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'var(--border)';
-              e.currentTarget.style.color = 'var(--text-muted)';
-            }}
-          >
-            <span>Built by</span>
-            <span style={{ fontWeight: 700, color: 'var(--text-strong)' }}>Huevsite Studio</span>
-            <span style={{ color: 'var(--accent)' }}>↗</span>
-          </a>
+        <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+          <Link href="/blog" style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textDecoration: 'none' }}>Blog</Link>
+          <Link href="https://x.com/i/communities/2026312282527932637" target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textDecoration: 'none' }}>X Community</Link>
+          <Link href="https://discord.gg/qE4CWG6D" target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textDecoration: 'none' }}>Discord Community</Link>
+          <Link href="https://github.com/tomasdeluca1" target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textDecoration: 'none' }}>GitHub</Link>
         </div>
       </footer>
     </div>

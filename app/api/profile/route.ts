@@ -11,7 +11,9 @@ const profilePatchSchema = z.object({
   username: z.string().min(1).max(50).regex(/^[a-zA-Z0-9_-]+$/, 'Username solo puede tener letras, números, guiones y guiones bajos').optional(),
   email: z.string().email().optional(),
   tagline: z.string().max(200).optional(),
-  accent_color: z.string().max(20).optional(),
+  // CSS injection guard: accent_color is interpolated into a <style dangerouslySetInnerHTML>
+  // tag on public profile pages. Must be a strict 6-digit hex color.
+  accent_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'accent_color debe ser un color hex de 6 dígitos (ej: #C8FF00)').optional(),
   layout: z.string().optional(),
   roles: z.array(z.string()).optional(),
   location: z.string().max(100).optional(),
@@ -20,7 +22,9 @@ const profilePatchSchema = z.object({
   image: z.string().url().or(z.literal('')).optional(),
   has_seen_update_feb25: z.boolean().optional(),
   custom_domain: z.string().max(253).optional(),
-  border_radius: z.string().optional(),
+  // Same CSS injection vector: border_radius is interpolated into the same <style> tag.
+  // Allow only a numeric value with rem/px/em units (or plain "0").
+  border_radius: z.string().regex(/^(0|\d+(\.\d+)?(rem|px|em))$/, 'border_radius debe ser un valor CSS válido (ej: 1.5rem, 12px, 0)').optional(),
   is_onboarding_test_user: z.boolean().optional(),
 })
 

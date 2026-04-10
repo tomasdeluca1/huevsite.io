@@ -15,12 +15,15 @@
 CREATE OR REPLACE FUNCTION public.enforce_profile_column_privileges()
 RETURNS TRIGGER
 LANGUAGE plpgsql
-SECURITY DEFINER
+SECURITY INVOKER
 SET search_path = public
 AS $$
 BEGIN
   -- Only enforce on direct authenticated-user updates.
   -- service_role, postgres, and SECURITY DEFINER function owners are trusted.
+  -- NOTE: must be SECURITY INVOKER so current_user reflects the caller's role.
+  -- With SECURITY DEFINER, current_user would be the function owner (postgres)
+  -- and the check below would always bypass, defeating the trigger.
   IF current_user <> 'authenticated' THEN
     RETURN NEW;
   END IF;

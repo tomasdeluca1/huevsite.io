@@ -70,17 +70,12 @@ export function AdminSidebar() {
       )}
 
       <aside
-        className={`
-          fixed inset-y-0 left-0 z-40
-          w-64
-          bg-[#0a0a0a] border-r border-[var(--border)]
-          flex flex-col
-          transition-transform duration-200 ease-out
-          ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
-        `}
+        className={`fixed inset-y-0 left-0 z-40 flex h-screen w-64 flex-col bg-[#0a0a0a] border-r border-[var(--border)] transition-transform duration-200 ease-out ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
       >
         {/* Brand */}
-        <div className="px-6 pt-8 pb-6">
+        <div className="shrink-0 px-6 pt-8 pb-6">
           <Link
             href="/"
             className="inline-block text-lg font-black tracking-tighter text-white"
@@ -93,7 +88,7 @@ export function AdminSidebar() {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
+        <nav className="flex flex-1 flex-col gap-0.5 px-3 overflow-y-auto">
           <div className="px-3 pb-2 text-[10px] font-mono text-[var(--text-dim)] uppercase tracking-widest">
             // secciones
           </div>
@@ -103,15 +98,11 @@ export function AdminSidebar() {
               <Link
                 key={href}
                 href={href}
-                className={`
-                  flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
-                  transition-all
-                  ${
-                    active
-                      ? "bg-[var(--accent)]/10 text-[var(--accent)]"
-                      : "text-[var(--text-muted)] hover:text-white hover:bg-white/5"
-                  }
-                `}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  active
+                    ? "bg-[var(--accent)]/10 text-[var(--accent)]"
+                    : "text-[var(--text-muted)] hover:text-white hover:bg-white/5"
+                }`}
                 aria-current={active ? "page" : undefined}
               >
                 <Icon size={16} strokeWidth={active ? 2.5 : 2} />
@@ -125,7 +116,7 @@ export function AdminSidebar() {
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-[var(--border)]">
+        <div className="shrink-0 p-4 border-t border-[var(--border)]">
           <Link
             href="/"
             className="flex items-center gap-2 text-[11px] font-mono text-[var(--text-dim)] hover:text-[var(--accent)] transition-colors"

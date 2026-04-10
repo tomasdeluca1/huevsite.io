@@ -90,8 +90,11 @@ export async function POST(request: NextRequest) {
       }
     } catch (e) {
       console.error("Verification error:", e);
-      // Fallback total: si todo falla pero la URL es un status de Twitter, confiamos (MVP pragmático)
-      isTweetValid = true;
+      // SECURITY: do NOT fall back to trusting the URL — if verification fails,
+      // reject. Previously this block set isTweetValid = true, allowing any tweet
+      // URL to unlock the bonus blocks without proof of mention.
+      isTweetValid = false;
+      errorMessage = "No pudimos verificar el tweet ahora mismo. Intentá de nuevo en unos segundos.";
     }
 
     if (!isTweetValid) {

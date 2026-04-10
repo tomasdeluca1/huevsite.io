@@ -9,7 +9,6 @@ import {
   Save,
   CheckCircle2,
   AlertCircle,
-  LogIn,
   Plus,
   Trash2,
   FileText,
@@ -24,7 +23,6 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 
 interface CarouselSlide {
   heading?: string;
@@ -65,8 +63,6 @@ export default function InterviewEditPage({
   const { id } = params;
   const router = useRouter();
 
-  const [authed, setAuthed] = useState(false);
-  const [checking, setChecking] = useState(true);
   const [loading, setLoading] = useState(true);
   const [interview, setInterview] = useState<Interview | null>(null);
   const [notFound, setNotFound] = useState(false);
@@ -215,31 +211,8 @@ Cualquier duda me escribís. ¡Gracias por el tiempo! 🙌`;
     }
   };
 
-  // Auth check
+  // Fetch interview — auth is enforced by app/admin/layout.tsx
   useEffect(() => {
-    const checkAdmin = async () => {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        setChecking(false);
-        return;
-      }
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("username")
-        .eq("id", user.id)
-        .single();
-      if (profile?.username === "tomi_delu") setAuthed(true);
-      setChecking(false);
-    };
-    checkAdmin();
-  }, []);
-
-  // Fetch interview
-  useEffect(() => {
-    if (!authed) return;
     (async () => {
       setLoading(true);
       try {
@@ -273,7 +246,7 @@ Cualquier duda me escribís. ¡Gracias por el tiempo! 🙌`;
         setLoading(false);
       }
     })();
-  }, [id, authed]);
+  }, [id]);
 
   // Load video playback URL when interview has a video
   useEffect(() => {
@@ -372,42 +345,17 @@ Cualquier duda me escribís. ¡Gracias por el tiempo! 🙌`;
     });
   };
 
-  // Render states
-  if (checking) {
-    return (
-      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
-        <Loader2 className="animate-spin text-[var(--accent)]" />
-      </div>
-    );
-  }
-
-  if (!authed) {
-    return (
-      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center p-4 font-display">
-        <div className="w-full max-w-sm space-y-6 text-center">
-          <div className="section-label mb-2 justify-center">// acceso restringido</div>
-          <h1 className="text-3xl font-extrabold tracking-tight">Admin</h1>
-          <Link
-            href="/auth/login"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-black bg-[var(--accent)] hover:opacity-90 transition-all"
-          >
-            <LogIn size={18} /> Iniciar sesión
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
+  // Render states — auth is enforced by app/admin/layout.tsx
   if (notFound) {
     return (
-      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center p-4 font-display">
+      <div className="flex items-center justify-center py-20">
         <div className="text-center space-y-4">
           <h1 className="text-2xl font-extrabold">Entrevista no encontrada</h1>
           <Link
-            href="/admin"
+            href="/admin/interviews"
             className="text-sm text-[var(--accent)] hover:underline"
           >
-            ← Volver al admin
+            ← Volver a interviews
           </Link>
         </div>
       </div>
@@ -416,14 +364,14 @@ Cualquier duda me escribís. ¡Gracias por el tiempo! 🙌`;
 
   if (loading || !interview) {
     return (
-      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
+      <div className="flex items-center justify-center py-20">
         <Loader2 className="animate-spin text-[var(--accent)]" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] font-display py-10 px-4 max-w-5xl mx-auto">
+    <div>
       {/* Header */}
       <header className="mb-8">
         <button

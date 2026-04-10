@@ -18,10 +18,12 @@ export default async function AdminLayout({
   await requireAdmin();
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] font-display flex">
+    <div className="min-h-screen bg-[var(--bg)] font-display">
       <AdminSidebar />
-      <main className="flex-1 min-w-0 p-4 pt-20 md:p-10 md:pt-10 max-w-5xl">
-        {children}
+      <main className="md:pl-64 min-h-screen">
+        <div className="max-w-5xl mx-auto px-4 pt-20 pb-16 md:px-10 md:pt-10">
+          {children}
+        </div>
       </main>
     </div>
   );

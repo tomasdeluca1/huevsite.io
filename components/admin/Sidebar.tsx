@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   Mic,
@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   Menu,
   X,
+  ExternalLink,
 } from "lucide-react";
 
 type NavItem = {
@@ -34,8 +35,12 @@ export function AdminSidebar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Exact match for dashboard, prefix match for everything else so that
-  // /admin/interviews/[id] keeps "Interviews" highlighted.
+  // Close the drawer on navigation
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  // Exact match for dashboard, prefix match for everything else
   const isActive = (href: string) => {
     if (href === "/admin") return pathname === "/admin";
     return pathname === href || pathname.startsWith(`${href}/`);
@@ -43,11 +48,11 @@ export function AdminSidebar() {
 
   return (
     <>
-      {/* Mobile toggle button */}
+      {/* Mobile toggle button — only visible below md */}
       <button
         type="button"
         onClick={() => setMobileOpen((v) => !v)}
-        className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-white"
+        className="md:hidden fixed top-4 left-4 z-50 flex items-center justify-center w-10 h-10 rounded-xl bg-[var(--surface)] border border-[var(--border)] text-white shadow-lg"
         aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
       >
         {mobileOpen ? <X size={18} /> : <Menu size={18} />}
@@ -59,65 +64,74 @@ export function AdminSidebar() {
           role="button"
           tabIndex={-1}
           aria-label="Cerrar menú"
-          className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-30"
+          className="md:hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-30"
           onClick={() => setMobileOpen(false)}
         />
       )}
 
       <aside
         className={`
-          fixed md:sticky md:top-0 md:self-start md:h-screen
-          inset-y-0 left-0 z-40
-          w-64 bg-[var(--surface)] border-r border-[var(--border)]
+          fixed inset-y-0 left-0 z-40
+          w-64
+          bg-[#0a0a0a] border-r border-[var(--border)]
           flex flex-col
           transition-transform duration-200 ease-out
           ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
       >
-        <div className="p-6 pb-4">
+        {/* Brand */}
+        <div className="px-6 pt-8 pb-6">
           <Link
             href="/"
-            className="inline-block text-lg font-black tracking-tighter"
+            className="inline-block text-lg font-black tracking-tighter text-white"
           >
             HUEV<span className="text-[var(--accent)]">SITE</span>.IO
           </Link>
-          <div className="text-[10px] font-mono text-[var(--text-dim)] uppercase tracking-widest mt-1">
-            // admin panel
+          <div className="text-[10px] font-mono text-[var(--text-dim)] uppercase tracking-widest mt-1.5">
+            admin panel
           </div>
         </div>
 
-        <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
+        {/* Nav */}
+        <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
+          <div className="px-3 pb-2 text-[10px] font-mono text-[var(--text-dim)] uppercase tracking-widest">
+            // secciones
+          </div>
           {NAV.map(({ href, label, icon: Icon }) => {
             const active = isActive(href);
             return (
               <Link
                 key={href}
                 href={href}
-                onClick={() => setMobileOpen(false)}
                 className={`
                   flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
-                  transition-colors
+                  transition-all
                   ${
                     active
-                      ? "bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20"
-                      : "text-[var(--text-muted)] hover:text-white hover:bg-white/5 border border-transparent"
+                      ? "bg-[var(--accent)]/10 text-[var(--accent)]"
+                      : "text-[var(--text-muted)] hover:text-white hover:bg-white/5"
                   }
                 `}
                 aria-current={active ? "page" : undefined}
               >
-                <Icon size={16} />
-                {label}
+                <Icon size={16} strokeWidth={active ? 2.5 : 2} />
+                <span className="flex-1">{label}</span>
+                {active && (
+                  <span className="w-1 h-1 rounded-full bg-[var(--accent)]" />
+                )}
               </Link>
             );
           })}
         </nav>
 
-        <div className="p-4 text-[10px] font-mono text-[var(--text-dim)] border-t border-[var(--border)]">
+        {/* Footer */}
+        <div className="p-4 border-t border-[var(--border)]">
           <Link
             href="/"
-            className="hover:text-[var(--accent)] transition-colors"
+            className="flex items-center gap-2 text-[11px] font-mono text-[var(--text-dim)] hover:text-[var(--accent)] transition-colors"
           >
-            ← volver al sitio
+            <ExternalLink size={11} />
+            volver al sitio
           </Link>
         </div>
       </aside>

@@ -16,12 +16,21 @@ import {
   LayoutGrid,
   Check,
   MessageSquare,
+  Video,
+  Upload,
+  Trash2,
 } from "lucide-react";
 
 interface CarouselSlide {
   heading?: string;
   body?: string;
   footer?: string;
+}
+
+interface VideoInfo {
+  uploadedAt: string | null;
+  sizeBytes: number | null;
+  mimeType: string | null;
 }
 
 interface ReviewData {
@@ -38,7 +47,21 @@ interface ReviewData {
     instagramCaption: string | null;
     instagramCarousel: CarouselSlide[];
   };
+  video: VideoInfo | null;
 }
+
+const ALLOWED_VIDEO_MIME = [
+  "video/mp4",
+  "video/quicktime",
+  "video/webm",
+  "video/x-m4v",
+];
+const MAX_VIDEO_BYTES = 524_288_000; // 500 MB
+
+type VideoUploadState =
+  | { type: "idle" }
+  | { type: "uploading"; progress: number }
+  | { type: "error"; message: string };
 
 type PageState =
   | { type: "loading" }
@@ -60,6 +83,155 @@ export default function BuilderReviewPage() {
     | { type: "error"; message: string }
     | null
   >(null);
+
+  // Video state
+  const [videoUpload, setVideoUpload] = useState<VideoUploadState>({ type: "idle" });
+  const [videoPlaybackUrl, setVideoPlaybackUrl] = useState<string | null>(null);
+  const [videoPlaybackLoading, setVideoPlaybackLoading] = useState(false);
+  const [deletingVideo, setDeletingVideo] = useState(false);
+
+  const refreshInterview = async () => {
+    try {
+      const res = await fetch(`/api/builder-interview/${token}/review`);
+      if (res.ok) {
+        const json = await res.json();
+        setState({ type: "ready", data: json });
+      }
+    } catch {
+      // non-blocking
+    }
+  };
+
+  const loadVideoPlayback = async () => {
+    setVideoPlaybackLoading(true);
+    try {
+      const res = await fetch(
+        `/api/builder-interview/${token}/video/playback-url`
+      );
+      if (res.ok) {
+        const json = await res.json();
+        setVideoPlaybackUrl(json.signedUrl);
+      } else {
+        setVideoPlaybackUrl(null);
+      }
+    } catch {
+      setVideoPlaybackUrl(null);
+    } finally {
+      setVideoPlaybackLoading(false);
+    }
+  };
+
+  const uploadVideo = async (file: File) => {
+    // Client-side validation
+    if (!ALLOWED_VIDEO_MIME.includes(file.type)) {
+      setVideoUpload({
+        type: "error",
+        message:
+          "Este formato no nos sirve. Grabá desde la cámara del celular y probá de nuevo.",
+      });
+      return;
+    }
+    if (file.size > MAX_VIDEO_BYTES) {
+      setVideoUpload({
+        type: "error",
+        message:
+          "El video es muy pesado. Probá grabando con menos calidad o recortando un poco.",
+      });
+      return;
+    }
+
+    setVideoUpload({ type: "uploading", progress: 0 });
+
+    try {
+      // Step 1: get signed upload URL
+      const urlRes = await fetch(
+        `/api/builder-interview/${token}/video/upload-url`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mimeType: file.type,
+            sizeBytes: file.size,
+          }),
+        }
+      );
+
+      if (!urlRes.ok) {
+        const j = await urlRes.json().catch(() => ({}));
+        throw new Error(j.error ?? "No pudimos preparar el upload.");
+      }
+
+      const { path, signedUrl } = await urlRes.json();
+
+      // Step 2: upload via XHR (to get progress events)
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("PUT", signedUrl);
+        xhr.setRequestHeader("Content-Type", file.type);
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const progress = Math.round((e.loaded / e.total) * 100);
+            setVideoUpload({ type: "uploading", progress });
+          }
+        };
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) resolve();
+          else reject(new Error(`Upload falló: ${xhr.status}`));
+        };
+        xhr.onerror = () => reject(new Error("Error de red durante el upload."));
+        xhr.send(file);
+      });
+
+      // Step 3: mark as complete server-side
+      const completeRes = await fetch(
+        `/api/builder-interview/${token}/video/complete`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            path,
+            mimeType: file.type,
+            sizeBytes: file.size,
+          }),
+        }
+      );
+
+      if (!completeRes.ok) {
+        const j = await completeRes.json().catch(() => ({}));
+        throw new Error(j.error ?? "No se pudo guardar el video.");
+      }
+
+      setVideoUpload({ type: "idle" });
+      setVideoPlaybackUrl(null);
+      await refreshInterview();
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Error desconocido.";
+      setVideoUpload({ type: "error", message });
+    }
+  };
+
+  const deleteVideo = async () => {
+    if (!confirm("¿Seguro que querés borrar el video?")) return;
+    setDeletingVideo(true);
+    try {
+      const res = await fetch(`/api/builder-interview/${token}/video`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setVideoUpload({
+          type: "error",
+          message: j.error ?? "No pudimos borrar el video.",
+        });
+        return;
+      }
+      setVideoPlaybackUrl(null);
+      setVideoUpload({ type: "idle" });
+      await refreshInterview();
+    } finally {
+      setDeletingVideo(false);
+    }
+  };
 
   useEffect(() => {
     async function load() {
@@ -89,6 +261,19 @@ export default function BuilderReviewPage() {
     }
     load();
   }, [token]);
+
+  // Load signed playback URL whenever a video exists and we don't have one yet
+  useEffect(() => {
+    if (
+      state.type === "ready" &&
+      state.data.video &&
+      !videoPlaybackUrl &&
+      !videoPlaybackLoading
+    ) {
+      loadVideoPlayback();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]);
 
   const submitReview = async (approved: boolean) => {
     setSubmitting(true);
@@ -276,6 +461,145 @@ export default function BuilderReviewPage() {
                   </div>
                 </Section>
               )}
+            </div>
+
+            {/* Story video */}
+            <div className="mt-20 pt-12 border-t border-white/10">
+              <div className="text-[10px] font-mono text-[#C8FF00] uppercase tracking-widest mb-3">
+                // tu historia en video
+              </div>
+              <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-3">
+                Subí tu video
+              </h2>
+              <p className="text-zinc-400 text-sm md:text-base max-w-xl leading-relaxed mb-8">
+                Grabá con{" "}
+                <Link
+                  href="/builder-de-la-semana/guia"
+                  target="_blank"
+                  className="text-[#C8FF00] underline underline-offset-4 hover:opacity-80"
+                >
+                  la guía de 10 preguntas
+                </Link>
+                {" "}y subilo acá. Cámara vertical, un solo video con todas tus respuestas. 1 a 3 minutos está perfecto. Lo usamos para tus stories en las redes de huevsite.
+              </p>
+
+              {/* Existing video player */}
+              {state.data.video && (
+                <div className="mb-6">
+                  <div className="rounded-2xl overflow-hidden border border-white/10 bg-black aspect-[9/16] max-w-sm mx-auto">
+                    {videoPlaybackLoading && !videoPlaybackUrl && (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Loader2 className="animate-spin text-[#C8FF00]" />
+                      </div>
+                    )}
+                    {videoPlaybackUrl && (
+                      <video
+                        key={videoPlaybackUrl}
+                        src={videoPlaybackUrl}
+                        controls
+                        playsInline
+                        className="w-full h-full object-contain bg-black"
+                      />
+                    )}
+                  </div>
+                  <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-xs font-mono text-zinc-500">
+                    {state.data.video.sizeBytes && (
+                      <span>
+                        {Math.round(state.data.video.sizeBytes / 1024 / 1024)} MB
+                      </span>
+                    )}
+                    {state.data.video.uploadedAt && (
+                      <span>
+                        subido{" "}
+                        {new Date(state.data.video.uploadedAt).toLocaleDateString(
+                          "es-AR",
+                          { day: "2-digit", month: "short" }
+                        )}
+                      </span>
+                    )}
+                    <button
+                      onClick={deleteVideo}
+                      disabled={deletingVideo || videoUpload.type === "uploading"}
+                      className="flex items-center gap-1.5 text-red-400/70 hover:text-red-400 disabled:opacity-40 transition-colors"
+                    >
+                      {deletingVideo ? (
+                        <Loader2 size={12} className="animate-spin" />
+                      ) : (
+                        <Trash2 size={12} />
+                      )}
+                      Borrar
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Upload UI */}
+              <div className="relative">
+                <label
+                  htmlFor="story-video-input"
+                  className={`block p-8 rounded-2xl border-2 border-dashed text-center transition-colors cursor-pointer ${
+                    videoUpload.type === "uploading"
+                      ? "border-[#C8FF00]/40 bg-[#C8FF00]/5 cursor-wait"
+                      : "border-white/15 hover:border-[#C8FF00]/50 hover:bg-white/[0.02]"
+                  }`}
+                >
+                  {videoUpload.type === "idle" && (
+                    <>
+                      <Upload className="w-6 h-6 mx-auto mb-3 text-[#C8FF00]" />
+                      <div className="text-sm font-bold text-white mb-1">
+                        {state.data.video ? "Reemplazar video" : "Elegir video"}
+                      </div>
+                      <div className="text-[11px] font-mono text-zinc-500">
+                        Grabado del celular, directo. No hace falta editarlo.
+                      </div>
+                    </>
+                  )}
+                  {videoUpload.type === "uploading" && (
+                    <>
+                      <Video className="w-6 h-6 mx-auto mb-3 text-[#C8FF00] animate-pulse" />
+                      <div className="text-sm font-bold text-white mb-3">
+                        Subiendo video...
+                      </div>
+                      <div className="w-full max-w-xs mx-auto h-1.5 rounded-full bg-white/10 overflow-hidden">
+                        <div
+                          className="h-full bg-[#C8FF00] transition-all"
+                          style={{ width: `${videoUpload.progress}%` }}
+                        />
+                      </div>
+                      <div className="mt-2 text-[11px] font-mono text-zinc-500">
+                        {videoUpload.progress}%
+                      </div>
+                    </>
+                  )}
+                  {videoUpload.type === "error" && (
+                    <>
+                      <AlertCircle className="w-6 h-6 mx-auto mb-3 text-red-400" />
+                      <div className="text-sm font-bold text-red-300 mb-1">
+                        Error al subir
+                      </div>
+                      <div className="text-[11px] font-mono text-red-300/70 mb-3">
+                        {videoUpload.message}
+                      </div>
+                      <div className="text-xs text-white/70">
+                        Click para intentar de nuevo
+                      </div>
+                    </>
+                  )}
+                </label>
+                <input
+                  id="story-video-input"
+                  type="file"
+                  accept={ALLOWED_VIDEO_MIME.join(",")}
+                  className="sr-only"
+                  disabled={videoUpload.type === "uploading" || deletingVideo}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) uploadVideo(file);
+                    // reset input so the same file can be re-picked after error
+                    e.target.value = "";
+                  }}
+                />
+              </div>
             </div>
 
             {/* Review actions */}

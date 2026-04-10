@@ -947,7 +947,7 @@ export default function AdminPage() {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3 shrink-0">
+                        <div className="flex items-center gap-2 shrink-0">
                           {/* Status badge */}
                           <span className={`text-[10px] font-mono px-3 py-1 rounded-full uppercase tracking-wider ${
                             iv.status === "published" ? "bg-green-500/10 text-green-400 border border-green-500/20" :
@@ -962,6 +962,38 @@ export default function AdminPage() {
                             {iv.status === "published" && "Publicado"}
                             {isExpired && "Expirado"}
                           </span>
+
+                          {/* Builder review badge */}
+                          {iv.builder_approved_at && (
+                            <span
+                              className="text-[10px] font-mono px-2 py-1 rounded-full uppercase tracking-wider bg-green-500/10 text-green-400 border border-green-500/20"
+                              title={`Aprobado ${new Date(iv.builder_approved_at).toLocaleDateString("es-AR")}`}
+                            >
+                              ✓ Aprobado
+                            </span>
+                          )}
+                          {!iv.builder_approved_at && iv.builder_feedback && (
+                            <span
+                              className="text-[10px] font-mono px-2 py-1 rounded-full uppercase tracking-wider bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
+                              title="El builder pidió cambios"
+                            >
+                              ✎ Cambios
+                            </span>
+                          )}
+
+                          {/* Video badge */}
+                          {iv.story_video_path && (
+                            <span
+                              className="text-[10px] font-mono px-2 py-1 rounded-full uppercase tracking-wider bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20"
+                              title={
+                                iv.story_video_is_public
+                                  ? "Video subido · público"
+                                  : "Video subido · privado"
+                              }
+                            >
+                              🎥 {iv.story_video_is_public ? "público" : "video"}
+                            </span>
+                          )}
 
                           {iv.generation_error && (
                             <span className="text-[10px] text-red-400 font-mono">⚠️ error</span>

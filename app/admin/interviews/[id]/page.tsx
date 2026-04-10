@@ -20,6 +20,9 @@ import {
   Check,
   Link2,
   MessageSquare,
+  Video,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -47,6 +50,11 @@ interface Interview {
   generated_instagram_carousel: CarouselSlide[] | null;
   typefully_x_draft_url: string | null;
   typefully_linkedin_draft_url: string | null;
+  story_video_path: string | null;
+  story_video_uploaded_at: string | null;
+  story_video_size_bytes: number | null;
+  story_video_mime_type: string | null;
+  story_video_is_public: boolean;
 }
 
 export default function InterviewEditPage({
@@ -75,6 +83,13 @@ export default function InterviewEditPage({
     null
   );
   const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedMessage, setCopiedMessage] = useState(false);
+
+  // Video state
+  const [videoPlaybackUrl, setVideoPlaybackUrl] = useState<string | null>(null);
+  const [videoPlaybackLoading, setVideoPlaybackLoading] = useState(false);
+  const [togglingPublic, setTogglingPublic] = useState(false);
+  const [deletingVideo, setDeletingVideo] = useState(false);
 
   const copyReviewLink = async () => {
     if (!interview) return;
@@ -85,6 +100,118 @@ export default function InterviewEditPage({
       setTimeout(() => setCopiedLink(false), 2000);
     } catch {
       setMsg({ type: "err", text: "No se pudo copiar. URL: " + url });
+    }
+  };
+
+  const copyBuilderMessage = async () => {
+    if (!interview) return;
+    const origin = window.location.origin;
+    const reviewUrl = `${origin}/builder-de-la-semana/review/${interview.token}`;
+    const guiaUrl = `${origin}/builder-de-la-semana/guia`;
+    const firstName = (interview.builder_name ?? interview.builder_username).split(" ")[0];
+
+    const text = `Hola ${firstName}! 🧉
+
+Con tus respuestas generamos el blog post y las piezas para X, LinkedIn e Instagram. Revisalo en este link y decinos si está bien para publicar o si querés cambiar algo:
+
+${reviewUrl}
+
+En ese mismo link también podés subir un video tuyo contando tu historia — para eso te dejo esta guía con 10 preguntas disparadoras (una por story, 15 seg, vertical, sin guion):
+
+${guiaUrl}
+
+Grabás, editás todo junto en un video, lo subís en el link de arriba. Lo usamos para tus stories en las redes de huevsite.
+
+Cualquier duda me escribís. ¡Gracias por el tiempo! 🙌`;
+
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedMessage(true);
+      setTimeout(() => setCopiedMessage(false), 2500);
+    } catch {
+      setMsg({
+        type: "err",
+        text: "No se pudo copiar el mensaje. Revisá permisos del navegador.",
+      });
+    }
+  };
+
+  const loadAdminVideoPlayback = async () => {
+    if (!interview?.story_video_path) return;
+    setVideoPlaybackLoading(true);
+    try {
+      const res = await fetch(
+        `/api/admin/builder-interview/${interview.id}/video/playback-url`
+      );
+      if (res.ok) {
+        const json = await res.json();
+        setVideoPlaybackUrl(json.signedUrl);
+      } else {
+        setVideoPlaybackUrl(null);
+      }
+    } finally {
+      setVideoPlaybackLoading(false);
+    }
+  };
+
+  const toggleVideoPublic = async () => {
+    if (!interview) return;
+    setTogglingPublic(true);
+    try {
+      const res = await fetch(
+        `/api/admin/builder-interview/${interview.id}/video/toggle-public`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isPublic: !interview.story_video_is_public }),
+        }
+      );
+      const json = await res.json();
+      if (!res.ok) {
+        setMsg({ type: "err", text: json.error ?? "Error al cambiar visibilidad." });
+        return;
+      }
+      setInterview({
+        ...interview,
+        story_video_is_public: json.isPublic,
+      });
+      setMsg({
+        type: "ok",
+        text: json.isPublic ? "Video público" : "Video privado",
+      });
+      setTimeout(() => setMsg(null), 2500);
+    } finally {
+      setTogglingPublic(false);
+    }
+  };
+
+  const deleteVideo = async () => {
+    if (!interview) return;
+    if (!confirm("¿Borrar el video subido por el builder?")) return;
+    setDeletingVideo(true);
+    try {
+      const res = await fetch(
+        `/api/admin/builder-interview/${interview.id}/video`,
+        { method: "DELETE" }
+      );
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setMsg({ type: "err", text: j.error ?? "Error al borrar." });
+        return;
+      }
+      setInterview({
+        ...interview,
+        story_video_path: null,
+        story_video_uploaded_at: null,
+        story_video_size_bytes: null,
+        story_video_mime_type: null,
+        story_video_is_public: false,
+      });
+      setVideoPlaybackUrl(null);
+      setMsg({ type: "ok", text: "Video borrado" });
+      setTimeout(() => setMsg(null), 2500);
+    } finally {
+      setDeletingVideo(false);
     }
   };
 
@@ -147,6 +274,14 @@ export default function InterviewEditPage({
       }
     })();
   }, [id, authed]);
+
+  // Load video playback URL when interview has a video
+  useEffect(() => {
+    if (interview?.story_video_path && !videoPlaybackUrl && !videoPlaybackLoading) {
+      loadAdminVideoPlayback();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [interview?.story_video_path]);
 
   const hasChanges = Boolean(
     interview &&
@@ -401,6 +536,14 @@ export default function InterviewEditPage({
           {copiedLink ? <Check size={14} /> : <Link2 size={14} />}
           {copiedLink ? "Copiado" : "Copiar link de review"}
         </button>
+        <button
+          onClick={copyBuilderMessage}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-sm font-mono text-white hover:bg-white/10 transition-all"
+          title="Mensaje completo para mandarle al builder (review + guía de stories)"
+        >
+          {copiedMessage ? <Check size={14} /> : <MessageSquare size={14} />}
+          {copiedMessage ? "Copiado" : "Copiar mensaje"}
+        </button>
         {interview.typefully_x_draft_url && (
           <a
             href={interview.typefully_x_draft_url}
@@ -615,6 +758,106 @@ export default function InterviewEditPage({
               </div>
             ))}
           </div>
+        </section>
+
+        {/* Story video from builder */}
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Video size={16} className="text-[var(--accent)]" />
+              <h2 className="text-sm font-mono uppercase tracking-widest text-[var(--text-muted)]">
+                Video del builder
+              </h2>
+            </div>
+            {interview.story_video_path && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={toggleVideoPublic}
+                  disabled={togglingPublic}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-mono transition-colors ${
+                    interview.story_video_is_public
+                      ? "bg-green-500/10 border-green-500/30 text-green-400 hover:bg-green-500/20"
+                      : "bg-white/5 border-white/10 text-[var(--text-muted)] hover:text-white hover:bg-white/10"
+                  }`}
+                  title={
+                    interview.story_video_is_public
+                      ? "Video público — clic para hacerlo privado"
+                      : "Video privado — clic para hacerlo público"
+                  }
+                >
+                  {togglingPublic ? (
+                    <Loader2 size={12} className="animate-spin" />
+                  ) : interview.story_video_is_public ? (
+                    <Eye size={12} />
+                  ) : (
+                    <EyeOff size={12} />
+                  )}
+                  {interview.story_video_is_public ? "Público" : "Privado"}
+                </button>
+                <button
+                  onClick={deleteVideo}
+                  disabled={deletingVideo}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/5 border border-red-500/20 text-xs font-mono text-red-400/80 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+                >
+                  {deletingVideo ? (
+                    <Loader2 size={12} className="animate-spin" />
+                  ) : (
+                    <Trash2 size={12} />
+                  )}
+                  Borrar
+                </button>
+              </div>
+            )}
+          </div>
+
+          {!interview.story_video_path && (
+            <div className="p-8 text-center bg-black/30 border border-dashed border-white/10 rounded-2xl">
+              <Video size={24} className="mx-auto mb-2 text-[var(--text-dim)]" />
+              <div className="text-sm text-[var(--text-muted)] font-mono">
+                El builder todavía no subió su video.
+              </div>
+              <div className="text-[10px] text-[var(--text-dim)] font-mono mt-1">
+                Se sube desde el link de review.
+              </div>
+            </div>
+          )}
+
+          {interview.story_video_path && (
+            <div>
+              <div className="rounded-2xl overflow-hidden border border-white/10 bg-black aspect-[9/16] max-w-xs mx-auto">
+                {videoPlaybackLoading && !videoPlaybackUrl && (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Loader2 size={20} className="animate-spin text-[var(--accent)]" />
+                  </div>
+                )}
+                {videoPlaybackUrl && (
+                  <video
+                    key={videoPlaybackUrl}
+                    src={videoPlaybackUrl}
+                    controls
+                    playsInline
+                    className="w-full h-full object-contain bg-black"
+                  />
+                )}
+              </div>
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-3 text-[10px] font-mono text-[var(--text-dim)]">
+                {interview.story_video_size_bytes && (
+                  <span>
+                    {Math.round(interview.story_video_size_bytes / 1024 / 1024)} MB
+                  </span>
+                )}
+                {interview.story_video_mime_type && (
+                  <span>{interview.story_video_mime_type}</span>
+                )}
+                {interview.story_video_uploaded_at && (
+                  <span>
+                    subido{" "}
+                    {new Date(interview.story_video_uploaded_at).toLocaleString("es-AR")}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </section>
       </div>
     </div>

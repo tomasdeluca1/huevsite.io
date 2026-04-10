@@ -24,7 +24,7 @@ export async function GET(
   const { token } = await params;
   const supabase = getServiceRoleClient();
 
-  const { data: interview } = await supabase
+  const { data: interview, error: queryError } = await supabase
     .from("builder_interviews")
     .select(
       `
@@ -38,17 +38,26 @@ export async function GET(
       generated_twitter_post,
       generated_linkedin_post,
       generated_instagram_caption,
-      generated_instagram_carousel
+      generated_instagram_carousel,
+      story_video_path,
+      story_video_uploaded_at,
+      story_video_size_bytes,
+      story_video_mime_type
     `
     )
     .eq("token", token)
     .maybeSingle();
 
-  if (!interview) {
+  if (queryError) {
+    console.error("Review GET query error:", queryError);
     return NextResponse.json(
-      { error: "not_found" },
-      { status: 404 }
+      { error: queryError.message },
+      { status: 500 }
     );
+  }
+
+  if (!interview) {
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
   if (!REVIEWABLE_STATUSES.has(interview.status)) {
@@ -74,6 +83,13 @@ export async function GET(
         ? interview.generated_instagram_carousel
         : [],
     },
+    video: interview.story_video_path
+      ? {
+          uploadedAt: interview.story_video_uploaded_at,
+          sizeBytes: interview.story_video_size_bytes,
+          mimeType: interview.story_video_mime_type,
+        }
+      : null,
   });
 }
 
@@ -104,11 +120,19 @@ export async function POST(
 
   const supabase = getServiceRoleClient();
 
-  const { data: interview } = await supabase
+  const { data: interview, error: queryError } = await supabase
     .from("builder_interviews")
     .select("id, builder_name, builder_username, status")
     .eq("token", token)
     .maybeSingle();
+
+  if (queryError) {
+    console.error("Review POST query error:", queryError);
+    return NextResponse.json(
+      { error: queryError.message },
+      { status: 500 }
+    );
+  }
 
   if (!interview) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });

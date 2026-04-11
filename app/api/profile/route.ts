@@ -1,10 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { scoreService } from '@/lib/score-service'
 import { vercelService } from '@/lib/vercel-service'
 import { hasProAccess } from '@/lib/pro-access'
 import { rateLimit, getIdentifier } from '@/lib/rate-limit'
+
+// After the 2026-04-11 hardening pass, several profile columns
+// (ai_credits, lemon_squeezy_*, free_trial_*) are no longer readable from
+// the user-session client. The owner of the profile still needs to read
+// those columns for the dashboard, so we use a service-role client AFTER
+// authenticating the request.
+function getServiceRoleClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
 
 const profilePatchSchema = z.object({
   name: z.string().max(100).optional(),
@@ -58,9 +71,9 @@ async function syncMainHeroAvatar(supabase: any, userId: string, avatarUrl: stri
 // GET /api/profile - obtener perfil del usuario autenticado
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const sessionClient = await createClient()
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await sessionClient.auth.getUser()
 
     if (authError || !user) {
       return NextResponse.json(
@@ -68,6 +81,13 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       )
     }
+
+    // After authenticating the user via the session client, switch to the
+    // service-role client to read the full profile (including columns that
+    // are no longer grant-readable to authenticated, like ai_credits,
+    // lemon_squeezy_* and free_trial_*). All queries below are scoped to
+    // user.id so we never leak someone else's data.
+    const supabase = getServiceRoleClient()
 
     // Obtener perfil
     const { data: profile, error: profileError } = await supabase

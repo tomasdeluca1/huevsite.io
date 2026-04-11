@@ -18,9 +18,13 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
     .order("created_at", { ascending: false })
     .limit(50);
 
+  // NOTE: select("id", ...) instead of select("*", ...) so the column-level
+  // grants from migration 20260411000000 don't reject this query (it would
+  // try to read every column including the now-restricted email,
+  // lemon_squeezy_*, etc.). Count queries only need any single granted column.
   const { count } = await supabase
     .from("profiles")
-    .select("*", { count: "exact", head: true })
+    .select("id", { count: "exact", head: true })
     .not("username", "is", null);
 
   const totalRegistered = count || 0;

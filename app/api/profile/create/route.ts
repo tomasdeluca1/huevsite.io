@@ -1,5 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+
+// referral_code is no longer in the public SELECT grant since the
+// 2026-04-11 hardening pass. Use the service-role client for the lookup
+// (it's a join key, not user-facing data).
+function getServiceRoleClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
 import { buildOnboardingBlocks, selectOnboardingLayout } from '@/lib/onboarding-utils'
 import { checkAndPostCommunityMilestone } from '@/lib/twitter'
 import { type LinktreeImportData } from '@/lib/linktree-import'
@@ -96,15 +107,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Buscar ID del referente si existe código
+    // Buscar ID del referente si existe código.
+    // referral_code is service-role only (per the 2026-04-11 hardening),
+    // so we use the admin client just for this lookup.
     let referredById = null;
     if (body.referredBy) {
-      const { data: referrer } = await supabase
+      const adminClient = getServiceRoleClient();
+      const { data: referrer } = await adminClient
         .from('profiles')
         .select('id')
         .eq('referral_code', body.referredBy)
         .maybeSingle();
-      
+
       if (referrer) {
         referredById = referrer.id;
       }

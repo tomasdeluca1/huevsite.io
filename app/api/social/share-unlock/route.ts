@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
+
+// twitter_share_unlocked and extra_blocks_from_share are blocked at the
+// trigger level (2026-04-11 hardening) so users can't grant themselves
+// bonus blocks via direct REST. The unlock flow runs through the
+// service-role client after we authenticate the user and verify the
+// tweet content.
+function getServiceRoleClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 /**
  * POST /api/social/share-unlock
@@ -10,16 +23,20 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const sessionClient = await createClient();
 
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser();
+    } = await sessionClient.auth.getUser();
 
     if (authError || !user) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
+
+    // Switch to service role for the read+write of share-unlock columns,
+    // which the trigger blocks for the authenticated role.
+    const supabase = getServiceRoleClient();
 
     const { tweetUrl } = await request.json().catch(() => ({ tweetUrl: null }));
 

@@ -1,4 +1,16 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
+
+// Showcase reads aggregated nomination + winner data for the public
+// /showcase page. Since 2026-04-11 the showcase_nominations table is no
+// longer directly readable by anon/authenticated (privacy: reveals who
+// voted for whom). We use the service-role client here so the API layer
+// can sanitize and aggregate before returning to the page.
+function getServiceRoleClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 export function getWeekString(date: Date): string {
   // Ajuste a horario de Argentina (UTC-3)
@@ -27,7 +39,7 @@ export async function getShowcaseData(requestedWeek?: string | null) {
   const currentWeek = requestedWeek || getCurrentWeek();
 
   try {
-    const supabase = await createClient();
+    const supabase = getServiceRoleClient();
 
     // Winner: Intentar buscar por week específica, si no, traer la week del más reciente
     let targetWeek = requestedWeek;

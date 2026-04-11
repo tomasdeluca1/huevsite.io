@@ -175,9 +175,11 @@ export async function checkAndPostWelcomeTweet(supabase: any, userId: string, bl
 export async function checkAndPostCommunityMilestone(supabase: any) {
   try {
     // 1. Get total builder count
+    // Use select('id', ...) — select('*', ...) fails under the column-level
+    // grants from migration 20260411000000 when called with a session client.
     const { count, error } = await supabase
       .from('profiles')
-      .select('*', { count: 'exact', head: true });
+      .select('id', { count: 'exact', head: true });
 
     if (error || count === null) return;
 
@@ -233,9 +235,11 @@ export async function postWeeklyStats(supabase: any, preview = false) {
     const dateStr = sevenDaysAgo.toISOString();
 
     // 1. Get new builders in last 7 days
+    // select('id', ...) instead of select('*', ...) — column-level grants
+    // would reject the latter under a session client.
     const { count: newBuilders } = await supabase
       .from('profiles')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .gte('created_at', dateStr);
 
     // 2. Get new projects/buildings in last 7 days

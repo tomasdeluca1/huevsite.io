@@ -27,64 +27,63 @@
 
 REVOKE SELECT ON public.profiles FROM anon, authenticated;
 
-GRANT SELECT (
-  -- Identity & display
-  id,
-  username,
-  name,
-  image,
-  github_handle,
-  -- Visual customization
-  accent_color,
-  layout,
-  border_radius,
-  roles,
-  recent_colors,
-  -- Public profile fields
-  tagline,
-  location,
-  available,
-  -- Public flags
-  twitter_share_unlocked,
-  extra_blocks_from_share,
-  has_seen_update_feb25,
-  welcome_tweet_sent,
-  is_onboarding_test_user,
-  -- Subscription (badge visibility)
-  subscription_tier,
-  pro_since,
-  custom_domain,
-  -- Public gamification
-  builder_score,
-  is_monthly_winner,
-  winner_month,
-  is_profile_verified,
-  has_good_reputation,
-  is_top_matchmaker,
-  -- Trial state (used by trial banners and pro-access checks)
-  free_trial_started_at,
-  free_trial_ends_at,
-  free_trial_claimed_at,
-  free_trial_last_insights_viewed_at,
-  -- Referral state (NOT the code itself)
-  pro_referrals_count,
-  referral_reward_expires_at,
-  -- Timestamps
-  created_at,
-  updated_at
-) ON public.profiles TO anon, authenticated;
+-- The whitelist below is generated dynamically: we only GRANT columns that
+-- actually exist in the live profiles table. This makes the migration safe
+-- against schema drift between environments (a column listed in schema.sql
+-- but never migrated to prod won't break the GRANT).
+--
+-- Sensitive columns are NEVER added even if present:
+--   email, lemon_squeezy_customer_id, lemon_squeezy_subscription_id,
+--   referral_code, referred_by, ai_credits, and any
+--   free_trial_*_email_sent_at tracking column.
 
--- Excluded (service-role only — the critical PII / secrets):
---   email                                  PII
---   lemon_squeezy_customer_id              billing
---   lemon_squeezy_subscription_id          billing
---   referral_code                          per-user secret (used as a join key)
---   referred_by                            attribution privacy
---   ai_credits                             per-user quota (could enable abuse)
---   free_trial_welcome_email_sent_at       internal tracking
---   free_trial_launch_email_sent_at        internal tracking
---   free_trial_activation_email_sent_at    internal tracking
---   free_trial_expiring_email_sent_at      internal tracking
+DO $$
+DECLARE
+  v_public_columns TEXT[] := ARRAY[
+    -- Identity & display
+    'id', 'username', 'name', 'image', 'github_handle',
+    -- Visual customization
+    'accent_color', 'layout', 'border_radius', 'roles', 'recent_colors',
+    -- Public profile fields
+    'tagline', 'location', 'available',
+    -- Public flags
+    'twitter_share_unlocked', 'extra_blocks_from_share',
+    'has_seen_update_feb25', 'welcome_tweet_sent', 'is_onboarding_test_user',
+    -- Subscription (badge visibility)
+    'subscription_tier', 'pro_since', 'custom_domain',
+    -- Public gamification
+    'builder_score', 'is_monthly_winner', 'winner_month',
+    'is_profile_verified', 'has_good_reputation', 'is_top_matchmaker',
+    -- Trial state (used by trial banners and pro-access checks)
+    'free_trial_started_at', 'free_trial_ends_at', 'free_trial_claimed_at',
+    'free_trial_last_insights_viewed_at',
+    -- Referral state (NOT the code itself)
+    'pro_referrals_count', 'referral_reward_expires_at',
+    -- Timestamps
+    'created_at', 'updated_at'
+  ];
+  v_existing_columns TEXT[];
+  v_grant_sql TEXT;
+BEGIN
+  SELECT array_agg(quote_ident(column_name) ORDER BY column_name)
+    INTO v_existing_columns
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'profiles'
+      AND column_name = ANY(v_public_columns);
+
+  IF v_existing_columns IS NULL OR array_length(v_existing_columns, 1) IS NULL THEN
+    RAISE EXCEPTION 'No public profile columns found — refusing to GRANT empty list';
+  END IF;
+
+  v_grant_sql := format(
+    'GRANT SELECT (%s) ON public.profiles TO anon, authenticated',
+    array_to_string(v_existing_columns, ', ')
+  );
+
+  RAISE NOTICE 'Granting SELECT on % public profile columns', array_length(v_existing_columns, 1);
+  EXECUTE v_grant_sql;
+END $$;
 
 -- ============================================================================
 -- 2. PROFILES — extend privilege-escalation trigger (C1)
@@ -95,12 +94,48 @@ GRANT SELECT (
 -- and other gamification flags. Extend the trigger to cover everything that
 -- should never be writable by an authenticated user via direct REST.
 
+-- We use to_jsonb(NEW)->>'column' instead of NEW.column so the function
+-- doesn't fail at runtime if a column happens to be missing in this
+-- environment (schema drift defense). For columns that don't exist,
+-- to_jsonb returns NULL on both sides and the IS DISTINCT FROM check
+-- is false, so the trigger silently skips.
+
 CREATE OR REPLACE FUNCTION public.enforce_profile_column_privileges()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
+DECLARE
+  v_old JSONB;
+  v_new JSONB;
+  v_locked_columns TEXT[] := ARRAY[
+    -- Score & gamification
+    'builder_score',
+    'is_monthly_winner',
+    'winner_month',
+    'is_profile_verified',
+    'has_good_reputation',
+    'is_top_matchmaker',
+    -- Subscription & billing
+    'subscription_tier',
+    'pro_since',
+    'lemon_squeezy_customer_id',
+    'lemon_squeezy_subscription_id',
+    -- Credits & referrals
+    'ai_credits',
+    'referral_code',
+    'pro_referrals_count',
+    'referral_reward_expires_at',
+    -- Free trial state
+    'free_trial_claimed_at',
+    'free_trial_started_at',
+    'free_trial_ends_at',
+    -- Share-unlock state
+    'twitter_share_unlocked',
+    'extra_blocks_from_share'
+  ];
+  v_col TEXT;
 BEGIN
   -- Only enforce on direct authenticated-user updates.
   -- service_role, postgres, and SECURITY DEFINER function owners are trusted.
@@ -108,83 +143,15 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  -- Score & gamification
-  IF NEW.builder_score IS DISTINCT FROM OLD.builder_score THEN
-    RAISE EXCEPTION 'builder_score is read-only. Use the recompute_builder_score() RPC.'
-      USING ERRCODE = '42501';
-  END IF;
-  IF NEW.is_monthly_winner IS DISTINCT FROM OLD.is_monthly_winner THEN
-    RAISE EXCEPTION 'is_monthly_winner is read-only.' USING ERRCODE = '42501';
-  END IF;
-  IF NEW.winner_month IS DISTINCT FROM OLD.winner_month THEN
-    RAISE EXCEPTION 'winner_month is read-only.' USING ERRCODE = '42501';
-  END IF;
-  IF NEW.is_profile_verified IS DISTINCT FROM OLD.is_profile_verified THEN
-    RAISE EXCEPTION 'is_profile_verified is read-only.' USING ERRCODE = '42501';
-  END IF;
-  IF NEW.has_good_reputation IS DISTINCT FROM OLD.has_good_reputation THEN
-    RAISE EXCEPTION 'has_good_reputation is read-only.' USING ERRCODE = '42501';
-  END IF;
-  IF NEW.is_top_matchmaker IS DISTINCT FROM OLD.is_top_matchmaker THEN
-    RAISE EXCEPTION 'is_top_matchmaker is read-only.' USING ERRCODE = '42501';
-  END IF;
+  v_old := to_jsonb(OLD);
+  v_new := to_jsonb(NEW);
 
-  -- Subscription & billing
-  IF NEW.subscription_tier IS DISTINCT FROM OLD.subscription_tier THEN
-    RAISE EXCEPTION 'subscription_tier can only be changed by the billing webhook.'
-      USING ERRCODE = '42501';
-  END IF;
-  IF NEW.pro_since IS DISTINCT FROM OLD.pro_since THEN
-    RAISE EXCEPTION 'pro_since can only be changed by the billing webhook.'
-      USING ERRCODE = '42501';
-  END IF;
-  IF NEW.lemon_squeezy_customer_id IS DISTINCT FROM OLD.lemon_squeezy_customer_id THEN
-    RAISE EXCEPTION 'lemon_squeezy_customer_id is read-only for users.'
-      USING ERRCODE = '42501';
-  END IF;
-  IF NEW.lemon_squeezy_subscription_id IS DISTINCT FROM OLD.lemon_squeezy_subscription_id THEN
-    RAISE EXCEPTION 'lemon_squeezy_subscription_id is read-only for users.'
-      USING ERRCODE = '42501';
-  END IF;
-
-  -- Credits & referrals
-  IF NEW.ai_credits IS DISTINCT FROM OLD.ai_credits THEN
-    RAISE EXCEPTION 'ai_credits is read-only. Credits are spent via API endpoints.'
-      USING ERRCODE = '42501';
-  END IF;
-  IF NEW.referral_code IS DISTINCT FROM OLD.referral_code THEN
-    RAISE EXCEPTION 'referral_code is read-only.' USING ERRCODE = '42501';
-  END IF;
-  IF NEW.pro_referrals_count IS DISTINCT FROM OLD.pro_referrals_count THEN
-    RAISE EXCEPTION 'pro_referrals_count is read-only for users.'
-      USING ERRCODE = '42501';
-  END IF;
-  IF NEW.referral_reward_expires_at IS DISTINCT FROM OLD.referral_reward_expires_at THEN
-    RAISE EXCEPTION 'referral_reward_expires_at is read-only.' USING ERRCODE = '42501';
-  END IF;
-
-  -- Free trial state (driven by /api/trial/claim and the lifecycle cron)
-  IF NEW.free_trial_claimed_at IS DISTINCT FROM OLD.free_trial_claimed_at THEN
-    RAISE EXCEPTION 'free_trial_claimed_at is read-only.' USING ERRCODE = '42501';
-  END IF;
-  IF NEW.free_trial_started_at IS DISTINCT FROM OLD.free_trial_started_at THEN
-    RAISE EXCEPTION 'free_trial_started_at is read-only.' USING ERRCODE = '42501';
-  END IF;
-  IF NEW.free_trial_ends_at IS DISTINCT FROM OLD.free_trial_ends_at THEN
-    RAISE EXCEPTION 'free_trial_ends_at is read-only.' USING ERRCODE = '42501';
-  END IF;
-
-  -- Share-unlock state (driven by /api/social/share-unlock with tweet
-  -- verification). Block direct REST writes so a user can't grant themselves
-  -- bonus blocks.
-  IF NEW.twitter_share_unlocked IS DISTINCT FROM OLD.twitter_share_unlocked THEN
-    RAISE EXCEPTION 'twitter_share_unlocked is read-only. Use the share-unlock API.'
-      USING ERRCODE = '42501';
-  END IF;
-  IF NEW.extra_blocks_from_share IS DISTINCT FROM OLD.extra_blocks_from_share THEN
-    RAISE EXCEPTION 'extra_blocks_from_share is read-only. Use the share-unlock API.'
-      USING ERRCODE = '42501';
-  END IF;
+  FOREACH v_col IN ARRAY v_locked_columns LOOP
+    IF (v_old ? v_col) AND (v_new ? v_col) AND ((v_old -> v_col) IS DISTINCT FROM (v_new -> v_col)) THEN
+      RAISE EXCEPTION 'Column % is read-only and can only be updated via service-role API routes.', v_col
+        USING ERRCODE = '42501';
+    END IF;
+  END LOOP;
 
   RETURN NEW;
 END;
@@ -276,10 +243,19 @@ DROP POLICY IF EXISTS "Nominaciones visibles para todos" ON public.showcase_nomi
 -- only — lib/score-service.ts is updated to call it via the service-role
 -- client.
 
-REVOKE EXECUTE ON FUNCTION public.recompute_builder_score(UUID) FROM PUBLIC;
-REVOKE EXECUTE ON FUNCTION public.recompute_builder_score(UUID) FROM anon;
-REVOKE EXECUTE ON FUNCTION public.recompute_builder_score(UUID) FROM authenticated;
-GRANT EXECUTE ON FUNCTION public.recompute_builder_score(UUID) TO service_role;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_proc p
+    JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public' AND p.proname = 'recompute_builder_score'
+  ) THEN
+    EXECUTE 'REVOKE EXECUTE ON FUNCTION public.recompute_builder_score(UUID) FROM PUBLIC';
+    EXECUTE 'REVOKE EXECUTE ON FUNCTION public.recompute_builder_score(UUID) FROM anon';
+    EXECUTE 'REVOKE EXECUTE ON FUNCTION public.recompute_builder_score(UUID) FROM authenticated';
+    EXECUTE 'GRANT EXECUTE ON FUNCTION public.recompute_builder_score(UUID) TO service_role';
+  END IF;
+END $$;
 
 -- ============================================================================
 -- 8. RPC get_builder_score_breakdown — block anon (H3)
@@ -288,6 +264,15 @@ GRANT EXECUTE ON FUNCTION public.recompute_builder_score(UUID) TO service_role;
 -- only meaningful for logged-in users that want to understand the gamification
 -- system. Block anon entirely; keep authenticated.
 
-REVOKE EXECUTE ON FUNCTION public.get_builder_score_breakdown(UUID) FROM PUBLIC;
-REVOKE EXECUTE ON FUNCTION public.get_builder_score_breakdown(UUID) FROM anon;
-GRANT EXECUTE ON FUNCTION public.get_builder_score_breakdown(UUID) TO authenticated, service_role;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_proc p
+    JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public' AND p.proname = 'get_builder_score_breakdown'
+  ) THEN
+    EXECUTE 'REVOKE EXECUTE ON FUNCTION public.get_builder_score_breakdown(UUID) FROM PUBLIC';
+    EXECUTE 'REVOKE EXECUTE ON FUNCTION public.get_builder_score_breakdown(UUID) FROM anon';
+    EXECUTE 'GRANT EXECUTE ON FUNCTION public.get_builder_score_breakdown(UUID) TO authenticated, service_role';
+  END IF;
+END $$;

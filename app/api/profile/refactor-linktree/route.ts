@@ -1,5 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+
+// After the 2026-04-11 hardening pass, ai_credits is no longer readable
+// or writable from the user-session client. We auth with the session
+// client and then switch to the service-role client for the credit
+// read/decrement (always scoping queries to user.id).
+function getServiceRoleClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 import { buildOnboardingBlocks } from "@/lib/onboarding-utils";
 import {
   dedupeImportedLinks,
@@ -131,15 +143,19 @@ async function scrapeLinktree(url: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const sessionClient = createClient();
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser();
+    } = await sessionClient.auth.getUser();
 
     if (authError || !user) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
+
+    // Switch to service-role to read/write ai_credits and the other private
+    // profile columns. All subsequent queries are scoped to user.id.
+    const supabase = getServiceRoleClient();
 
     const { url: rawUrl } = await request.json();
     const url = ensureAbsoluteUrl((rawUrl || "").trim());

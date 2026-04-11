@@ -1,38 +1,27 @@
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
 import { ProfileData, BlockData, getAdjustedAccentColor, MAX_FREE_BLOCKS } from './profile-types';
 import { scoreService } from './score-service';
 import { getProfileBadges } from './profile-badges';
 import { getFreeTrialState, hasProAccess } from './pro-access';
 
-async function getServerClient() {
-  const cookieStore = await cookies();
-
-  return createServerClient(
+// Public-profile rendering uses the service-role client because:
+//   1) The /[username] page must work for anonymous visitors, and after
+//      the 2026-04-11 hardening pass several profile columns (ai_credits,
+//      lemon_squeezy_*, free_trial_*) are no longer grant-readable to anon
+//      via the REST API.
+//   2) These reads are read-only and aggregated server-side before being
+//      shipped to the client; _transformProfile is responsible for not
+//      leaking sensitive fields back to the page.
+function getServerClient() {
+  return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          } catch {
-            // Ignorar errores de cookies en server components
-          }
-        },
-      },
-    }
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 }
 
 export const profileService = {
   async getProfile(username: string): Promise<ProfileData | null> {
-    const supabase = await getServerClient();
+    const supabase = getServerClient();
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
@@ -138,7 +127,7 @@ export const profileService = {
   },
 
   async getSubSiteProfile(username: string, slug: string): Promise<ProfileData | null> {
-    const supabase = await getServerClient();
+    const supabase = getServerClient();
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
@@ -287,7 +276,7 @@ export const profileService = {
   },
 
   async saveProfile(userId: string, profile: ProfileData) {
-    const supabase = await getServerClient();
+    const supabase = getServerClient();
 
     // 1. Actualizar perfil básico
     const { error: profileError } = await supabase

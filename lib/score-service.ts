@@ -1,28 +1,16 @@
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
 
-async function getServerClient() {
-    const cookieStore = await cookies();
+// recompute_builder_score is restricted to service_role since the
+// security hardening pass (2026-04-11). The RPC needs to recompute scores
+// for OTHER users (e.g. after an endorsement is granted), which can't be
+// safely expressed as `auth.uid() = target_user_id`. We trust the
+// application logic to only call this from server routes that have already
+// validated the operation that triggered the recomputation.
 
-    return createServerClient(
+function getServiceRoleClient() {
+    return createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!,
-        {
-            cookies: {
-                getAll() {
-                    return cookieStore.getAll();
-                },
-                setAll(cookiesToSet) {
-                    try {
-                        cookiesToSet.forEach(({ name, value, options }) =>
-                            cookieStore.set(name, value, options)
-                        );
-                    } catch {
-                        // Ignorar errores de cookies en server components
-                    }
-                },
-            },
-        }
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 }
 
@@ -31,7 +19,7 @@ export const scoreService = {
      * Recalcula el Builder Score para un usuario específico llamando a la función RPC en Postgres
      */
     async recomputeScore(userId: string): Promise<number> {
-        const supabase = await getServerClient();
+        const supabase = getServiceRoleClient();
 
         const { data, error } = await supabase.rpc('recompute_builder_score', {
             target_user_id: userId

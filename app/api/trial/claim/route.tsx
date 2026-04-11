@@ -1,6 +1,7 @@
 import React from "react";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { FREE_TRIAL_DAYS, FREE_TRIAL_EMAIL_COPY } from "@/lib/free-trial-campaign";
 import { hasPaidProBadge } from "@/lib/pro-access";
 import { sendRenderedEmail } from "@/lib/email";
@@ -8,14 +9,28 @@ import { TrialLifecycleEmail } from "@/components/emails/TrialLifecycleEmail";
 
 export const dynamic = "force-dynamic";
 
+// After the 2026-04-11 hardening pass, the free_trial_* writable columns
+// are blocked by an UPDATE trigger when called as `authenticated`, and
+// `email` is no longer in the public SELECT grant. We auth via the session
+// client and then perform the trial activation via the service-role
+// client (always scoped to user.id).
+function getServiceRoleClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
+
 export async function POST() {
   try {
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const sessionClient = await createClient();
+    const { data: { user }, error: authError } = await sessionClient.auth.getUser();
 
     if (authError || !user) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
+
+    const supabase = getServiceRoleClient();
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")

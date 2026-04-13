@@ -41,20 +41,24 @@ export async function getShowcaseData(requestedWeek?: string | null) {
   try {
     const supabase = getServiceRoleClient();
 
-    // Winner: Intentar buscar por week específica, si no, traer la week del más reciente
+    // Winner: primero la semana actual; si no hay, fallback a la anterior.
+    // Así mostramos a los recién elegidos (el cron corre el lunes y guarda
+    // bajo la week previa) sin arrastrar winners de hace varias semanas.
     let targetWeek = requestedWeek;
 
     if (!targetWeek) {
-      const { data: latestWinner } = await supabase
+      const prevDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const prevWeek = getWeekString(prevDate);
+
+      const { data: recentWinner } = await supabase
         .from("showcase_winners")
         .select("week")
-        .order("created_at", { ascending: false })
+        .in("week", [currentWeek, prevWeek])
+        .order("week", { ascending: false })
         .limit(1)
         .maybeSingle();
-      
-      if (latestWinner) {
-        targetWeek = latestWinner.week;
-      }
+
+      targetWeek = recentWinner?.week || currentWeek;
     }
 
     let winners: any[] = [];

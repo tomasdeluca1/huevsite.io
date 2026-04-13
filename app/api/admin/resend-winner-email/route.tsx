@@ -4,6 +4,7 @@ import { Resend } from "resend";
 import { render } from "@react-email/render";
 import { WinnerEmail } from "@/components/emails/WinnerEmail";
 import React from "react";
+import crypto from "crypto";
 
 export const dynamic = "force-dynamic";
 
@@ -54,7 +55,8 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "No se encontraron perfiles de los ganadores" }, { status: 404 });
         }
 
-        const emailResults: { username: string; email?: string; sent: boolean; error?: string }[] = [];
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://huevsite.io";
+        const emailResults: { username: string; email?: string; sent: boolean; formUrl?: string; error?: string }[] = [];
 
         for (const profile of profiles) {
             try {
@@ -67,11 +69,43 @@ export async function POST(request: NextRequest) {
 
                 const userEmail = authUser.user.email;
 
+                // Create or reuse interview invitation
+                let formUrl: string | undefined;
+                const { data: existingInterview } = await adminClient
+                    .from("builder_interviews")
+                    .select("id, token, status")
+                    .eq("builder_username", profile.username)
+                    .in("status", ["invited", "submitted", "generating", "ready"])
+                    .maybeSingle();
+
+                if (existingInterview) {
+                    formUrl = `${siteUrl}/builder-de-la-semana/${existingInterview.token}`;
+                } else {
+                    const token = crypto.randomBytes(32).toString("hex");
+                    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+                    const { error: interviewErr } = await adminClient
+                        .from("builder_interviews")
+                        .insert({
+                            token,
+                            builder_username: profile.username,
+                            builder_email: userEmail,
+                            builder_name: profile.name || profile.username,
+                            expires_at: expiresAt,
+                            status: "invited",
+                        });
+
+                    if (!interviewErr) {
+                        formUrl = `${siteUrl}/builder-de-la-semana/${token}`;
+                    }
+                }
+
                 const html = await render(
                     React.createElement(WinnerEmail, {
                         name: profile.name || profile.username,
                         username: profile.username,
                         week: week,
+                        formUrl,
                     })
                 );
 
@@ -83,7 +117,7 @@ export async function POST(request: NextRequest) {
                 });
 
                 console.log(`✅ Email enviado a ${userEmail} (${profile.username})`);
-                emailResults.push({ username: profile.username, email: userEmail, sent: true });
+                emailResults.push({ username: profile.username, email: userEmail, sent: true, formUrl });
             } catch (err: any) {
                 console.error(`❌ Error enviando email a ${profile.username}:`, err);
                 emailResults.push({ username: profile.username, sent: false, error: err?.message });

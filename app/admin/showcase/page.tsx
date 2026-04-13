@@ -9,6 +9,7 @@ import {
   AlertCircle,
   Trash2,
   X,
+  Search,
 } from "lucide-react";
 
 interface NominatedUser {
@@ -38,6 +39,11 @@ export default function ShowcasePage() {
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(
     null
   );
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -85,6 +91,22 @@ export default function ShowcasePage() {
       method: "DELETE",
     });
     fetchData();
+  };
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    setIsSearching(true);
+    setHasSearched(true);
+    try {
+      const res = await fetch(`/api/explore?q=${encodeURIComponent(searchQuery)}&limit=5`);
+      const json = await res.json();
+      setSearchResults(json.profiles || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   return (
@@ -241,6 +263,110 @@ export default function ShowcasePage() {
                   );
                 })}
               </div>
+            )}
+          </div>
+
+          {/* Agregar manualmente */}
+          <div className="pt-6 border-t border-[var(--border)]">
+            <div className="section-label mb-4">// o agregá uno manualmente 👀</div>
+            <form onSubmit={handleSearch} className="flex gap-2 mb-4">
+              <input
+                type="text"
+                placeholder="Buscar por usuario o nombre..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setHasSearched(false);
+                }}
+                className="flex-1 bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-[var(--accent)] transition-colors"
+              />
+              <button
+                type="submit"
+                disabled={isSearching || !searchQuery.trim()}
+                className="flex items-center gap-2 px-4 py-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl text-sm font-bold hover:border-white/20 transition-all disabled:opacity-50"
+              >
+                {isSearching ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
+                Buscar
+              </button>
+            </form>
+
+            {searchResults.length > 0 && (
+              <div className="space-y-3">
+                {searchResults.map((profile) => {
+                  const isWinner = data.winners?.some(
+                    (w) => w.user.id === profile.id
+                  );
+                  return (
+                    <motion.div
+                      key={profile.id}
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center gap-4 p-4 rounded-2xl bg-[var(--surface)] border border-[var(--border)]"
+                    >
+                      {profile.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={profile.image}
+                          alt={profile.username}
+                          className="w-10 h-10 rounded-xl object-cover shrink-0"
+                        />
+                      ) : (
+                        <div
+                          className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-black shrink-0"
+                          style={{ backgroundColor: profile.accent_color || "var(--accent)" }}
+                        >
+                          {(profile.name ?? profile.username)[0]?.toUpperCase()}
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <p
+                          className="font-bold text-sm"
+                          style={{ color: profile.accent_color || "white" }}
+                        >
+                          {profile.name ?? profile.username}
+                        </p>
+                        <p className="text-xs text-[var(--text-muted)] font-mono">
+                          @{profile.username}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setWinner(profile.id, data.week)}
+                        disabled={settingWinner === profile.id}
+                        type="button"
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all"
+                        style={{
+                          backgroundColor: isWinner
+                            ? "transparent"
+                            : profile.accent_color || "var(--accent)",
+                          border: isWinner
+                            ? `1px solid ${profile.accent_color || "var(--accent)"}`
+                            : "none",
+                          color: isWinner ? (profile.accent_color || "var(--accent)") : "black",
+                          opacity: settingWinner === profile.id ? 0.7 : 1,
+                        }}
+                      >
+                        {settingWinner === profile.id ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : isWinner ? (
+                          <>
+                            <X size={14} /> Quitar
+                          </>
+                        ) : (
+                          <>
+                            <Trophy size={14} /> Elegir
+                          </>
+                        )}
+                      </button>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+            
+            {searchResults.length === 0 && hasSearched && !isSearching && (
+              <p className="text-xs font-mono text-[var(--text-dim)]">
+                No se encontraron resultados para "{searchQuery}"
+              </p>
             )}
           </div>
         </div>

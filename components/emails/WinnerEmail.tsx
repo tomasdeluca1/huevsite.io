@@ -5,12 +5,14 @@ interface WinnerEmailProps {
   name: string;
   username: string;
   week: string;
+  formUrl?: string;
 }
 
 export const WinnerEmail: React.FC<Readonly<WinnerEmailProps>> = ({
   name,
   username,
   week,
+  formUrl,
 }) => (
   <EmailLayout previewText={`¡Felicitaciones ${name}, sos el builder de la semana!`}>
     <div style={{
@@ -63,43 +65,43 @@ export const WinnerEmail: React.FC<Readonly<WinnerEmailProps>> = ({
       </a>
     </div>
 
-    {/* Interview invitation */}
-    <div style={{
-      marginTop: '40px',
-      padding: '32px',
-      borderRadius: '16px',
-      border: '1px solid rgba(200, 255, 0, 0.15)',
-      background: 'rgba(200, 255, 0, 0.04)',
-      textAlign: 'center',
-    }}>
-      <div style={{ fontSize: '28px', marginBottom: '12px' }}>🎙️</div>
-      <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 8px 0' }}>
-        ¿Te sumás a una entrevista?
-      </h3>
-      <p style={{ fontSize: '15px', lineHeight: '1.6', color: '#a1a1aa', margin: '0 0 20px 0' }}>
-        Cada semana entrevistamos al builder destacado. Es una charla corta de 15 min
-        donde contás qué estás buildeando y tu proceso. Después lo publicamos en el blog,
-        LinkedIn, X e Instagram.
-      </p>
-      <a href="https://cal.com/tomas-deluca-iko3up/15min" style={{
-        backgroundColor: 'transparent',
-        color: '#C8FF00',
-        padding: '14px 28px',
-        borderRadius: '10px',
-        fontWeight: 'bold',
-        textDecoration: 'none',
-        display: 'inline-block',
-        fontSize: '15px',
-        border: '2px solid #C8FF00',
+    {/* Interview form CTA */}
+    {formUrl && (
+      <div style={{
+        marginTop: '40px',
+        padding: '32px',
+        borderRadius: '16px',
+        border: '1px solid rgba(200, 255, 0, 0.15)',
+        background: 'rgba(200, 255, 0, 0.04)',
+        textAlign: 'center',
       }}>
-        Agendar entrevista de 15 min →
-      </a>
-      <p style={{ fontSize: '13px', color: '#a1a1aa', marginTop: '16px', lineHeight: '1.6' }}>
-        <strong style={{ color: '#e4e4e7' }}>¿Qué te van a preguntar?</strong> Tu camino profesional, en qué proyecto estás laburando, qué stack usás, y consejos para otros builders. Es una charla informal de 15 min — no hace falta preparar nada formal.
-      </p>
-      <p style={{ fontSize: '12px', color: '#52525b', marginTop: '12px' }}>
-        100% opcional. Si no podés, no pasa nada.
-      </p>
-    </div>
+        <div style={{ fontSize: '28px', marginBottom: '12px' }}>🎙️</div>
+        <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 8px 0' }}>
+          Completá tu perfil de Builder de la Semana
+        </h3>
+        <p style={{ fontSize: '15px', lineHeight: '1.6', color: '#a1a1aa', margin: '0 0 20px 0' }}>
+          Respondé unas preguntas cortas sobre lo que estás buildeando. Con eso armamos
+          tu nota para el blog, LinkedIn, X e Instagram.
+        </p>
+        <a href={formUrl} style={{
+          backgroundColor: '#C8FF00',
+          color: '#000000',
+          padding: '16px 32px',
+          borderRadius: '12px',
+          fontWeight: 'bold',
+          textDecoration: 'none',
+          display: 'inline-block',
+          fontSize: '16px',
+        }}>
+          Completar formulario →
+        </a>
+        <p style={{ fontSize: '13px', color: '#a1a1aa', marginTop: '16px', lineHeight: '1.6' }}>
+          <strong style={{ color: '#e4e4e7' }}>¿Qué te preguntamos?</strong> Quién sos, en qué proyecto estás laburando, qué stack usás y consejos para otros builders. Son 5 minutos.
+        </p>
+        <p style={{ fontSize: '12px', color: '#52525b', marginTop: '12px' }}>
+          El link expira en 7 días.
+        </p>
+      </div>
+    )}
   </EmailLayout>
 );

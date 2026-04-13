@@ -1,23 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createServiceRoleClient } from '@/lib/supabase/service-role'
 import { scoreService } from '@/lib/score-service'
 import { vercelService } from '@/lib/vercel-service'
 import { hasProAccess } from '@/lib/pro-access'
 import { rateLimit, getIdentifier } from '@/lib/rate-limit'
-
-// After the 2026-04-11 hardening pass, several profile columns
-// (ai_credits, lemon_squeezy_*, free_trial_*) are no longer readable from
-// the user-session client. The owner of the profile still needs to read
-// those columns for the dashboard, so we use a service-role client AFTER
-// authenticating the request.
-function getServiceRoleClient() {
-  return createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
-}
 
 const profilePatchSchema = z.object({
   name: z.string().max(100).optional(),
@@ -87,7 +75,7 @@ export async function GET(request: NextRequest) {
     // are no longer grant-readable to authenticated, like ai_credits,
     // lemon_squeezy_* and free_trial_*). All queries below are scoped to
     // user.id so we never leak someone else's data.
-    const supabase = getServiceRoleClient()
+    const supabase = createServiceRoleClient()
 
     // Obtener perfil
     const { data: profile, error: profileError } = await supabase
@@ -167,9 +155,9 @@ export async function GET(request: NextRequest) {
 // PATCH /api/profile - actualizar perfil del usuario autenticado
 export async function PATCH(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const sessionClient = await createClient()
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await sessionClient.auth.getUser()
 
     if (authError || !user) {
       return NextResponse.json(
@@ -177,6 +165,12 @@ export async function PATCH(request: NextRequest) {
         { status: 401 }
       )
     }
+
+    // After authentication, switch to service-role so the update reaches
+    // columns the `authenticated` role can no longer SELECT after the
+    // 2026-04-11 hardening (the .select() after .update() would 403 otherwise).
+    // All queries below are scoped to user.id so we never touch other rows.
+    const supabase = createServiceRoleClient()
 
     // Rate limit: 30 profile updates per minute per user
     const rl = profileUpdateLimiter.check(30, getIdentifier(request, user.id))

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createServiceRoleClient } from '@/lib/supabase/service-role'
 import { scoreService } from '@/lib/score-service'
 import { checkAndPostWelcomeTweet } from '@/lib/twitter'
 
@@ -35,9 +36,9 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = await createClient()
+    const sessionClient = await createClient()
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await sessionClient.auth.getUser()
 
     if (authError || !user) {
       return NextResponse.json(
@@ -45,6 +46,10 @@ export async function PATCH(
         { status: 401 }
       )
     }
+
+    // After auth, switch to service-role. All queries below are scoped to
+    // (id, user_id) so the user can only touch their own blocks.
+    const supabase = createServiceRoleClient()
 
     const blockId = params.id
     const body = await request.json()
@@ -175,9 +180,9 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = await createClient()
+    const sessionClient = await createClient()
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await sessionClient.auth.getUser()
 
     if (authError || !user) {
       console.error('DELETE - Auth error:', authError)
@@ -186,6 +191,9 @@ export async function DELETE(
         { status: 401 }
       )
     }
+
+    // After auth, service-role client scoped to (id, user_id).
+    const supabase = createServiceRoleClient()
 
     const blockId = params.id
     console.log('DELETE block:', { blockId, userId: user.id })

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { hasProAccess } from "@/lib/pro-access";
 import OpenAI from "openai";
 import { scoreService } from "@/lib/score-service";
@@ -151,12 +152,18 @@ const subSiteJsonSchema = {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const sessionClient = await createClient();
+    const { data: { user }, error: authError } = await sessionClient.auth.getUser();
 
     if (authError || !user) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
+
+    // After auth, service-role for all DB work. Reads cover trial/subscription
+    // columns that `authenticated` can't SELECT after the 2026-04-11 hardening,
+    // and writes hit sub_sites/blocks which may otherwise fail the .select()
+    // round-trip. All queries scoped to user.id.
+    const supabase = createServiceRoleClient();
 
     // Check if user is PRO
     const { data: profile } = await supabase

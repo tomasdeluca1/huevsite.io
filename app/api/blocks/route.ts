@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
+import { createServiceRoleClient } from '@/lib/supabase/service-role'
 import { scoreService } from '@/lib/score-service'
 import { checkAndPostWelcomeTweet } from '@/lib/twitter'
 import { hasProAccess } from '@/lib/pro-access'
@@ -47,9 +48,9 @@ async function syncOwnerAvatarFromHero(
 // POST /api/blocks - crear nuevo bloque
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const sessionClient = await createClient()
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await sessionClient.auth.getUser()
 
     if (authError || !user) {
       return NextResponse.json(
@@ -57,6 +58,12 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       )
     }
+
+    // After auth, switch to service-role. The `authenticated` role can no
+    // longer SELECT the trial / subscription columns we need for the pro
+    // check, and the public-column GRANT doesn't cover all of them. All
+    // queries below are scoped to user.id so there's no cross-user access.
+    const supabase = createServiceRoleClient()
 
     // Rate limit: 20 block creations per minute per user
     const rl = blockCreateLimiter.check(20, getIdentifier(request, user.id))
@@ -87,10 +94,20 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    const { count: blockCount } = await supabase
+    // Contar bloques del mismo scope (main profile o sub-site específico).
+    // El frontend limita por scope, así que la API debe alinearse — si no,
+    // usuarios Pro con muchos sub-sites quedan bloqueados incorrectamente.
+    const targetSubSiteId = body.sub_site_id || null
+    let blockCountQuery = supabase
       .from('blocks')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id)
+
+    blockCountQuery = targetSubSiteId
+      ? blockCountQuery.eq('sub_site_id', targetSubSiteId)
+      : blockCountQuery.is('sub_site_id', null)
+
+    const { count: blockCount } = await blockCountQuery
 
     const MAX_BASE_FREE = 5
     const MAX_PRO = 22 // Consistente con MAX_PRO_BLOCKS en el frontend

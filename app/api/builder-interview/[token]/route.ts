@@ -159,10 +159,9 @@ export async function POST(
         content: generated.blogMarkdown,
         date: new Date().toISOString().split("T")[0],
         tags: generated.blogTags,
-        author_name: "Tomas Deluca",
-        author_username: "tomi_delu",
-        author_avatar_url:
-          "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+        author_name: "Equipo Huevsite",
+        author_username: "huevsite",
+        author_avatar_url: "https://huevsite.io/huevsite-avatar.png",
         is_published: false,
         interview_id: interview.id,
       })

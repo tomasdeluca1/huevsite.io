@@ -106,6 +106,46 @@ export async function POST(
       })
       .eq("id", interview.id);
 
+    // Detect co-winners of the same week so the generated content can
+    // cross-reference them. We find the builder's showcase_winners row first
+    // (to know which week they won), then pull the other winners for that
+    // same week (excluding the current one).
+    let coWinners: Array<{ name: string; username: string }> = [];
+    let weekLabel: string | undefined;
+    try {
+      const { data: profileRow } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("username", interview.builder_username)
+        .maybeSingle();
+
+      if (profileRow?.id) {
+        const { data: winRow } = await supabase
+          .from("showcase_winners")
+          .select("week")
+          .eq("user_id", profileRow.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (winRow?.week) {
+          weekLabel = winRow.week;
+          const { data: siblings } = await supabase
+            .from("showcase_winners")
+            .select("user_id, profiles:profiles!showcase_winners_user_id_fkey(name, username)")
+            .eq("week", winRow.week)
+            .neq("user_id", profileRow.id);
+
+          coWinners = (siblings || [])
+            .map((s: any) => s.profiles)
+            .filter(Boolean)
+            .map((p: any) => ({ name: p.name || p.username, username: p.username }));
+        }
+      }
+    } catch (e) {
+      console.error("Co-winner lookup error (non-fatal):", e);
+    }
+
     // Generate content with AI
     let generated;
     try {
@@ -126,6 +166,8 @@ export async function POST(
         quickfireAdvice: body.quickfire_advice || "",
         quickfireWhatsNext: body.quickfire_whats_next || "",
         quickfireWhereToFind: body.quickfire_where_to_find || "",
+        coWinners,
+        weekLabel,
       });
     } catch (aiError: any) {
       await supabase
@@ -148,6 +190,25 @@ export async function POST(
       })
       .eq("id", interview.id);
 
+    // Fetch the builder's real profile so the blog post is authored by THEM,
+    // not by "Equipo Huevsite". Each BDLS post should link back to the
+    // builder's huevsite profile (the "author" card is what readers click).
+    const { data: builderProfile } = await supabase
+      .from("profiles")
+      .select("name, username, image")
+      .eq("username", interview.builder_username)
+      .maybeSingle();
+
+    const authorName = builderProfile?.name || interview.builder_name || interview.builder_username;
+    const authorUsername = builderProfile?.username || interview.builder_username;
+    const authorAvatarUrl =
+      builderProfile?.image ||
+      `https://huevsite.io/api/og/${authorUsername}`;
+
+    // Ensure the "builder-de-la-semana" tag is always present so the blog
+    // listing can badge/filter these posts reliably.
+    const blogTags = Array.from(new Set([...(generated.blogTags || []), "builder-de-la-semana"]));
+
     // Create blog post (unpublished)
     const slug = `builder-de-la-semana-${interview.builder_username}`;
     const { data: blogPost } = await supabase
@@ -158,10 +219,10 @@ export async function POST(
         excerpt: generated.blogExcerpt,
         content: generated.blogMarkdown,
         date: new Date().toISOString().split("T")[0],
-        tags: generated.blogTags,
-        author_name: "Equipo Huevsite",
-        author_username: "huevsite",
-        author_avatar_url: "https://huevsite.io/huevsite-avatar.png",
+        tags: blogTags,
+        author_name: authorName,
+        author_username: authorUsername,
+        author_avatar_url: authorAvatarUrl,
         is_published: false,
         interview_id: interview.id,
       })

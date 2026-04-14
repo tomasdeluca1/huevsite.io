@@ -1099,6 +1099,48 @@ export async function getAllBlogPosts(): Promise<BlogPost[]> {
   );
 }
 
+export const BLOG_POSTS_PER_PAGE = 9;
+
+// A post is "Builder de la Semana" when it was generated from a builder_interview.
+// The static posts don't have the tag, so we detect it by tags OR slug prefix.
+export function isBuilderOfTheWeekPost(post: BlogPost): boolean {
+  return (
+    post.slug.startsWith("builder-de-la-semana-") ||
+    post.tags.includes("builder-de-la-semana")
+  );
+}
+
+export async function getPaginatedBlogPosts(opts: {
+  page?: number;
+  pageSize?: number;
+  tag?: string;
+}): Promise<{
+  posts: BlogPost[];
+  total: number;
+  totalPages: number;
+  page: number;
+  pageSize: number;
+  allTags: string[];
+}> {
+  const pageSize = opts.pageSize ?? BLOG_POSTS_PER_PAGE;
+  const page = Math.max(1, opts.page ?? 1);
+
+  const all = await getAllBlogPosts();
+  const filtered = opts.tag
+    ? all.filter((p) => p.tags.includes(opts.tag!))
+    : all;
+
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const start = (safePage - 1) * pageSize;
+  const posts = filtered.slice(start, start + pageSize);
+
+  const allTags = Array.from(new Set(all.flatMap((p) => p.tags)));
+
+  return { posts, total, totalPages, page: safePage, pageSize, allTags };
+}
+
 export async function getPostBySlugAsync(slug: string): Promise<BlogPost | undefined> {
   const hardcoded = getPostBySlug(slug);
   if (hardcoded) return hardcoded;

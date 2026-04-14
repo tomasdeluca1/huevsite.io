@@ -17,6 +17,11 @@ interface InterviewData {
   quickfireAdvice: string;
   quickfireWhatsNext: string;
   quickfireWhereToFind: string;
+  // Other builders that won the same week. When present, the generated
+  // content mentions them (with @handle + profile link) so each post in a
+  // multi-winner week cross-references its siblings.
+  coWinners?: Array<{ name: string; username: string }>;
+  weekLabel?: string;
 }
 
 export interface CarouselSlide {
@@ -100,10 +105,20 @@ REGLAS PARA EL CARRUSEL:
 - La quote del slide 4 debe ser textual de las respuestas del builder`;
 
 function formatInterviewForAI(data: InterviewData): string {
+  const hasCoWinners = (data.coWinners || []).length > 0;
+  const coWinnersBlock = hasCoWinners
+    ? `\n--- CO-GANADORES DE LA MISMA SEMANA ---\nEsta semana${data.weekLabel ? ` (${data.weekLabel})` : ""} hubo empate. Además de ${data.builderName}, también ganaron:\n${data.coWinners!
+        .map((c) => `- ${c.name} (@${c.username}) — https://huevsite.io/${c.username}`)
+        .join("\n")}
+
+INSTRUCCIÓN IMPORTANTE: Este post es SOBRE ${data.builderName}, pero al final del blog (sección "Dónde encontrarlo" o antes del footer) agregá una nota corta que diga "Esta semana también ganaron:" y listá a los co-ganadores con link al perfil (huevsite.io/username). En el tweet y LinkedIn mencioná a los co-ganadores con "@" y sus handles. En la caption de Instagram sumá una línea al final mencionándolos. El carrusel no los menciona (se mantiene centrado en el protagonista).`
+    : "";
+
   return `ENTREVISTA — Builder de la Semana
 
 Builder: ${data.builderName} (@${data.builderUsername})
 Perfil: https://huevsite.io/${data.builderUsername}
+${coWinnersBlock}
 
 --- INTRO ---
 ¿Quién sos?

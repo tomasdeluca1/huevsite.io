@@ -17,9 +17,33 @@ export async function GET(request: NextRequest) {
 
   const env = {
     hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL,
     hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
     serviceKeyLen: process.env.SUPABASE_SERVICE_ROLE_KEY?.length ?? 0,
+    serviceKeyPrefix: (process.env.SUPABASE_SERVICE_ROLE_KEY || "").slice(0, 40),
   };
+
+  // Raw REST call — same query that the helper runs but via plain fetch
+  // so we can see exactly what PostgREST returns without the supabase-js
+  // client sitting in the middle.
+  let rawRest: any = null;
+  let rawRestError: string | null = null;
+  try {
+    const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/blog_posts?select=slug,is_published,date&is_published=eq.true&order=date.desc`;
+    const res = await fetch(url, {
+      headers: {
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+      },
+      cache: "no-store",
+    });
+    rawRest = {
+      status: res.status,
+      body: await res.text(),
+    };
+  } catch (e: any) {
+    rawRestError = `${e?.name}: ${e?.message}`;
+  }
 
   let dbPostsResult: any = null;
   let dbPostsError: string | null = null;
@@ -62,6 +86,7 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     env,
+    rawRest: { ok: !rawRestError, result: rawRest, error: rawRestError },
     dbPosts: { ok: !dbPostsError, result: dbPostsResult, error: dbPostsError },
     allPosts: { ok: !allPostsError, result: allPostsResult, error: allPostsError },
     paginated: { ok: !paginatedError, result: paginatedResult, error: paginatedError },

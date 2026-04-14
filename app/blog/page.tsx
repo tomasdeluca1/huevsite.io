@@ -63,8 +63,12 @@ export default async function BlogIndexPage({
     tag: activeTag,
   });
 
+  // Visible runtime marker so we can verify which version of this RSC is
+  // actually executing on the edge (remove once stable).
+  const debugMarker = `rsc-v2|total=${total}|pageSize=${BLOG_POSTS_PER_PAGE}|first=${posts[0]?.slug || "-"}|ts=${Date.now()}`;
+
   return (
-    <main className="min-h-screen bg-[var(--bg)] font-display py-12 px-4 max-w-4xl mx-auto">
+    <main className="min-h-screen bg-[var(--bg)] font-display py-12 px-4 max-w-4xl mx-auto" data-rsc-debug={debugMarker}>
       <header className="mb-12">
         <div className="flex items-center justify-between mb-8">
           <Link href="/" className="logo">huev<span>site</span>.io</Link>

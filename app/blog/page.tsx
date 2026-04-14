@@ -7,6 +7,12 @@ import {
 } from "@/lib/blog-data";
 import { SITE_URL } from "@/lib/site-url";
 
+// Always render fresh: the listing combines static MDX + DB rows (new Builder
+// de la Semana posts get published frequently) and uses searchParams for tag
+// filter + page number. Without this, Next.js may serve a stale cached shell
+// that predates the latest published BDLS posts.
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Blog - huevsite.io",
   description: "Noticias, guías y casos de estudio de la comunidad de huevsite.io para empoderar a creadores y builders.",

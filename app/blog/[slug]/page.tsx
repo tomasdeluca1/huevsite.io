@@ -11,6 +11,10 @@ import "highlight.js/styles/github-dark.css";
 import Image from "next/image";
 import { SITE_URL } from "@/lib/site-url";
 
+// DB-backed BDLS posts are published ad-hoc — avoid serving cached shells
+// from the previous build that don't know about them yet.
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ 
   params 
 }: { 

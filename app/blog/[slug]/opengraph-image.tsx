@@ -262,7 +262,7 @@ export default async function Image({
                   display: 'flex',
                 }}
               >
-                @{post.author.username}
+                {post.author.username === "huevsite" ? "huevsite.io" : `@${post.author.username}`}
               </span>
             </div>
           </div>

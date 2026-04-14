@@ -2,7 +2,14 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ShareButtons } from "@/components/blog/ShareButtons";
 import { RelatedPosts } from "@/components/blog/RelatedPosts";
-import { getPostBySlug, getPostBySlugAsync, getAllBlogPosts, BLOG_POSTS } from "@/lib/blog-data";
+import {
+  getPostBySlug,
+  getPostBySlugAsync,
+  getAllBlogPosts,
+  BLOG_POSTS,
+  getBlogAuthorHref,
+  PLATFORM_AUTHOR_USERNAME,
+} from "@/lib/blog-data";
 import { Metadata } from "next";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -93,9 +100,12 @@ export default async function BlogPostPage({
     "headline": post.title,
     "description": post.excerpt,
     "author": {
-      "@type": "Person",
+      "@type": post.author.username === PLATFORM_AUTHOR_USERNAME ? "Organization" : "Person",
       "name": post.author.name,
-      "url": `https://huevsite.io/${post.author.username}`,
+      "url":
+        post.author.username === PLATFORM_AUTHOR_USERNAME
+          ? SITE_URL
+          : `${SITE_URL}/${post.author.username}`,
     },
     "datePublished": post.date,
   };
@@ -124,14 +134,20 @@ export default async function BlogPostPage({
 
           <div className="flex flex-col sm:flex-row gap-6 sm:items-center justify-between mb-10 pb-10 border-b border-[var(--border)]">
             <div className="flex items-center gap-4">
-              <Link href={`/${post.author.username}`} className="shrink-0 hover:opacity-80 transition-opacity">
+              <Link href={getBlogAuthorHref(post.author)} className="shrink-0 hover:opacity-80 transition-opacity">
                 <Image src={post.author.avatarUrl} alt={post.author.name} width={40} height={40} className="rounded-full" />
               </Link>
               <div>
-                <Link href={`/${post.author.username}`} className="text-sm font-bold text-white tracking-tight hover:underline">
+                <Link href={getBlogAuthorHref(post.author)} className="text-sm font-bold text-white tracking-tight hover:underline">
                   {post.author.name}
                 </Link>
                 <div className="flex items-center gap-2 text-[11px] font-mono text-[var(--text-muted)] mt-0.5">
+                  {post.author.username !== PLATFORM_AUTHOR_USERNAME && (
+                    <>
+                      <span>@{post.author.username}</span>
+                      <span>•</span>
+                    </>
+                  )}
                   <time dateTime={post.date}>
                     {new Date(post.date).toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' })}
                   </time>

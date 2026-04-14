@@ -23,9 +23,9 @@ const RAW_BLOG_POSTS: Omit<BlogPost, 'readingTime'>[] = [
     date: "2026-03-20",
     tags: ["onboarding", "linktree", "feature"],
     author: {
-      name: "Tomas Deluca",
-      username: "tomi_delu",
-      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
     },
     content: `
 Arrancar un perfil desde cero puede ser una paja. Tenés que pensar el nombre, rearmar tus links, volver a escribir la bio y encima decidir qué mostrar primero.
@@ -94,9 +94,9 @@ Ese orden es mucho mejor para publicar rápido.
     date: "2026-03-20",
     tags: ["pro", "dominios", "feature"],
     author: {
-      name: "Tomas Deluca",
-      username: "tomi_delu",
-      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
     },
     content: `
 Conectar un dominio custom debería sentirse como un upgrade premium. No como una búsqueda del tesoro entre registros DNS, capturas viejas y mensajes ambiguos.
@@ -154,9 +154,9 @@ La mejora acá no es solo técnica. Es psicológica:
     date: "2026-03-20",
     tags: ["cuenta", "privacidad", "update"],
     author: {
-      name: "Tomas Deluca",
-      username: "tomi_delu",
-      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
     },
     content: `
 Un producto serio no solo te deja entrar fácil. También te deja salir con claridad.
@@ -208,9 +208,9 @@ Porque transmite algo simple:
     date: "2026-03-18",
     tags: ["onboarding", "feature", "perfil"],
     author: {
-      name: "Tomas Deluca",
-      username: "tomi_delu",
-      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
     },
     content: `
 Elegir un username no parece gran cosa, hasta que te das cuenta de que esa URL va a aparecer en tu bio, en tu CV, en tus mensajes privados y en cada link que compartas.
@@ -264,9 +264,9 @@ El objetivo no es que pases una hora “configurando”. Es que puedas salir con
     date: "2026-03-18",
     tags: ["comunidad", "social", "feature"],
     author: {
-      name: "Tomas Deluca",
-      username: "tomi_delu",
-      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
     },
     content: `
 Un portfolio sirve para mostrar. Una red sirve para circular. huevsite quiere hacer las dos cosas.
@@ -329,9 +329,9 @@ Tu proyecto deja de ser “algo que subiste” y pasa a ser:
     date: "2026-03-18",
     tags: ["sub-sites", "portfolio", "tips"],
     author: {
-      name: "Tomas Deluca",
-      username: "tomi_delu",
-      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
     },
     content: `
 Uno de los errores más comunes en portfolios de builders es querer meter absolutamente todo en la home principal.
@@ -405,9 +405,9 @@ Si tu perfil principal ya está empezando a parecer un depósito de cosas, proba
     date: "2026-03-17",
     tags: ["comunidad", "referidos", "pro"],
     author: {
-      name: "Tomas Deluca",
-      username: "tomi_delu",
-      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
     },
     content: `
 huevsite.io nació para ser el punto de encuentro de los builders de LATAM. Y como sabemos que los mejores builders siempre están rodeados de gente con el mismo mindset, hoy lanzamos el **Sistema de Referidos**.
@@ -439,9 +439,9 @@ Esta es nuestra forma de devolverle algo a los builders que están ayudando a qu
     date: "2026-03-17",
     tags: ["twitter", "automatizacion", "admin"],
     author: {
-      name: "Tomas Deluca",
-      username: "tomi_delu",
-      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
     },
     content: `
 La comunidad de builders vive en X (Twitter), y huevsite.io ahora tiene una integración mucho más profunda para que tu actividad no pase desapercibida. 
@@ -472,9 +472,9 @@ Para que nuestra comunicación sea impecable, hemos implementado un sistema de *
     date: "2026-03-17",
     tags: ["analytics", "pro", "feature"],
     author: {
-      name: "Tomas Deluca",
-      username: "tomi_delu",
-      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
     },
     content: `
 Lanzamos **Insights 3.0**, la evolución definitiva de tus analiticas en huevsite.io. Si las métricas antes eran útiles, ahora son quirúrgicas.
@@ -503,9 +503,9 @@ Mejoramos la detección de fuentes para que sepas exactamente si vienen de un li
     date: "2026-03-16",
     tags: ["comunidad", "showcase", "Twitter"],
     author: {
-      name: "Tomas Deluca",
-      username: "tomi_delu",
-      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
     },
     content: `
 En huevsite.io creemos que el building es una maratón, pero se corre paso a paso. Esperar un mes entero para celebrar a los builders que están rompiéndola se sentía demasiado lento. Por eso, hoy anunciamos el nuevo **Showcase Semanal**.
@@ -535,9 +535,9 @@ El proceso no cambió, pero ahora es más dinámico. Los builders con más nomin
     date: "2026-03-16",
     tags: ["feature", "analytics", "design"],
     author: {
-      name: "Tomas Deluca",
-      username: "tomi_delu",
-      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
     },
     content: `
 Si sos un builder PRO, sabés que medir es fundamental. Pero, ¿por qué las herramientas de analíticas tienen que ser aburridas o feas? En huevsite.io nos obsesiona el diseño, y hoy lanzamos **Insights 2.0**.
@@ -569,9 +569,9 @@ Seguimos cumpliendo nuestra promesa: métricas potentes sin cookies invasivas ni
     date: "2026-03-15",
     tags: ["gamification", "comunidad", "ranking"],
     author: {
-      name: "Tomas Deluca",
-      username: "tomi_delu",
-      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
     },
     content: `
 ¿Te preguntaste por qué algunos perfiles aparecen primero en la sección Explore? O ¿qué significa ese número al lado de tu nombre? 
@@ -619,9 +619,9 @@ Aparecer arriba en el **Explore** no es solo vanidad. Es visibilidad ante reclut
     date: "2026-03-15",
     tags: ["feature", "analytics", "pro"],
     author: {
-      name: "Tomas Deluca",
-      username: "tomi_delu",
-      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
     },
     content: `
 Uno de los mayores problemas de los portfolios estáticos es que son un \"agujero negro\". Lo compartís en LinkedIn o X, pero no sabés si alguien realmente hizo clic, si lo leyeron desde el celular o si ese reclutador de la empresa que te gusta entró a mirar.
@@ -657,9 +657,9 @@ Si notás que mucha gente entra a tu perfil pero nadie hace clic en tu botón de
     date: "2026-03-14",
     tags: ["feature", "perfil", "update"],
     author: {
-      name: "Tomas Deluca",
-      username: "tomi_delu",
-      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
     },
     content: `
 Si alguna vez compartiste el enlace a tu portfolio en un chat o en tus redes sociales, habrás notado que a veces la imagen que acompaña al enlace no es exactamente tuya. O peor: a veces ni siquiera carga tu foto de perfil.
@@ -695,9 +695,9 @@ Si por algún motivo no habías subido todavía una foto de perfil, ¡no te preo
     date: "2026-03-14",
     tags: ["design", "tips", "portfolio"],
     author: {
-      name: "Tomas Deluca",
-      username: "tomi_delu",
-      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
     },
     content: `
 Tener un huevsite es el primer paso, pero optimizarlo es lo que realmente marca la diferencia entre ser un builder más y ser \"el\" builder que todos quieren contratar o seguir.
@@ -733,9 +733,9 @@ El bloque **Building** es tu feed de actividad. No tiene que ser un proyecto ter
     date: "2026-03-12",
     tags: ["feature", "pro", "portfolio"],
     author: {
-      name: "Tomas Deluca",
-      username: "tomi_delu",
-      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
     },
     content: `
 Si sos un builder serio, tu URL importa. huevsite.io/tu-nombre está buenísimo para arrancar, pero cuando querés cerrar ese cliente premium o aplicar a una startup top de US, tener **tu-nombre.com** o **tu-startup.io** apuntando directo a tu portfolio bento-box no tiene comparación.
@@ -779,9 +779,9 @@ Es, literalmente, un constructor de sitios estáticos profesional disfrazado de 
     date: "2026-03-11", // Using roughly current date
     tags: ["ai", "pro", "feature"],
     author: {
-      name: "Tomas Deluca",
-      username: "tomi_delu",
-      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg", // placeholder
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
     },
     content: `
 Armar un portfolio desde cero puede ser tedioso. Pensar qué métricas destacar, escribir el copy perfecto, acomodar las features en una grilla... a veces solo queremos armar algo rápido que se vea increíble.
@@ -817,9 +817,9 @@ Siendo usuario PRO ya podés entrar a tus ajustes (PRO Settings -> Sub-sites) y 
     date: "2026-03-18",
     tags: ["feed", "launches", "feature"],
     author: {
-      name: "Tomas Deluca",
-      username: "tomi_delu",
-      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
     },
     content: `
 Durante mucho tiempo, “lanzamientos” y “proyectos reales” vivían demasiado separados.
@@ -882,9 +882,9 @@ Si los builders mejoran sus blocks, el feed mejora solo.
     date: "2026-03-18",
     tags: ["feed", "social", "feature"],
     author: {
-      name: "Tomas Deluca",
-      username: "tomi_delu",
-      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
     },
     content: `
 No todos entran al feed buscando lo mismo.
@@ -953,9 +953,9 @@ La meta es que un builder entre a huevsite y en segundos pueda responder:
     date: "2026-03-18",
     tags: ["perfil", "sub-sites", "update"],
     author: {
-      name: "Tomas Deluca",
-      username: "tomi_delu",
-      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
     },
     content: `
 Había un problema chiquito, pero muy visible: a veces la imagen del **bio block** y el **avatar real** no coincidían.
@@ -1021,9 +1021,9 @@ A veces son las que hacen que el producto se sienta más sólido, más coherente
     date: "2026-03-04",
     tags: ["comunidad", "vision", "startup"],
     author: {
-      name: "Tomas Deluca",
-      username: "tomi_delu",
-      avatarUrl: "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/4dt5yx2f1qs-1771790082443.jpg",
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
     },
     content: `
 Tener un buen portfolio siempre fue un dolor de cabeza para los desarrolladores y creadores. O armás algo súper customizado que te lleva semanas mantener, o terminás usando un template genérico que no destaca ni tus métricas, ni tu impacto real.
@@ -1116,6 +1116,17 @@ export async function getAllBlogPosts(): Promise<BlogPost[]> {
 }
 
 export const BLOG_POSTS_PER_PAGE = 9;
+
+// Canonical username we use to credit posts written by the platform itself
+// (updates, launches, feature announcements) instead of an individual builder.
+// No such profile exists in the DB, so links to this author go to the
+// marketing homepage rather than 404ing on /huevsite.
+export const PLATFORM_AUTHOR_USERNAME = "huevsite";
+
+export function getBlogAuthorHref(author: BlogPost["author"]): string {
+  if (author.username === PLATFORM_AUTHOR_USERNAME) return "/";
+  return `/${author.username}`;
+}
 
 // A post is "Builder de la Semana" when it was generated from a builder_interview.
 // The static posts don't have the tag, so we detect it by tags OR slug prefix.

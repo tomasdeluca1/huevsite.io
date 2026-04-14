@@ -4,6 +4,8 @@ import {
   getPaginatedBlogPosts,
   isBuilderOfTheWeekPost,
   BLOG_POSTS_PER_PAGE,
+  getBlogAuthorHref,
+  PLATFORM_AUTHOR_USERNAME,
 } from "@/lib/blog-data";
 import { SITE_URL } from "@/lib/site-url";
 
@@ -154,10 +156,15 @@ export default async function BlogIndexPage({
                   </Link>
                 </div>
                 <div className="shrink-0 relative z-20">
-                  <Link href={`/${post.author.username}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                  <Link
+                    href={getBlogAuthorHref(post.author)}
+                    className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                  >
                     <div className="text-right hidden sm:block">
                       <div className="text-xs font-bold text-white">{post.author.name}</div>
-                      <div className="text-[10px] text-[var(--text-muted)] font-mono">@{post.author.username}</div>
+                      {post.author.username !== PLATFORM_AUTHOR_USERNAME && (
+                        <div className="text-[10px] text-[var(--text-muted)] font-mono">@{post.author.username}</div>
+                      )}
                     </div>
                     <Image src={post.author.avatarUrl} alt={post.author.name} width={40} height={40} className="rounded-full" />
                   </Link>

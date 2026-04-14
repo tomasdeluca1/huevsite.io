@@ -1,5 +1,4 @@
 import { calculateReadingTime } from "./utils";
-import { createClient } from "@supabase/supabase-js";
 
 export interface BlogPost {
   slug: string;
@@ -1059,31 +1058,48 @@ export function getPostBySlug(slug: string): BlogPost | undefined {
 
 // ─── Supabase blog posts (Builder de la Semana + future dynamic posts) ────────
 
-function getServiceClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
-
 export async function getDBBlogPosts(): Promise<BlogPost[]> {
-  const supabase = getServiceClient();
-  const { data, error } = await supabase
-    .from("blog_posts")
-    .select("*")
-    .eq("is_published", true)
-    .order("date", { ascending: false });
+  // Hit Supabase REST directly instead of going through supabase-js. The
+  // JS client's underlying fetch gets memoized by Next.js's data cache when
+  // it runs inside a Server Component (e.g. /blog page), even with
+  // `export const dynamic = "force-dynamic"` on the route — meaning newly
+  // published BDLS posts wouldn't show up on the listing until the next
+  // deploy. The same helper called from a Route Handler (/api/debug/blog)
+  // bypassed the cache, which is how we caught it. Forcing
+  // `cache: "no-store"` here closes the gap for both call sites.
+  const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/blog_posts?select=*&is_published=eq.true&order=date.desc`;
 
-  if (error || !data) return [];
+  let rows: any[] = [];
+  try {
+    const res = await fetch(url, {
+      headers: {
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+      },
+      cache: "no-store",
+    });
 
-  return data.map((p) => ({
+    if (!res.ok) {
+      console.error(
+        `getDBBlogPosts: REST returned ${res.status} — ${await res.text().catch(() => "")}`
+      );
+      return [];
+    }
+
+    rows = (await res.json()) || [];
+  } catch (e) {
+    console.error("getDBBlogPosts fetch error:", e);
+    return [];
+  }
+
+  return rows.map((p) => ({
     slug: p.slug,
     title: p.title,
     excerpt: p.excerpt,
     content: p.content,
     date: p.date,
     tags: p.tags ?? [],
-    readingTime: calculateReadingTime(p.content),
+    readingTime: calculateReadingTime(p.content || ""),
     author: {
       name: p.author_name,
       username: p.author_username,
@@ -1145,13 +1161,26 @@ export async function getPostBySlugAsync(slug: string): Promise<BlogPost | undef
   const hardcoded = getPostBySlug(slug);
   if (hardcoded) return hardcoded;
 
-  const supabase = getServiceClient();
-  const { data } = await supabase
-    .from("blog_posts")
-    .select("*")
-    .ilike("slug", slug)
-    .eq("is_published", true)
-    .maybeSingle();
+  // Same reason as getDBBlogPosts: bypass Next.js fetch memoization so newly
+  // published posts are visible immediately, not only after the next deploy.
+  const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/blog_posts?select=*&slug=ilike.${encodeURIComponent(slug)}&is_published=eq.true&limit=1`;
+
+  let data: any = null;
+  try {
+    const res = await fetch(url, {
+      headers: {
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+      },
+      cache: "no-store",
+    });
+    if (!res.ok) return undefined;
+    const rows = (await res.json()) || [];
+    data = rows[0];
+  } catch (e) {
+    console.error("getPostBySlugAsync fetch error:", e);
+    return undefined;
+  }
 
   if (!data) return undefined;
 
@@ -1162,7 +1191,7 @@ export async function getPostBySlugAsync(slug: string): Promise<BlogPost | undef
     content: data.content,
     date: data.date,
     tags: data.tags ?? [],
-    readingTime: calculateReadingTime(data.content),
+    readingTime: calculateReadingTime(data.content || ""),
     author: {
       name: data.author_name,
       username: data.author_username,

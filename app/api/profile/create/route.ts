@@ -1,16 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
-
-// referral_code is no longer in the public SELECT grant since the
-// 2026-04-11 hardening pass. Use the service-role client for the lookup
-// (it's a join key, not user-facing data).
-function getServiceRoleClient() {
-  return createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
-}
+import { createServiceRoleClient } from '@/lib/supabase/service-role'
 import { buildOnboardingBlocks, selectOnboardingLayout } from '@/lib/onboarding-utils'
 import { checkAndPostCommunityMilestone } from '@/lib/twitter'
 import { type LinktreeImportData } from '@/lib/linktree-import'
@@ -75,6 +65,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // After authentication, switch to service-role for all DB operations.
+    // The `authenticated` role has no INSERT policy on profiles (only SELECT
+    // and UPDATE), so the session client's INSERT is silently denied by RLS.
+    const adminSupabase = createServiceRoleClient()
+
     const body: CreateProfileRequest = await request.json()
     const inferredGitHubHandle = getGitHubHandleFromUser(user)
 
@@ -94,7 +89,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar que el username esté disponible
-    const { data: existingProfile } = await supabase
+    const { data: existingProfile } = await adminSupabase
       .from('profiles')
       .select('username')
       .eq('username', body.username)
@@ -108,12 +103,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Buscar ID del referente si existe código.
-    // referral_code is service-role only (per the 2026-04-11 hardening),
-    // so we use the admin client just for this lookup.
     let referredById = null;
     if (body.referredBy) {
-      const adminClient = getServiceRoleClient();
-      const { data: referrer } = await adminClient
+      const { data: referrer } = await adminSupabase
         .from('profiles')
         .select('id')
         .eq('referral_code', body.referredBy)
@@ -129,7 +121,7 @@ export async function POST(request: NextRequest) {
     const selectedLayout = selectOnboardingLayout(body.username)
     const githubHandle = body.githubHandle || body.githubData?.username || inferredGitHubHandle || null
 
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await adminSupabase
       .from('profiles')
       .insert({
         id: user.id,
@@ -229,7 +221,7 @@ export async function POST(request: NextRequest) {
     }))
 
     if (blocksToInsert.length > 0) {
-      const { error: blocksError } = await supabase
+      const { error: blocksError } = await adminSupabase
         .from('blocks')
         .insert(blocksToInsert)
 
@@ -240,14 +232,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Registrar actividad de nuevo builder en el feed
-    await supabase.from('activities').insert({
+    await adminSupabase.from('activities').insert({
       user_id: user.id,
       type: 'new_builder',
       data: { username: body.username }
     });
 
     // Check for community milestones (e.g. 100, 150, 200...)
-    await checkAndPostCommunityMilestone(supabase);
+    await checkAndPostCommunityMilestone(adminSupabase);
 
     const newScore = await scoreService.recomputeScore(user.id);
     if (profile) {

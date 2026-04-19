@@ -2,7 +2,7 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Trash2, Sparkles, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
+import { GripVertical, Trash2, Sparkles, EyeOff, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
 import { BlockData } from "@/lib/profile-types";
 import { ReactNode } from "react";
 
@@ -13,9 +13,10 @@ interface Props {
   onRemove: (id: string) => void;
   onEdit: (block: BlockData) => void;
   onResize?: (id: string, colSpan: number, rowSpan: number) => void;
+  onHide?: (id: string) => void;
 }
 
-export function SortableBlock({ id, block, children, onRemove, onEdit, onResize }: Props) {
+export function SortableBlock({ id, block, children, onRemove, onEdit, onResize, onHide }: Props) {
   const {
     attributes,
     listeners,
@@ -50,6 +51,15 @@ export function SortableBlock({ id, block, children, onRemove, onEdit, onResize 
         >
           <Sparkles size={16} />
         </button>
+        {onHide && (
+          <button
+            onClick={() => onHide(id)}
+            className="p-2 rounded-lg bg-[var(--surface2)] border border-[var(--border-bright)] hover:border-amber-500/50 transition-all text-white/50 hover:text-amber-400 backdrop-blur-md shadow-lg"
+            title="Ocultar bloque"
+          >
+            <EyeOff size={16} />
+          </button>
+        )}
         <button
           onClick={() => onRemove(id)}
           className="p-2 rounded-lg bg-red-500/10 border border-red-500/30 hover:bg-red-500 hover:text-white transition-all text-red-500 backdrop-blur-md shadow-lg"

@@ -38,6 +38,7 @@ interface SidebarProps {
   activeTab: 'board' | 'insights' | 'subsites' | 'domain' | 'transfer';
   setActiveTab: (tab: 'board' | 'insights' | 'subsites' | 'domain' | 'transfer') => void;
   onShareUnlocked: () => void;
+  visibleBlockCount?: number;
 }
 
 export function DashboardSidebar({
@@ -65,7 +66,8 @@ export function DashboardSidebar({
   autoSaveEnabled,
   activeTab,
   setActiveTab,
-  onShareUnlocked
+  onShareUnlocked,
+  visibleBlockCount
 }: SidebarProps) {
   
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
@@ -272,7 +274,7 @@ export function DashboardSidebar({
             <BlockSelector
               onAdd={addBlock}
               accentColor={profile.accentColor}
-              currentBlockCount={profile.blocks.length}
+              currentBlockCount={visibleBlockCount ?? profile.blocks.length}
               subscriptionTier={isPro ? "pro" : profile.subscriptionTier}
               username={profile.username}
               twitterShareUnlocked={profile.twitterShareUnlocked}

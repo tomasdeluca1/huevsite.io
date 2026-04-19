@@ -102,6 +102,7 @@ export async function POST(request: NextRequest) {
       .from('blocks')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id)
+      .eq('visible', true)
 
     blockCountQuery = targetSubSiteId
       ? blockCountQuery.eq('sub_site_id', targetSubSiteId)

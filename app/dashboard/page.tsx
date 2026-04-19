@@ -17,7 +17,7 @@ import {
   rectSortingStrategy
 } from "@dnd-kit/sortable";
 import {
-  Save, Eye, Layout as LayoutIcon, Settings, LogOut, Plus, Sparkles, MessageSquare,
+  Save, Eye, EyeOff, Layout as LayoutIcon, Settings, LogOut, Plus, Sparkles, MessageSquare,
   Activity, Compass, Trash2, Copy, Check, Trophy, ArrowUpRight, BadgeCheck, ArrowLeft, Lock, Globe, ChevronRight,
   Globe2, AlertCircle, SendHorizontal, ChevronDown, X
 } from "lucide-react";
@@ -506,6 +506,48 @@ export default function DashboardPage() {
     });
   };
 
+  const BLOCK_TYPE_LABELS: Record<string, string> = {
+    hero: "Bio / Hero", building: "Building", github: "GitHub Stats", project: "Proyecto",
+    stack: "Tech Stack", metric: "Métrica", social: "Redes Sociales", community: "Comunidad",
+    writing: "Escritura", cv: "CV / Resume", media: "Media", certification: "Certificación",
+    achievement: "Logro", custom: "Custom", collab: "Collab", ecosystem: "Ecosistema",
+  };
+
+  const hideBlock = async (id: string) => {
+    setProfile(prev => {
+      if (!prev) return prev;
+      return { ...prev, blocks: prev.blocks.map(b => b.id === id ? { ...b, visible: false } : b) };
+    });
+    if (!id.startsWith("temp-")) {
+      try {
+        await fetch(`/api/blocks/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ visible: false }),
+        });
+      } catch (e) { console.error("Error hiding block:", e); }
+    }
+  };
+
+  const restoreBlock = async (id: string) => {
+    setProfile(prev => {
+      if (!prev) return prev;
+      return { ...prev, blocks: prev.blocks.map(b => b.id === id ? { ...b, visible: true } : b) };
+    });
+    if (!id.startsWith("temp-")) {
+      try {
+        await fetch(`/api/blocks/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ visible: true }),
+        });
+      } catch (e) { console.error("Error restoring block:", e); }
+    }
+  };
+
+  const visibleBlocks = profile?.blocks.filter(b => b.visible !== false) || [];
+  const hiddenBlocks = profile?.blocks.filter(b => b.visible === false) || [];
+
   const handleBlockChooserConfirm = async (keepBlockIds: string[]) => {
     if (!profile) return;
     const hideIds = profile.blocks.filter(b => !keepBlockIds.includes(b.id)).map(b => b.id);
@@ -521,7 +563,7 @@ export default function DashboardPage() {
       );
       setProfile(prev => prev ? {
         ...prev,
-        blocks: prev.blocks.filter(b => keepBlockIds.includes(b.id)),
+        blocks: prev.blocks.map(b => hideIds.includes(b.id) ? { ...b, visible: false } : b),
       } : prev);
     } catch (err) {
       console.error("Error hiding blocks:", err);
@@ -1177,6 +1219,7 @@ export default function DashboardPage() {
         onShareUnlocked={() => {
           setProfile(prev => prev ? { ...prev, twitterShareUnlocked: true, extraBlocksFromShare: (prev.extraBlocksFromShare || 0) + 3 } : null);
         }}
+        visibleBlockCount={visibleBlocks.length}
       />
 
       <main className={`flex-1 min-w-0 h-full overflow-y-auto p-4 md:px-8 lg:px-10 relative z-0 custom-scrollbar ${
@@ -1523,27 +1566,28 @@ export default function DashboardPage() {
                   </p>
                   <div className="hidden md:flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/25 shrink-0">
                     <span className="inline-flex h-2 w-2 rounded-full" style={{ backgroundColor: profile.accentColor }} />
-                    {profile.blocks.length} bloques
+                    {visibleBlocks.length} bloques{hiddenBlocks.length > 0 && isPro ? ` · ${hiddenBlocks.length} ocultos` : ""}
                   </div>
                 </div>
 
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                  <SortableContext items={profile.blocks.map(b => b.id)} strategy={rectSortingStrategy}>
+                  <SortableContext items={visibleBlocks.map(b => b.id)} strategy={rectSortingStrategy}>
                     <div className="dashboard-board-grid huevsite-grid min-h-[560px] md:min-h-[620px] p-3 sm:p-6 lg:p-8 xl:p-10 border border-dashed border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.008))] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]" style={{ borderRadius: "calc(var(--dashboard-radius) + 0.5rem)" }}>
-                      {profile.blocks.length === 0 ? (
+                      {visibleBlocks.length === 0 ? (
                         <div className="col-span-full flex flex-col items-center justify-center py-40 text-center text-white/20 font-bold uppercase tracking-widest text-sm">
                           <Plus className="mb-4 opacity-30" size={40} />
                           Agregá tu primer bloque
                         </div>
                       ) : (
-                        profile.blocks.map((block) => (
-                          <SortableBlock 
-                            key={block.id} 
-                            id={block.id} 
-                            block={block} 
-                            onRemove={(id) => setIsDeletingId(id)} 
-                            onEdit={(b) => setEditingBlock(b)} 
+                        visibleBlocks.map((block) => (
+                          <SortableBlock
+                            key={block.id}
+                            id={block.id}
+                            block={block}
+                            onRemove={(id) => setIsDeletingId(id)}
+                            onEdit={(b) => setEditingBlock(b)}
                             onResize={(id, colSpan, rowSpan) => updateBlock({ ...block, col_span: colSpan, row_span: rowSpan })}
+                            onHide={isPro ? hideBlock : undefined}
                           >
                             {renderBlockContent(block)}
                           </SortableBlock>
@@ -1552,6 +1596,43 @@ export default function DashboardPage() {
                     </div>
                   </SortableContext>
                 </DndContext>
+
+                {/* Hidden blocks panel — Pro only */}
+                {isPro && hiddenBlocks.length > 0 && (
+                  <div className="mt-8 p-5 md:p-6 border border-dashed border-white/10 bg-white/[0.015]" style={{ borderRadius: "calc(var(--dashboard-radius) + 0.5rem)" }}>
+                    <div className="flex items-center gap-2.5 mb-4">
+                      <EyeOff size={14} className="text-white/30" />
+                      <span className="text-[11px] font-black uppercase tracking-[0.15em] text-white/30">
+                        Bloques ocultos
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {hiddenBlocks.map((block) => (
+                        <div
+                          key={block.id}
+                          className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-[var(--accent)]/30 transition-all group"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-white/[0.05] flex items-center justify-center shrink-0">
+                              <EyeOff size={14} className="text-white/20" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-bold text-white/60 truncate">{BLOCK_TYPE_LABELS[block.type] || block.type}</p>
+                              <p className="text-[10px] text-white/25 font-mono uppercase">{block.type}</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => restoreBlock(block.id)}
+                            className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold border border-white/10 hover:border-[var(--accent)]/50 hover:text-[var(--accent)] text-white/40 transition-all"
+                          >
+                            <Eye size={13} />
+                            Mostrar
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {!isPro && (
                   <div ref={referralsSectionRef} className="mt-12 max-w-[1200px] mx-auto scroll-mt-28">

@@ -61,6 +61,8 @@ export async function getShowcaseData(requestedWeek?: string | null) {
       targetWeek = recentWinner?.week || currentWeek;
     }
 
+    console.log(`[showcase-data] currentWeek=${currentWeek} targetWeek=${targetWeek}`);
+
     let winners: any[] = [];
     if (targetWeek) {
       const { data: winnerData, error: winnerError } = await supabase
@@ -74,6 +76,8 @@ export async function getShowcaseData(requestedWeek?: string | null) {
           )
         `)
         .eq("week", targetWeek);
+
+      console.log(`[showcase-data] winners query: ${winnerData?.length ?? 0} rows, error=${winnerError?.message ?? 'none'}`);
 
       if (winnerError) {
         console.error("Winner query error:", winnerError);

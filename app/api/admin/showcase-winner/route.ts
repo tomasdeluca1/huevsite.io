@@ -27,9 +27,12 @@ export async function POST(request: NextRequest) {
       .eq("week", week)
       .maybeSingle();
 
+    console.log(`[showcase-winner] userId=${userId} week=${week} existing=${!!existing}`);
+
     if (existing) {
       // Si ya existe, lo quitamos
       await supabase.from("showcase_winners").delete().eq("user_id", userId).eq("week", week);
+      console.log(`[showcase-winner] REMOVED winner ${userId} from ${week}`);
       return NextResponse.json({ success: true, action: 'removed' });
     } else {
       // Si no existe, lo agregamos
@@ -39,7 +42,11 @@ export async function POST(request: NextRequest) {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error(`[showcase-winner] INSERT error:`, error);
+        throw error;
+      }
+      console.log(`[showcase-winner] ADDED winner ${userId} for ${week}`, data);
 
       // Publicar en X (Twitter)
       try {

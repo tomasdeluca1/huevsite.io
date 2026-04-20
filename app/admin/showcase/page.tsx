@@ -71,7 +71,10 @@ export default function ShowcasePage() {
       });
       const json = await res.json();
       if (res.ok) {
-        setMsg({ type: "ok", text: "Winner establecido correctamente 🏆" });
+        const actionText = json.action === 'removed'
+          ? "Winner quitado correctamente ❌"
+          : "Winner establecido correctamente 🏆";
+        setMsg({ type: json.action === 'removed' ? "err" : "ok", text: actionText });
         await fetchData();
       } else {
         setMsg({

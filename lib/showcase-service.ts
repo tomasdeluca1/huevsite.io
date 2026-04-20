@@ -1,16 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
-
-// Showcase reads aggregated nomination + winner data for the public
-// /showcase page. Since 2026-04-11 the showcase_nominations table is no
-// longer directly readable by anon/authenticated (privacy: reveals who
-// voted for whom). We use the service-role client here so the API layer
-// can sanitize and aggregate before returning to the page.
-function getServiceRoleClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
 export function getWeekString(date: Date): string {
   // Ajuste a horario de Argentina (UTC-3)
@@ -39,7 +27,7 @@ export async function getShowcaseData(requestedWeek?: string | null) {
   const currentWeek = requestedWeek || getCurrentWeek();
 
   try {
-    const supabase = getServiceRoleClient();
+    const supabase = createServiceRoleClient();
 
     // Winner: primero la semana actual; si no hay, fallback a la anterior.
     // Así mostramos a los recién elegidos (el cron corre el lunes y guarda
@@ -61,7 +49,16 @@ export async function getShowcaseData(requestedWeek?: string | null) {
       targetWeek = recentWinner?.week || currentWeek;
     }
 
-    console.log(`[showcase-data] currentWeek=${currentWeek} targetWeek=${targetWeek}`);
+    // Diagnostic: raw count of all winners in DB
+    const { count: totalWinners } = await supabase
+      .from("showcase_winners")
+      .select("*", { count: "exact", head: true });
+    const { data: rawRows } = await supabase
+      .from("showcase_winners")
+      .select("user_id, week")
+      .order("week", { ascending: false })
+      .limit(5);
+    console.log(`[showcase-data] currentWeek=${currentWeek} targetWeek=${targetWeek} totalWinnersInDB=${totalWinners} recentRows=${JSON.stringify(rawRows)}`);
 
     let winners: any[] = [];
     if (targetWeek) {
@@ -77,7 +74,7 @@ export async function getShowcaseData(requestedWeek?: string | null) {
         `)
         .eq("week", targetWeek);
 
-      console.log(`[showcase-data] winners query: ${winnerData?.length ?? 0} rows, error=${winnerError?.message ?? 'none'}`);
+      console.log(`[showcase-data] winners join query for ${targetWeek}: ${winnerData?.length ?? 0} rows, error=${winnerError?.message ?? 'none'}`);
 
       if (winnerError) {
         console.error("Winner query error:", winnerError);

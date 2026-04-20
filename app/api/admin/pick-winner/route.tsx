@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { getAdminClient } from "@/lib/admin-auth";
 import { Resend } from "resend";
 import { render } from "@react-email/render";
 import { getWeekString } from "@/lib/showcase-service";
@@ -16,75 +15,23 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Para obtener la semana anterior (útil si el cron corre apenas empieza la nueva)
 function getPreviousWeek(): string {
-  // Si corre el Lunes a la madrugada, "ayer" siempre es parte de la semana que queremos cerrar.
   const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
   return getWeekString(yesterday);
 }
 
-async function isAdmin(request: NextRequest, secret: string | null) {
-  // 1. Check for Cron/Admin secrets first (for automated jobs)
-  const authHeader = request.headers.get("authorization");
-  
-  // Vercel Crons send "Bearer <token>"
-  if (process.env.CRON_SECRET && authHeader === `Bearer ${process.env.CRON_SECRET}`) {
-    console.log("Authenticated via CRON_SECRET");
-    return true;
-  }
-  
-  if (secret && secret === process.env.ADMIN_SECRET) {
-    console.log("Authenticated via ADMIN_SECRET query param");
-    return true;
-  }
-
-  // 2. Check for User session (for manual trigger)
-  // We use the service role client here to check the profile, to avoid cookie issues in some environments
-  const supabase = createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-  
-  // For manual triggers, we might still have a session if called from the same browser
-  // But usually this will be called via curl or cron
-  const { data: { user } } = await (await createClient()).auth.getUser();
-  if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('username')
-      .eq('id', user.id)
-      .single();
-
-    if (profile?.username === 'tomi_delu') {
-      console.log("Authenticated via user session:", profile.username);
-      return true;
-    }
-  }
-
-  console.warn("Authentication failed for pick-winner cron", { 
-    hasAuthHeader: !!authHeader, 
-    hasSecret: !!secret 
-  });
-  return false;
-}
-
 async function handlePickWinner(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const secret = searchParams.get("secret");
-    const requestedWeek = searchParams.get("week");
-
-    if (!await isAdmin(request, secret)) {
+    const supabase = await getAdminClient(request);
+    if (!supabase) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const { searchParams } = new URL(request.url);
+    const requestedWeek = searchParams.get("week");
 
     // Si el cron corre el Domingo (nuevo ciclo para el usuario),
     // probablemente quiere cerrar la semana que pasó.
     const week = requestedWeek || getPreviousWeek();
-
-    // Use service role client to bypass RLS
-    const supabase = createSupabaseClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
 
     // 1. Verificar si ya hay ganador para esa semana
     const { data: existingWinner } = await supabase
@@ -165,18 +112,13 @@ async function handlePickWinner(request: NextRequest) {
     }
 
     // 5. Obtener emails desde auth.users usando service role (NO están en profiles)
-    const adminClient = createSupabaseClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://huevsite.io";
     const emailResults: { username: string; sent: boolean; formUrl?: string; error?: string }[] = [];
 
     for (const winnerProfile of winnerProfiles) {
       try {
         console.log(`Buscando email para ${winnerProfile.username}...`);
-        const { data: authUser, error: authError } = await adminClient.auth.admin.getUserById(winnerProfile.id);
+        const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(winnerProfile.id);
 
         if (authError || !authUser?.user?.email) {
           console.error(`No se encontró email para ${winnerProfile.username}:`, authError?.message);

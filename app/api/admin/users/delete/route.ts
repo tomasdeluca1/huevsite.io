@@ -1,32 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { deleteAccountByUserId, getAdminClient } from "@/lib/account-deletion";
+import { getAdminClient } from "@/lib/admin-auth";
+import { ADMIN_USERNAME } from "@/lib/constants";
+import { deleteAccountByUserId, getAdminClient as getAccountDeletionClient } from "@/lib/account-deletion";
 
 export const dynamic = "force-dynamic";
-
-async function isAdmin() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) return false;
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("username")
-    .eq("id", user.id)
-    .single();
-
-  return profile?.username === "tomi_delu";
-}
 
 function normalizeUsername(value: string | null) {
   return value?.trim().replace(/^@+/, "").toLowerCase() || "";
 }
 
 export async function GET(request: NextRequest) {
-  if (!await isAdmin()) {
+  const adminAuth = await getAdminClient(request);
+  if (!adminAuth) {
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
 
@@ -37,7 +22,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Falta username." }, { status: 400 });
   }
 
-  const adminClient = getAdminClient();
+  const adminClient = getAccountDeletionClient();
   const { data: profile, error } = await adminClient
     .from("profiles")
     .select("id, username, name, image, custom_domain")
@@ -73,7 +58,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  if (!await isAdmin()) {
+  const adminAuth = await getAdminClient(request);
+  if (!adminAuth) {
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
 
@@ -86,7 +72,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Falta username." }, { status: 400 });
     }
 
-    if (username === "tomi_delu") {
+    if (username === ADMIN_USERNAME) {
       return NextResponse.json({ error: "No podés borrar la cuenta admin desde este panel." }, { status: 400 });
     }
 
@@ -98,7 +84,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const adminClient = getAdminClient();
+    const adminClient = getAccountDeletionClient();
     const { data: profile, error } = await adminClient
       .from("profiles")
       .select("id, username, name")

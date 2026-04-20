@@ -1,28 +1,67 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
+import { ADMIN_EMAILS } from "@/lib/constants";
 
-// Server-side admin guard. Call at the top of an admin server component
-// or layout. If the visitor isn't the admin, this throws a redirect and
-// the caller never continues.
-export async function requireAdmin() {
+/**
+ * Check if the current session user is an admin by email.
+ * Uses the session client only for auth (getUser), then checks the email
+ * against the ADMIN_EMAILS whitelist. No DB query needed — the email
+ * comes straight from the JWT.
+ *
+ * Returns `{ user }` if admin, `null` otherwise.
+ */
+export async function getAdminUser() {
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/auth/login?next=/admin");
+  if (!user?.email || !ADMIN_EMAILS.includes(user.email)) {
+    return null;
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("username")
-    .eq("id", user.id)
-    .single();
+  return { user };
+}
 
-  if (profile?.username !== "tomi_delu") {
+/**
+ * Returns a service-role Supabase client if the caller is an admin.
+ * Use this in API routes: authenticate first, then get an unrestricted
+ * client for all DB operations — no RLS will block admin actions.
+ *
+ * Also accepts an optional NextRequest for cron/secret auth (pick-winner, etc.).
+ */
+export async function getAdminClient(request?: Request) {
+  // 1. Check cron/admin secrets (for automated jobs)
+  if (request) {
+    const authHeader = request.headers.get("authorization");
+    if (process.env.CRON_SECRET && authHeader === `Bearer ${process.env.CRON_SECRET}`) {
+      return createServiceRoleClient();
+    }
+
+    const url = new URL(request.url);
+    const secret = url.searchParams.get("secret");
+    if (secret && process.env.ADMIN_SECRET && secret === process.env.ADMIN_SECRET) {
+      return createServiceRoleClient();
+    }
+  }
+
+  // 2. Check user session
+  const admin = await getAdminUser();
+  if (!admin) return null;
+
+  return createServiceRoleClient();
+}
+
+/**
+ * Server-side admin guard for layouts/pages. Redirects non-admins.
+ */
+export async function requireAdmin() {
+  const admin = await getAdminUser();
+
+  if (!admin) {
     redirect("/");
   }
 
-  return { user, profile };
+  return admin;
 }

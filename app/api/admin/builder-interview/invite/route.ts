@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { getAdminClient } from "@/lib/admin-auth";
 import { sendRenderedEmail } from "@/lib/email";
 import { BuilderInvitationEmail } from "@/components/emails/BuilderInvitationEmail";
 import crypto from "crypto";
@@ -8,27 +7,9 @@ import React from "react";
 
 export const dynamic = "force-dynamic";
 
-function getServiceRoleClient() {
-  return createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
-
-async function isAdmin() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return false;
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("username")
-    .eq("id", user.id)
-    .single();
-  return profile?.username === "tomi_delu";
-}
-
 export async function POST(request: NextRequest) {
-  if (!(await isAdmin())) {
+  const supabase = await getAdminClient(request);
+  if (!supabase) {
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
 
@@ -38,7 +19,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "username es requerido." }, { status: 400 });
     }
 
-    const supabase = getServiceRoleClient();
 
     // Look up builder profile
     const { data: profile } = await supabase

@@ -1,5 +1,6 @@
 import React from "react";
 import { NextRequest, NextResponse } from "next/server";
+import { getAdminClient } from "@/lib/admin-auth";
 import { FREE_TRIAL_EMAIL_COPY, FreeTrialEmailStage } from "@/lib/free-trial-campaign";
 import { sendRenderedEmail } from "@/lib/email";
 import { TrialLifecycleEmail } from "@/components/emails/TrialLifecycleEmail";
@@ -13,12 +14,11 @@ function sleep(ms: number) {
 }
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const secret = searchParams.get("secret");
-
-  if (secret !== process.env.ADMIN_SECRET) {
+  if (!await getAdminClient(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const { searchParams } = new URL(request.url);
 
   const to = searchParams.get("to") || "huevsite.studio@gmail.com";
   const results: { stage: string; success: boolean; error?: string }[] = [];

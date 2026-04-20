@@ -1,34 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { getAdminClient } from "@/lib/admin-auth";
 import { postBuilderOfTheWeek } from "@/lib/twitter";
 import { resolveXHandles } from "@/lib/twitter-utils";
 
 export const dynamic = "force-dynamic";
 
-function getServiceRoleClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-  return createSupabaseClient(url, key);
-}
-
-async function isAdmin() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return false;
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('username')
-    .eq('id', user.id)
-    .single();
-
-  return profile?.username === 'tomi_delu';
-}
-
 // POST /api/admin/showcase-winner — alternar winner de la semana
 export async function POST(request: NextRequest) {
-  if (!await isAdmin()) {
+  const supabase = await getAdminClient();
+  if (!supabase) {
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
 
@@ -38,8 +18,6 @@ export async function POST(request: NextRequest) {
     if (!userId || !week) {
       return NextResponse.json({ error: "userId y week son requeridos." }, { status: 400 });
     }
-
-    const supabase = getServiceRoleClient();
 
     // Ver si ya es winner
     const { data: existing } = await supabase
@@ -117,7 +95,8 @@ export async function POST(request: NextRequest) {
 
 // DELETE /api/admin/showcase-winner — limpiar todos los winners de una semana
 export async function DELETE(request: NextRequest) {
-  if (!await isAdmin()) {
+  const supabase = await getAdminClient();
+  if (!supabase) {
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
 
@@ -125,7 +104,6 @@ export async function DELETE(request: NextRequest) {
   const week = searchParams.get("week");
   if (!week) return NextResponse.json({ error: "week requerida" }, { status: 400 });
 
-  const supabase = getServiceRoleClient();
   await supabase.from("showcase_winners").delete().eq("week", week);
   return NextResponse.json({ success: true });
 }

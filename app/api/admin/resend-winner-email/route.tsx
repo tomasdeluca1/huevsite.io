@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { getAdminClient } from "@/lib/admin-auth";
 import { Resend } from "resend";
 import { render } from "@react-email/render";
 import { WinnerEmail } from "@/components/emails/WinnerEmail";
@@ -12,22 +12,17 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: NextRequest) {
     try {
-        const { searchParams } = new URL(request.url);
-        const secret = searchParams.get("secret");
-        const week = searchParams.get("week");
-
-        if (!secret || secret !== process.env.ADMIN_SECRET) {
+        const adminClient = await getAdminClient(request);
+        if (!adminClient) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
+
+        const { searchParams } = new URL(request.url);
+        const week = searchParams.get("week");
 
         if (!week) {
             return NextResponse.json({ error: "El parámetro ?week= es requerido (ej: 2026-W10)" }, { status: 400 });
         }
-
-        const adminClient = createSupabaseClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!
-        );
 
         // Buscar los ganadores de esa semana
         const { data: winners, error: winnersError } = await adminClient

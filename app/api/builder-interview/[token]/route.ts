@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { generateInterviewContent } from "@/lib/openrouter";
+import {
+  generateInterviewContent,
+  generateJointCarouselPrompt,
+  type JointCarouselBuilder,
+} from "@/lib/openrouter";
 import { createTypefullyDraft, getTypefullyDraftUrl } from "@/lib/typefully";
 import { sendRenderedEmail } from "@/lib/email";
 import { InterviewNotificationEmail } from "@/components/emails/InterviewNotificationEmail";
@@ -186,9 +190,97 @@ export async function POST(
         generated_linkedin_post: generated.linkedinPost,
         generated_twitter_post: generated.twitterPost,
         generated_instagram_caption: generated.instagramCaption,
-        generated_instagram_carousel: generated.instagramCarousel,
+        generated_instagram_carousel_prompt: generated.instagramCarouselPrompt,
+        generated_instagram_story_prompt: generated.instagramStoryPrompt,
       })
       .eq("id", interview.id);
+
+    // Multi-winner week: if all co-winners (including current) have now
+    // submitted their forms, regenerate ONE joint carousel prompt using
+    // every builder's content and write it to all of their interview rows.
+    // The story prompt stays individual on each row. If a co-winner never
+    // submits, the others keep their solo prompt until admin triggers a
+    // manual regen.
+    if (coWinners.length > 0 && weekLabel) {
+      try {
+        const { data: weekWinners } = await supabase
+          .from("showcase_winners")
+          .select("user_id, profiles:profiles!showcase_winners_user_id_fkey(username, name)")
+          .eq("week", weekLabel);
+
+        const usernames = (weekWinners || [])
+          .map((w: any) => w.profiles?.username)
+          .filter(Boolean) as string[];
+
+        if (usernames.length >= 2) {
+          const { data: weekInterviews } = await supabase
+            .from("builder_interviews")
+            .select(
+              "id, status, builder_name, builder_username, intro_who_are_you, projects_main_project, projects_problem_solved, projects_stack"
+            )
+            .in("builder_username", usernames)
+            .in("status", ["submitted", "generating", "ready", "published"]);
+
+          // Treat the row we just touched as "submitted" too — it's still
+          // in `generating` status at this point because we update to
+          // `ready` further down.
+          const submittedUsernames = new Set(
+            (weekInterviews || []).map((i: any) => i.builder_username)
+          );
+          submittedUsernames.add(interview.builder_username);
+
+          const allSubmitted = usernames.every((u) =>
+            submittedUsernames.has(u)
+          );
+
+          if (allSubmitted && (weekInterviews || []).length > 0) {
+            // Build the JointCarouselBuilder list. The current interview's
+            // form fields are in `body` (not yet refetched), so include them
+            // explicitly to avoid a race with the update we just issued.
+            const others = (weekInterviews || [])
+              .filter((i: any) => i.builder_username !== interview.builder_username)
+              .map(
+                (i: any): JointCarouselBuilder => ({
+                  name: i.builder_name || i.builder_username,
+                  username: i.builder_username,
+                  introWhoAreYou: i.intro_who_are_you || "",
+                  projectsMainProject: i.projects_main_project || "",
+                  projectsProblemSolved: i.projects_problem_solved || "",
+                  projectsStack: i.projects_stack || "",
+                })
+              );
+            const current: JointCarouselBuilder = {
+              name: interview.builder_name || interview.builder_username,
+              username: interview.builder_username,
+              introWhoAreYou: body.intro_who_are_you || "",
+              projectsMainProject: body.projects_main_project || "",
+              projectsProblemSolved: body.projects_problem_solved || "",
+              projectsStack: body.projects_stack || "",
+            };
+            const allBuilders = [current, ...others];
+
+            const jointPrompt = await generateJointCarouselPrompt(
+              allBuilders,
+              weekLabel
+            );
+
+            const interviewIds = [
+              interview.id,
+              ...(weekInterviews || [])
+                .filter((i: any) => i.builder_username !== interview.builder_username)
+                .map((i: any) => i.id),
+            ];
+
+            await supabase
+              .from("builder_interviews")
+              .update({ generated_instagram_carousel_prompt: jointPrompt })
+              .in("id", interviewIds);
+          }
+        }
+      } catch (jointErr) {
+        console.error("Joint carousel generation error (non-fatal):", jointErr);
+      }
+    }
 
     // Fetch the builder's real profile so the blog post is authored by THEM,
     // not by "Equipo Huevsite". Each BDLS post should link back to the

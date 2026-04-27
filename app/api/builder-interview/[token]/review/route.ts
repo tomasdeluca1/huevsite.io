@@ -38,7 +38,8 @@ export async function GET(
       generated_twitter_post,
       generated_linkedin_post,
       generated_instagram_caption,
-      generated_instagram_carousel,
+      generated_instagram_carousel_prompt,
+      generated_instagram_story_prompt,
       story_video_path,
       story_video_uploaded_at,
       story_video_size_bytes,
@@ -79,9 +80,8 @@ export async function GET(
       twitterPost: interview.generated_twitter_post,
       linkedinPost: interview.generated_linkedin_post,
       instagramCaption: interview.generated_instagram_caption,
-      instagramCarousel: Array.isArray(interview.generated_instagram_carousel)
-        ? interview.generated_instagram_carousel
-        : [],
+      instagramCarouselPrompt: interview.generated_instagram_carousel_prompt,
+      instagramStoryPrompt: interview.generated_instagram_story_prompt,
     },
     video: interview.story_video_path
       ? {

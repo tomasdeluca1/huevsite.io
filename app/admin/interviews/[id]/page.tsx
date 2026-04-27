@@ -9,13 +9,13 @@ import {
   Save,
   CheckCircle2,
   AlertCircle,
-  Plus,
   Trash2,
   FileText,
   Twitter,
   Linkedin,
   Instagram,
   LayoutGrid,
+  Sparkles,
   Check,
   Link2,
   MessageSquare,
@@ -23,13 +23,6 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
-
-interface CarouselSlide {
-  heading?: string;
-  body?: string;
-  footer?: string;
-  [key: string]: unknown;
-}
 
 interface Interview {
   id: string;
@@ -45,7 +38,8 @@ interface Interview {
   generated_twitter_post: string | null;
   generated_linkedin_post: string | null;
   generated_instagram_caption: string | null;
-  generated_instagram_carousel: CarouselSlide[] | null;
+  generated_instagram_carousel_prompt: string | null;
+  generated_instagram_story_prompt: string | null;
   typefully_x_draft_url: string | null;
   typefully_linkedin_draft_url: string | null;
   story_video_path: string | null;
@@ -72,7 +66,8 @@ export default function InterviewEditPage({
   const [twitterPost, setTwitterPost] = useState("");
   const [linkedinPost, setLinkedinPost] = useState("");
   const [igCaption, setIgCaption] = useState("");
-  const [carousel, setCarousel] = useState<CarouselSlide[]>([]);
+  const [carouselPrompt, setCarouselPrompt] = useState("");
+  const [storyPrompt, setStoryPrompt] = useState("");
 
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(
@@ -234,11 +229,8 @@ Cualquier duda me escribís. ¡Gracias por el tiempo! 🙌`;
         setTwitterPost(json.generated_twitter_post ?? "");
         setLinkedinPost(json.generated_linkedin_post ?? "");
         setIgCaption(json.generated_instagram_caption ?? "");
-        setCarousel(
-          Array.isArray(json.generated_instagram_carousel)
-            ? json.generated_instagram_carousel
-            : []
-        );
+        setCarouselPrompt(json.generated_instagram_carousel_prompt ?? "");
+        setStoryPrompt(json.generated_instagram_story_prompt ?? "");
       } catch (e: unknown) {
         const err = e instanceof Error ? e.message : "Error desconocido";
         setMsg({ type: "err", text: `Error de red: ${err}` });
@@ -262,8 +254,8 @@ Cualquier duda me escribís. ¡Gracias por el tiempo! 🙌`;
         twitterPost !== (interview.generated_twitter_post ?? "") ||
         linkedinPost !== (interview.generated_linkedin_post ?? "") ||
         igCaption !== (interview.generated_instagram_caption ?? "") ||
-        JSON.stringify(carousel) !==
-          JSON.stringify(interview.generated_instagram_carousel ?? []))
+        carouselPrompt !== (interview.generated_instagram_carousel_prompt ?? "") ||
+        storyPrompt !== (interview.generated_instagram_story_prompt ?? ""))
   );
 
   const save = async () => {
@@ -278,7 +270,8 @@ Cualquier duda me escribís. ¡Gracias por el tiempo! 🙌`;
           generated_twitter_post: twitterPost,
           generated_linkedin_post: linkedinPost,
           generated_instagram_caption: igCaption,
-          generated_instagram_carousel: carousel,
+          generated_instagram_carousel_prompt: carouselPrompt,
+          generated_instagram_story_prompt: storyPrompt,
         }),
       });
       const json = await res.json();
@@ -325,24 +318,18 @@ Cualquier duda me escribís. ¡Gracias por el tiempo! 🙌`;
     }
   };
 
-  // Carousel helpers
-  const updateSlide = (i: number, field: keyof CarouselSlide, value: string) => {
-    setCarousel((prev) =>
-      prev.map((slide, idx) => (idx === i ? { ...slide, [field]: value } : slide))
-    );
-  };
-  const addSlide = () =>
-    setCarousel((prev) => [...prev, { heading: "", body: "", footer: "" }]);
-  const removeSlide = (i: number) =>
-    setCarousel((prev) => prev.filter((_, idx) => idx !== i));
-  const moveSlide = (i: number, dir: -1 | 1) => {
-    setCarousel((prev) => {
-      const next = [...prev];
-      const j = i + dir;
-      if (j < 0 || j >= next.length) return prev;
-      [next[i], next[j]] = [next[j], next[i]];
-      return next;
-    });
+  // Copy-to-clipboard for Creatibro prompts
+  const [copiedPrompt, setCopiedPrompt] = useState<"carousel" | "story" | null>(null);
+  const copyPrompt = async (kind: "carousel" | "story") => {
+    const text = kind === "carousel" ? carouselPrompt : storyPrompt;
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedPrompt(kind);
+      setTimeout(() => setCopiedPrompt(null), 2000);
+    } catch {
+      setMsg({ type: "err", text: "No se pudo copiar." });
+    }
   };
 
   // Render states — auth is enforced by app/admin/layout.tsx
@@ -515,7 +502,7 @@ Cualquier duda me escribís. ¡Gracias por el tiempo! 🙌`;
       </div>
 
       {/* Debug / empty state notice */}
-      {!blogMd && !twitterPost && !linkedinPost && !igCaption && carousel.length === 0 && (
+      {!blogMd && !twitterPost && !linkedinPost && !igCaption && !carouselPrompt && !storyPrompt && (
         <div className="mb-6 p-4 rounded-xl border border-yellow-500/30 bg-yellow-500/10 text-sm text-yellow-300 font-mono">
           <div className="font-bold mb-1">⚠️ Sin contenido generado</div>
           <div className="text-xs leading-relaxed opacity-80">
@@ -611,101 +598,64 @@ Cualquier duda me escribís. ¡Gracias por el tiempo! 🙌`;
           </p>
         </section>
 
-        {/* Instagram carousel */}
+        {/* Instagram carousel prompt (Creatibro) */}
         <section>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <LayoutGrid size={16} className="text-[var(--accent)]" />
               <h2 className="text-sm font-mono uppercase tracking-widest text-[var(--text-muted)]">
-                Carrusel de Instagram ({carousel.length} slides)
+                Prompt carrusel IG (Creatibro)
               </h2>
             </div>
             <button
-              onClick={addSlide}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-mono text-[var(--text-muted)] hover:text-white hover:bg-white/10 transition-colors"
+              onClick={() => copyPrompt("carousel")}
+              disabled={!carouselPrompt}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-mono text-[var(--text-muted)] hover:text-white hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
-              <Plus size={12} /> Agregar slide
+              {copiedPrompt === "carousel" ? <Check size={12} /> : <Link2 size={12} />}
+              {copiedPrompt === "carousel" ? "Copiado" : "Copiar para Creatibro"}
             </button>
           </div>
+          <textarea
+            value={carouselPrompt}
+            onChange={(e) => setCarouselPrompt(e.target.value)}
+            rows={8}
+            className="w-full p-4 bg-black/30 border border-white/10 rounded-2xl text-sm text-white leading-relaxed resize-y focus:outline-none focus:border-[var(--accent)]/50 transition-colors"
+            placeholder="Brief en lenguaje natural para Creatibro..."
+          />
+          <p className="mt-2 text-[10px] font-mono text-[var(--text-dim)]">
+            {carouselPrompt.length} caracteres · Pegalo en creatibro.com con las fotos del builder. En semanas con co-ganadores este prompt presenta a TODOS (se regenera al submitir el último form).
+          </p>
+        </section>
 
-          {carousel.length === 0 && (
-            <div className="p-8 text-center bg-black/30 border border-dashed border-white/10 rounded-2xl text-sm font-mono text-[var(--text-muted)]">
-              No hay slides. Agregá uno para empezar.
+        {/* Instagram story prompt (Creatibro) */}
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Sparkles size={16} className="text-[var(--accent)]" />
+              <h2 className="text-sm font-mono uppercase tracking-widest text-[var(--text-muted)]">
+                Prompt story IG (Creatibro)
+              </h2>
             </div>
-          )}
-
-          <div className="space-y-4">
-            {carousel.map((slide, i) => (
-              <div
-                key={i}
-                className="p-4 bg-black/30 border border-white/10 rounded-2xl space-y-3"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="text-[10px] font-mono text-[var(--accent)] uppercase tracking-widest">
-                    Slide {i + 1} / {carousel.length}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => moveSlide(i, -1)}
-                      disabled={i === 0}
-                      className="px-2 py-1 text-xs font-mono text-[var(--text-muted)] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                      title="Subir"
-                    >
-                      ↑
-                    </button>
-                    <button
-                      onClick={() => moveSlide(i, 1)}
-                      disabled={i === carousel.length - 1}
-                      className="px-2 py-1 text-xs font-mono text-[var(--text-muted)] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                      title="Bajar"
-                    >
-                      ↓
-                    </button>
-                    <button
-                      onClick={() => removeSlide(i)}
-                      className="px-2 py-1 text-xs text-red-400/70 hover:text-red-400 transition-colors"
-                      title="Eliminar"
-                    >
-                      <Trash2 size={12} />
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-[9px] font-mono text-[var(--text-dim)] uppercase tracking-widest mb-1">
-                    Heading
-                  </label>
-                  <input
-                    type="text"
-                    value={slide.heading ?? ""}
-                    onChange={(e) => updateSlide(i, "heading", e.target.value)}
-                    className="w-full px-3 py-2 bg-black/50 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-[var(--accent)]/50 transition-colors"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[9px] font-mono text-[var(--text-dim)] uppercase tracking-widest mb-1">
-                    Body
-                  </label>
-                  <textarea
-                    value={slide.body ?? ""}
-                    onChange={(e) => updateSlide(i, "body", e.target.value)}
-                    rows={3}
-                    className="w-full px-3 py-2 bg-black/50 border border-white/10 rounded-lg text-sm text-white resize-y focus:outline-none focus:border-[var(--accent)]/50 transition-colors"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[9px] font-mono text-[var(--text-dim)] uppercase tracking-widest mb-1">
-                    Footer
-                  </label>
-                  <input
-                    type="text"
-                    value={slide.footer ?? ""}
-                    onChange={(e) => updateSlide(i, "footer", e.target.value)}
-                    className="w-full px-3 py-2 bg-black/50 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-[var(--accent)]/50 transition-colors"
-                  />
-                </div>
-              </div>
-            ))}
+            <button
+              onClick={() => copyPrompt("story")}
+              disabled={!storyPrompt}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-mono text-[var(--text-muted)] hover:text-white hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              {copiedPrompt === "story" ? <Check size={12} /> : <Link2 size={12} />}
+              {copiedPrompt === "story" ? "Copiado" : "Copiar para Creatibro"}
+            </button>
           </div>
+          <textarea
+            value={storyPrompt}
+            onChange={(e) => setStoryPrompt(e.target.value)}
+            rows={5}
+            className="w-full p-4 bg-black/30 border border-white/10 rounded-2xl text-sm text-white leading-relaxed resize-y focus:outline-none focus:border-[var(--accent)]/50 transition-colors"
+            placeholder="Brief corto para Creatibro (1 slide vertical 9:16)..."
+          />
+          <p className="mt-2 text-[10px] font-mono text-[var(--text-dim)]">
+            {storyPrompt.length} caracteres · Story siempre individual de este builder.
+          </p>
         </section>
 
         {/* Story video from builder */}

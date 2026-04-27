@@ -6,6 +6,7 @@ import Link from "next/link";
 import { isEnabled } from "@/lib/feature-flags";
 import { EndorsementsSection } from "@/components/social/EndorsementsSection";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
+import { AuthoredPostsCard } from "@/components/profile/AuthoredPostsCard";
 import { MobileBottomNav, MobileStickyHeader } from "@/components/profile/MobileProfileUI";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWeek } from "@/lib/showcase-service";
@@ -241,6 +242,9 @@ export default async function ProfilePage({ params, searchParams }: Props) {
           isCustomDomain={isCustomDomain}
           isWinner={profile.isWinner}
         />
+
+        {/* BDLS / authored blog posts featured for this builder */}
+        <AuthoredPostsCard username={profile.username} accentColor={profile.accentColor} />
 
         {/* Huevsite Grid (Client Component for animations) */}
         <div className="relative z-10">

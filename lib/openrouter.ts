@@ -17,17 +17,22 @@ interface InterviewData {
   quickfireAdvice: string;
   quickfireWhatsNext: string;
   quickfireWhereToFind: string;
-  // Other builders that won the same week. When present, the generated
-  // content mentions them (with @handle + profile link) so each post in a
-  // multi-winner week cross-references its siblings.
+  // Other builders that won the same week. When present, the per-builder
+  // posts (blog/twitter/linkedin) cross-reference them. The carousel prompt
+  // produced here is SOLO — when there are co-winners, the API route
+  // overrides it with `generateJointCarouselPrompt` once all forms arrive.
   coWinners?: Array<{ name: string; username: string }>;
   weekLabel?: string;
 }
 
-export interface CarouselSlide {
-  heading: string;
-  body: string;
-  footer?: string;
+// Subset of InterviewData carried per-builder for the joint carousel prompt.
+export interface JointCarouselBuilder {
+  name: string;
+  username: string;
+  introWhoAreYou: string;
+  projectsMainProject: string;
+  projectsProblemSolved: string;
+  projectsStack: string;
 }
 
 interface GeneratedContent {
@@ -38,14 +43,18 @@ interface GeneratedContent {
   linkedinPost: string;
   twitterPost: string;
   instagramCaption: string;
-  instagramCarousel: CarouselSlide[];
+  // Natural-language briefs designed to be pasted into Creatibro
+  // (creatibro.com) — a 1-2 sentence brief is what the tool expects;
+  // it picks slide layout, copy, and hashtags using Voice DNA.
+  instagramCarouselPrompt: string;
+  instagramStoryPrompt: string;
 }
 
 const SYSTEM_PROMPT = `Sos un redactor de contenido para huevsite.io, una plataforma de builders que construyen productos en público.
 
-Tu tarea es procesar las respuestas de una entrevista escrita al "Builder de la Semana" y generar 5 piezas de contenido.
+Tu tarea es procesar las respuestas de una entrevista escrita al "Builder de la Semana" y generar 6 piezas de contenido.
 
-REGLAS:
+REGLAS GENERALES:
 - Todo en español argentino (usá "vos", no "tú")
 - Tono: cercano, directo, como contarle a un amigo sobre alguien interesante que conociste
 - Usá quotes textuales del builder (entre comillas) para darle autenticidad
@@ -61,48 +70,46 @@ FORMATO DE RESPUESTA (JSON estricto):
   "linkedinPost": "Post para LinkedIn (máx 1300 chars). Hook fuerte, 2-3 párrafos cortos, quote, CTA al blog. Hashtags: #buildinpublic #huevsite",
   "twitterPost": "Tweet único (máx 270 chars). Nombre, quote corta, qué construye, link al blog. #buildinpublic #huevsite",
   "instagramCaption": "Caption para IG (máx 2200 chars). Storytelling con saltos de línea, emojis moderados, hashtags al final",
-  "instagramCarousel": [
-    {
-      "heading": "SLIDE 1 — COVER. Nombre del builder en grande. Subtítulo: Builder de la Semana. Frase corta de enganche.",
-      "body": "Texto principal del slide",
-      "footer": "Texto chico al pie (opcional)"
-    },
-    {
-      "heading": "SLIDE 2 — QUIÉN ES. Nombre + una línea de contexto (de dónde es, qué hace).",
-      "body": "2-3 oraciones sobre su background y cómo arrancó a buildear. Directo, sin relleno."
-    },
-    {
-      "heading": "SLIDE 3 — QUÉ CONSTRUYE. Nombre del proyecto principal.",
-      "body": "2-3 oraciones: qué problema resuelve, para quién, qué stack usa. Que se entienda sin ser dev."
-    },
-    {
-      "heading": "SLIDE 4 — QUOTE. La frase más potente del builder entre comillas.",
-      "body": "Solo la quote. Nada más. Que pegue."
-    },
-    {
-      "heading": "SLIDE 5 — EL DESAFÍO. Momento más difícil o aprendizaje clave.",
-      "body": "2-3 oraciones sobre qué le costó y qué aprendió. Lo que humaniza la historia."
-    },
-    {
-      "heading": "SLIDE 6 — CONSEJO. Un tip directo para otros builders.",
-      "body": "El mejor consejo que dio en la entrevista. Corto y memorable."
-    },
-    {
-      "heading": "SLIDE 7 — CTA. Conocé a @username en huevsite.io.",
-      "body": "Link al perfil + redes. Footer: 'Leé la entrevista completa en huevsite.io/blog'",
-      "footer": "huevsite.io"
-    }
-  ]
+  "instagramCarouselPrompt": "Brief de 1-3 oraciones para Creatibro que produzca un carrusel de 7 slides sobre este builder. Ver REGLAS PROMPT CREATIBRO abajo.",
+  "instagramStoryPrompt": "Brief de 1-2 oraciones para Creatibro que produzca UNA story de IG (1 slide) reflejando el perfil individual de este builder. Ver REGLAS PROMPT CREATIBRO abajo."
 }
 
-REGLAS PARA EL CARRUSEL:
-- 7 slides exactos
-- Cada slide tiene heading (título grande), body (texto principal), footer (opcional, pie de slide)
-- Estética: dark (#0a0a0a), acento verde lima (#C8FF00), tipografía bold sans-serif
-- Heading: máximo 8 palabras. Body: máximo 40 palabras por slide. Footer: máximo 5 palabras
-- Slide 1 es la tapa, slide 7 es el CTA. Los del medio cuentan la historia
-- Tono: directo, informal argentino, como un reel contando una historia
-- La quote del slide 4 debe ser textual de las respuestas del builder`;
+REGLAS PROMPT CREATIBRO (instagramCarouselPrompt + instagramStoryPrompt):
+- Creatibro toma briefs cortos en lenguaje natural y arma el visual él solo (no le mandes JSON ni listas de slides).
+- Estructura recomendada: "[Mensaje central en 1 oración]. Para [audiencia: builders/founders early-stage en LATAM]. Quiero que sientan [emoción] y [CTA: visiten el perfil / lean el blog / lo sigan]. Tono: [directo, informal argentino, build-in-public]. [Detalle puntual: nombre, proyecto, quote, stack]."
+- Carrusel: pedí explícitamente "7 slides" en el brief y mencioná cover + cuerpo + CTA final.
+- Story: pedí "1 slide vertical 9:16, copy ultra corto (max 8 palabras visibles)".
+- NO incluyas hashtags dentro del prompt (Creatibro los agrega).
+- Largo objetivo: carousel 4-6 oraciones, story 2-3 oraciones.
+
+CARROUSEL — qué información incluir en el brief:
+- Nombre y @handle del builder
+- 1 línea de quién es (ciudad/role)
+- Nombre del proyecto + qué problema resuelve
+- 1 quote textual potente del builder (entre comillas)
+- CTA: "conocelo en huevsite.io/[username]"
+
+STORY — qué información incluir en el brief:
+- Nombre del builder + foto/avatar
+- 1 hook ("Builder de la Semana en huevsite.io")
+- CTA: link al perfil`;
+
+const JOINT_CAROUSEL_SYSTEM_PROMPT = `Sos un redactor de contenido para huevsite.io.
+
+Tu tarea: armar UN solo prompt en lenguaje natural para Creatibro (creatibro.com) que produzca un carrusel de Instagram de 7 slides presentando a VARIOS builders que ganaron Builder de la Semana en la misma semana (empate).
+
+REGLAS:
+- Español argentino (usá "vos")
+- Tono: directo, informal, build-in-public
+- Devolvé SOLO el prompt como string JSON: { "prompt": "..." }
+- El prompt debe ser de 5-8 oraciones, sin JSON ni listas de slides adentro
+- Mencioná a cada builder por nombre y @handle, qué construye cada uno (1 línea), y un punto en común que justifique el empate
+- CTA final: "conocelos en huevsite.io"
+- NO incluyas hashtags dentro del prompt (Creatibro los agrega)
+- Estructura sugerida: hook → presentación de cada builder → qué los une → CTA
+
+FORMATO DE RESPUESTA (JSON estricto):
+{ "prompt": "..." }`;
 
 function formatInterviewForAI(data: InterviewData): string {
   const hasCoWinners = (data.coWinners || []).length > 0;
@@ -111,7 +118,7 @@ function formatInterviewForAI(data: InterviewData): string {
         .map((c) => `- ${c.name} (@${c.username}) — https://huevsite.io/${c.username}`)
         .join("\n")}
 
-INSTRUCCIÓN IMPORTANTE: Este post es SOBRE ${data.builderName}, pero al final del blog (sección "Dónde encontrarlo" o antes del footer) agregá una nota corta que diga "Esta semana también ganaron:" y listá a los co-ganadores con link al perfil (huevsite.io/username). En el tweet y LinkedIn mencioná a los co-ganadores con "@" y sus handles. En la caption de Instagram sumá una línea al final mencionándolos. El carrusel no los menciona (se mantiene centrado en el protagonista).`
+INSTRUCCIÓN IMPORTANTE: Este blog post + tweet + LinkedIn + caption son SOBRE ${data.builderName} (post individual). En el blog, antes del footer, agregá una nota corta "Esta semana también ganaron:" listando a los co-ganadores con link al perfil. En tweet y LinkedIn mencioná a los co-ganadores con "@" + handle. En la caption sumá una línea final mencionándolos. Para los prompts de Creatibro (carrusel + story): el carrusel acá lo generás SOLO sobre ${data.builderName} — el sistema lo va a sobrescribir con un carrusel JOINT cuando todos los co-ganadores hayan completado el form. La story SIEMPRE es individual sobre ${data.builderName}.`
     : "";
 
   return `ENTREVISTA — Builder de la Semana
@@ -157,9 +164,30 @@ Un consejo para builders: ${data.quickfireAdvice}
 ¿Dónde te encuentran?: ${data.quickfireWhereToFind}`;
 }
 
-export async function generateInterviewContent(
-  data: InterviewData
-): Promise<GeneratedContent> {
+function formatJointBuildersForAI(
+  builders: JointCarouselBuilder[],
+  weekLabel?: string
+): string {
+  return `Co-ganadores Builder de la Semana${weekLabel ? ` (${weekLabel})` : ""}:
+
+${builders
+  .map(
+    (b, i) => `BUILDER ${i + 1}
+Nombre: ${b.name}
+Handle: @${b.username}
+Perfil: https://huevsite.io/${b.username}
+Quién es: ${b.introWhoAreYou}
+Proyecto principal: ${b.projectsMainProject}
+Problema que resuelve: ${b.projectsProblemSolved}
+Stack: ${b.projectsStack}`
+  )
+  .join("\n\n")}`;
+}
+
+async function callOpenRouter(
+  systemPrompt: string,
+  userPrompt: string
+): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error("OPENROUTER_API_KEY not configured");
 
@@ -174,8 +202,8 @@ export async function generateInterviewContent(
     body: JSON.stringify({
       model: "google/gemini-2.0-flash-001",
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: formatInterviewForAI(data) },
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
       ],
       response_format: { type: "json_object" },
       temperature: 0.7,
@@ -190,6 +218,30 @@ export async function generateInterviewContent(
   const json = await res.json();
   const content = json.choices?.[0]?.message?.content;
   if (!content) throw new Error("No content in OpenRouter response");
+  return content;
+}
 
+export async function generateInterviewContent(
+  data: InterviewData
+): Promise<GeneratedContent> {
+  const content = await callOpenRouter(SYSTEM_PROMPT, formatInterviewForAI(data));
   return JSON.parse(content) as GeneratedContent;
+}
+
+// Generate ONE Creatibro prompt presenting all co-winners of the same week.
+// The result replaces `generated_instagram_carousel_prompt` on every
+// co-winner's interview row once the last form is submitted.
+export async function generateJointCarouselPrompt(
+  builders: JointCarouselBuilder[],
+  weekLabel?: string
+): Promise<string> {
+  const content = await callOpenRouter(
+    JOINT_CAROUSEL_SYSTEM_PROMPT,
+    formatJointBuildersForAI(builders, weekLabel)
+  );
+  const parsed = JSON.parse(content) as { prompt?: string };
+  if (!parsed.prompt || typeof parsed.prompt !== "string") {
+    throw new Error("Joint carousel response missing 'prompt' field");
+  }
+  return parsed.prompt;
 }

@@ -32,7 +32,8 @@ const EDITABLE_FIELDS = [
   "generated_twitter_post",
   "generated_linkedin_post",
   "generated_instagram_caption",
-  "generated_instagram_carousel",
+  "generated_instagram_carousel_prompt",
+  "generated_instagram_story_prompt",
 ] as const;
 
 type EditableField = (typeof EDITABLE_FIELDS)[number];
@@ -65,17 +66,21 @@ export async function PATCH(
     return NextResponse.json({ error: "Sin cambios." }, { status: 400 });
   }
 
-  // Validate carousel shape if present
-  if ("generated_instagram_carousel" in updates) {
-    const carousel = updates.generated_instagram_carousel;
-    if (carousel !== null && !Array.isArray(carousel)) {
-      return NextResponse.json(
-        { error: "Carrusel debe ser un array." },
-        { status: 400 }
-      );
+  // Validate prompt fields if present (must be string or null)
+  for (const field of [
+    "generated_instagram_carousel_prompt",
+    "generated_instagram_story_prompt",
+  ] as const) {
+    if (field in updates) {
+      const v = updates[field];
+      if (v !== null && typeof v !== "string") {
+        return NextResponse.json(
+          { error: `${field} debe ser texto.` },
+          { status: 400 }
+        );
+      }
     }
   }
-
 
   // Fetch current state to get blog_post_id if blog content is being edited
   const { data: current } = await supabase

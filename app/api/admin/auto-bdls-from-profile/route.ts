@@ -324,7 +324,8 @@ export async function POST(request: NextRequest) {
         generated_linkedin_post: aiOut.linkedinPost,
         generated_twitter_post: aiOut.twitterPost,
         generated_instagram_caption: aiOut.instagramCaption,
-        generated_instagram_carousel: aiOut.instagramCarousel,
+        generated_instagram_carousel_prompt: aiOut.instagramCarouselPrompt,
+        generated_instagram_story_prompt: aiOut.instagramStoryPrompt,
         blog_post_id: blogPostId,
       })
       .select("id")

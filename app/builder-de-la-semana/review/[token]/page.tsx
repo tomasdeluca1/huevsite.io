@@ -14,18 +14,13 @@ import {
   Linkedin,
   Instagram,
   LayoutGrid,
+  Sparkles,
   Check,
   MessageSquare,
   Video,
   Upload,
   Trash2,
 } from "lucide-react";
-
-interface CarouselSlide {
-  heading?: string;
-  body?: string;
-  footer?: string;
-}
 
 interface VideoInfo {
   uploadedAt: string | null;
@@ -45,7 +40,8 @@ interface ReviewData {
     twitterPost: string | null;
     linkedinPost: string | null;
     instagramCaption: string | null;
-    instagramCarousel: CarouselSlide[];
+    instagramCarouselPrompt: string | null;
+    instagramStoryPrompt: string | null;
   };
   video: VideoInfo | null;
 }
@@ -422,43 +418,33 @@ export default function BuilderReviewPage() {
                 </Section>
               )}
 
-              {/* Instagram carousel */}
-              {state.data.content.instagramCarousel.length > 0 && (
+              {/* Instagram carousel prompt (for Creatibro) */}
+              {state.data.content.instagramCarouselPrompt && (
                 <Section
                   icon={<LayoutGrid size={16} />}
-                  label={`Carrusel de Instagram · ${state.data.content.instagramCarousel.length} slides`}
+                  label="Brief carrusel de Instagram"
                 >
-                  <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 snap-x">
-                    {state.data.content.instagramCarousel.map((slide, i) => (
-                      <div
-                        key={i}
-                        className="shrink-0 w-[260px] aspect-square rounded-2xl border border-white/10 p-6 flex flex-col justify-between snap-center"
-                        style={{
-                          background:
-                            i === 0
-                              ? "linear-gradient(135deg, #0a0a0a 0%, #1a1a0a 100%)"
-                              : "#0a0a0a",
-                        }}
-                      >
-                        <div>
-                          <div className="text-[10px] font-mono text-[#C8FF00]/60 uppercase tracking-widest mb-3">
-                            {i + 1} / {state.data.content.instagramCarousel.length}
-                          </div>
-                          <div className="text-base font-extrabold text-white leading-tight mb-3">
-                            {slide.heading}
-                          </div>
-                          <div className="text-xs text-zinc-400 leading-relaxed">
-                            {slide.body}
-                          </div>
-                        </div>
-                        {slide.footer && (
-                          <div className="text-[10px] text-[#C8FF00] font-mono mt-auto pt-3">
-                            {slide.footer}
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                  <div className="p-6 bg-white/[0.02] border border-white/10 rounded-2xl text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap">
+                    {state.data.content.instagramCarouselPrompt}
                   </div>
+                  <p className="mt-2 text-[11px] text-zinc-500 font-mono">
+                    Esto es lo que le pasamos a la herramienta que arma el carrusel visual.
+                  </p>
+                </Section>
+              )}
+
+              {/* Instagram story prompt (for Creatibro) */}
+              {state.data.content.instagramStoryPrompt && (
+                <Section
+                  icon={<Sparkles size={16} />}
+                  label="Brief story de Instagram"
+                >
+                  <div className="p-6 bg-white/[0.02] border border-white/10 rounded-2xl text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap">
+                    {state.data.content.instagramStoryPrompt}
+                  </div>
+                  <p className="mt-2 text-[11px] text-zinc-500 font-mono">
+                    Brief para una story de IG que refleja tu perfil.
+                  </p>
                 </Section>
               )}
             </div>

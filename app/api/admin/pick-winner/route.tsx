@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/admin-auth";
 import { Resend } from "resend";
 import { render } from "@react-email/render";
-import { getWeekString } from "@/lib/showcase-service";
+import { getWeekString, getCurrentWeek } from "@/lib/showcase-service";
 import { WinnerEmail } from "@/components/emails/WinnerEmail";
 import React from "react";
 import { postBuilderOfTheWeek } from "@/lib/twitter";
@@ -13,10 +13,20 @@ export const dynamic = "force-dynamic";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Para obtener la semana anterior (útil si el cron corre apenas empieza la nueva)
-function getPreviousWeek(): string {
-  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  return getWeekString(yesterday);
+// The "week to close" is the ISO week that just ended in Argentina time.
+// - If the cron fires Sunday 23:00 ART (= Mon 02:00 UTC), today's argDay is
+//   Sun (0); the week ends today, so close the current ISO week.
+// - If it fires Monday early (any time before next Saturday in ART),
+//   yesterday is part of the just-closed week, so use yesterday's ISO week.
+// This is robust to clock drift and to manual reruns hours after the cron
+// time, which is what bit us when the W17 pick fired at 07:36 UTC.
+function getWeekToClose(): string {
+  const argNow = new Date(Date.now() - 3 * 60 * 60 * 1000);
+  const argDay = argNow.getUTCDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
+  if (argDay === 0) {
+    return getCurrentWeek();
+  }
+  return getWeekString(new Date(Date.now() - 24 * 60 * 60 * 1000));
 }
 
 async function handlePickWinner(request: NextRequest) {
@@ -28,10 +38,27 @@ async function handlePickWinner(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const requestedWeek = searchParams.get("week");
+    const force = searchParams.get("force") === "1";
 
-    // Si el cron corre el Domingo (nuevo ciclo para el usuario),
-    // probablemente quiere cerrar la semana que pasó.
-    const week = requestedWeek || getPreviousWeek();
+    const computedWeek = getWeekToClose();
+    const week = requestedWeek || computedWeek;
+
+    // Guard against premature picks. Picking a week that hasn't ended yet
+    // (= the current ISO week, or any future week) closes the voting window
+    // before users have actually had time to nominate, and freezes the
+    // tally to whatever was in the table when the call ran. That's exactly
+    // how W17 ended up locked to a single early nomination on Apr 20 even
+    // though the week ran through Apr 26. Require ?force=1 to override.
+    const currentWeek = getCurrentWeek();
+    if (week >= currentWeek && !force) {
+      return NextResponse.json(
+        {
+          error: `La semana ${week} todavía está en curso. Esperá al cierre o usá ?force=1 para forzar.`,
+          currentWeek,
+        },
+        { status: 400 }
+      );
+    }
 
     // 1. Verificar si ya hay ganador para esa semana
     const { data: existingWinner } = await supabase

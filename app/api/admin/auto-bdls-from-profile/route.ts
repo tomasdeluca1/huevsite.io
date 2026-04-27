@@ -310,25 +310,37 @@ export async function POST(request: NextRequest) {
     const { data: authUser } = await supabase.auth.admin.getUserById(profile.id);
     const builderEmail = authUser?.user?.email || null;
 
-    const { error: interviewErr } = await supabase.from("builder_interviews").insert({
-      token,
-      builder_username: profile.username,
-      builder_email: builderEmail,
-      builder_name: profile.name || profile.username,
-      expires_at: expiresAt,
-      status: "ready",
-      submitted_at: new Date().toISOString(),
-      generated_blog_markdown: aiOut.blogMarkdown,
-      generated_linkedin_post: aiOut.linkedinPost,
-      generated_twitter_post: aiOut.twitterPost,
-      generated_instagram_caption: aiOut.instagramCaption,
-      generated_instagram_carousel: aiOut.instagramCarousel,
-      blog_post_id: blogPostId,
-    });
+    const { data: insertedInterview, error: interviewErr } = await supabase
+      .from("builder_interviews")
+      .insert({
+        token,
+        builder_username: profile.username,
+        builder_email: builderEmail,
+        builder_name: profile.name || profile.username,
+        expires_at: expiresAt,
+        status: "ready",
+        submitted_at: new Date().toISOString(),
+        generated_blog_markdown: aiOut.blogMarkdown,
+        generated_linkedin_post: aiOut.linkedinPost,
+        generated_twitter_post: aiOut.twitterPost,
+        generated_instagram_caption: aiOut.instagramCaption,
+        generated_instagram_carousel: aiOut.instagramCarousel,
+        blog_post_id: blogPostId,
+      })
+      .select("id")
+      .single();
 
     if (interviewErr) {
       console.error("auto-bdls interview insert error:", interviewErr);
       // Non-fatal: blog post + winner are the load-bearing pieces.
+    } else if (insertedInterview && blogPostId) {
+      // Backfill the reverse pointer so /admin/interviews and the blog
+      // metadata stay consistent. Either side alone is enough for the
+      // approve flow but having both makes audits/joins simpler.
+      await supabase
+        .from("blog_posts")
+        .update({ interview_id: insertedInterview.id })
+        .eq("id", blogPostId);
     }
 
     generated = true;

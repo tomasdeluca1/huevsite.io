@@ -1,17 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/admin-auth";
-import { Resend } from "resend";
-import { render } from "@react-email/render";
 import { getWeekString, getCurrentWeek } from "@/lib/showcase-service";
-import { WinnerEmail } from "@/components/emails/WinnerEmail";
-import React from "react";
 import { postBuilderOfTheWeek } from "@/lib/twitter";
 import { resolveXHandles } from "@/lib/twitter-utils";
-import crypto from "crypto";
+import {
+  processWinnerForWeek,
+  regenerateJointCarouselForWeek,
+  type ProcessResult,
+} from "@/lib/bdls-content-pipeline";
 
 export const dynamic = "force-dynamic";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 // The "week to close" is the ISO week that just ended in Argentina time.
 // - If the cron fires Sunday 23:00 ART (= Mon 02:00 UTC), today's argDay is
@@ -138,79 +136,46 @@ async function handlePickWinner(request: NextRequest) {
       return NextResponse.json({ error: rpcError.message }, { status: 500 });
     }
 
-    // 5. Obtener emails desde auth.users usando service role (NO están en profiles)
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://huevsite.io";
-    const emailResults: { username: string; sent: boolean; formUrl?: string; error?: string }[] = [];
+    // 5. Para cada winner: armar blog draft + interview row + email + drafts
+    //    de Typefully a través del pipeline compartido. El pipeline reusa
+    //    el form previo del builder si está dentro de los últimos 60 días,
+    //    o sintetiza desde su perfil/blocks si no.
+    const fullProfileSelect = "id, username, name, tagline, location, github_handle, image";
+    const { data: enrichedProfiles } = await supabase
+      .from("profiles")
+      .select(fullProfileSelect)
+      .in("id", winnerIds);
 
-    for (const winnerProfile of winnerProfiles) {
+    const results: ProcessResult[] = [];
+    for (const winnerProfile of (enrichedProfiles || winnerProfiles)) {
       try {
-        console.log(`Buscando email para ${winnerProfile.username}...`);
-        const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(winnerProfile.id);
-
-        if (authError || !authUser?.user?.email) {
-          console.error(`No se encontró email para ${winnerProfile.username}:`, authError?.message);
-          emailResults.push({ username: winnerProfile.username, sent: false, error: authError?.message || "Sin email en auth.users" });
-          continue;
-        }
-
-        const userEmail = authUser.user.email;
-
-        // Auto-create builder interview invitation (skip if one already exists)
-        let formUrl: string | undefined;
-        const { data: existingInterview } = await supabase
-          .from("builder_interviews")
-          .select("id, token, status")
-          .eq("builder_username", winnerProfile.username)
-          .in("status", ["invited", "submitted", "generating", "ready"])
-          .maybeSingle();
-
-        if (existingInterview) {
-          formUrl = `${siteUrl}/builder-de-la-semana/${existingInterview.token}`;
-          console.log(`Interview ya existe para ${winnerProfile.username}, reutilizando token`);
-        } else {
-          const token = crypto.randomBytes(32).toString("hex");
-          const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-
-          const { error: interviewErr } = await supabase
-            .from("builder_interviews")
-            .insert({
-              token,
-              builder_username: winnerProfile.username,
-              builder_email: userEmail,
-              builder_name: winnerProfile.name || winnerProfile.username,
-              expires_at: expiresAt,
-              status: "invited",
-            });
-
-          if (interviewErr) {
-            console.error(`Error creando interview para ${winnerProfile.username}:`, interviewErr);
-          } else {
-            formUrl = `${siteUrl}/builder-de-la-semana/${token}`;
-            console.log(`✅ Interview creada para ${winnerProfile.username}`);
-          }
-        }
-
-        const html = await render(
-          React.createElement(WinnerEmail, {
-            name: winnerProfile.name || winnerProfile.username,
-            username: winnerProfile.username,
-            week,
-            formUrl,
-          })
-        );
-
-        await resend.emails.send({
-          from: 'hi@huevsite.studio',
-          to: userEmail,
-          subject: '🏆 ¡Sos el builder de la semana en Huevsite!',
-          html,
+        const r = await processWinnerForWeek(supabase, {
+          profile: winnerProfile as any,
+          week,
+          sendEmail: true,
         });
+        results.push(r);
+        console.log(`✅ Pipeline OK ${winnerProfile.username} (${r.source})`);
+      } catch (err: any) {
+        console.error(`❌ Pipeline error ${winnerProfile.username}:`, err);
+        results.push({
+          username: winnerProfile.username,
+          blogPostId: null,
+          interviewId: null,
+          source: "synthesized",
+          emailSent: false,
+          emailError: err?.message || String(err),
+        });
+      }
+    }
 
-        console.log(`✅ Email enviado a ${userEmail} (${winnerProfile.username})`);
-        emailResults.push({ username: winnerProfile.username, sent: true, formUrl });
-      } catch (emailErr: any) {
-        console.error(`❌ Error enviando email a ${winnerProfile.username}:`, emailErr);
-        emailResults.push({ username: winnerProfile.username, sent: false, error: emailErr?.message });
+    // Multi-winner: regenerar el carrusel JOINT una sola vez después de
+    // armar todos los individuales.
+    if (winnerProfiles.length >= 2) {
+      try {
+        await regenerateJointCarouselForWeek(supabase, week);
+      } catch (e) {
+        console.error("Joint carousel regen error (non-fatal):", e);
       }
     }
 
@@ -244,7 +209,7 @@ async function handlePickWinner(request: NextRequest) {
       winners: winnerProfiles.map(w => w.username),
       week,
       votes: maxVotes,
-      emails: emailResults,
+      results,
     }, { status: 200 });
 
   } catch (error) {

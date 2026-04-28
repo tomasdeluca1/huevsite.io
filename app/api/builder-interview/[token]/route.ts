@@ -45,7 +45,12 @@ export async function GET(
     return NextResponse.json({ error: "expired" }, { status: 410 });
   }
 
-  if (interview.status !== "invited") {
+  // Allow re-editing while the interview is still in `invited` (cold
+  // open) or `ready` (cron-armed draft — builder can upgrade the AI
+  // content with their own words). Block once the admin has approved
+  // and `published` it; reopening would let the builder rewrite a
+  // post that's already live.
+  if (interview.status !== "invited" && interview.status !== "ready") {
     return NextResponse.json({
       error: "already_submitted",
       status: interview.status,
@@ -55,6 +60,27 @@ export async function GET(
   return NextResponse.json({
     builderName: interview.builder_name,
     builderUsername: interview.builder_username,
+    // Pre-populate the form with the answers we already have on file.
+    // Empty/null fields → fresh inputs. Cron auto-synthesized values
+    // → builder edits over them. Their previous form within the reuse
+    // window → builder edits the old answers.
+    prefill: {
+      intro_who_are_you: interview.intro_who_are_you || "",
+      intro_origin_story: interview.intro_origin_story || "",
+      intro_build_in_public: interview.intro_build_in_public || "",
+      projects_main_project: interview.projects_main_project || "",
+      projects_problem_solved: interview.projects_problem_solved || "",
+      projects_stack: interview.projects_stack || "",
+      projects_biggest_challenge: interview.projects_biggest_challenge || "",
+      projects_users_traction: interview.projects_users_traction || "",
+      projects_links: interview.projects_links || "",
+      quickfire_tool: interview.quickfire_tool || "",
+      quickfire_inspiration: interview.quickfire_inspiration || "",
+      quickfire_advice: interview.quickfire_advice || "",
+      quickfire_whats_next: interview.quickfire_whats_next || "",
+      quickfire_where_to_find: interview.quickfire_where_to_find || "",
+    },
+    isUpgradingDraft: interview.status === "ready" && !!interview.blog_post_id,
   });
 }
 
@@ -76,7 +102,10 @@ export async function POST(
     return NextResponse.json({ error: "Entrevista no encontrada." }, { status: 404 });
   }
 
-  if (interview.status !== "invited") {
+  // Same gate as GET — accept submits while `invited` (initial flow)
+  // or `ready` (builder upgrading the cron-armed draft). Anything past
+  // `published` stays locked.
+  if (interview.status !== "invited" && interview.status !== "ready") {
     return NextResponse.json({ error: "Ya fue enviada." }, { status: 409 });
   }
 
@@ -301,25 +330,68 @@ export async function POST(
     // listing can badge/filter these posts reliably.
     const blogTags = Array.from(new Set([...(generated.blogTags || []), "builder-de-la-semana"]));
 
-    // Create blog post (unpublished)
-    const slug = `builder-de-la-semana-${interview.builder_username}`;
-    const { data: blogPost } = await supabase
-      .from("blog_posts")
-      .insert({
-        slug,
-        title: generated.blogTitle,
-        excerpt: generated.blogExcerpt,
-        content: generated.blogMarkdown,
-        date: new Date().toISOString().split("T")[0],
-        tags: blogTags,
-        author_name: authorName,
-        author_username: authorUsername,
-        author_avatar_url: authorAvatarUrl,
-        is_published: false,
-        interview_id: interview.id,
-      })
-      .select("id")
-      .single();
+    // Slug aligned with the cron pipeline so a builder upgrading a
+    // cron-armed draft regenerates THE SAME blog post (instead of
+    // duplicating). The week suffix also makes future repeat winners
+    // safe (each pick gets its own slug).
+    const slugWeek = (weekLabel || "").toLowerCase();
+    const slug = slugWeek
+      ? `builder-de-la-semana-${interview.builder_username}-${slugWeek}`
+      : `builder-de-la-semana-${interview.builder_username}`;
+
+    // Resolve the target blog row: prefer the one already linked from
+    // the interview (set by the cron), then fall back to slug match.
+    let targetBlogId: string | null = interview.blog_post_id || null;
+    if (!targetBlogId) {
+      const { data: bySlug } = await supabase
+        .from("blog_posts")
+        .select("id")
+        .eq("slug", slug)
+        .maybeSingle();
+      targetBlogId = bySlug?.id || null;
+    }
+
+    let blogPost: { id: string } | null = null;
+    if (targetBlogId) {
+      // Builder is upgrading a draft we (or the cron) already armed.
+      // Update in place; keep is_published=false so the admin still
+      // gets to review the regenerated copy.
+      const { error: updErr } = await supabase
+        .from("blog_posts")
+        .update({
+          title: generated.blogTitle,
+          excerpt: generated.blogExcerpt,
+          content: generated.blogMarkdown,
+          tags: blogTags,
+          author_name: authorName,
+          author_username: authorUsername,
+          author_avatar_url: authorAvatarUrl,
+          is_published: false,
+          interview_id: interview.id,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", targetBlogId);
+      if (!updErr) blogPost = { id: targetBlogId };
+    } else {
+      const { data: inserted } = await supabase
+        .from("blog_posts")
+        .insert({
+          slug,
+          title: generated.blogTitle,
+          excerpt: generated.blogExcerpt,
+          content: generated.blogMarkdown,
+          date: new Date().toISOString().split("T")[0],
+          tags: blogTags,
+          author_name: authorName,
+          author_username: authorUsername,
+          author_avatar_url: authorAvatarUrl,
+          is_published: false,
+          interview_id: interview.id,
+        })
+        .select("id")
+        .single();
+      blogPost = inserted ?? null;
+    }
 
     if (blogPost) {
       await supabase

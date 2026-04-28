@@ -162,6 +162,7 @@ async function handlePickWinner(request: NextRequest) {
           username: winnerProfile.username,
           blogPostId: null,
           interviewId: null,
+          formUrl: null,
           source: "synthesized",
           emailSent: false,
           emailError: err?.message || String(err),

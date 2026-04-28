@@ -65,7 +65,10 @@ export const WinnerEmail: React.FC<Readonly<WinnerEmailProps>> = ({
       </a>
     </div>
 
-    {/* Interview form CTA */}
+    {/* Optional form CTA — frames the interview as an upgrade over the
+        auto-generated draft we already armed. No deadline pressure: the
+        nudge is "tu nota va con tus palabras", not "completala o no
+        publicamos". */}
     {formUrl && (
       <div style={{
         marginTop: '40px',
@@ -77,11 +80,13 @@ export const WinnerEmail: React.FC<Readonly<WinnerEmailProps>> = ({
       }}>
         <div style={{ fontSize: '28px', marginBottom: '12px' }}>🎙️</div>
         <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 8px 0' }}>
-          Completá tu perfil de Builder de la Semana
+          ¿Querés que la nota tenga tus palabras?
         </h3>
         <p style={{ fontSize: '15px', lineHeight: '1.6', color: '#a1a1aa', margin: '0 0 20px 0' }}>
-          Respondé unas preguntas cortas sobre lo que estás buildeando. Con eso armamos
-          tu nota para el blog, LinkedIn, X e Instagram.
+          Ya armamos un borrador con la info de tu huevsite. Si tenés 5 minutos, contestá
+          5 preguntas y la regeneramos con tus respuestas: cómo arrancaste, qué problema
+          resolvés, el momento más difícil, un consejo para builders. Las notas con voz
+          del builder se comparten más.
         </p>
         <a href={formUrl} style={{
           backgroundColor: '#C8FF00',
@@ -93,13 +98,10 @@ export const WinnerEmail: React.FC<Readonly<WinnerEmailProps>> = ({
           display: 'inline-block',
           fontSize: '16px',
         }}>
-          Completar formulario →
+          Mejorar la nota con tus palabras →
         </a>
-        <p style={{ fontSize: '13px', color: '#a1a1aa', marginTop: '16px', lineHeight: '1.6' }}>
-          <strong style={{ color: '#e4e4e7' }}>¿Qué te preguntamos?</strong> Quién sos, en qué proyecto estás laburando, qué stack usás y consejos para otros builders. Son 5 minutos.
-        </p>
-        <p style={{ fontSize: '12px', color: '#52525b', marginTop: '12px' }}>
-          El link expira en 7 días.
+        <p style={{ fontSize: '13px', color: '#52525b', marginTop: '16px', lineHeight: '1.6' }}>
+          Si no te llegan los 5 minutos, no pasa nada — publicamos el borrador como está.
         </p>
       </div>
     )}

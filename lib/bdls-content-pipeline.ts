@@ -39,6 +39,10 @@ export type ProcessResult = {
   username: string;
   blogPostId: string | null;
   interviewId: string | null;
+  /** Public URL of the interview form for this winner (only present
+   *  when a fresh interview row was just created — re-runs and the
+   *  idempotent path don't need to re-issue the link). */
+  formUrl: string | null;
   source: ProcessSource;
   emailSent: boolean;
   emailError?: string | null;
@@ -275,7 +279,8 @@ async function getCoWinners(supabase: any, week: string, excludeUserId: string) 
 async function sendWinnerEmail(
   supabase: any,
   profile: WinnerProfile,
-  week: string
+  week: string,
+  formUrl?: string
 ): Promise<{ sent: boolean; error?: string | null }> {
   try {
     const { data: authUser } = await supabase.auth.admin.getUserById(profile.id);
@@ -286,9 +291,11 @@ async function sendWinnerEmail(
         name: profile.name || profile.username,
         username: profile.username,
         week,
-        // Intentionally no formUrl — the draft is already auto-armed.
-        // The admin reviews it from /admin/interviews/[id]; the builder
-        // doesn't need to fill anything out.
+        // Optional: passes a link to the interview form. The cron-armed
+        // draft is already there; the form lets the builder upgrade it
+        // with their own words. Omitted on idempotent re-runs since the
+        // draft already exists.
+        formUrl,
       })
     );
     await resend.emails.send({
@@ -329,7 +336,7 @@ export async function processWinnerForWeek(
     .maybeSingle();
 
   // Idempotent path: same builder + same week, already armed → just
-  // confirm the email got sent and exit.
+  // confirm the email got sent and exit. No new form link issued.
   if (existingBlogPost && !regenerate) {
     let emailSent = false;
     let emailError: string | null = null;
@@ -342,6 +349,7 @@ export async function processWinnerForWeek(
       username: profile.username,
       blogPostId: existingBlogPost.id,
       interviewId: null,
+      formUrl: null,
       source: "existing",
       emailSent,
       emailError,
@@ -530,12 +538,19 @@ export async function processWinnerForWeek(
     console.error("Admin notification email error (non-fatal):", e);
   }
 
+  // Public URL the builder follows to upgrade the auto-armed draft
+  // with their own words. The form endpoint accepts both `invited` and
+  // `ready` rows, so this works against the synthetic interview row
+  // we just created.
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://huevsite.io";
+  const formUrl = `${siteUrl}/builder-de-la-semana/${token}`;
+
   // Winner email last so any earlier failure surfaces before we tell
   // the builder anything.
   let emailSent = false;
   let emailError: string | null = null;
   if (sendEmail) {
-    const r = await sendWinnerEmail(supabase, profile, week);
+    const r = await sendWinnerEmail(supabase, profile, week, formUrl);
     emailSent = r.sent;
     emailError = r.error ?? null;
   }
@@ -544,6 +559,7 @@ export async function processWinnerForWeek(
     username: profile.username,
     blogPostId,
     interviewId,
+    formUrl,
     source,
     emailSent,
     emailError,

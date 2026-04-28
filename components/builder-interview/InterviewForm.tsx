@@ -2,7 +2,15 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, ArrowLeft, Send, Loader2, Mic, X } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowLeft,
+  Send,
+  Loader2,
+  Mic,
+  X,
+  Pencil,
+} from "lucide-react";
 import { VoiceRecorder } from "./VoiceRecorder";
 
 interface InterviewFormProps {
@@ -126,23 +134,29 @@ export function InterviewForm({
   builderUsername,
   onComplete,
 }: InterviewFormProps) {
+  const PREVIEW_INDEX = SECTIONS.length;
   const [currentSection, setCurrentSection] = useState(0);
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showVoiceTip, setShowVoiceTip] = useState(true);
 
-  const section = SECTIONS[currentSection];
-  const isLast = currentSection === SECTIONS.length - 1;
+  const isPreview = currentSection === PREVIEW_INDEX;
+  const section = isPreview ? null : SECTIONS[currentSection];
+  const isLastFormSection = currentSection === SECTIONS.length - 1;
   const isFirst = currentSection === 0;
 
   const updateField = (key: string, value: string) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
-  const canAdvance = section.fields.every(
-    (f) => (formData[f.key] ?? "").trim().length > 0
-  );
+  const canAdvance = isPreview
+    ? SECTIONS.every((s) =>
+        s.fields.every((f) => (formData[f.key] ?? "").trim().length > 0)
+      )
+    : (section?.fields ?? []).every(
+        (f) => (formData[f.key] ?? "").trim().length > 0
+      );
 
   const handleSubmit = async () => {
     if (!canAdvance) return;
@@ -202,7 +216,7 @@ export function InterviewForm({
 
       {/* Progress bar */}
       <div className="flex gap-2 mb-12">
-        {SECTIONS.map((s, i) => (
+        {[...SECTIONS, { id: "preview" }].map((s, i) => (
           <div
             key={s.id}
             className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
@@ -213,83 +227,194 @@ export function InterviewForm({
       </div>
 
       <AnimatePresence mode="wait">
-        <motion.div
-          key={section.id}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.3 }}
-        >
-          {/* Section header */}
-          <div className="mb-10">
-            <p className="text-[10px] font-mono uppercase tracking-widest text-[#C8FF00] mb-2">
-              {currentSection + 1} / {SECTIONS.length}
-            </p>
-            <h2 className="text-3xl font-extrabold tracking-tight text-white">
-              {section.title}
-            </h2>
-            <p className="text-zinc-500 mt-2">{section.subtitle}</p>
-          </div>
+        {section ? (
+          <motion.div
+            key={section.id}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            {/* Section header */}
+            <div className="mb-10">
+              <p className="text-[10px] font-mono uppercase tracking-widest text-[#C8FF00] mb-2">
+                {currentSection + 1} / {SECTIONS.length}
+              </p>
+              <h2 className="text-3xl font-extrabold tracking-tight text-white">
+                {section.title}
+              </h2>
+              <p className="text-zinc-500 mt-2">{section.subtitle}</p>
+            </div>
 
-          {/* Fields */}
-          <div className="space-y-8">
-            {section.fields.map((field) => (
-              <div key={field.key}>
-                <label className="block text-sm font-bold text-zinc-300 mb-2">
-                  {field.label}
-                </label>
-                <div className="relative">
-                  {field.type === "textarea" ? (
-                    <textarea
-                      value={formData[field.key] ?? ""}
-                      onChange={(e) => updateField(field.key, e.target.value)}
-                      placeholder={field.placeholder}
-                      rows={4}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 pr-14 text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#C8FF00]/50 focus:ring-1 focus:ring-[#C8FF00]/20 transition-colors resize-none text-sm leading-relaxed"
-                    />
-                  ) : (
-                    <input
-                      type="text"
-                      value={formData[field.key] ?? ""}
-                      onChange={(e) => updateField(field.key, e.target.value)}
-                      placeholder={field.placeholder}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 pr-14 text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#C8FF00]/50 focus:ring-1 focus:ring-[#C8FF00]/20 transition-colors text-sm"
-                    />
-                  )}
-                  <div className="absolute top-3 right-3">
-                    <VoiceRecorder
-                      onTranscription={(text) => {
-                        const current = formData[field.key] ?? "";
-                        updateField(field.key, current ? `${current} ${text}` : text);
-                      }}
-                    />
+            {/* Fields */}
+            <div className="space-y-8">
+              {section.fields.map((field) => (
+                <div key={field.key}>
+                  <label className="block text-sm font-bold text-zinc-300 mb-2">
+                    {field.label}
+                  </label>
+                  <div className="relative">
+                    {field.type === "textarea" ? (
+                      <textarea
+                        value={formData[field.key] ?? ""}
+                        onChange={(e) => updateField(field.key, e.target.value)}
+                        placeholder={field.placeholder}
+                        rows={4}
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 pr-14 text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#C8FF00]/50 focus:ring-1 focus:ring-[#C8FF00]/20 transition-colors resize-none text-sm leading-relaxed"
+                      />
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData[field.key] ?? ""}
+                        onChange={(e) => updateField(field.key, e.target.value)}
+                        placeholder={field.placeholder}
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 pr-14 text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#C8FF00]/50 focus:ring-1 focus:ring-[#C8FF00]/20 transition-colors text-sm"
+                      />
+                    )}
+                    <div className="absolute top-3 right-3">
+                      <VoiceRecorder
+                        onTranscription={(text) => {
+                          const current = formData[field.key] ?? "";
+                          updateField(field.key, current ? `${current} ${text}` : text);
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
 
-          {/* Error */}
-          {error && (
-            <p className="text-red-400 text-sm mt-4">{error}</p>
-          )}
+            {/* Error */}
+            {error && (
+              <p className="text-red-400 text-sm mt-4">{error}</p>
+            )}
 
-          {/* Navigation */}
-          <div className="flex items-center justify-between mt-12">
-            <button
-              onClick={() => setCurrentSection((s) => s - 1)}
-              disabled={isFirst}
-              className={`flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium transition-colors ${
-                isFirst
-                  ? "opacity-0 pointer-events-none"
-                  : "text-zinc-400 hover:text-white hover:bg-white/5"
-              }`}
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Anterior
-            </button>
+            {/* Navigation */}
+            <div className="flex items-center justify-between mt-12">
+              <button
+                onClick={() => setCurrentSection((s) => s - 1)}
+                disabled={isFirst}
+                className={`flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium transition-colors ${
+                  isFirst
+                    ? "opacity-0 pointer-events-none"
+                    : "text-zinc-400 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Anterior
+              </button>
 
-            {isLast ? (
+              <button
+                onClick={() => setCurrentSection((s) => s + 1)}
+                disabled={!canAdvance}
+                className="flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-bold bg-[#C8FF00] text-black hover:bg-[#d4ff33] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {isLastFormSection ? "Revisar antes de enviar" : "Siguiente"}
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="preview"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            {/* Preview header */}
+            <div className="mb-10">
+              <p className="text-[10px] font-mono uppercase tracking-widest text-[#C8FF00] mb-2">
+                Revisión final
+              </p>
+              <h2 className="text-3xl font-extrabold tracking-tight text-white">
+                Repasá tus respuestas
+              </h2>
+              <p className="text-zinc-500 mt-2">
+                Editá lo que quieras antes de enviar. Cuando esté todo bien, dale a enviar.
+              </p>
+            </div>
+
+            {/* All sections, all fields, editable inline */}
+            <div className="space-y-12">
+              {SECTIONS.map((s, sIndex) => (
+                <div key={s.id}>
+                  <div className="flex items-center justify-between mb-5">
+                    <div>
+                      <p className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">
+                        {sIndex + 1} / {SECTIONS.length}
+                      </p>
+                      <h3 className="text-lg font-extrabold tracking-tight text-white">
+                        {s.title}
+                      </h3>
+                    </div>
+                    <button
+                      onClick={() => setCurrentSection(sIndex)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-mono uppercase tracking-widest text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
+                    >
+                      <Pencil className="w-3 h-3" />
+                      Ir a la sección
+                    </button>
+                  </div>
+
+                  <div className="space-y-6">
+                    {s.fields.map((field) => (
+                      <div key={field.key}>
+                        <label className="block text-sm font-bold text-zinc-300 mb-2">
+                          {field.label}
+                        </label>
+                        <div className="relative">
+                          {field.type === "textarea" ? (
+                            <textarea
+                              value={formData[field.key] ?? ""}
+                              onChange={(e) => updateField(field.key, e.target.value)}
+                              placeholder={field.placeholder}
+                              rows={4}
+                              className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 pr-14 text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#C8FF00]/50 focus:ring-1 focus:ring-[#C8FF00]/20 transition-colors resize-none text-sm leading-relaxed"
+                            />
+                          ) : (
+                            <input
+                              type="text"
+                              value={formData[field.key] ?? ""}
+                              onChange={(e) => updateField(field.key, e.target.value)}
+                              placeholder={field.placeholder}
+                              className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 pr-14 text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#C8FF00]/50 focus:ring-1 focus:ring-[#C8FF00]/20 transition-colors text-sm"
+                            />
+                          )}
+                          <div className="absolute top-3 right-3">
+                            <VoiceRecorder
+                              onTranscription={(text) => {
+                                const current = formData[field.key] ?? "";
+                                updateField(
+                                  field.key,
+                                  current ? `${current} ${text}` : text
+                                );
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Error */}
+            {error && (
+              <p className="text-red-400 text-sm mt-6">{error}</p>
+            )}
+
+            {/* Navigation */}
+            <div className="flex items-center justify-between mt-12">
+              <button
+                onClick={() => setCurrentSection(SECTIONS.length - 1)}
+                className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Anterior
+              </button>
+
               <button
                 onClick={handleSubmit}
                 disabled={!canAdvance || submitting}
@@ -307,18 +432,14 @@ export function InterviewForm({
                   </>
                 )}
               </button>
-            ) : (
-              <button
-                onClick={() => setCurrentSection((s) => s + 1)}
-                disabled={!canAdvance}
-                className="flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-bold bg-[#C8FF00] text-black hover:bg-[#d4ff33] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                Siguiente
-                <ArrowRight className="w-4 h-4" />
-              </button>
+            </div>
+            {!canAdvance && (
+              <p className="mt-3 text-[10px] font-mono text-zinc-600 text-right">
+                Te falta completar algún campo arriba.
+              </p>
             )}
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );

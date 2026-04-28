@@ -1,8 +1,8 @@
-import { createClient } from '@supabase/supabase-js';
 import { ProfileData, BlockData, getAdjustedAccentColor, MAX_FREE_BLOCKS } from './profile-types';
 import { scoreService } from './score-service';
 import { getProfileBadges } from './profile-badges';
 import { getFreeTrialState, hasProAccess } from './pro-access';
+import { createServiceRoleClient } from './supabase/service-role';
 
 // Public-profile rendering uses the service-role client because:
 //   1) The /[username] page must work for anonymous visitors, and after
@@ -12,11 +12,13 @@ import { getFreeTrialState, hasProAccess } from './pro-access';
 //   2) These reads are read-only and aggregated server-side before being
 //      shipped to the client; _transformProfile is responsible for not
 //      leaking sensitive fields back to the page.
+//
+// Use createServiceRoleClient (not a bare supabase-js client) so that the
+// `cache: "no-store"` fetch override applies — without it, Next.js caches
+// PostgREST responses across requests and the BDLS winner badge sticks to
+// whoever was latest when the page was first rendered.
 function getServerClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  return createServiceRoleClient();
 }
 
 export const profileService = {
@@ -49,13 +51,16 @@ export const profileService = {
         .from('showcase_winners')
         .select('week')
         .eq('user_id', profile.id)
-        .order('created_at', { ascending: false })
+        .order('week', { ascending: false })
         .limit(1)
         .maybeSingle(),
+      // Order by `week` (not `created_at`) — backfilled or re-inserted rows
+      // can have a fresh created_at while pointing at an older ISO week, and
+      // would otherwise spoof a stale winner as "current".
       supabase
         .from('showcase_winners')
         .select('week')
-        .order('created_at', { ascending: false })
+        .order('week', { ascending: false })
         .limit(1)
         .maybeSingle(),
       supabase

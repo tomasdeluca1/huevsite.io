@@ -46,12 +46,17 @@ export async function AuthoredPostsCard({ username, accentColor }: Props) {
     >
       <div className="huevsite-block bg-[var(--surface)] border border-[var(--border)] p-6 md:p-8">
         <div
-          className="flex items-center gap-2 mb-4 text-[10px] font-mono uppercase tracking-[0.2em]"
+          className="flex items-center gap-2 mb-1 text-[10px] font-mono uppercase tracking-[0.2em]"
           style={{ color: accentColor }}
         >
           <Sparkles size={12} />
-          {posts.length === 1 ? "Publicado en huevsite" : "Publicado en huevsite"}
+          Reconocimiento de la comunidad
         </div>
+        <p className="text-xs md:text-sm text-white/50 mb-4">
+          {posts.length === 1
+            ? "Post escrito por el equipo de huevsite sobre este builder, a partir de las nominaciones de la comunidad. No fue escrito por ellos."
+            : "Posts escritos por el equipo de huevsite sobre este builder, a partir de las nominaciones de la comunidad. No fueron escritos por ellos."}
+        </p>
 
         <ul className="space-y-4 md:space-y-5">
           {posts.map((post) => {

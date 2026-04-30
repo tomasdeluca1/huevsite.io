@@ -76,7 +76,6 @@ export async function GET(request: NextRequest) {
     let activationEmails = 0;
     let expiringEmails = 0;
     let expiredEmails = 0;
-    let lastChanceEmails = 0;
     let emailsSentThisRun = 0;
 
     const delayBetweenEmails = () =>
@@ -149,18 +148,10 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      if (now.getTime() - endsAt.getTime() >= 24 * 60 * 60 * 1000 && !profile.free_trial_last_chance_email_sent_at) {
-        await delayBetweenEmails();
-        const sent = await sendStageEmail(profile, "last_chance").catch((err) => {
-          console.error("Free trial last chance email error:", err);
-          return false;
-        });
-        if (sent) {
-          lastChanceEmails += 1;
-          emailsSentThisRun += 1;
-          await supabase.from("profiles").update({ free_trial_last_chance_email_sent_at: now.toISOString() }).eq("id", profile.id);
-        }
-      }
+      // last_chance ("¿Extrañás tus Insights?") was disabled — too
+      // invasive in practice (some users got 11 of these). Copy stays
+      // in FREE_TRIAL_EMAIL_COPY for one-off manual sends if we ever
+      // want to bring it back.
     }
 
     return NextResponse.json({
@@ -169,7 +160,6 @@ export async function GET(request: NextRequest) {
       activationEmails,
       expiringEmails,
       expiredEmails,
-      lastChanceEmails,
     });
   } catch (error: any) {
     console.error("Free trial lifecycle cron error:", error);

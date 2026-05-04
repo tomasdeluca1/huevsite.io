@@ -16,7 +16,7 @@ interface BlockSelectorProps {
   username?: string;
   twitterShareUnlocked?: boolean;
   extraBlocksFromShare?: number;
-  onShareUnlocked?: () => void;
+  onShareUnlocked?: (extraBlocks: number) => void;
 }
 
 export function BlockSelector({
@@ -43,6 +43,7 @@ export function BlockSelector({
     : MAX_FREE_BLOCKS + extraBlocksFromShare;
 
   const atLimit = currentBlockCount >= effectiveLimit;
+  const canUnlockExtraBlocks = subscriptionTier !== "pro" && !twitterShareUnlocked;
 
   const categories = [
     {
@@ -112,6 +113,33 @@ export function BlockSelector({
           </div>
         )}
       </div>
+
+      {canUnlockExtraBlocks && (
+        <button
+          onClick={() => setIsShareModalOpen(true)}
+          className="mb-3 w-full rounded-[1.4rem] border border-[var(--border-bright)] bg-[linear-gradient(135deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-4 text-left transition-all hover:border-[var(--accent)]/40 hover:bg-[var(--surface2)]"
+        >
+          <div className="flex items-start gap-3">
+            <div
+              className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border"
+              style={{ borderColor: `${accentColor}40`, backgroundColor: `${accentColor}12` }}
+            >
+              <Sparkles size={16} style={{ color: accentColor }} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--accent)]">
+                Bonus free tier
+              </div>
+              <p className="mt-1 text-sm font-bold text-white">
+                Desbloqueá +3 bloques gratis
+              </p>
+              <p className="mt-1 text-[12px] leading-relaxed text-[var(--text-dim)]">
+                Compartí tu huevsite en Twitter, pegá el link del tweet y te acreditamos los 3 bloques.
+              </p>
+            </div>
+          </div>
+        </button>
+      )}
 
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -211,9 +239,8 @@ export function BlockSelector({
         onClose={() => setIsShareModalOpen(false)}
         accentColor={accentColor}
         username={username}
-        onUnlocked={() => {
-          setIsShareModalOpen(false);
-          onShareUnlocked?.();
+        onUnlocked={(extraBlocks) => {
+          onShareUnlocked?.(extraBlocks);
         }}
       />
     </div>

@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Twitter, Sparkles, Loader2, CheckCircle2 } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import { lemonCheckoutUrl } from "@/lib/lemon-checkout-url";
 
@@ -11,7 +11,7 @@ interface Props {
   onClose: () => void;
   accentColor: string;
   username: string;
-  onUnlocked: () => void;
+  onUnlocked: (extraBlocks: number) => void;
 }
 
 type Step = "prompt" | "tweeted" | "verifying" | "unlocked";
@@ -52,8 +52,9 @@ export function ShareModal({ isOpen, onClose, accentColor, username, onUnlocked 
         body: JSON.stringify({ tweetUrl: tweetUrlInput })
       });
       if (res.ok) {
+        const data = await res.json().catch(() => ({}));
         setStep("unlocked");
-        onUnlocked();
+        onUnlocked(typeof data.extraBlocks === "number" ? data.extraBlocks : 3);
       } else {
         const data = await res.json();
         alert(data.error || "Error al verificar el tweet.");
@@ -144,9 +145,9 @@ function PromptView({
         <Sparkles size={28} style={{ color: accentColor }} />
       </div>
 
-      <div className="section-label mb-2 mx-auto justify-center">// límite del plan free</div>
+      <div className="section-label mb-2 mx-auto justify-center">// bonus del plan free</div>
       <h3 className="text-2xl font-extrabold tracking-tight mb-3">
-        Llegaste al límite.
+        Desbloqueá +3 bloques.
       </h3>
 
       {step === "prompt" && (
@@ -177,7 +178,7 @@ function PromptView({
               {isCapturing ? (
                 <><Loader2 size={16} className="animate-spin" /> Preparando tweet...</>
               ) : (
-                <><Twitter size={16} /> Twittear con screenshot →</>
+                <><Twitter size={16} /> Twittear y pedir +3 bloques →</>
               )}
             </button>
             <button

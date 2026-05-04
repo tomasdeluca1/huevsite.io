@@ -1216,8 +1216,8 @@ export default function DashboardPage() {
         autoSaveEnabled={autoSaveEnabled}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        onShareUnlocked={() => {
-          setProfile(prev => prev ? { ...prev, twitterShareUnlocked: true, extraBlocksFromShare: (prev.extraBlocksFromShare || 0) + 3 } : null);
+        onShareUnlocked={(extraBlocks) => {
+          setProfile(prev => prev ? { ...prev, twitterShareUnlocked: true, extraBlocksFromShare: extraBlocks } : null);
         }}
         visibleBlockCount={visibleBlocks.length}
       />

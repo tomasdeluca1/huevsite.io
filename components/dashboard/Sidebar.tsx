@@ -37,7 +37,7 @@ interface SidebarProps {
   autoSaveEnabled: boolean;
   activeTab: 'board' | 'insights' | 'subsites' | 'domain' | 'transfer';
   setActiveTab: (tab: 'board' | 'insights' | 'subsites' | 'domain' | 'transfer') => void;
-  onShareUnlocked: () => void;
+  onShareUnlocked: (extraBlocks: number) => void;
   visibleBlockCount?: number;
 }
 

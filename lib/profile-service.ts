@@ -2,6 +2,7 @@ import { ProfileData, BlockData, getAdjustedAccentColor, MAX_FREE_BLOCKS } from 
 import { scoreService } from './score-service';
 import { getProfileBadges } from './profile-badges';
 import { getFreeTrialState, hasProAccess } from './pro-access';
+import { getCurrentWeek, getWeekString } from './showcase-service';
 import { createServiceRoleClient } from './supabase/service-role';
 
 // Public-profile rendering uses the service-role client because:
@@ -54,12 +55,20 @@ export const profileService = {
         .order('week', { ascending: false })
         .limit(1)
         .maybeSingle(),
-      // Order by `week` (not `created_at`) — backfilled or re-inserted rows
-      // can have a fresh created_at while pointing at an older ISO week, and
-      // would otherwise spoof a stale winner as "current".
+      // Restrict the "latest winner" lookup to the current ISO week or the
+      // immediately previous one. Without this clamp, the top banner sticks
+      // to whoever was the most recent pick — even if that pick was weeks
+      // ago because the cron stalled, or if a stale/test row pointed at a
+      // future week. We mirror the [currentWeek, prevWeek] window used by
+      // showcase-service.getShowcaseData so the banner matches the
+      // "currently featured" winner concept on /explore.
       supabase
         .from('showcase_winners')
         .select('week')
+        .in('week', [
+          getCurrentWeek(),
+          getWeekString(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)),
+        ])
         .order('week', { ascending: false })
         .limit(1)
         .maybeSingle(),

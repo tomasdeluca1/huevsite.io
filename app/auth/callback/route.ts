@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { subscribeToBeehiiv } from '@/lib/beehiiv'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function GET(request: NextRequest) {
@@ -11,10 +12,26 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const supabase = createClient()
-    
+
     try {
       const { error } = await supabase.auth.exchangeCodeForSession(code)
       if (!error) {
+        // Sync the authed user's email to beehiiv. Beehiiv 422s repeats so
+        // calling on every login is idempotent — no need to check first-time.
+        // Fire-and-forget: a beehiiv outage must not delay the auth redirect.
+        try {
+          const { data: { user } } = await supabase.auth.getUser()
+          if (user?.email) {
+            subscribeToBeehiiv({
+              email: user.email,
+              utmSource: 'huevsite-io',
+              utmCampaign: 'oauth-login',
+            }).catch((err) => console.error('// beehiiv sync:', err))
+          }
+        } catch (err) {
+          console.error('// beehiiv sync getUser failed:', err)
+        }
+
         console.log('// Auth Exchange Success -> Redirecting to', next);
         return NextResponse.redirect(`${origin}${next}`)
       } else {

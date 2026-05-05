@@ -6,6 +6,7 @@ import { scoreService } from '@/lib/score-service'
 import { vercelService } from '@/lib/vercel-service'
 import { hasProAccess } from '@/lib/pro-access'
 import { rateLimit, getIdentifier } from '@/lib/rate-limit'
+import { subscribeToBeehiiv, unsubscribeFromBeehiiv } from '@/lib/beehiiv'
 
 const profilePatchSchema = z.object({
   name: z.string().max(100).optional(),
@@ -27,6 +28,7 @@ const profilePatchSchema = z.object({
   // Allow only a numeric value with rem/px/em units (or plain "0").
   border_radius: z.string().regex(/^(0|\d+(\.\d+)?(rem|px|em))$/, 'border_radius debe ser un valor CSS válido (ej: 1.5rem, 12px, 0)').optional(),
   is_onboarding_test_user: z.boolean().optional(),
+  newsletter_subscribed: z.boolean().optional(),
 })
 
 const profileUpdateLimiter = rateLimit({ interval: 60_000, uniqueTokenPerInterval: 500 })
@@ -208,6 +210,7 @@ export async function PATCH(request: NextRequest) {
       'custom_domain',
       'border_radius',
       'is_onboarding_test_user',
+      'newsletter_subscribed',
     ]
 
     // Segurizar: Solo usuarios PRO pueden configurar custom_domain
@@ -281,6 +284,22 @@ export async function PATCH(request: NextRequest) {
 
     if (updateData.image !== undefined) {
       await syncMainHeroAvatar(supabase, user.id, updateData.image || null)
+    }
+
+    // Sync the newsletter flag to beehiiv when it flips. Fire-and-forget:
+    // the profile patch must succeed even if beehiiv is unreachable.
+    if (updateData.newsletter_subscribed !== undefined && user.email) {
+      if (updateData.newsletter_subscribed) {
+        subscribeToBeehiiv({
+          email: user.email,
+          utmSource: 'huevsite-io',
+          utmCampaign: 'dashboard-opt-in',
+        }).catch((err) => console.error('// beehiiv subscribe (dashboard):', err))
+      } else {
+        unsubscribeFromBeehiiv(user.email).catch((err) =>
+          console.error('// beehiiv unsubscribe (dashboard):', err)
+        )
+      }
     }
 
     // Al actualizar el perfil (name, tagline, image), el score puede cambiar

@@ -20,7 +20,7 @@ export default function PrivacyPage() {
         </Link>
 
         <h1 className="text-4xl font-bold mb-2 tracking-tight">Política de Privacidad</h1>
-        <p className="text-gray-400 mb-12">Última actualización: abril 2025</p>
+        <p className="text-gray-400 mb-12">Última actualización: mayo 2026</p>
 
         <div className="prose prose-invert prose-gray max-w-none space-y-10">
 
@@ -75,7 +75,25 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold mb-4">4. Servicios de terceros</h2>
+            <h2 className="text-xl font-semibold mb-4">4. Newsletter del founder</h2>
+            <p className="text-gray-300 leading-relaxed mb-3">
+              Cuando creás una cuenta en huevsite.io, sumamos tu email al newsletter que escribe el founder. Es un newsletter de baja frecuencia (típicamente 1-2 emails por mes) sobre el progreso del producto, novedades para builders y la comunidad de huevsite.io.
+            </p>
+            <p className="text-gray-300 leading-relaxed mb-3">
+              Podés darte de baja en cualquier momento desde:
+            </p>
+            <ul className="list-disc list-inside space-y-2 text-gray-300">
+              <li>El link de "unsubscribe" al pie de cualquier email del newsletter</li>
+              <li>El toggle "Newsletter" en la configuración de tu dashboard</li>
+              <li>Escribiéndonos a <a href="mailto:hi@huevsite.studio" className="text-white underline underline-offset-4">hi@huevsite.studio</a></li>
+            </ul>
+            <p className="text-gray-300 leading-relaxed mt-3">
+              Los usuarios que se registraron antes de la entrada en vigencia de esta cláusula (mayo 2026) no fueron sumados automáticamente y pueden activar la suscripción manualmente desde el dashboard.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold mb-4">5. Servicios de terceros</h2>
             <p className="text-gray-300 leading-relaxed mb-3">
               Para operar huevsite.io usamos los siguientes servicios externos, cada uno con su propia política de privacidad:
             </p>
@@ -105,11 +123,16 @@ export default function PrivacyPage() {
                 <h3 className="font-semibold mb-1">Resend</h3>
                 <p className="text-gray-300 text-sm">Envío de emails transaccionales (notificaciones, confirmaciones). <a href="https://resend.com/privacy" target="_blank" rel="noopener noreferrer" className="text-white underline underline-offset-4">Ver política</a></p>
               </div>
+
+              <div className="border border-white/10 rounded-lg p-4">
+                <h3 className="font-semibold mb-1">Beehiiv</h3>
+                <p className="text-gray-300 text-sm">Plataforma del newsletter del founder. Almacena tu email y lo usa exclusivamente para enviarte el newsletter al que estás suscripto. <a href="https://www.beehiiv.com/tou/privacy" target="_blank" rel="noopener noreferrer" className="text-white underline underline-offset-4">Ver política</a></p>
+              </div>
             </div>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold mb-4">5. Cookies y tracking</h2>
+            <h2 className="text-xl font-semibold mb-4">6. Cookies y tracking</h2>
             <p className="text-gray-300 leading-relaxed">
               Usamos cookies esenciales para mantener tu sesión autenticada. Para analytics usamos Umami, que no utiliza cookies y procesa datos de forma anónima.
             </p>
@@ -119,7 +142,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold mb-4">6. Tus derechos</h2>
+            <h2 className="text-xl font-semibold mb-4">7. Tus derechos</h2>
             <p className="text-gray-300 leading-relaxed mb-3">Tenés derecho a:</p>
             <ul className="list-disc list-inside space-y-2 text-gray-300">
               <li><strong className="text-white">Acceso:</strong> solicitar una copia de los datos que tenemos sobre vos</li>
@@ -136,7 +159,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold mb-4">7. Seguridad</h2>
+            <h2 className="text-xl font-semibold mb-4">8. Seguridad</h2>
             <p className="text-gray-300 leading-relaxed">
               Implementamos medidas técnicas y organizativas para proteger tus datos: conexiones HTTPS, autenticación segura, acceso restringido a bases de datos y revisión periódica de permisos. Sin embargo, ningún sistema es 100% seguro. Si detectás una vulnerabilidad, reportala a{' '}
               <a href="mailto:hi@huevsite.studio" className="text-white underline underline-offset-4">hi@huevsite.studio</a>.
@@ -144,21 +167,21 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold mb-4">8. Retención de datos</h2>
+            <h2 className="text-xl font-semibold mb-4">9. Retención de datos</h2>
             <p className="text-gray-300 leading-relaxed">
               Conservamos tus datos mientras tu cuenta esté activa. Al eliminar tu cuenta, borramos tus datos personales en un plazo de 30 días, salvo que debamos retenerlos por obligaciones legales.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold mb-4">9. Cambios a esta política</h2>
+            <h2 className="text-xl font-semibold mb-4">10. Cambios a esta política</h2>
             <p className="text-gray-300 leading-relaxed">
               Podemos actualizar esta política periódicamente. Te notificaremos sobre cambios significativos por email o mediante un aviso en la plataforma. La fecha de "última actualización" al inicio de esta página indica cuándo fue revisada por última vez.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold mb-4">10. Contacto</h2>
+            <h2 className="text-xl font-semibold mb-4">11. Contacto</h2>
             <p className="text-gray-300 leading-relaxed">
               Para cualquier consulta sobre privacidad o para ejercer tus derechos, contactanos en{' '}
               <a href="mailto:hi@huevsite.studio" className="text-white underline underline-offset-4">hi@huevsite.studio</a>.

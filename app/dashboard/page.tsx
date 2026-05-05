@@ -293,6 +293,7 @@ export default function DashboardPage() {
         builderScore: data.profile.builder_score || 0,
         aiCredits: data.profile.ai_credits || 0,
         isOnboardingTestUser: data.profile.is_onboarding_test_user || false,
+        newsletterSubscribed: data.profile.newsletter_subscribed === true,
         customDomain: data.profile.custom_domain || "",
         referralCode: data.profile.referral_code || "",
         referredBy: data.profile.referred_by || "",
@@ -1162,6 +1163,23 @@ export default function DashboardPage() {
     localStorage.setItem("huevsite_autosave", String(newVal));
   };
 
+  const toggleNewsletter = async () => {
+    if (!profile) return;
+    const newVal = !profile.newsletterSubscribed;
+    setProfile({ ...profile, newsletterSubscribed: newVal });
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newsletter_subscribed: newVal }),
+      });
+      if (!res.ok) throw new Error("patch failed");
+    } catch (err) {
+      console.error("toggleNewsletter failed:", err);
+      setProfile({ ...profile, newsletterSubscribed: !newVal });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] font-display">
@@ -1214,6 +1232,8 @@ export default function DashboardPage() {
         handleBorderRadiusChange={handleBorderRadiusChange}
         toggleAutoSave={toggleAutoSave}
         autoSaveEnabled={autoSaveEnabled}
+        toggleNewsletter={toggleNewsletter}
+        newsletterSubscribed={profile.newsletterSubscribed === true}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onShareUnlocked={(extraBlocks) => {

@@ -77,3 +77,79 @@ export async function subscribeToBeehiiv(payload: SubscribePayload): Promise<Sub
     return { ok: false, error: String(err) };
   }
 }
+
+/**
+ * Mark a subscriber as unsubscribed in beehiiv. Used when a user toggles
+ * the newsletter off from the dashboard. Fire-and-forget — beehiiv being
+ * down should not block the API response.
+ *
+ * Beehiiv requires a two-step lookup (email -> subscription_id) before we
+ * can patch the status, so this does both.
+ */
+export async function unsubscribeFromBeehiiv(email: string): Promise<SubscribeResult> {
+  const apiKey = process.env.BEEHIIV_API_KEY;
+  const pubId = process.env.BEEHIIV_PUBLICATION_ID;
+
+  if (!apiKey || !pubId) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn("[beehiiv] missing env vars — skipping unsubscribe");
+    }
+    return { ok: false, error: "missing env" };
+  }
+
+  if (!email || !email.trim()) {
+    return { ok: false, error: "missing email" };
+  }
+
+  const normalized = email.trim().toLowerCase();
+
+  try {
+    // 1) Resolve email -> subscription id
+    const lookupRes = await fetch(
+      `https://api.beehiiv.com/v2/publications/${pubId}/subscriptions/by_email/${encodeURIComponent(normalized)}`,
+      {
+        headers: { Authorization: `Bearer ${apiKey}` },
+      }
+    );
+
+    if (lookupRes.status === 404) {
+      // Never was a subscriber — treat as success (idempotent).
+      return { ok: true };
+    }
+    if (!lookupRes.ok) {
+      const err = await lookupRes.text().catch(() => "unknown");
+      console.error("[beehiiv] lookup failed:", lookupRes.status, err);
+      return { ok: false, error: `lookup ${lookupRes.status}: ${err}` };
+    }
+
+    const lookupBody = await lookupRes.json().catch(() => null);
+    const subscriptionId: string | undefined = lookupBody?.data?.id;
+    if (!subscriptionId) {
+      return { ok: false, error: "lookup returned no id" };
+    }
+
+    // 2) Patch the subscription to inactive
+    const patchRes = await fetch(
+      `https://api.beehiiv.com/v2/publications/${pubId}/subscriptions/${subscriptionId}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({ unsubscribe: true }),
+      }
+    );
+
+    if (!patchRes.ok) {
+      const err = await patchRes.text().catch(() => "unknown");
+      console.error("[beehiiv] unsubscribe patch failed:", patchRes.status, err);
+      return { ok: false, error: `${patchRes.status}: ${err}` };
+    }
+
+    return { ok: true };
+  } catch (err) {
+    console.error("[beehiiv] unsubscribe threw:", err);
+    return { ok: false, error: String(err) };
+  }
+}

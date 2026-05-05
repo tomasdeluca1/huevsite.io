@@ -308,6 +308,7 @@ export interface ProfileData {
   isWinner?: boolean;
   ogImageVersion?: string;
   isOnboardingTestUser?: boolean;
+  newsletterSubscribed?: boolean;
   subSites: SubSite[];
   blocks: BlockData[];
   sourceUrl?: string;

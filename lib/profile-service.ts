@@ -28,7 +28,7 @@ export const profileService = {
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('id, username, name, tagline, image, github_handle, accent_color, border_radius, subscription_tier, pro_since, extra_blocks_from_share, twitter_share_unlocked, builder_score, ai_credits, custom_domain, referral_code, referred_by, pro_referrals_count, referral_reward_expires_at, is_onboarding_test_user, is_profile_verified, has_good_reputation, is_top_matchmaker, free_trial_claimed_at, free_trial_started_at, free_trial_ends_at, free_trial_last_insights_viewed_at, updated_at')
+      .select('id, username, name, tagline, image, github_handle, accent_color, border_radius, subscription_tier, pro_since, extra_blocks_from_share, twitter_share_unlocked, builder_score, ai_credits, custom_domain, referral_code, referred_by, pro_referrals_count, referral_reward_expires_at, is_onboarding_test_user, is_profile_verified, has_good_reputation, is_top_matchmaker, free_trial_claimed_at, free_trial_started_at, free_trial_ends_at, free_trial_last_insights_viewed_at, newsletter_subscribed, updated_at')
       .eq('username', username)
       .single();
 
@@ -145,7 +145,7 @@ export const profileService = {
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('id, username, name, tagline, image, github_handle, accent_color, border_radius, subscription_tier, pro_since, extra_blocks_from_share, twitter_share_unlocked, builder_score, ai_credits, custom_domain, referral_code, referred_by, pro_referrals_count, referral_reward_expires_at, is_onboarding_test_user, is_profile_verified, has_good_reputation, is_top_matchmaker, free_trial_claimed_at, free_trial_started_at, free_trial_ends_at, free_trial_last_insights_viewed_at, updated_at')
+      .select('id, username, name, tagline, image, github_handle, accent_color, border_radius, subscription_tier, pro_since, extra_blocks_from_share, twitter_share_unlocked, builder_score, ai_credits, custom_domain, referral_code, referred_by, pro_referrals_count, referral_reward_expires_at, is_onboarding_test_user, is_profile_verified, has_good_reputation, is_top_matchmaker, free_trial_claimed_at, free_trial_started_at, free_trial_ends_at, free_trial_last_insights_viewed_at, newsletter_subscribed, updated_at')
       .eq('username', username)
       .single();
 
@@ -273,6 +273,7 @@ export const profileService = {
       freeTrial: getFreeTrialState(profile),
       borderRadius: profile.border_radius || '1.5rem',
       isOnboardingTestUser: profile.is_onboarding_test_user || false,
+      newsletterSubscribed: profile.newsletter_subscribed === true,
       subSites: [], // Initially empty, filled by API if needed
       blocks: (blocks || []).map(b => {
         const { id, type, order, col_span, row_span, visible, ...data } = b.data || {};

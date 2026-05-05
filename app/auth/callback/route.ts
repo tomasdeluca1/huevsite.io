@@ -16,17 +16,27 @@ export async function GET(request: NextRequest) {
     try {
       const { error } = await supabase.auth.exchangeCodeForSession(code)
       if (!error) {
-        // Sync the authed user's email to beehiiv. Beehiiv 422s repeats so
-        // calling on every login is idempotent — no need to check first-time.
-        // Fire-and-forget: a beehiiv outage must not delay the auth redirect.
+        // Sync the authed user's email to beehiiv only if they have the
+        // newsletter_subscribed flag set on their profile. New signups
+        // default to TRUE (per privacy policy mayo 2026); pre-existing
+        // users were backfilled to FALSE and must opt in from the
+        // dashboard. Beehiiv 422s repeats so this stays idempotent on
+        // re-login. Fire-and-forget: never delay the auth redirect.
         try {
           const { data: { user } } = await supabase.auth.getUser()
           if (user?.email) {
-            subscribeToBeehiiv({
-              email: user.email,
-              utmSource: 'huevsite-io',
-              utmCampaign: 'oauth-login',
-            }).catch((err) => console.error('// beehiiv sync:', err))
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('newsletter_subscribed')
+              .eq('id', user.id)
+              .maybeSingle()
+            if (profile?.newsletter_subscribed) {
+              subscribeToBeehiiv({
+                email: user.email,
+                utmSource: 'huevsite-io',
+                utmCampaign: 'oauth-login',
+              }).catch((err) => console.error('// beehiiv sync:', err))
+            }
           }
         } catch (err) {
           console.error('// beehiiv sync getUser failed:', err)

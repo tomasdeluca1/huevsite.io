@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Trophy, Settings, ArrowLeft, Copy, Check, Globe, Activity, 
-  Compass, Save, LogOut, MessageSquare, Layout as LayoutIcon, 
-  Sparkles, ArrowUpRight, Lock, ChevronRight, User, PlusCircle, Trash2, Link2
+import {
+  Trophy, Settings, ArrowLeft, Copy, Check, Globe, Activity,
+  Compass, Save, LogOut, MessageSquare, Layout as LayoutIcon,
+  Sparkles, ArrowUpRight, Lock, ChevronRight, User, PlusCircle, Trash2, Link2, Mail
 } from "lucide-react";
 import Link from "next/link";
 import { ProfileData, BlockType, PRESET_BORDER_RADIUS } from "@/lib/profile-types";
@@ -35,6 +35,8 @@ interface SidebarProps {
   handleBorderRadiusChange: (value: string) => void;
   toggleAutoSave: () => void;
   autoSaveEnabled: boolean;
+  toggleNewsletter: () => void;
+  newsletterSubscribed: boolean;
   activeTab: 'board' | 'insights' | 'subsites' | 'domain' | 'transfer';
   setActiveTab: (tab: 'board' | 'insights' | 'subsites' | 'domain' | 'transfer') => void;
   onShareUnlocked: (extraBlocks: number) => void;
@@ -64,6 +66,8 @@ export function DashboardSidebar({
   handleBorderRadiusChange,
   toggleAutoSave,
   autoSaveEnabled,
+  toggleNewsletter,
+  newsletterSubscribed,
   activeTab,
   setActiveTab,
   onShareUnlocked,
@@ -373,11 +377,32 @@ export function DashboardSidebar({
                 </div>
                 <span className="text-sm font-bold text-white/70">Auto-Guardado</span>
               </div>
-              <button 
+              <button
                 onClick={toggleAutoSave}
                 className={`w-10 h-5 rounded-full relative transition-all duration-300 ${autoSaveEnabled ? 'bg-[var(--accent)]' : 'bg-white/10'}`}
               >
                 <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all duration-300 ${autoSaveEnabled ? 'right-1' : 'left-1'}`} />
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between p-3 rounded-2xl hover:bg-white/5 transition-all group">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${newsletterSubscribed ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'bg-white/5 text-white/40'}`}>
+                  <Mail size={18} />
+                </div>
+                <div className="flex-1 text-left">
+                  <div className="text-sm font-bold text-white/70">Newsletter</div>
+                  <div className="text-[10px] font-mono text-white/25">
+                    {newsletterSubscribed ? "Suscripto" : "1-2 emails al mes"}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={toggleNewsletter}
+                className={`w-10 h-5 rounded-full relative transition-all duration-300 shrink-0 ${newsletterSubscribed ? 'bg-[var(--accent)]' : 'bg-white/10'}`}
+                aria-label={newsletterSubscribed ? "Darse de baja del newsletter" : "Suscribirse al newsletter"}
+              >
+                <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all duration-300 ${newsletterSubscribed ? 'right-1' : 'left-1'}`} />
               </button>
             </div>
             

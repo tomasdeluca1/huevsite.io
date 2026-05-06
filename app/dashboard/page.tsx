@@ -1260,7 +1260,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {profile.freeTrial?.eligible && (
+          {!isPro && profile.freeTrial?.eligible && (
             <div className="relative z-20 mt-6 md:mt-8 mb-6 border border-[var(--accent)]/20 bg-[linear-gradient(135deg,rgba(200,255,0,0.12),rgba(255,255,255,0.02))] p-5 md:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.18)]" style={{ borderRadius: "var(--dashboard-radius)" }}>
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
@@ -1283,7 +1283,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {profile.freeTrial?.active && !trialBannerDismissed && (
+          {profile.freeTrial?.active && profile.subscriptionTier !== 'pro' && !trialBannerDismissed && (
             <div className="relative z-20 mb-6 border border-white/10 bg-white/[0.03] p-5 md:p-6" style={{ borderRadius: "var(--dashboard-radius)" }}>
               <button
                 onClick={() => setTrialBannerDismissed(true)}
@@ -1318,7 +1318,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {profile.freeTrial?.canUseLastInsightsView && !profile.freeTrial?.active && (
+          {!isPro && profile.freeTrial?.canUseLastInsightsView && !profile.freeTrial?.active && (
             <div className="relative z-20 mb-6 border border-white/10 bg-white/[0.03] p-5 md:p-6" style={{ borderRadius: "var(--dashboard-radius)" }}>
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>

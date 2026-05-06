@@ -77,7 +77,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-semibold mb-4">4. Newsletter del founder</h2>
             <p className="text-gray-300 leading-relaxed mb-3">
-              Cuando creás una cuenta en huevsite.io, sumamos tu email al newsletter que escribe el founder. Es un newsletter de baja frecuencia (típicamente 1-2 emails por mes) sobre el progreso del producto, novedades para builders y la comunidad de huevsite.io.
+              Cuando creás una cuenta en huevsite.io, sumamos tu email al newsletter personal que escribe Tomás (founder de huevsite.io). Es un newsletter de baja frecuencia (típicamente 1-2 envíos por mes) enfocado en SEO aplicado y crecimiento orgánico, con experimentos reales sacados de los productos que está armando en paralelo — huevsite.io y <a href="https://creatibro.com" target="_blank" rel="noopener noreferrer" className="text-white underline underline-offset-4">creatibro</a>.
             </p>
             <p className="text-gray-300 leading-relaxed mb-3">
               Podés darte de baja en cualquier momento desde:

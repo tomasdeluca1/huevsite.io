@@ -391,9 +391,9 @@ export function DashboardSidebar({
                   <Mail size={18} />
                 </div>
                 <div className="flex-1 text-left">
-                  <div className="text-sm font-bold text-white/70">Newsletter</div>
+                  <div className="text-sm font-bold text-white/70">Newsletter de Tomás</div>
                   <div className="text-[10px] font-mono text-white/25">
-                    {newsletterSubscribed ? "Suscripto" : "1-2 emails al mes"}
+                    {newsletterSubscribed ? "Suscripto" : "SEO + huevsite + creatibro"}
                   </div>
                 </div>
               </div>

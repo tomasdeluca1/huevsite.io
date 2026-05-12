@@ -45,6 +45,28 @@ async function sendStageEmail(profile: TrialProfileRow, stage: keyof typeof FREE
   return true;
 }
 
+// Email-level dedup: if any OTHER profile sharing this email already had
+// the stage email sent, treat the current profile as sent too. Without
+// this, multiple test/dummy profiles wired to the same inbox each fire
+// the cron independently — which is how one inbox received the "expired"
+// email 22 times (and prompted the earlier `last_chance` shutdown).
+async function peerEmailAlreadyHasStage(
+  supabase: any,
+  email: string,
+  stageColumn: string,
+  selfId: string
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("email", email)
+    .neq("id", selfId)
+    .not(stageColumn, "is", null)
+    .limit(1)
+    .maybeSingle();
+  return !!data;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get("authorization");
@@ -91,6 +113,10 @@ export async function GET(request: NextRequest) {
       const startedAt = profile.free_trial_started_at ? new Date(profile.free_trial_started_at) : null;
 
       if (!profile.free_trial_claimed_at && !profile.free_trial_launch_email_sent_at) {
+        if (await peerEmailAlreadyHasStage(supabase, profile.email, "free_trial_launch_email_sent_at", profile.id)) {
+          await supabase.from("profiles").update({ free_trial_launch_email_sent_at: now.toISOString() }).eq("id", profile.id);
+          continue;
+        }
         await delayBetweenEmails();
         const sent = await sendStageEmail(profile, "launch").catch((err) => {
           console.error("Free trial launch email error:", err);
@@ -110,41 +136,53 @@ export async function GET(request: NextRequest) {
       const daysUntilExpiry = Math.ceil((endsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
       if (elapsedDays >= 3 && !profile.free_trial_activation_email_sent_at && now < endsAt) {
-        await delayBetweenEmails();
-        const sent = await sendStageEmail(profile, "activation").catch((err) => {
-          console.error("Free trial activation email error:", err);
-          return false;
-        });
-        if (sent) {
-          activationEmails += 1;
-          emailsSentThisRun += 1;
+        if (await peerEmailAlreadyHasStage(supabase, profile.email, "free_trial_activation_email_sent_at", profile.id)) {
           await supabase.from("profiles").update({ free_trial_activation_email_sent_at: now.toISOString() }).eq("id", profile.id);
+        } else {
+          await delayBetweenEmails();
+          const sent = await sendStageEmail(profile, "activation").catch((err) => {
+            console.error("Free trial activation email error:", err);
+            return false;
+          });
+          if (sent) {
+            activationEmails += 1;
+            emailsSentThisRun += 1;
+            await supabase.from("profiles").update({ free_trial_activation_email_sent_at: now.toISOString() }).eq("id", profile.id);
+          }
         }
       }
 
       if (daysUntilExpiry <= 2 && now < endsAt && !profile.free_trial_expiring_email_sent_at) {
-        await delayBetweenEmails();
-        const sent = await sendStageEmail(profile, "expiring").catch((err) => {
-          console.error("Free trial expiring email error:", err);
-          return false;
-        });
-        if (sent) {
-          expiringEmails += 1;
-          emailsSentThisRun += 1;
+        if (await peerEmailAlreadyHasStage(supabase, profile.email, "free_trial_expiring_email_sent_at", profile.id)) {
           await supabase.from("profiles").update({ free_trial_expiring_email_sent_at: now.toISOString() }).eq("id", profile.id);
+        } else {
+          await delayBetweenEmails();
+          const sent = await sendStageEmail(profile, "expiring").catch((err) => {
+            console.error("Free trial expiring email error:", err);
+            return false;
+          });
+          if (sent) {
+            expiringEmails += 1;
+            emailsSentThisRun += 1;
+            await supabase.from("profiles").update({ free_trial_expiring_email_sent_at: now.toISOString() }).eq("id", profile.id);
+          }
         }
       }
 
       if (now >= endsAt && !profile.free_trial_expired_email_sent_at) {
-        await delayBetweenEmails();
-        const sent = await sendStageEmail(profile, "expired").catch((err) => {
-          console.error("Free trial expired email error:", err);
-          return false;
-        });
-        if (sent) {
-          expiredEmails += 1;
-          emailsSentThisRun += 1;
+        if (await peerEmailAlreadyHasStage(supabase, profile.email, "free_trial_expired_email_sent_at", profile.id)) {
           await supabase.from("profiles").update({ free_trial_expired_email_sent_at: now.toISOString() }).eq("id", profile.id);
+        } else {
+          await delayBetweenEmails();
+          const sent = await sendStageEmail(profile, "expired").catch((err) => {
+            console.error("Free trial expired email error:", err);
+            return false;
+          });
+          if (sent) {
+            expiredEmails += 1;
+            emailsSentThisRun += 1;
+            await supabase.from("profiles").update({ free_trial_expired_email_sent_at: now.toISOString() }).eq("id", profile.id);
+          }
         }
       }
 

@@ -19,6 +19,13 @@ export const size = {
 
 export const contentType = "image/png";
 
+const ACCENT = "#C8FF00";
+const BG_TOP = "#050505";
+const BG_BOTTOM = "#0c0c0c";
+const BORDER = "rgba(255,255,255,0.08)";
+const TEXT_DIM = "rgba(255,255,255,0.62)";
+const TEXT_MUTED = "rgba(255,255,255,0.38)";
+
 function absoluteAssetUrl(src?: string | null) {
   if (!src) return null;
   if (src.startsWith("http://") || src.startsWith("https://")) return src;
@@ -27,24 +34,33 @@ function absoluteAssetUrl(src?: string | null) {
 }
 
 function truncate(text: string, max: number) {
+  if (!text) return "";
   if (text.length <= max) return text;
   return `${text.slice(0, max - 1).trimEnd()}…`;
+}
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("es-AR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 }
 
 function renderFallback() {
   return (
     <div
       style={{
-        background: "#080808",
+        background: BG_TOP,
         width: "100%",
         height: "100%",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        color: "#C8FF00",
-        fontSize: 52,
+        color: ACCENT,
+        fontSize: 64,
         fontWeight: 900,
-        letterSpacing: "-0.04em",
+        letterSpacing: "-0.05em",
       }}
     >
       huevsite.io
@@ -52,348 +68,168 @@ function renderFallback() {
   );
 }
 
-function renderBuilderOfTheWeek(post: BlogPost) {
-  const avatarUrl = absoluteAssetUrl(post.author.avatarUrl);
-  const title = truncate(post.title, 88);
-  const excerpt = truncate(post.excerpt, 170);
-
+function FrameBackground({ tinted = false }: { tinted?: boolean }) {
   return (
-    <div
-      style={{
-        width: "100%",
-        height: "100%",
-        display: "flex",
-        position: "relative",
-        overflow: "hidden",
-        background:
-          "linear-gradient(135deg, #050505 0%, #0d0d0d 50%, #111307 100%)",
-        color: "white",
-        padding: "42px",
-      }}
-    >
+    <>
       <div
         style={{
           position: "absolute",
-          top: -130,
-          right: -110,
+          inset: 0,
+          background: `linear-gradient(160deg, ${BG_TOP} 0%, ${BG_BOTTOM} 60%, ${
+            tinted ? "#111307" : "#0a0a0a"
+          } 100%)`,
+          display: "flex",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          top: -160,
+          right: -140,
+          width: 540,
+          height: 540,
+          borderRadius: 999,
+          background:
+            "radial-gradient(circle, rgba(200,255,0,0.20) 0%, rgba(200,255,0,0.05) 40%, transparent 72%)",
+          display: "flex",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          bottom: -200,
+          left: -140,
           width: 460,
           height: 460,
           borderRadius: 999,
           background:
-            "radial-gradient(circle, rgba(200,255,0,0.22) 0%, rgba(200,255,0,0.06) 38%, transparent 72%)",
+            "radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%)",
           display: "flex",
         }}
       />
       <div
         style={{
           position: "absolute",
-          bottom: -180,
-          left: -120,
-          width: 420,
-          height: 420,
-          borderRadius: 999,
-          background:
-            "radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%)",
+          inset: 24,
+          border: `1px solid ${BORDER}`,
+          borderRadius: 28,
           display: "flex",
         }}
       />
-      <div
-        style={{
-          position: "absolute",
-          inset: 18,
-          border: "1px solid rgba(200,255,0,0.16)",
-          borderRadius: 22,
-          display: "flex",
-        }}
-      />
+    </>
+  );
+}
 
+function Logo() {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 16,
+      }}
+    >
       <div
         style={{
-          width: "100%",
-          height: "100%",
+          width: 12,
+          height: 12,
+          borderRadius: 999,
+          background: ACCENT,
           display: "flex",
-          gap: 32,
-          position: "relative",
-          zIndex: 1,
+          boxShadow: `0 0 24px ${ACCENT}`,
+        }}
+      />
+      <span
+        style={{
+          color: "white",
+          fontSize: 22,
+          fontWeight: 900,
+          letterSpacing: "-0.04em",
+          display: "flex",
         }}
       >
-        <div
-          style={{
-            width: 320,
-            height: "100%",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            padding: "8px 0",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 18,
-              padding: 24,
-              borderRadius: 28,
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                color: "#C8FF00",
-                fontSize: 13,
-                fontWeight: 800,
-                letterSpacing: "0.22em",
-                textTransform: "uppercase",
-              }}
-            >
-              <div
-                style={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: 999,
-                  background: "#C8FF00",
-                  display: "flex",
-                }}
-              />
-              Builder de la Semana
-            </div>
-
-            {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                style={{
-                  width: 132,
-                  height: 132,
-                  borderRadius: 999,
-                  objectFit: "cover",
-                  border: "3px solid rgba(200,255,0,0.75)",
-                }}
-              />
-            ) : (
-              <div
-                style={{
-                  width: 132,
-                  height: 132,
-                  borderRadius: 999,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: "linear-gradient(135deg, #C8FF00 0%, #8DB800 100%)",
-                  color: "black",
-                  fontSize: 54,
-                  fontWeight: 900,
-                }}
-              >
-                {post.author.name.charAt(0).toUpperCase()}
-              </div>
-            )}
-
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 8,
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 34,
-                  lineHeight: 1,
-                  fontWeight: 900,
-                  letterSpacing: "-0.04em",
-                  display: "flex",
-                  flexWrap: "wrap",
-                }}
-              >
-                {post.author.name}
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 6,
-                  fontSize: 18,
-                  color: "rgba(255,255,255,0.78)",
-                  fontWeight: 600,
-                }}
-              >
-                <span style={{ display: "flex", color: "#C8FF00" }}>
-                  @{post.author.username}
-                </span>
-                <span style={{ display: "flex" }}>
-                  huevsite.io/{post.author.username}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "0 8px",
-              fontSize: 14,
-              color: "rgba(255,255,255,0.42)",
-              fontWeight: 700,
-            }}
-          >
-            <span style={{ display: "flex" }}>huevsite.io</span>
-            <span style={{ display: "flex" }}>
-              {new Date(post.date).toLocaleDateString("es-AR", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })}
-            </span>
-          </div>
-        </div>
-
-        <div
-          style={{
-            flex: 1,
-            height: "100%",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            padding: "10px 0 10px 4px",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 18,
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                gap: 10,
-              }}
-            >
-              {post.tags.slice(0, 3).map((tag) => (
-                <div
-                  key={tag}
-                  style={{
-                    display: "flex",
-                    padding: "8px 14px",
-                    borderRadius: 999,
-                    background: "rgba(200,255,0,0.08)",
-                    border: "1px solid rgba(200,255,0,0.26)",
-                    color: "#C8FF00",
-                    fontSize: 12,
-                    fontWeight: 800,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.12em",
-                  }}
-                >
-                  #{tag}
-                </div>
-              ))}
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 16,
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 58,
-                  lineHeight: 1.04,
-                  fontWeight: 900,
-                  letterSpacing: "-0.045em",
-                  display: "flex",
-                  flexWrap: "wrap",
-                }}
-              >
-                {title}
-              </div>
-              <div
-                style={{
-                  fontSize: 24,
-                  lineHeight: 1.42,
-                  color: "rgba(255,255,255,0.62)",
-                  display: "flex",
-                  flexWrap: "wrap",
-                  maxWidth: 690,
-                }}
-              >
-                {excerpt}
-              </div>
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              borderTop: "1px solid rgba(255,255,255,0.10)",
-              paddingTop: 18,
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 6,
-              }}
-            >
-              <span
-                style={{
-                  display: "flex",
-                  color: "rgba(255,255,255,0.38)",
-                  fontSize: 12,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.18em",
-                  fontWeight: 700,
-                }}
-              >
-                Serie editorial
-              </span>
-              <span
-                style={{
-                  display: "flex",
-                  fontSize: 28,
-                  color: "white",
-                  fontWeight: 800,
-                  letterSpacing: "-0.03em",
-                }}
-              >
-                Entrevistas a builders que están haciendo ruido.
-              </span>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                padding: "14px 20px",
-                borderRadius: 18,
-                background: "#C8FF00",
-                color: "black",
-                fontSize: 16,
-                fontWeight: 900,
-              }}
-            >
-              Leer en huevsite
-            </div>
-          </div>
-        </div>
-      </div>
+        huevsite.io
+      </span>
     </div>
   );
 }
 
-function renderDefaultPost(post: BlogPost) {
+function TagPill({ tag }: { tag: string }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        padding: "8px 14px",
+        borderRadius: 999,
+        background: "rgba(200,255,0,0.10)",
+        border: "1px solid rgba(200,255,0,0.28)",
+        color: ACCENT,
+        fontSize: 13,
+        fontWeight: 800,
+        textTransform: "uppercase",
+        letterSpacing: "0.14em",
+      }}
+    >
+      #{tag}
+    </div>
+  );
+}
+
+function AuthorAvatar({
+  url,
+  name,
+  size: avatarSize,
+  ring = false,
+}: {
+  url: string | null;
+  name: string;
+  size: number;
+  ring?: boolean;
+}) {
+  if (url) {
+    return (
+      <img
+        src={url}
+        style={{
+          width: avatarSize,
+          height: avatarSize,
+          borderRadius: 999,
+          objectFit: "cover",
+          border: ring
+            ? `3px solid ${ACCENT}`
+            : "1px solid rgba(200,255,0,0.35)",
+        }}
+      />
+    );
+  }
+  return (
+    <div
+      style={{
+        width: avatarSize,
+        height: avatarSize,
+        borderRadius: 999,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "linear-gradient(135deg, #C8FF00 0%, #7aaa00 100%)",
+        color: "black",
+        fontSize: Math.round(avatarSize * 0.42),
+        fontWeight: 900,
+        border: ring ? `3px solid ${ACCENT}` : "none",
+      }}
+    >
+      {name.charAt(0).toUpperCase()}
+    </div>
+  );
+}
+
+function renderBuilderOfTheWeek(post: BlogPost) {
   const avatarUrl = absoluteAssetUrl(post.author.avatarUrl);
-  const excerpt = truncate(post.excerpt, 200);
+  const title = truncate(post.title, 110);
+  const excerpt = truncate(post.excerpt, 230);
+  const readingLabel = post.readingTime
+    ? `${post.readingTime} min read`
+    : null;
 
   return (
     <div
@@ -402,142 +238,104 @@ function renderDefaultPost(post: BlogPost) {
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        padding: "52px 64px",
-        backgroundColor: "#080808",
-        color: "white",
         position: "relative",
+        overflow: "hidden",
+        color: "white",
+        padding: "56px 64px",
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          top: -80,
-          right: -80,
-          width: 480,
-          height: 480,
-          borderRadius: "50%",
-          background:
-            "radial-gradient(circle, rgba(200,255,0,0.13) 0%, transparent 70%)",
-          display: "flex",
-        }}
-      />
-
-      <div
-        style={{
-          position: "absolute",
-          top: 20,
-          left: 20,
-          right: 20,
-          bottom: 20,
-          border: "0.5px solid rgba(200,255,0,0.15)",
-          borderRadius: 12,
-          display: "flex",
-        }}
-      />
+      <FrameBackground tinted />
 
       <div
         style={{
           display: "flex",
           alignItems: "center",
-          marginBottom: 36,
-          zIndex: 10,
+          justifyContent: "space-between",
+          position: "relative",
+          zIndex: 1,
         }}
       >
-        <span
-          style={{
-            color: "#C8FF00",
-            fontSize: 22,
-            fontWeight: 900,
-            letterSpacing: "-0.04em",
-            display: "flex",
-          }}
-        >
-          huevsite.io
-        </span>
         <div
           style={{
-            width: 1,
-            height: 22,
-            background: "rgba(255,255,255,0.15)",
-            marginLeft: 18,
-            marginRight: 18,
             display: "flex",
-          }}
-        />
-        <span
-          style={{
-            color: "rgba(255,255,255,0.35)",
-            fontSize: 13,
-            fontWeight: 700,
-            letterSpacing: "0.18em",
-            textTransform: "uppercase",
-            display: "flex",
+            alignItems: "center",
+            gap: 14,
+            padding: "10px 18px",
+            borderRadius: 999,
+            background: "rgba(200,255,0,0.10)",
+            border: "1px solid rgba(200,255,0,0.32)",
           }}
         >
-          Blog Post
-        </span>
-      </div>
-
-      <div
-        style={{
-          display: "flex",
-          gap: 8,
-          marginBottom: 28,
-          zIndex: 10,
-        }}
-      >
-        {post.tags.slice(0, 3).map((tag) => (
           <div
-            key={tag}
             style={{
+              width: 10,
+              height: 10,
+              borderRadius: 999,
+              background: ACCENT,
               display: "flex",
-              padding: "6px 14px",
-              background: "rgba(200,255,0,0.08)",
-              border: "0.5px solid rgba(200,255,0,0.3)",
-              color: "#C8FF00",
-              borderRadius: 100,
-              fontSize: 12,
-              fontWeight: 800,
+              boxShadow: `0 0 16px ${ACCENT}`,
+            }}
+          />
+          <span
+            style={{
+              color: ACCENT,
+              fontSize: 14,
+              fontWeight: 900,
+              letterSpacing: "0.24em",
               textTransform: "uppercase",
-              letterSpacing: "0.12em",
+              display: "flex",
             }}
           >
-            #{tag}
-          </div>
-        ))}
+            Builder de la Semana
+          </span>
+        </div>
+        <Logo />
       </div>
 
       <div
         style={{
-          fontSize: 64,
-          fontWeight: 700,
-          lineHeight: 1.1,
-          letterSpacing: "-0.03em",
-          color: "white",
-          maxWidth: 860,
-          marginBottom: 20,
-          zIndex: 10,
           display: "flex",
-          flexWrap: "wrap",
-        }}
-      >
-        {post.title}
-      </div>
-
-      <div
-        style={{
-          fontSize: 22,
-          color: "rgba(255,255,255,0.45)",
-          lineHeight: 1.55,
-          maxWidth: 760,
-          fontWeight: 400,
-          zIndex: 10,
-          display: "flex",
+          flexDirection: "column",
+          gap: 24,
+          marginTop: 36,
+          position: "relative",
+          zIndex: 1,
           flex: 1,
-          flexWrap: "wrap",
         }}
       >
-        {excerpt}
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          {post.tags.slice(0, 3).map((tag) => (
+            <TagPill key={tag} tag={tag} />
+          ))}
+        </div>
+
+        <div
+          style={{
+            fontSize: 60,
+            lineHeight: 1.05,
+            fontWeight: 900,
+            letterSpacing: "-0.045em",
+            display: "flex",
+            flexWrap: "wrap",
+            maxWidth: 1040,
+          }}
+        >
+          {title}
+        </div>
+
+        <div
+          style={{
+            fontSize: 24,
+            lineHeight: 1.42,
+            color: TEXT_DIM,
+            display: "flex",
+            flexWrap: "wrap",
+            maxWidth: 980,
+            fontWeight: 500,
+          }}
+        >
+          {excerpt}
+        </div>
       </div>
 
       <div
@@ -545,48 +343,196 @@ function renderDefaultPost(post: BlogPost) {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          width: "100%",
-          zIndex: 10,
-          paddingTop: 20,
-          borderTop: "0.5px solid rgba(255,255,255,0.07)",
+          paddingTop: 24,
+          borderTop: `1px solid ${BORDER}`,
+          position: "relative",
+          zIndex: 1,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          {avatarUrl ? (
-            <img
-              src={avatarUrl}
+        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+          <AuthorAvatar
+            url={avatarUrl}
+            name={post.author.name}
+            size={72}
+            ring
+          />
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <span
               style={{
-                width: 48,
-                height: 48,
-                borderRadius: 24,
-                border: "1px solid rgba(200,255,0,0.3)",
-              }}
-            />
-          ) : (
-            <div
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: 24,
-                background: "linear-gradient(135deg, #C8FF00 0%, #7aaa00 100%)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "black",
-                fontSize: 20,
+                fontSize: 24,
                 fontWeight: 900,
+                letterSpacing: "-0.025em",
+                color: "white",
+                display: "flex",
               }}
             >
-              {post.author.name.charAt(0)}
+              {post.author.name}
+            </span>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                fontSize: 15,
+                fontWeight: 600,
+              }}
+            >
+              <span style={{ display: "flex", color: ACCENT }}>
+                huevsite.io/{post.author.username}
+              </span>
+              <span style={{ display: "flex", color: TEXT_MUTED }}>·</span>
+              <span style={{ display: "flex", color: TEXT_MUTED }}>
+                {formatDate(post.date)}
+              </span>
+              {readingLabel ? (
+                <>
+                  <span style={{ display: "flex", color: TEXT_MUTED }}>·</span>
+                  <span style={{ display: "flex", color: TEXT_MUTED }}>
+                    {readingLabel}
+                  </span>
+                </>
+              ) : null}
             </div>
-          )}
-          <div style={{ display: "flex", flexDirection: "column" }}>
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            padding: "14px 22px",
+            borderRadius: 16,
+            background: ACCENT,
+            color: "black",
+            fontSize: 17,
+            fontWeight: 900,
+            letterSpacing: "-0.01em",
+          }}
+        >
+          Leer entrevista →
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function renderDefaultPost(post: BlogPost) {
+  const avatarUrl = absoluteAssetUrl(post.author.avatarUrl);
+  const title = truncate(post.title, 110);
+  const excerpt = truncate(post.excerpt, 230);
+  const readingLabel = post.readingTime
+    ? `${post.readingTime} min read`
+    : null;
+
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        position: "relative",
+        overflow: "hidden",
+        color: "white",
+        padding: "56px 64px",
+      }}
+    >
+      <FrameBackground />
+
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          position: "relative",
+          zIndex: 1,
+        }}
+      >
+        <Logo />
+        <span
+          style={{
+            color: TEXT_MUTED,
+            fontSize: 13,
+            fontWeight: 800,
+            letterSpacing: "0.22em",
+            textTransform: "uppercase",
+            display: "flex",
+          }}
+        >
+          Blog · huevsite.io/blog
+        </span>
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 24,
+          marginTop: 40,
+          position: "relative",
+          zIndex: 1,
+          flex: 1,
+        }}
+      >
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          {post.tags.slice(0, 3).map((tag) => (
+            <TagPill key={tag} tag={tag} />
+          ))}
+        </div>
+
+        <div
+          style={{
+            fontSize: 64,
+            lineHeight: 1.04,
+            fontWeight: 900,
+            letterSpacing: "-0.045em",
+            display: "flex",
+            flexWrap: "wrap",
+            maxWidth: 1040,
+            color: "white",
+          }}
+        >
+          {title}
+        </div>
+
+        <div
+          style={{
+            fontSize: 24,
+            lineHeight: 1.42,
+            color: TEXT_DIM,
+            display: "flex",
+            flexWrap: "wrap",
+            maxWidth: 980,
+            fontWeight: 500,
+          }}
+        >
+          {excerpt}
+        </div>
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingTop: 24,
+          borderTop: `1px solid ${BORDER}`,
+          position: "relative",
+          zIndex: 1,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <AuthorAvatar
+            url={avatarUrl}
+            name={post.author.name}
+            size={56}
+          />
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <span
               style={{
                 fontSize: 20,
-                fontWeight: 700,
-                color: "white",
+                fontWeight: 800,
                 letterSpacing: "-0.02em",
+                color: "white",
                 display: "flex",
               }}
             >
@@ -595,8 +541,8 @@ function renderDefaultPost(post: BlogPost) {
             <span
               style={{
                 fontSize: 14,
-                color: "#C8FF00",
                 fontWeight: 600,
+                color: ACCENT,
                 display: "flex",
               }}
             >
@@ -607,17 +553,21 @@ function renderDefaultPost(post: BlogPost) {
 
         <div
           style={{
-            fontSize: 14,
-            color: "rgba(255,255,255,0.35)",
-            fontWeight: 600,
             display: "flex",
+            alignItems: "center",
+            gap: 14,
+            fontSize: 14,
+            fontWeight: 600,
+            color: TEXT_MUTED,
           }}
         >
-          {new Date(post.date).toLocaleDateString("es-AR", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
+          <span style={{ display: "flex" }}>{formatDate(post.date)}</span>
+          {readingLabel ? (
+            <>
+              <span style={{ display: "flex" }}>·</span>
+              <span style={{ display: "flex" }}>{readingLabel}</span>
+            </>
+          ) : null}
         </div>
       </div>
     </div>
@@ -637,7 +587,9 @@ export default async function Image({
   }
 
   return new ImageResponse(
-    isBuilderOfTheWeekPost(post) ? renderBuilderOfTheWeek(post) : renderDefaultPost(post),
+    isBuilderOfTheWeekPost(post)
+      ? renderBuilderOfTheWeek(post)
+      : renderDefaultPost(post),
     { ...size }
   );
 }

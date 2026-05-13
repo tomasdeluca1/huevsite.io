@@ -68,6 +68,12 @@ async function peerEmailAlreadyHasStage(
 }
 
 export async function GET(request: NextRequest) {
+  // Cron disabled: the lifecycle emails were spamming inboxes (multiple
+  // trial profiles sharing one email kept slipping past the dedup). Schedule
+  // removed from vercel.json. Keep the route but short-circuit so an admin-
+  // secret call can't reactivate the blast by mistake.
+  return NextResponse.json({ success: true, disabled: true });
+  // eslint-disable-next-line no-unreachable
   try {
     const authHeader = request.headers.get("authorization");
     const { searchParams } = new URL(request.url);

@@ -6,28 +6,27 @@ import { SITE_URL } from "@/lib/site-url";
 
 export const dynamic = "force-dynamic";
 
+const OG_TITLE = "huevsite.io | El portfolio que no da vergüenza ajena";
+const OG_DESCRIPTION =
+  "Armá tu portfolio bento-box, mostrá tus proyectos, métricas y stack. La red de builders, devs y founders de Argentina y LATAM.";
+
 export const metadata: Metadata = {
-  title: "huevsite.io | Mostrá lo que buildeás",
-  description: "Red social y portfolio para builders de Argentina y LATAM.",
+  title: OG_TITLE,
+  description: OG_DESCRIPTION,
   openGraph: {
-    title: "huevsite.io | Mostrá lo que buildeás",
-    description: "Red social y portfolio para builders de Argentina y LATAM.",
+    title: OG_TITLE,
+    description: OG_DESCRIPTION,
     url: SITE_URL,
     type: "website",
-    images: [
-      {
-        url: "/opengraph-image.png",
-        width: 1200,
-        height: 630,
-        alt: "huevsite.io",
-      },
-    ],
+    siteName: "huevsite.io",
+    locale: "es_AR",
   },
   twitter: {
     card: "summary_large_image",
-    title: "huevsite.io | Mostrá lo que buildeás",
-    description: "Red social y portfolio para builders de Argentina y LATAM.",
-    images: ["/opengraph-image.png"],
+    title: OG_TITLE,
+    description: OG_DESCRIPTION,
+    site: "@huevsite",
+    creator: "@huevsite",
   },
 };
 

@@ -241,7 +241,7 @@ function renderWithWinner(winner: Winner) {
         >
           <div
             style={{
-              fontSize: 64,
+              fontSize: 60,
               lineHeight: 1.04,
               fontWeight: 900,
               letterSpacing: "-0.045em",
@@ -251,21 +251,21 @@ function renderWithWinner(winner: Winner) {
               maxWidth: 580,
             }}
           >
-            El portfolio que no da vergüenza ajena.
+            Construí tu reputación como builder.
           </div>
           <div
             style={{
-              fontSize: 22,
+              fontSize: 21,
               lineHeight: 1.42,
               color: TEXT_DIM,
               display: "flex",
               flexWrap: "wrap",
-              maxWidth: 540,
+              maxWidth: 560,
               fontWeight: 500,
             }}
           >
-            Mostrá quién sos y qué buildás. Sin diseñar desde cero, sin LinkedIn
-            genérico.
+            Proyectos, métricas reales y endorsements de otros builders. Que te
+            vean shippeando, no diciendo. Acá vive la red de LATAM.
           </div>
         </div>
 
@@ -416,7 +416,7 @@ function renderBrandOnly() {
       >
         <div
           style={{
-            fontSize: 88,
+            fontSize: 80,
             lineHeight: 1.02,
             fontWeight: 900,
             letterSpacing: "-0.05em",
@@ -425,21 +425,21 @@ function renderBrandOnly() {
             color: "white",
           }}
         >
-          El portfolio que no da vergüenza ajena.
+          Construí tu reputación como builder.
         </div>
         <div
           style={{
-            fontSize: 28,
+            fontSize: 26,
             lineHeight: 1.42,
             color: TEXT_DIM,
             display: "flex",
             flexWrap: "wrap",
-            maxWidth: 820,
+            maxWidth: 880,
             fontWeight: 500,
           }}
         >
-          Mostrá quién sos y qué buildás. Sin diseñar desde cero, sin LinkedIn
-          genérico. Con personalidad propia.
+          Proyectos, métricas reales y endorsements de otros builders. Que te
+          vean shippeando, no diciendo. Acá vive la red de LATAM.
         </div>
       </div>
 

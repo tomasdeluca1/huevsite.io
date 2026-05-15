@@ -6,9 +6,9 @@ import { SITE_URL } from "@/lib/site-url";
 
 export const dynamic = "force-dynamic";
 
-const OG_TITLE = "huevsite.io | El portfolio que no da vergüenza ajena";
+const OG_TITLE = "huevsite.io | Construí tu reputación como builder";
 const OG_DESCRIPTION =
-  "Armá tu portfolio bento-box, mostrá tus proyectos, métricas y stack. La red de builders, devs y founders de Argentina y LATAM.";
+  "Proyectos, métricas reales y endorsements de otros builders. Que te vean shippeando, no diciendo. Acá vive la red de LATAM.";
 
 export const metadata: Metadata = {
   title: OG_TITLE,

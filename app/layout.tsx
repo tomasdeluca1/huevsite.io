@@ -19,9 +19,9 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "huevsite.io | El portfolio que no da vergüenza ajena",
+  title: "huevsite.io | Construí tu reputación como builder",
   description:
-    "Armá tu portfolio bento-box, mostrá tus proyectos, métricas y stack. La red de builders, devs y founders de Argentina y LATAM.",
+    "Proyectos, métricas reales y endorsements de otros builders. Que te vean shippeando, no diciendo. Acá vive la red de LATAM.",
   metadataBase: new URL(SITE_URL),
   alternates: {
     types: {

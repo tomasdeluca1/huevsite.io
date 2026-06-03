@@ -1,5 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { profileService } from '@/lib/profile-service';
+import { ogAvatarUrl } from '@/lib/og-avatar';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
@@ -21,7 +22,8 @@ export async function GET(
     const accentColor = profile.accentColor || '#C8FF00';
     const score = profile.builderScore || 0;
     const isWinner = profile.isWinner || false;
-    const avatarUrl = profile.avatarUrl;
+    // Proxy + re-encode to JPEG; Satori can't decode the webp avatars huevsite stores.
+    const avatarSrc = ogAvatarUrl(profile.avatarUrl, 240);
     const earnedBadges = (profile.badges || []).slice(0, 5);
 
     const BADGE_OG_VISUALS: Record<string, { bg: string }> = {
@@ -131,14 +133,17 @@ export async function GET(
                   borderRadius: '50%',
                 }}
               />
-              {avatarUrl ? (
+              {avatarSrc ? (
                 <img
-                  src={avatarUrl}
+                  src={avatarSrc}
+                  width={240}
+                  height={240}
                   style={{
                     width: 240,
                     height: 240,
                     borderRadius: 60,
                     border: `4px solid ${accentColor}40`,
+                    objectFit: 'cover',
                   }}
                 />
               ) : (

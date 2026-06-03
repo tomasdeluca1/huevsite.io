@@ -1,5 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { profileService } from '@/lib/profile-service';
+import { ogAvatarUrl } from '@/lib/og-avatar';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
@@ -19,6 +20,9 @@ export async function GET(
     const tagline = profile.tagline || 'Proyecto built on huevsite.io';
     const accentColor = profile.accentColor || '#C8FF00';
     const creator = profile.parentProfile;
+    // Proxy + re-encode to JPEG; Satori can't decode the webp avatars huevsite stores.
+    const creatorAvatarSrc = ogAvatarUrl(creator?.avatarUrl, 32);
+    const profileAvatarSrc = ogAvatarUrl(profile.avatarUrl, 320);
 
     return new ImageResponse(
       (
@@ -65,8 +69,8 @@ export async function GET(
 
             {creator && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.05)', padding: '8px 16px', borderRadius: 40, border: '1px solid rgba(255,255,255,0.1)' }}>
-                {creator.avatarUrl && (
-                  <img src={creator.avatarUrl} style={{ width: 32, height: 32, borderRadius: '50%', border: `1px solid ${accentColor}` }} />
+                {creatorAvatarSrc && (
+                  <img src={creatorAvatarSrc} width={32} height={32} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${accentColor}` }} />
                 )}
                 <span style={{ fontSize: 16, fontWeight: 600, color: 'rgba(255,255,255,0.5)' }}>por</span>
                 <span style={{ fontSize: 18, fontWeight: 800, color: 'white' }}>@{creator.username}</span>
@@ -138,13 +142,16 @@ export async function GET(
                 borderRadius: '50%',
               }} />
 
-              {profile.avatarUrl ? (
+              {profileAvatarSrc ? (
                 <img
-                  src={profile.avatarUrl}
+                  src={profileAvatarSrc}
+                  width={320}
+                  height={320}
                   style={{
                     width: 320,
                     height: 320,
                     borderRadius: 80,
+                    objectFit: 'cover',
                     border: `4.5px solid ${accentColor}40`,
                     boxShadow: `0 40px 80px ${accentColor}20`,
                   }}

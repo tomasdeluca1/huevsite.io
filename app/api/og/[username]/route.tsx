@@ -1,6 +1,7 @@
 import { ImageResponse } from 'next/og';
 import { profileService } from '@/lib/profile-service';
 import { ogAvatarUrl } from '@/lib/og-avatar';
+import { getContrastColor } from '@/lib/profile-types';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
@@ -256,7 +257,7 @@ export async function GET(
 
           <div style={{
             display: 'flex',
-            justifyContent: 'flex-start',
+            justifyContent: 'space-between',
             alignItems: 'center',
             marginTop: 40,
           }}>
@@ -272,6 +273,22 @@ export async function GET(
               fontFamily: 'monospace'
             }}>
               huevsite.io/<span style={{ color: 'white' }}>{username}</span>
+            </div>
+
+            {/* Call to action */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              backgroundColor: accentColor,
+              color: getContrastColor(accentColor),
+              padding: '14px 30px',
+              borderRadius: 100,
+              fontSize: 24,
+              fontWeight: 900,
+              letterSpacing: '-0.01em',
+              boxShadow: `0 10px 30px ${accentColor}40`,
+            }}>
+              Ver perfil →
             </div>
           </div>
         </div>

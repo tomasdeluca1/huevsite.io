@@ -27,36 +27,66 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!profile) return { title: "Usuario no encontrado | huevsite.io" };
 
   const heroBlock = profile.blocks.find(b => b.type === 'hero');
-  const tagline = (heroBlock as any)?.tagline || 'Builder en huevsite.io';
+  const rawTagline = (heroBlock as any)?.tagline || profile.tagline || '';
+  const tagline = rawTagline || 'Builder en huevsite.io';
 
   const ogImageVersion = profile.ogImageVersion || "botw-none-default";
   // Use a winner-aware cache buster so social crawlers fetch a fresh OG image
   // when the current Builder of the Week changes and the badge state flips.
   const ogImageUrl = `${SITE_URL}/api/og/${username}?v=${encodeURIComponent(ogImageVersion)}`;
 
+  // Build a title (~50-60 chars) and description (~110-160 chars) so social
+  // previews aren't flagged as too short. Lead with the name + a descriptor.
+  const clamp = (s: string, max: number) =>
+    s.length <= max ? s : `${s.slice(0, max - 1).trimEnd()}…`;
+  const displayName = profile.displayName || profile.username;
+  const roles = Array.isArray((profile as any).roles) ? (profile as any).roles.filter(Boolean) : [];
+  const hasRealTagline = Boolean(rawTagline);
+  const descriptor = hasRealTagline
+    ? rawTagline
+    : roles.length
+      ? roles.slice(0, 2).join(" · ")
+      : "Builder en huevsite.io";
+
+  const baseTitle = `${displayName} — ${descriptor}`;
+  // Keep the title around 50-60 chars: enrich short ones with @handle + brand.
+  const ogTitle = clamp(
+    baseTitle.length >= 50
+      ? baseTitle
+      : `${displayName} (@${profile.username}) · ${descriptor} | huevsite.io`,
+    66
+  );
+  // Keep the description around 110-160 chars.
+  const ogDescription = clamp(
+    hasRealTagline
+      ? `${rawTagline} · Conocé los proyectos, el stack, las métricas y los logros de ${displayName} (@${profile.username}) en huevsite.io.`
+      : `Conocé los proyectos, el stack, las métricas y los logros de ${displayName} (@${profile.username}) en huevsite.io — el perfil para builders que muestran lo que shippean.`,
+    160
+  );
+
   return {
-    title: `${profile.displayName} (@${profile.username}) | huevsite.io`,
-    description: tagline,
+    title: ogTitle,
+    description: ogDescription,
     alternates: {
       canonical: `${SITE_URL}/${profile.username}`,
     },
     openGraph: {
-      title: `${profile.displayName} (@${profile.username})`,
-      description: tagline,
+      title: ogTitle,
+      description: ogDescription,
       url: `${SITE_URL}/${profile.username}`,
       images: [
         {
           url: ogImageUrl,
           width: 1200,
           height: 630,
-          alt: `${profile.displayName} profile cover on huevsite.io`,
+          alt: `${displayName} (@${profile.username}) en huevsite.io`,
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title: `${profile.displayName} (@${profile.username})`,
-      description: tagline,
+      title: ogTitle,
+      description: ogDescription,
       images: [ogImageUrl],
     },
   };

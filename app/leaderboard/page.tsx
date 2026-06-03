@@ -1,0 +1,93 @@
+import { createClient } from "@/lib/supabase/server";
+import Link from "next/link";
+import { Medal } from "lucide-react";
+import { LeaderboardClient } from "@/components/leaderboard/LeaderboardClient";
+import type { Metadata } from "next";
+
+export const revalidate = 60;
+
+export const metadata: Metadata = {
+  title: "Ranking de Builders — huevsite.io",
+  description:
+    "El ranking de los builders más activos de LATAM. Subí tu builder score, sumá seguidores y escalá posiciones.",
+  openGraph: {
+    title: "Ranking de Builders — huevsite.io",
+    description: "Mirá quiénes lideran la comunidad de builders y competí por el primer puesto.",
+  },
+};
+
+export default async function LeaderboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string }>;
+}) {
+  const supabase = await createClient();
+  const params = await searchParams;
+  const fromDashboard = params.from === "dashboard";
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  return (
+    <div className="min-h-screen bg-[var(--bg)] font-display flex flex-col">
+      {/* NAV */}
+      <nav className="flex items-center justify-between px-6 py-6 md:px-10 max-w-6xl mx-auto w-full relative z-50">
+        <Link href={fromDashboard ? "/dashboard" : "/"} className="logo text-2xl">
+          huev<span>site</span>.io
+        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/explore"
+            className="hidden sm:flex items-center text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] hover:text-white transition-colors px-4 py-3"
+          >
+            Explorar
+          </Link>
+          <Link
+            href={user ? "/dashboard" : "/login"}
+            className="btn btn-accent text-xs md:text-sm font-bold !px-6 !py-3 !rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-lg shadow-[var(--accent)]/20"
+          >
+            {user ? "Mi huevsite" : "Crear mi huevsite"}
+          </Link>
+        </div>
+      </nav>
+
+      {/* HEADER */}
+      <header className="relative py-16 md:py-20 px-6 text-center overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(200,255,0,0.06)_0%,transparent_60%)] pointer-events-none" />
+        <div className="max-w-3xl mx-auto relative z-10">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--surface2)] border border-[var(--border-bright)] text-[var(--accent)] text-xs font-mono mb-8 justify-center">
+            <Medal size={14} /> // RANKING DE BUILDERS
+          </div>
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-6">
+            Los builders que
+            <br />
+            <span className="text-[var(--accent)]">la están rompiendo.</span>
+          </h1>
+          <p className="text-base md:text-lg text-[var(--text-dim)] max-w-xl mx-auto leading-relaxed">
+            Subí tu builder score, sumá seguidores, conseguí recomendaciones y escalá
+            posiciones. ¿Llegás al podio?
+          </p>
+        </div>
+      </header>
+
+      {/* CONTENT */}
+      <main className="flex-1 px-6 md:px-10 pb-32 max-w-4xl mx-auto w-full pt-4">
+        <LeaderboardClient currentUserId={user?.id} />
+      </main>
+
+      {/* FOOTER */}
+      <footer className="py-10 px-6 border-t border-[var(--border)] flex flex-col md:flex-row items-center justify-between gap-4 max-w-6xl mx-auto w-full">
+        <div className="flex flex-col items-center md:items-start gap-1">
+          <div className="logo text-[var(--text-muted)] text-sm font-mono font-bold tracking-tight">huevsite.io</div>
+          <div className="text-xs text-[var(--text-dim)]">Mostrá lo que buildeás.</div>
+        </div>
+        <div className="flex gap-6">
+          <Link href="/explore" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">Explorar</Link>
+          <Link href="/showcase" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">Showcase</Link>
+          <Link href="/feed" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">Feed</Link>
+        </div>
+      </footer>
+    </div>
+  );
+}

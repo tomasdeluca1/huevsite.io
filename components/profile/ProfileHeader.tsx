@@ -7,9 +7,10 @@ import { NominateButton } from "@/components/social/NominateButton";
 import { FollowListModal } from "@/components/social/FollowListModal";
 
 import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
-import { BadgeCheck, Globe, ChevronDown, ArrowUpRight, Sparkles } from "lucide-react";
+import { BadgeCheck, Globe, ChevronDown, ArrowUpRight, Sparkles, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { BlockData } from "@/lib/profile-types";
+import { ShareProfileModal } from "@/components/share/ShareProfileModal";
 
 interface Props {
   profileId?: string;
@@ -54,6 +55,7 @@ export function ProfileHeader({
   const [localFollowersCount, setLocalFollowersCount] = useState(followersCount);
   const [localNominationsCount, setLocalNominationsCount] = useState(nominationsCount);
   const [isScoreOpen, setIsScoreOpen] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
 
   const ecosystemBlock = blocks.find(b => b.type === 'ecosystem' && b.visible) as any;
   const hideHeaderEcosystem = ecosystemBlock?.hideHeaderEcosystem;
@@ -118,6 +120,15 @@ export function ProfileHeader({
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsShareOpen(true)}
+              className="flex items-center gap-2 !text-[10px] md:!text-xs !py-2 md:!py-3 !px-3 md:!px-4 rounded-xl md:!rounded-2xl border border-white/5 bg-white/5 hover:bg-[var(--accent)]/10 hover:border-[var(--accent)]/30 transition-all text-white/70 hover:text-white font-bold"
+              aria-label="Compartir este huevsite"
+            >
+              <Share2 size={14} className="text-[var(--accent)]" />
+              <span className="hidden sm:inline uppercase tracking-widest">Compartir</span>
+            </button>
+
             {currentUserId ? (
               <Link
                 href="/dashboard"
@@ -299,6 +310,13 @@ export function ProfileHeader({
       )}
 
       <ScoreInfoModal isOpen={isScoreOpen} onClose={() => setIsScoreOpen(false)} accentColor={accentColor} profileId={profileId} />
+
+      <ShareProfileModal
+        isOpen={isShareOpen}
+        onClose={() => setIsShareOpen(false)}
+        username={username}
+        accentColor={accentColor}
+      />
     </header>
   );
 }

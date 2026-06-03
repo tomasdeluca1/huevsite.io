@@ -43,6 +43,7 @@ import { createClient } from "@/lib/supabase/client";
 import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
 import { UpgradeModal } from "@/components/dashboard/UpgradeModal";
 import { DashboardSidebar } from "@/components/dashboard/Sidebar";
+import { ShareProfileModal } from "@/components/share/ShareProfileModal";
 import { InsightsTab } from "@/components/dashboard/InsightsTab";
 import { CreateSubSiteModal } from "@/components/dashboard/CreateSubSiteModal";
 import { DomainConnectionCard } from "@/components/dashboard/DomainConnectionCard";
@@ -76,6 +77,8 @@ export default function DashboardPage() {
   const [isCreateSubSiteOpen, setIsCreateSubSiteOpen] = useState(false);
   const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
   const [isLinktreeRefactorOpen, setIsLinktreeRefactorOpen] = useState(false);
+  const [isShareProfileOpen, setIsShareProfileOpen] = useState(false);
+  const [shareCelebrate, setShareCelebrate] = useState(false);
   const [isClaimingTrial, setIsClaimingTrial] = useState(false);
   const [trialBannerDismissed, setTrialBannerDismissed] = useState(false);
   const [blockChooserResolved, setBlockChooserResolved] = useState(false);
@@ -548,6 +551,24 @@ export default function DashboardPage() {
 
   const visibleBlocks = profile?.blocks.filter(b => b.visible !== false) || [];
   const hiddenBlocks = profile?.blocks.filter(b => b.visible === false) || [];
+
+  // One-time celebration: when a brand-new profile becomes "shareable" (complete
+  // enough), open the share modal with confetti exactly once. Persisted in
+  // localStorage so it never nags again. No DB writes involved.
+  useEffect(() => {
+    if (loading || !profile?.username) return;
+    if (typeof window === "undefined") return;
+    const isShareable = Boolean(
+      profile.displayName && profile.avatarUrl && profile.tagline && visibleBlocks.length >= 3
+    );
+    if (!isShareable) return;
+    const key = `huevsite_share_celebrated_${profile.username}`;
+    if (localStorage.getItem(key)) return;
+    localStorage.setItem(key, "1");
+    setShareCelebrate(true);
+    setIsShareProfileOpen(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, profile?.username, profile?.displayName, profile?.avatarUrl, profile?.tagline, visibleBlocks.length]);
 
   const handleBlockChooserConfirm = async (keepBlockIds: string[]) => {
     if (!profile) return;
@@ -1239,6 +1260,7 @@ export default function DashboardPage() {
         onShareUnlocked={(extraBlocks) => {
           setProfile(prev => prev ? { ...prev, twitterShareUnlocked: true, extraBlocksFromShare: extraBlocks } : null);
         }}
+        onShareProfile={() => { setShareCelebrate(false); setIsShareProfileOpen(true); }}
         visibleBlockCount={visibleBlocks.length}
       />
 
@@ -1883,6 +1905,17 @@ export default function DashboardPage() {
           isClaimingTrial={isClaimingTrial}
         />
       )}
+
+      <ShareProfileModal
+        isOpen={isShareProfileOpen}
+        onClose={() => { setIsShareProfileOpen(false); setShareCelebrate(false); }}
+        url={`${typeof window !== "undefined" ? window.location.origin : "https://huevsite.io"}/${profile.username}`}
+        username={profile.username}
+        displayName={profile.displayName}
+        accentColor={profile.accentColor}
+        message={`Armé mi huevsite — mi portfolio de builder 🚀\nhttps://huevsite.io/${profile.username}`}
+        celebrate={shareCelebrate}
+      />
       <ProFeatureTour
         isOpen={isProTourOpen}
         onClose={() => setIsProTourOpen(false)}

@@ -42,6 +42,12 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
           huev<span>site</span>.io
         </Link>
         <div className="flex items-center gap-2">
+          <Link
+            href="/leaderboard"
+            className="hidden sm:flex items-center text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] hover:text-white transition-colors px-4 py-3"
+          >
+            Ranking
+          </Link>
           <Link href={user ? "/dashboard" : "/login"} className="btn btn-accent text-xs md:text-sm font-bold !px-6 !py-3 !rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-lg shadow-[var(--accent)]/20">
             {user ? "Mi huevsite" : "Crear mi huevsite"}
           </Link>

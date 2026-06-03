@@ -5,12 +5,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Trophy, Settings, ArrowLeft, Copy, Check, Globe, Activity,
   Compass, Save, LogOut, MessageSquare, Layout as LayoutIcon,
-  Sparkles, ArrowUpRight, Lock, ChevronRight, User, PlusCircle, Trash2, Link2, Mail
+  Sparkles, ArrowUpRight, Lock, ChevronRight, User, PlusCircle, Trash2, Link2, Mail, Share2, Medal
 } from "lucide-react";
 import Link from "next/link";
 import { ProfileData, BlockType, PRESET_BORDER_RADIUS } from "@/lib/profile-types";
 import { ColorPicker } from "./ColorPicker";
 import { BlockSelector } from "./BlockSelector";
+import { QuestPanel } from "./QuestPanel";
 
 interface SidebarProps {
   profile: ProfileData;
@@ -40,6 +41,7 @@ interface SidebarProps {
   activeTab: 'board' | 'insights' | 'subsites' | 'domain' | 'transfer';
   setActiveTab: (tab: 'board' | 'insights' | 'subsites' | 'domain' | 'transfer') => void;
   onShareUnlocked: (extraBlocks: number) => void;
+  onShareProfile: () => void;
   visibleBlockCount?: number;
 }
 
@@ -71,6 +73,7 @@ export function DashboardSidebar({
   activeTab,
   setActiveTab,
   onShareUnlocked,
+  onShareProfile,
   visibleBlockCount
 }: SidebarProps) {
   
@@ -230,7 +233,22 @@ export function DashboardSidebar({
 
         {/* Scrollable Content */}
         <div className="relative z-0 flex-1 overflow-y-auto px-6 space-y-8 pb-8 custom-scrollbar">
-          
+
+          {/* Share CTA */}
+          <button
+            onClick={() => { setIsSidebarOpen(false); onShareProfile(); }}
+            className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-[var(--accent)]/10 border border-[var(--accent)]/25 hover:bg-[var(--accent)]/15 hover:border-[var(--accent)]/40 transition-all group text-left"
+          >
+            <div className="w-9 h-9 rounded-xl bg-[var(--accent)] flex items-center justify-center text-black shrink-0 group-hover:scale-105 transition-transform shadow-[0_0_15px_var(--accent)]/40">
+              <Share2 size={16} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-black text-white">Compartir mi huevsite</div>
+              <div className="text-[10px] font-mono text-white/40 truncate">Link, QR y redes para difundir tu board</div>
+            </div>
+            <ChevronRight size={14} className="text-white/30 group-hover:translate-x-0.5 transition-transform" />
+          </button>
+
           {/* Main Actions Section */}
           <div className="space-y-3">
             <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] pl-1 mb-2">Editor</div>
@@ -321,7 +339,19 @@ export function DashboardSidebar({
               {(profile.builderScore || 0) < 100 ? "Validá tu perfil para aparecer en el ranking." : "¡Vas por buen camino! Agregá más proyectos."}
             </p>
           </motion.div>
-          
+
+          {/* Quests / Badge progress */}
+          <QuestPanel
+            profile={profile}
+            visibleBlockCount={visibleBlockCount ?? profile.blocks.length}
+            accentColor={profile.accentColor}
+            borderRadius={profile.borderRadius}
+            onAddBlock={addBlock}
+            onEditProfile={() => openModal(setIsProfileModalOpen)}
+            onShare={() => { setIsSidebarOpen(false); onShareProfile(); }}
+            onUpgrade={() => openModal(setIsUpgradeModalOpen)}
+          />
+
           {/* AI Credits Card */}
           <div
             className="p-4 bg-white/[0.02] border border-white/[0.05] flex items-center justify-between group"
@@ -351,6 +381,7 @@ export function DashboardSidebar({
             <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] pl-1 mb-3">Comunidad</div>
             <SidebarLink href="/feed" icon={<Activity size={18} />} label="Feed Global" />
             <SidebarLink href="/explore" icon={<Compass size={18} />} label="Explorar Builders" />
+            <SidebarLink href="/leaderboard" icon={<Medal size={18} />} label="Ranking" />
             <SidebarLink href="/showcase" icon={<Sparkles size={18} />} label="Showcase" />
           </div>
 

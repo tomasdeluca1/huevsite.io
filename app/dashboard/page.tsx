@@ -1913,7 +1913,7 @@ export default function DashboardPage() {
         username={profile.username}
         displayName={profile.displayName}
         accentColor={profile.accentColor}
-        message={`Armé mi huevsite — mi portfolio de builder 🚀\nhttps://huevsite.io/${profile.username}`}
+        message={`Armé mi huevsite — mi portfolio de builder 🚀`}
         celebrate={shareCelebrate}
       />
       <ProFeatureTour

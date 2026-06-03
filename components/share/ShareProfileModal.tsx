@@ -123,9 +123,14 @@ export function ShareProfileModal({
 
   const canNativeShare = typeof navigator !== "undefined" && !!(navigator as any).share;
 
+  // The modal is the single source of the URL: strip any copy a caller may
+  // have embedded in `message`, so platforms that take the URL separately
+  // (X, Telegram, LinkedIn) and those that inline it (WhatsApp, email) never
+  // end up with the link twice.
+  const baseText = shareText.replace(shareUrl, "").replace(/\n{2,}/g, "\n").trim();
   const encodedUrl = encodeURIComponent(shareUrl);
-  const encodedText = encodeURIComponent(shareText);
-  const encodedTextWithUrl = encodeURIComponent(`${shareText}\n${shareUrl}`);
+  const encodedText = encodeURIComponent(baseText);
+  const encodedTextWithUrl = encodeURIComponent(baseText ? `${baseText}\n${shareUrl}` : shareUrl);
 
   const targets: ShareTarget[] = [
     {

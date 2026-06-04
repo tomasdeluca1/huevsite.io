@@ -831,8 +831,12 @@ nav {
 
 .huevsite-grid {
   display: grid;
-  /* Base: 2 columns for mobile and tablet */
-  grid-template-columns: repeat(2, 1fr);
+  /* Base: 2 columns for mobile and tablet.
+     minmax(0, 1fr) (not plain 1fr) so columns can shrink below their
+     content's min-content width — otherwise wide block content (avatars,
+     long titles) blows the grid past the viewport and the whole profile
+     scrolls sideways on mobile. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-auto-rows: minmax(110px, auto);
   gap: 12px;
   grid-auto-flow: dense;
@@ -842,7 +846,7 @@ nav {
 /* Stable break: Above 1128px (Desktop), we go to 4 columns */
 @media (min-width: 1128px) {
   .huevsite-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     grid-auto-rows: minmax(130px, auto);
     gap: 20px;
   }
@@ -2335,7 +2339,10 @@ footer {
 
 @media (max-width: 640px) {
   .huevsite-grid {
-    grid-template-columns: 1fr;
+    /* minmax(0, 1fr), not 1fr: a single 1fr column still grows to the widest
+       block's min-content (wide avatars/titles), pushing the profile past the
+       viewport and causing horizontal scroll. minmax(0,...) lets it shrink. */
+    grid-template-columns: minmax(0, 1fr);
     padding: 16px;
   }
 

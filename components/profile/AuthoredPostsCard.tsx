@@ -94,7 +94,7 @@ export async function AuthoredPostsCard({ username, accentColor }: Props) {
                         {formatDate(post.date)}
                       </span>
                     </div>
-                    <h3 className="text-base md:text-lg font-extrabold text-white leading-snug truncate">
+                    <h3 className="text-base md:text-lg font-extrabold text-white leading-snug line-clamp-2 break-words">
                       {post.title}
                     </h3>
                     {post.excerpt && (

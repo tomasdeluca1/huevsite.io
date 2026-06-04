@@ -1,209 +1,30 @@
 import { ImageResponse } from "next/og";
+import {
+  ACCENT,
+  BORDER,
+  TEXT_DIM,
+  TEXT_MUTED,
+  OG_SIZE,
+  OG_CONTENT_TYPE,
+  truncate,
+  AvatarCircle,
+  Wordmark,
+  Eyebrow,
+  InnerBorder,
+  rootStyle,
+  fetchCurrentWinner,
+  type Winner,
+} from "@/lib/og/shared";
 
 export const dynamic = "force-dynamic";
 export const runtime = "edge";
 
 export const alt = "huevsite.io — el portfolio que no da vergüenza ajena";
-export const size = { width: 1200, height: 630 };
-export const contentType = "image/png";
-
-const ACCENT_FALLBACK = "#C8FF00";
-const BORDER = "rgba(255,255,255,0.08)";
-const TEXT_DIM = "rgba(255,255,255,0.62)";
-const TEXT_MUTED = "rgba(255,255,255,0.40)";
-
-type Winner = {
-  username: string;
-  name: string | null;
-  image: string | null;
-  tagline: string | null;
-  accent_color: string | null;
-};
-
-async function fetchCurrentWinner(): Promise<Winner | null> {
-  const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!baseUrl || !key) return null;
-
-  const url = `${baseUrl}/rest/v1/showcase_winners?select=user:profiles!showcase_winners_user_id_fkey(username,name,image,tagline,accent_color)&order=week.desc&limit=1`;
-
-  try {
-    const res = await fetch(url, {
-      headers: { apikey: key, Authorization: `Bearer ${key}` },
-      cache: "no-store",
-    });
-    if (!res.ok) return null;
-    const rows = (await res.json()) as Array<{ user: Winner | null }>;
-    return rows[0]?.user ?? null;
-  } catch {
-    return null;
-  }
-}
-
-function truncate(text: string, max: number) {
-  if (!text) return "";
-  return text.length <= max ? text : `${text.slice(0, max - 1).trimEnd()}…`;
-}
-
-// Satori on edge doesn't decode webp. Route remote avatars through a free
-// image proxy that re-encodes to jpeg at a fixed size.
-function safeAvatarUrl(src: string | null, size: number): string | null {
-  if (!src) return null;
-  if (!src.startsWith("http")) return null;
-  const encoded = encodeURIComponent(src);
-  return `https://images.weserv.nl/?url=${encoded}&w=${size * 2}&h=${
-    size * 2
-  }&fit=cover&output=jpg`;
-}
-
-function Wordmark() {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-      <div
-        style={{
-          width: 12,
-          height: 12,
-          borderRadius: 999,
-          background: ACCENT_FALLBACK,
-          display: "flex",
-          boxShadow: `0 0 24px ${ACCENT_FALLBACK}`,
-        }}
-      />
-      <span
-        style={{
-          color: "white",
-          fontSize: 28,
-          fontWeight: 900,
-          letterSpacing: "-0.04em",
-          display: "flex",
-        }}
-      >
-        huevsite.io
-      </span>
-    </div>
-  );
-}
-
-function BuilderBadge({ accent }: { accent: string }) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 12,
-        padding: "10px 18px",
-        borderRadius: 999,
-        background: `${accent}1f`,
-        border: `1px solid ${accent}66`,
-      }}
-    >
-      <div
-        style={{
-          width: 10,
-          height: 10,
-          borderRadius: 999,
-          background: accent,
-          display: "flex",
-          boxShadow: `0 0 14px ${accent}`,
-        }}
-      />
-      <span
-        style={{
-          color: accent,
-          fontSize: 14,
-          fontWeight: 900,
-          letterSpacing: "0.24em",
-          textTransform: "uppercase",
-          display: "flex",
-        }}
-      >
-        Builder de la Semana
-      </span>
-    </div>
-  );
-}
-
-function AvatarCircle({
-  url,
-  name,
-  size: avatarSize,
-  accent,
-}: {
-  url: string | null;
-  name: string;
-  size: number;
-  accent: string;
-}) {
-  const proxied = safeAvatarUrl(url, avatarSize);
-  if (proxied) {
-    return (
-      <img
-        src={proxied}
-        width={avatarSize}
-        height={avatarSize}
-        style={{
-          width: avatarSize,
-          height: avatarSize,
-          borderRadius: 999,
-          objectFit: "cover",
-          border: `4px solid ${accent}`,
-        }}
-      />
-    );
-  }
-  return (
-    <div
-      style={{
-        width: avatarSize,
-        height: avatarSize,
-        borderRadius: 999,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: `linear-gradient(135deg, ${accent} 0%, ${accent}aa 100%)`,
-        color: "black",
-        fontSize: Math.round(avatarSize * 0.42),
-        fontWeight: 900,
-        border: `4px solid ${accent}`,
-      }}
-    >
-      {(name || "?").charAt(0).toUpperCase()}
-    </div>
-  );
-}
-
-function rootStyle(accent: string) {
-  return {
-    width: "100%",
-    height: "100%",
-    display: "flex",
-    flexDirection: "column" as const,
-    padding: "56px 64px",
-    color: "white",
-    background: `radial-gradient(circle at 14% 12%, ${accent}26 0%, transparent 42%), radial-gradient(circle at 88% 88%, ${accent}1f 0%, transparent 48%), linear-gradient(160deg, #050505 0%, #0c0c0c 55%, #0a0a0a 100%)`,
-    position: "relative" as const,
-  };
-}
-
-function InnerBorder() {
-  return (
-    <div
-      style={{
-        position: "absolute",
-        top: 24,
-        left: 24,
-        right: 24,
-        bottom: 24,
-        border: `1px solid ${BORDER}`,
-        borderRadius: 28,
-        display: "flex",
-      }}
-    />
-  );
-}
+export const size = OG_SIZE;
+export const contentType = OG_CONTENT_TYPE;
 
 function renderWithWinner(winner: Winner) {
-  const accent = winner.accent_color || ACCENT_FALLBACK;
+  const accent = winner.accent_color || ACCENT;
   const name = winner.name || winner.username;
   const tagline = truncate(winner.tagline || "", 64);
 
@@ -219,7 +40,7 @@ function renderWithWinner(winner: Winner) {
         }}
       >
         <Wordmark />
-        <BuilderBadge accent={accent} />
+        <Eyebrow label="Builder de la Semana" accent={accent} />
       </div>
 
       <div
@@ -371,7 +192,7 @@ function renderWithWinner(winner: Winner) {
             display: "flex",
             padding: "12px 22px",
             borderRadius: 14,
-            background: ACCENT_FALLBACK,
+            background: ACCENT,
             color: "black",
             fontSize: 16,
             fontWeight: 900,
@@ -399,7 +220,7 @@ function renderWithWinner(winner: Winner) {
 
 function renderBrandOnly() {
   return (
-    <div style={rootStyle(ACCENT_FALLBACK)}>
+    <div style={rootStyle(ACCENT)}>
       <InnerBorder />
 
       <Wordmark />
@@ -449,7 +270,7 @@ function renderBrandOnly() {
             display: "flex",
             padding: "14px 24px",
             borderRadius: 14,
-            background: ACCENT_FALLBACK,
+            background: ACCENT,
             color: "black",
             fontSize: 18,
             fontWeight: 900,

@@ -16,6 +16,7 @@ import {
   Archive,
   Bug,
   Lightbulb,
+  Music,
 } from "lucide-react";
 
 interface InterviewRow {
@@ -337,6 +338,12 @@ export default function AdminDashboard() {
             icon={<Trophy size={16} />}
             label="Showcase"
             hint="Winners de la semana"
+          />
+          <QuickLink
+            href="/admin/jingles"
+            icon={<Music size={16} />}
+            label="Jingles"
+            hint="Votación del jingle"
           />
           <QuickLink
             href="/admin/danger"

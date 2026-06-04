@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   ExternalLink,
+  Music,
 } from "lucide-react";
 
 type NavItem = {
@@ -27,6 +28,7 @@ const NAV: NavItem[] = [
   { href: "/admin/interviews", label: "Interviews", icon: Mic },
   { href: "/admin/feedback", label: "Feedback", icon: MessageSquare },
   { href: "/admin/showcase", label: "Showcase", icon: Trophy },
+  { href: "/admin/jingles", label: "Jingles", icon: Music },
   { href: "/admin/twitter", label: "Twitter", icon: Share2 },
   { href: "/admin/danger", label: "Danger", icon: AlertTriangle },
 ];

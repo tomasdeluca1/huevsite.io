@@ -44,6 +44,8 @@ import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
 import { UpgradeModal } from "@/components/dashboard/UpgradeModal";
 import { DashboardSidebar } from "@/components/dashboard/Sidebar";
 import { ShareProfileModal } from "@/components/share/ShareProfileModal";
+import { JingleVoteModal } from "@/components/jingle/JingleVoteModal";
+import type { JingleChoice } from "@/lib/jingles";
 import { InsightsTab } from "@/components/dashboard/InsightsTab";
 import { CreateSubSiteModal } from "@/components/dashboard/CreateSubSiteModal";
 import { DomainConnectionCard } from "@/components/dashboard/DomainConnectionCard";
@@ -79,6 +81,8 @@ export default function DashboardPage() {
   const [isLinktreeRefactorOpen, setIsLinktreeRefactorOpen] = useState(false);
   const [isShareProfileOpen, setIsShareProfileOpen] = useState(false);
   const [shareCelebrate, setShareCelebrate] = useState(false);
+  const [showJingle, setShowJingle] = useState(false);
+  const [jingleVote, setJingleVote] = useState<JingleChoice | null>(null);
   const [isClaimingTrial, setIsClaimingTrial] = useState(false);
   const [trialBannerDismissed, setTrialBannerDismissed] = useState(false);
   const [blockChooserResolved, setBlockChooserResolved] = useState(false);
@@ -569,6 +573,28 @@ export default function DashboardPage() {
     setIsShareProfileOpen(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, profile?.username, profile?.displayName, profile?.avatarUrl, profile?.tagline, visibleBlocks.length]);
+
+  // Jingle vote: once the user is loaded, fetch their vote. Show the modal once
+  // if they haven't voted and haven't snoozed it this session.
+  useEffect(() => {
+    if (loading || !profile?.username) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/jingle-vote");
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        const vote = (data?.myVote ?? null) as JingleChoice | null;
+        setJingleVote(vote);
+        const snoozed = typeof window !== "undefined" && sessionStorage.getItem("huevsite_jingle_snoozed");
+        if (!vote && !snoozed) setShowJingle(true);
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, profile?.username]);
 
   const handleBlockChooserConfirm = async (keepBlockIds: string[]) => {
     if (!profile) return;
@@ -1916,6 +1942,20 @@ export default function DashboardPage() {
         message={`Armé mi huevsite — mi portfolio de builder 🚀`}
         celebrate={shareCelebrate}
       />
+
+      <JingleVoteModal
+        isOpen={showJingle}
+        onClose={() => {
+          setShowJingle(false);
+          if (!jingleVote && typeof window !== "undefined") {
+            sessionStorage.setItem("huevsite_jingle_snoozed", "1");
+          }
+        }}
+        accentColor={profile.accentColor}
+        initialVote={jingleVote}
+        onVoted={(choice) => setJingleVote(choice)}
+      />
+
       <ProFeatureTour
         isOpen={isProTourOpen}
         onClose={() => setIsProTourOpen(false)}

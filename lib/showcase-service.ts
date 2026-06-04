@@ -122,7 +122,7 @@ export async function getShowcaseData(requestedWeek?: string | null) {
     const { data: randomData } = await supabase
       .from("profiles")
       .select(`
-        id, username, name, image, accent_color, tagline,
+        id, username, name, image, accent_color, tagline, builder_score,
         blocks:blocks (*),
         sub_sites:sub_sites (*)
       `)

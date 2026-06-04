@@ -4,8 +4,8 @@ import { ReactNode, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { WinnerSection } from "@/components/landing/WinnerSection";
-import { ProfileGrid } from "@/components/profile/ProfileGrid";
-import { BlockPreviewContext } from "@/lib/block-preview-context";
+import { BuilderSpotlightCard } from "@/components/landing/BuilderSpotlightCard";
+import { LatamFlags } from "@/components/landing/LatamFlags";
 import { supabase } from "@/lib/supabase";
 import { lemonCheckoutUrl } from "@/lib/lemon-checkout-url";
 import { User } from "@supabase/supabase-js";
@@ -30,11 +30,10 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
   const [selectedRoles, setSelectedRoles] = useState<string[]>(['Developer', 'Founder']);
   const [user, setUser] = useState<User | null>(null);
   const [showMobileNav, setShowMobileNav] = useState(false);
-  const [heroVariant, setHeroVariant] = useState<HeroVariant>("claim");
+  const [heroVariant] = useState<HeroVariant>("social");
   const [claimInput, setClaimInput] = useState("");
   const [claimStatus, setClaimStatus] = useState<"idle" | "checking" | "available" | "taken" | "invalid" | "error">("idle");
   const [claimSuggestions, setClaimSuggestions] = useState<string[]>([]);
-  const [heroSliderIndex, setHeroSliderIndex] = useState(0);
 
   const heroProfiles = useMemo(() => {
     if (!showcaseData) return [];
@@ -77,19 +76,18 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
       secondaryLabel: "Crear el mío gratis",
     },
     social: {
-      eyebrow: "Entrá por tracción real, no por promesas vacías",
+      eyebrow: "mostrá lo que buildeás",
       title: (
         <>
-          El lugar para <span className="accent">mostrar</span> <br className="hidden md:block" />
-          qué estás <br className="hidden md:block" />
-          construyendo ahora.
+          No digas que sos builder.<br className="hidden md:block" />{" "}
+          <span className="accent">Probalo.</span>
         </>
       ),
-      description: "No es un CV ni un bio link. Es tu espacio como builder — con proyectos reales, código en vivo y actividad genuina.",
-      primaryHref: "/feed",
-      primaryLabel: "Entrar por el feed",
-      secondaryHref: user ? "/dashboard" : "/login",
-      secondaryLabel: user ? "Ir a mi dashboard" : "Crear el mío",
+      description: "Tu portfolio vivo: proyectos, código y métricas reales en un link que se actualiza solo. Donde los builders de LATAM se muestran de verdad.",
+      primaryHref: user ? "/dashboard" : "/login",
+      primaryLabel: user ? "Ir a mi dashboard" : "Armá el tuyo — gratis",
+      secondaryHref: "/feed",
+      secondaryLabel: "Ver el feed",
     },
     product: {
       eyebrow: "Así luce tu perfil en producción",
@@ -181,17 +179,10 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
         window.location.href = `/auth/callback?code=${code}`;
       }
 
-      const storedVariant = window.localStorage.getItem("hs_lp_hero_variant_v3") as HeroVariant | null;
-      if (storedVariant === "claim" || storedVariant === "social" || storedVariant === "product") {
-        setHeroVariant(storedVariant);
-        trackLandingEvent("landing_hero_variant_seen", { variant: storedVariant });
-      } else {
-        const r = Math.random();
-        const assignedVariant: HeroVariant = r < 0.33 ? "claim" : r < 0.66 ? "social" : "product";
-        window.localStorage.setItem("hs_lp_hero_variant_v3", assignedVariant);
-        setHeroVariant(assignedVariant);
-        trackLandingEvent("landing_hero_variant_seen", { variant: assignedVariant });
-      }
+      // Single consolidated hero ("show, don't tell"). The previous 3-way split
+      // was dropped — at this traffic it couldn't reach significance. We ship the
+      // strongest variant and track conversion to inform a future test at scale.
+      trackLandingEvent("landing_hero_seen", { variant: "social" });
     }
 
     const cells = [];
@@ -272,15 +263,6 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
     };
   }, [normalizedClaim]);
 
-  // Auto-advance hero profile slider
-  useEffect(() => {
-    if (heroProfiles.length <= 1) return;
-    const interval = setInterval(() => {
-      setHeroSliderIndex(prev => (prev + 1) % heroProfiles.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [heroProfiles.length]);
-
   // Price Section - Show to everyone
   const showPricing = true;
 
@@ -360,6 +342,7 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
             <div className="badge">
               <span className="dot"></span>
               {currentHero.eyebrow}
+              <LatamFlags />
             </div>
 
             <h1 className="text-center xl:text-left leading-[1.05]">
@@ -419,58 +402,7 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
                 Vista previa real
               </div>
               {heroProfiles.length > 0 ? (
-                <div className="hpp-browser">
-                  <div className="hpp-browser-bar">
-                    <div className="hpp-browser-dots">
-                      <span /><span /><span />
-                    </div>
-                    <AnimatePresence mode="wait">
-                      <motion.span
-                        key={heroProfiles[heroSliderIndex]?.username}
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="hpp-browser-url"
-                      >
-                        huevsite.io/{heroProfiles[heroSliderIndex]?.username}
-                      </motion.span>
-                    </AnimatePresence>
-                    {heroProfiles.length > 1 && (
-                      <div className="hpp-nav-dots">
-                        {heroProfiles.map((_: any, i: number) => (
-                          <button
-                            key={i}
-                            onClick={() => setHeroSliderIndex(i)}
-                            className={`hpp-nav-dot${i === heroSliderIndex ? ' hpp-nav-dot--active' : ''}`}
-                            aria-label={`Ver perfil ${i + 1}`}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div className="hpp-browser-content">
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={heroSliderIndex}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="hpp-profile-scaler"
-                      >
-                        <BlockPreviewContext.Provider value={true}>
-                          <div className="hpp-profile-inner hpp-preview-grid">
-                            <ProfileGrid
-                              blocks={heroProfiles[heroSliderIndex]?.blocks}
-                              accentColor={heroProfiles[heroSliderIndex]?.accent_color}
-                              displayName={heroProfiles[heroSliderIndex]?.name || heroProfiles[heroSliderIndex]?.username}
-                              tagline={heroProfiles[heroSliderIndex]?.tagline || undefined}
-                            />
-                          </div>
-                        </BlockPreviewContext.Provider>
-                      </motion.div>
-                    </AnimatePresence>
-                  </div>
-                </div>
+                <BuilderSpotlightCard builders={heroProfiles} />
               ) : (
                 <div className="hpp-card">
                   <div className="hpp-header">

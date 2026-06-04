@@ -20,6 +20,7 @@ export function JingleVoteModal({ isOpen, onClose, accentColor = "var(--accent)"
   const [submitting, setSubmitting] = useState<JingleChoice | null>(null);
   const [error, setError] = useState<string | null>(null);
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => setMounted(true), []);
   useEffect(() => setMyVote(initialVote), [initialVote]);
@@ -31,6 +32,7 @@ export function JingleVoteModal({ isOpen, onClose, accentColor = "var(--accent)"
       document.body.style.overflow = "unset";
       // Pause any playing video when the modal closes.
       Object.values(videoRefs.current).forEach((v) => v && v.pause());
+      if (closeTimer.current) clearTimeout(closeTimer.current);
     };
   }, [isOpen]);
 
@@ -57,11 +59,19 @@ export function JingleVoteModal({ isOpen, onClose, accentColor = "var(--accent)"
       }
       setMyVote(choice);
       onVoted?.(choice);
+      // Branded confetti: huevsite accent + greens + white.
+      const accentHex = accentColor.startsWith("#") ? accentColor : "#C8FF00";
       import("canvas-confetti")
-        .then((m) =>
-          m.default({ particleCount: 110, spread: 75, origin: { y: 0.7 }, disableForReducedMotion: true })
-        )
+        .then((m) => {
+          const confetti = m.default;
+          const opts = { disableForReducedMotion: true, colors: [accentHex, "#C8FF00", "#00FF88", "#ffffff"] };
+          confetti({ ...opts, particleCount: 130, spread: 85, startVelocity: 42, origin: { y: 0.6 } });
+          setTimeout(() => confetti({ ...opts, particleCount: 70, spread: 110, scalar: 0.9, origin: { y: 0.55 } }), 220);
+        })
         .catch(() => {});
+      // Auto-close shortly after voting so the modal gets out of the way.
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+      closeTimer.current = setTimeout(() => onClose(), 2600);
     } catch {
       setError("Error de conexión. Probá de nuevo.");
     } finally {
@@ -113,7 +123,7 @@ export function JingleVoteModal({ isOpen, onClose, accentColor = "var(--accent)"
             </h3>
             <p className="text-[var(--text-dim)] text-sm leading-relaxed mb-6">
               {myVote
-                ? "Tu voto quedó registrado. Podés cambiarlo tocando la otra opción."
+                ? "¡Tu voto quedó registrado! Gracias por ser parte de huevsite. 🙌 Cerrando…"
                 : "Escuchá las dos y votá la que más te represente. Tu voto define el sonido de huevsite."}
             </p>
 

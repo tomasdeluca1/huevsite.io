@@ -232,7 +232,7 @@ export function DashboardSidebar({
         </div>
 
         {/* Scrollable Content */}
-        <div className="relative z-0 flex-1 overflow-y-auto px-6 space-y-8 pb-8 custom-scrollbar">
+        <div className="relative z-0 flex-1 overflow-y-auto px-6 space-y-5 pb-8 custom-scrollbar">
 
           {/* Share CTA */}
           <button

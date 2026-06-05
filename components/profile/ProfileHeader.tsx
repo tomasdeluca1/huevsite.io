@@ -172,15 +172,15 @@ export function ProfileHeader({
           className="overflow-visible px-3 sm:px-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6"
         >
           {isEnabledSocialNetwork && profileId && (
-            <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-2 w-full lg:w-auto">
+            <div className="grid grid-cols-4 sm:flex sm:items-center gap-1.5 sm:gap-2 w-full lg:w-auto">
               <button
                 onClick={() => setModalType("followers")}
-                className="flex flex-col items-center px-2 py-3 sm:px-5 sm:py-2.5 rounded-2xl bg-white/5 border border-white/5 sm:bg-transparent sm:border-transparent hover:bg-white/5 transition-all group shrink-0 hover:border-white/5"
+                className="flex flex-col items-center px-1 py-2 sm:px-5 sm:py-2.5 rounded-2xl bg-white/5 border border-white/5 sm:bg-transparent sm:border-transparent hover:bg-white/5 transition-all group shrink-0 hover:border-white/5"
               >
-                <span className="font-mono font-bold text-white text-base sm:text-lg leading-tight group-hover:scale-110 transition-transform">
+                <span className="font-mono font-bold text-white text-sm sm:text-lg leading-tight group-hover:scale-110 transition-transform">
                   {localFollowersCount || 0}
                 </span>
-                <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-[var(--text-muted)] font-black">
+                <span className="text-[8px] sm:text-[10px] uppercase tracking-[0.08em] sm:tracking-[0.2em] text-[var(--text-muted)] font-black">
                   Seguidores
                 </span>
               </button>
@@ -189,23 +189,23 @@ export function ProfileHeader({
 
               <button
                 onClick={() => setModalType("following")}
-                className="flex flex-col items-center px-2 py-3 sm:px-5 sm:py-2.5 rounded-2xl bg-white/5 border border-white/5 sm:bg-transparent sm:border-transparent hover:bg-white/5 transition-all group shrink-0 hover:border-white/5"
+                className="flex flex-col items-center px-1 py-2 sm:px-5 sm:py-2.5 rounded-2xl bg-white/5 border border-white/5 sm:bg-transparent sm:border-transparent hover:bg-white/5 transition-all group shrink-0 hover:border-white/5"
               >
-                <span className="font-mono font-bold text-white text-base sm:text-lg leading-tight group-hover:scale-110 transition-transform">
+                <span className="font-mono font-bold text-white text-sm sm:text-lg leading-tight group-hover:scale-110 transition-transform">
                   {followingCount || 0}
                 </span>
-                <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-[var(--text-muted)] font-black">
+                <span className="text-[8px] sm:text-[10px] uppercase tracking-[0.08em] sm:tracking-[0.2em] text-[var(--text-muted)] font-black">
                   Siguiendo
                 </span>
               </button>
 
               <div className="hidden sm:block w-px h-8 bg-white/10 shrink-0" />
 
-              <div className="flex flex-col items-center px-2 py-3 sm:px-5 sm:py-2.5 rounded-2xl bg-white/5 border border-white/5 sm:bg-transparent sm:border-transparent shrink-0">
-                <span className="font-mono font-bold text-white text-base sm:text-lg leading-tight">
+              <div className="flex flex-col items-center px-1 py-2 sm:px-5 sm:py-2.5 rounded-2xl bg-white/5 border border-white/5 sm:bg-transparent sm:border-transparent shrink-0">
+                <span className="font-mono font-bold text-white text-sm sm:text-lg leading-tight">
                   {localNominationsCount || 0}
                 </span>
-                <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-[var(--text-muted)] font-black">
+                <span className="text-[8px] sm:text-[10px] uppercase tracking-[0.08em] sm:tracking-[0.2em] text-[var(--text-muted)] font-black">
                   Nominaciones
                 </span>
               </div>
@@ -214,12 +214,12 @@ export function ProfileHeader({
 
               <button
                 onClick={() => setIsScoreOpen(true)}
-                className="flex flex-col items-center px-2 py-3 sm:px-5 sm:py-2.5 rounded-2xl bg-[var(--accent)]/5 border border-[var(--accent)]/20 sm:bg-transparent sm:border-transparent group relative shrink-0 hover:border-[var(--accent)]/30 hover:bg-[var(--accent)]/5 transition-all"
+                className="flex flex-col items-center px-1 py-2 sm:px-5 sm:py-2.5 rounded-2xl bg-[var(--accent)]/5 border border-[var(--accent)]/20 sm:bg-transparent sm:border-transparent group relative shrink-0 hover:border-[var(--accent)]/30 hover:bg-[var(--accent)]/5 transition-all"
               >
                 <span className="font-mono text-[var(--accent)] text-lg sm:text-xl leading-tight group-hover:scale-110 transition-transform font-black">
                   {builderScore || 0}
                 </span>
-                <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-[var(--text-muted)] font-black">
+                <span className="text-[8px] sm:text-[10px] uppercase tracking-[0.08em] sm:tracking-[0.2em] text-[var(--text-muted)] font-black">
                   Score 🔥
                 </span>
 

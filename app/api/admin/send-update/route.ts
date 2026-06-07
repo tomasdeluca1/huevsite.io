@@ -5,6 +5,7 @@ import { render } from "@react-email/render";
 import React from "react";
 import { ProductUpdateEmail } from "@/components/emails/ProductUpdateEmail";
 import { buildUnsubscribeUrl } from "@/lib/email-unsubscribe";
+import { listAllAuthUsers } from "@/lib/list-auth-users";
 import { SITE_URL } from "@/lib/site-url";
 
 export const dynamic = "force-dynamic";
@@ -59,6 +60,8 @@ export async function GET(request: NextRequest) {
     const secret = searchParams.get("secret");
     const preview = searchParams.get("preview") === "1";
     const testEmail = searchParams.get("test_email");
+    // Catch-up support: start_page=2 skips the first 50 auth users (already sent).
+    const startPage = Math.max(1, parseInt(searchParams.get("start_page") || "1", 10) || 1);
 
     if (!secret || secret !== process.env.ADMIN_SECRET) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -83,17 +86,17 @@ export async function GET(request: NextRequest) {
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!
       );
-      const { data: authData } = await supabase.auth.admin.listUsers();
+      const authUsers = await listAllAuthUsers(supabase, startPage);
       const { data: profs } = await supabase
         .from("profiles")
         .select("id, username, community_digest_unsubscribed")
         .not("username", "is", null);
       const profMap = new Map((profs || []).map((p) => [p.id, p]));
-      const eligible = (authData?.users || []).filter((u) => {
+      const eligible = authUsers.filter((u) => {
         const p = profMap.get(u.id);
         return u.email && p && !p.community_digest_unsubscribed;
       });
-      return NextResponse.json({ preview: true, eligibleRecipients: eligible.length, subject, features });
+      return NextResponse.json({ preview: true, startPage, authUsers: authUsers.length, eligibleRecipients: eligible.length, subject, features });
     }
 
     if (testEmail) {
@@ -112,12 +115,11 @@ export async function GET(request: NextRequest) {
       .not("username", "is", null);
     const profMap = new Map((profs || []).map((p) => [p.id, p]));
 
-    const { data: authData, error: authErr } = await supabase.auth.admin.listUsers();
-    if (authErr) throw authErr;
+    const authUsers = await listAllAuthUsers(supabase, startPage);
 
     let emailsSent = 0;
     const errors: string[] = [];
-    for (const u of authData.users) {
+    for (const u of authUsers) {
       if (!u.email) continue;
       const p = profMap.get(u.id);
       if (!p) continue;

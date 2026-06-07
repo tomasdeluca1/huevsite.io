@@ -4,6 +4,7 @@ import { Resend } from "resend";
 import { render } from "@react-email/render";
 import { MonthlyDigestEmail } from "@/components/emails/MonthlyDigestEmail";
 import { BLOG_POSTS } from "@/lib/blog-data";
+import { listAllAuthUsers } from "@/lib/list-auth-users";
 import React from "react";
 
 export const dynamic = "force-dynamic";
@@ -131,9 +132,7 @@ export async function GET(request: NextRequest) {
         if (testEmail) {
             usersToNotify = [{ email: testEmail }];
         } else {
-            const { data: { users }, error: authError } = await supabase.auth.admin.listUsers();
-            if (authError) throw authError;
-            usersToNotify = users;
+            usersToNotify = await listAllAuthUsers(supabase);
         }
 
         // Generate the HTML once

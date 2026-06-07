@@ -6,6 +6,7 @@ import React from "react";
 import { WeeklyDigestEmail } from "@/components/emails/WeeklyDigestEmail";
 import { postWeeklyDigest } from "@/lib/twitter";
 import { buildUnsubscribeUrl } from "@/lib/email-unsubscribe";
+import { listAllAuthUsers } from "@/lib/list-auth-users";
 import { getAllBlogPosts, getPostCategory } from "@/lib/blog-data";
 
 export const dynamic = "force-dynamic";
@@ -174,10 +175,9 @@ export async function GET(request: NextRequest) {
       await resend.emails.send({ from: "hi@huevsite.studio", to: testEmail!, subject, html });
       emailsSent = 1;
     } else if (!preview) {
-      const { data: authData, error: authErr } = await supabase.auth.admin.listUsers();
-      if (authErr) throw authErr;
+      const authUsers = await listAllAuthUsers(supabase);
 
-      for (const u of authData.users) {
+      for (const u of authUsers) {
         if (!u.email) continue;
         const prof = profileById.get(u.id);
         if (!prof) continue; // no published profile

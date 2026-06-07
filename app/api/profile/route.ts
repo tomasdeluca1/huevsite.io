@@ -211,6 +211,7 @@ export async function PATCH(request: NextRequest) {
       'border_radius',
       'is_onboarding_test_user',
       'newsletter_subscribed',
+      'community_digest_unsubscribed',
     ]
 
     // Segurizar: Solo usuarios PRO pueden configurar custom_domain

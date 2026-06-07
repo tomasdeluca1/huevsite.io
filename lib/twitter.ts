@@ -265,3 +265,51 @@ export async function postWeeklyStats(supabase: any, preview = false) {
     return null;
   }
 }
+
+/**
+ * Composes and posts the weekly community digest tweet:
+ * top point-gainers of the week + new projects count + latest news.
+ * Returns the composed text when preview=true, null when there is nothing to share.
+ */
+export async function postWeeklyDigest(
+  movers: { username: string; delta: number }[],
+  newProjectsCount: number,
+  news: { title: string } | null,
+  preview = false
+) {
+  if (movers.length === 0 && newProjectsCount === 0 && !news) return null;
+
+  const lines: string[] = ["🥚 Resumen semanal de huevsite", ""];
+
+  if (movers.length > 0) {
+    lines.push("🏆 Los que más subieron:");
+    const medals = ["👑", "🥈", "🥉"];
+    movers.slice(0, 3).forEach((m, i) => {
+      lines.push(`${medals[i] || "🔹"} @${m.username} (+${m.delta} pts)`);
+    });
+    lines.push("");
+  }
+
+  if (newProjectsCount > 0) {
+    lines.push(`🚀 ${newProjectsCount} ${newProjectsCount === 1 ? "proyecto nuevo" : "proyectos nuevos"} esta semana`);
+    lines.push("");
+  }
+
+  let text = lines.join("\n");
+  const footer = "huevsite.io/leaderboard\n#buildinpublic #latam";
+
+  // Add the news headline only if it keeps us under Twitter's 280 (URL ≈ 23 chars).
+  if (news?.title) {
+    const candidate = `${text}✨ ${news.title}\n\n`;
+    if (candidate.length + 23 + 25 <= 280) {
+      text = candidate;
+    } else {
+      text = `${text}\n`;
+    }
+  }
+
+  const finalText = `${text}${footer}`;
+
+  if (preview) return finalText;
+  return sendTweet(finalText);
+}

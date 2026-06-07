@@ -4,6 +4,7 @@ import {
   getPaginatedBlogPosts,
   isBuilderOfTheWeekPost,
   BLOG_POSTS_PER_PAGE,
+  BLOG_CATEGORIES,
   getBlogAuthorHref,
   PLATFORM_AUTHOR_USERNAME,
 } from "@/lib/blog-data";
@@ -56,14 +57,24 @@ export default async function BlogIndexPage({
 }: {
   searchParams: { tag?: string; page?: string };
 }) {
-  const activeTag = searchParams.tag;
+  // `?tag=` now carries a curated category slug (kept as `tag` for URL stability).
+  const activeCategory = searchParams.tag;
   const requestedPage = Math.max(1, parseInt(searchParams.page || "1", 10) || 1);
 
-  const { posts, totalPages, page, allTags, total } = await getPaginatedBlogPosts({
+  const { posts, totalPages, page, categoryCounts, total, totalAll } = await getPaginatedBlogPosts({
     page: requestedPage,
     pageSize: BLOG_POSTS_PER_PAGE,
-    tag: activeTag,
+    category: activeCategory,
   });
+
+  const activeCategoryLabel = BLOG_CATEGORIES.find((c) => c.slug === activeCategory)?.label;
+
+  const pillClass = (active: boolean) =>
+    `px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+      active
+        ? "bg-[var(--accent)] text-black shadow-[0_0_20px_var(--accent-dim)]"
+        : "bg-white/5 text-[var(--text-muted)] hover:bg-white/10 hover:text-white border border-white/10"
+    }`;
 
   return (
     <main className="min-h-screen bg-[var(--bg)] font-display py-12 px-4 max-w-4xl mx-auto">
@@ -79,35 +90,24 @@ export default async function BlogIndexPage({
         </p>
         <div className="mt-6 text-[11px] font-mono text-[var(--text-muted)] uppercase tracking-widest">
           {total} {total === 1 ? "post" : "posts"}
-          {activeTag ? ` · filtrados por #${activeTag}` : ""}
+          {activeCategoryLabel ? ` · ${activeCategoryLabel}` : ""}
         </div>
       </header>
 
-      {/* Tags Filter */}
+      {/* Category filter */}
       <div className="flex flex-wrap gap-2 mb-8">
-        <Link
-          href="/blog"
-          className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-            !activeTag
-              ? "bg-[var(--accent)] text-black shadow-[0_0_20px_var(--accent-dim)]"
-              : "bg-white/5 text-[var(--text-muted)] hover:bg-white/10 hover:text-white border border-white/10"
-          }`}
-        >
-          Todos
+        <Link href="/blog" className={pillClass(!activeCategory)}>
+          Todos <span className="opacity-50">· {totalAll}</span>
         </Link>
-        {allTags.map((tag) => (
-          <Link
-            key={tag}
-            href={`/blog?tag=${tag}`}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              activeTag === tag
-                ? "bg-[var(--accent)] text-black shadow-[0_0_20px_var(--accent-dim)]"
-                : "bg-white/5 text-[var(--text-muted)] hover:bg-white/10 hover:text-white border border-white/10"
-            }`}
-          >
-            #{tag}
-          </Link>
-        ))}
+        {BLOG_CATEGORIES.map((cat) => {
+          const count = categoryCounts[cat.slug] || 0;
+          if (count === 0) return null;
+          return (
+            <Link key={cat.slug} href={`/blog?tag=${cat.slug}`} className={pillClass(activeCategory === cat.slug)}>
+              {cat.label} <span className="opacity-50">· {count}</span>
+            </Link>
+          );
+        })}
       </div>
 
       {posts.length === 0 ? (
@@ -184,7 +184,7 @@ export default async function BlogIndexPage({
           <div className="flex items-center gap-2">
             {page > 1 && (
               <Link
-                href={buildPageHref(page - 1, activeTag)}
+                href={buildPageHref(page - 1, activeCategory)}
                 className="px-4 py-2 rounded-full text-sm font-bold bg-white/5 text-white hover:bg-white/10 border border-white/10 transition-colors"
               >
                 ← Anterior
@@ -193,7 +193,7 @@ export default async function BlogIndexPage({
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
               <Link
                 key={n}
-                href={buildPageHref(n, activeTag)}
+                href={buildPageHref(n, activeCategory)}
                 className={`w-9 h-9 flex items-center justify-center rounded-full text-sm font-bold transition-colors ${
                   n === page
                     ? "bg-[var(--accent)] text-black"
@@ -205,7 +205,7 @@ export default async function BlogIndexPage({
             ))}
             {page < totalPages && (
               <Link
-                href={buildPageHref(page + 1, activeTag)}
+                href={buildPageHref(page + 1, activeCategory)}
                 className="px-4 py-2 rounded-full text-sm font-bold bg-white/5 text-white hover:bg-white/10 border border-white/10 transition-colors"
               >
                 Siguiente →

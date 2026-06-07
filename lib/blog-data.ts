@@ -17,6 +17,188 @@ export interface BlogPost {
 
 const RAW_BLOG_POSTS: Omit<BlogPost, 'readingTime'>[] = [
   {
+    slug: "tu-github-con-numeros-de-verdad",
+    title: "Tu GitHub, con números de verdad",
+    excerpt: "El bloque de GitHub ahora trae datos reales —stars, repos, followers—, un heatmap de contribuciones de verdad y un contador de commits que podés navegar mes a mes.",
+    date: "2026-06-07",
+    tags: ["feature", "github", "update"],
+    author: {
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
+    },
+    content: `
+Si tenés el bloque de GitHub en tu perfil, capaz lo viste alguna vez con todo en cero: stars, repos y followers en 0, aunque tu cuenta estuviera conectada. Eso ya es historia.
+
+Reescribimos de raíz cómo traemos tu data de GitHub. Antes se pedía sin autenticar y, bajo carga, GitHub nos cortaba por rate limit y el bloque quedaba en cero en silencio. Ahora va por una sola llamada autenticada y confiable.
+
+## Qué cambió
+- **Números reales**: stars sumadas de tus repos, cantidad de repos públicos (sin contar forks) y followers, traídos de verdad.
+- **Heatmap real**: el gráfico de actividad ya no es decorativo. Antes, si no había data, se rellenaba con cuadraditos al azar. Ahora muestra tus contribuciones reales de los últimos meses, con la intensidad correcta y pintado con tu color de acento.
+- **Commits navegables por mes**: sumamos un contador de commits que podés recorrer mes a mes con las flechas. Arranca en el mes actual y vas hacia atrás para ver tu ritmo.
+
+## Se mantiene fresco solo
+La data se sincroniza cuando entrás al dashboard y podés forzarla con el botón "Refrescar" al editar el bloque. Y una regla de oro: si por algún motivo no podemos traer la data, **nunca te pisamos los números buenos con ceros**. Lo que se ve siempre es lo último válido.
+
+Si tenías el bloque medio muerto, entrá, refrescá, y miralo con números de verdad.
+
+¡A buildeaRRR!
+    `,
+  },
+  {
+    slug: "resumen-semanal-de-comunidad-todos-los-viernes",
+    title: "Resumen semanal de comunidad: todos los viernes",
+    excerpt: "Cada viernes publicamos quién más subió puntos en la semana, los proyectos nuevos y la última novedad —en X y en tu inbox.",
+    date: "2026-06-07",
+    tags: ["comunidad", "feature", "update"],
+    author: {
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
+    },
+    content: `
+Hay mucho pasando en la comunidad todas las semanas: gente subiendo puntos, proyectos nuevos, lanzamientos. Desde ahora lo juntamos en un solo lugar: el **Resumen semanal**.
+
+Todos los **viernes** publicamos el digest de la comunidad —en X y en tu inbox.
+
+## Qué trae
+- **Los que más subieron**: el top de builders que más puntos sumaron esa semana. No es el ranking de siempre: es quién más se movió.
+- **Proyectos nuevos**: cuántos se publicaron y algunos destacados.
+- **La última novedad**: lo nuevo de huevsite.
+
+## Sobre el email
+Te llega porque tenés cuenta en huevsite. Si no lo querés, cada email tiene un link de baja a un click: te sacás y listo, sin vueltas. La idea no es spamearte, es que estés al tanto de lo que mueve la comunidad y, ojalá, que te den ganas de aparecer ahí.
+
+Nos leemos el viernes.
+
+¡A buildeaRRR!
+    `,
+  },
+  {
+    slug: "comparti-y-suma-3-bloques-extra",
+    title: "Compartí huevsite y sumá +3 bloques gratis",
+    excerpt: "Tuiteás mencionando a huevsite.io, verificamos tu posteo, y desbloqueás 3 bloques extra para tu perfil. Una sola vez, gratis.",
+    date: "2026-06-06",
+    tags: ["feature", "share", "twitter"],
+    author: {
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
+    },
+    content: `
+El plan free arranca con 5 bloques. Ahora podés sumar 3 más, gratis, compartiendo huevsite.
+
+## Cómo
+Publicás un tweet mencionando huevsite.io, pegás el link de tu posteo, y nosotros **verificamos el contenido real del tweet** (no alcanza con pegar cualquier link). Si está, te desbloqueamos **+3 bloques** al toque. Pasás de 5 a 8.
+
+Es por única vez por cuenta, así que usalo cuando lo necesites.
+
+## Por qué
+Es un win-win honesto: vos ganás más espacio para mostrar tus proyectos, y nosotros ganamos que más builders conozcan huevsite por gente real que lo usa. Nada de bots ni de inflar números: la verificación se hace sobre el tweet posta.
+
+Dato: si importaste tu perfil desde Linktree, ya te habíamos dado +3 bloques por ese lado. Los caminos suman.
+
+Tirá el tweet y agarrá tus bloques extra.
+
+¡A buildeaRRR!
+    `,
+  },
+  {
+    slug: "quests-en-vivo-misiones-para-potenciar-tu-board",
+    title: "Quests en vivo: misiones para potenciar tu board",
+    excerpt: "Un panel de misiones en tu dashboard que te dice exactamente qué hacer para subir tu builder score y desbloquear badges, paso a paso.",
+    date: "2026-06-05",
+    tags: ["feature", "quests", "update"],
+    author: {
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
+    },
+    content: `
+Saber que tenés que "mejorar tu perfil" es fácil. Saber **qué hacer exactamente** para subir es otra cosa. Para eso están las Quests.
+
+En tu dashboard ahora hay un panel de misiones que te muestra, paso a paso, qué te falta para subir tu builder score y desbloquear badges.
+
+## Cómo funciona
+Cada quest tiene un objetivo claro y una barra de progreso. Por ejemplo:
+
+- completar el perfil
+- agregar tu bloque de GitHub
+- sumar tu handle de X/Twitter
+- llegar a 8 bloques
+- alcanzar 300 puntos para entrar al showcase
+- invitar a otro builder con tu link de referido
+
+Cada misión te dice cuánto te falta y tiene un botón directo para hacerla en el momento: agregar el bloque, editar el perfil, lo que sea.
+
+## Por qué ayuda
+En vez de adivinar, seguís una lista. Cada quest que cerrás suma señal real a tu perfil y te acerca al próximo badge —y a mejores posiciones en el leaderboard.
+
+Abrí tu dashboard y fijate qué quest tenés más cerca de cerrar.
+
+¡A buildeaRRR!
+    `,
+  },
+  {
+    slug: "leaderboard-de-builders-el-ranking-de-quien-construye",
+    title: "Leaderboard de Builders: el ranking de quién la está rompiendo",
+    excerpt: "Lanzamos el ranking público de builders de LATAM. Tu builder score te posiciona, y escalás sumando proyectos, seguidores y actividad real.",
+    date: "2026-06-05",
+    tags: ["comunidad", "ranking", "gamification"],
+    author: {
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
+    },
+    content: `
+La comunidad no para de crecer, así que le dimos un lugar para verse: el **Leaderboard de Builders**.
+
+Es el ranking público de los builders más activos de LATAM, ordenado por tu **builder score**. Entrás, ves quién está arriba, y competís por escalar posiciones.
+
+## Cómo se sube
+Tu builder score no es un número arbitrario: refleja qué tan completo y activo está tu perfil. Sumás puntos con cosas como:
+
+- completar tu perfil (foto, nombre, tagline)
+- publicar proyectos reales
+- conectar GitHub y redes
+- conseguir seguidores y endorsements
+
+Cuanto más construís en público, más subís.
+
+## Por qué lo hicimos
+Construir solo se hace cuesta arriba. Ver a otros builders moviéndose, lanzando y subiendo da contexto y empuje. El leaderboard no es para inflar egos: es para que quien está haciendo las cosas bien sea visible, y para darte una vara clara de hacia dónde apuntar.
+
+Entrá, fijate dónde estás parado, y andá por el próximo puesto en huevsite.io/leaderboard.
+
+¡A buildeaRRR!
+    `,
+  },
+  {
+    slug: "el-jingle-lo-eligio-la-comunidad",
+    title: "El jingle lo eligió la comunidad",
+    excerpt: "Pusimos a votación los dos jingles de huevsite y la comunidad eligió. Te contamos cómo salió y por qué lo hicimos así.",
+    date: "2026-06-04",
+    tags: ["comunidad", "jingle"],
+    author: {
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
+    },
+    content: `
+Huevsite tiene jingle. En realidad tenía dos —y no nos poníamos de acuerdo. Así que en vez de decidirlo a dedo, lo mandamos a la cancha de la comunidad.
+
+## Qué hicimos
+Pusimos los dos jingles a votación dentro de la app: escuchabas los dos, votabas el que más te pegaba, y listo. Con confeti de festejo en los colores de huevsite cuando confirmabas tu voto, obvio.
+
+## Por qué así
+Podríamos haber elegido nosotros. Pero huevsite se construye con la comunidad, y estas decisiones chiquitas son una buena excusa para que participes y sientas que el producto también es tuyo. Spoiler: la gente votó, y bastante.
+
+Gracias a todos los que se coparon y votaron. El próximo experimento de comunidad ya está en el horno.
+
+¡A buildeaRRR!
+    `,
+  },
+  {
     slug: "importa-tu-linktree-o-bio-site-y-arranca-con-un-board-de-verdad",
     title: "Importá tu Linktree o Bio Site y arrancá con un board de verdad",
     excerpt: "El onboarding ahora puede traerse tu avatar, bio y links visibles desde Linktree o Bio Site para que no empieces desde cero ni armes un perfil genérico.",
@@ -1137,24 +1319,75 @@ export function isBuilderOfTheWeekPost(post: BlogPost): boolean {
   );
 }
 
+// --- Curated categories ---------------------------------------------------
+// The blog index filters by a small set of curated categories instead of one
+// pill per raw tag (~30 of them). Each post is mapped to ONE primary category
+// from its tags + BDLS detection — no schema column needed.
+
+export type BlogCategorySlug =
+  | "novedades"
+  | "builder-de-la-semana"
+  | "guias"
+  | "comunidad";
+
+export interface BlogCategory {
+  slug: BlogCategorySlug;
+  label: string;
+}
+
+// Display order of the filter pills (after "Todos").
+export const BLOG_CATEGORIES: BlogCategory[] = [
+  { slug: "novedades", label: "Novedades" },
+  { slug: "builder-de-la-semana", label: "Builder de la Semana" },
+  { slug: "guias", label: "Guías & Tips" },
+  { slug: "comunidad", label: "Comunidad" },
+];
+
+// Tags that route a post into each (non-BDLS) category, lowercase.
+const CATEGORY_TAGS: Record<Exclude<BlogCategorySlug, "builder-de-la-semana">, string[]> = {
+  comunidad: ["comunidad", "social", "showcase", "gamification", "ranking", "referidos", "vision", "startup"],
+  guias: ["tips", "onboarding", "portfolio", "perfil", "linktree", "privacidad", "cuenta", "sub-sites"],
+  novedades: ["feature", "update", "pro", "ai", "analytics", "feed", "launches", "design", "dominios", "automatizacion", "admin", "twitter"],
+};
+
+// Priority order (most specific first). "novedades" is the fallback for product
+// posts, so a post spanning buckets ("comunidad, feature") lands in Comunidad.
+const CATEGORY_PRIORITY: BlogCategorySlug[] = [
+  "builder-de-la-semana",
+  "comunidad",
+  "guias",
+  "novedades",
+];
+
+export function getPostCategory(post: BlogPost): BlogCategorySlug {
+  if (isBuilderOfTheWeekPost(post)) return "builder-de-la-semana";
+  const tagsLower = post.tags.map((t) => t.toLowerCase());
+  for (const slug of CATEGORY_PRIORITY) {
+    if (slug === "builder-de-la-semana") continue;
+    if (tagsLower.some((t) => CATEGORY_TAGS[slug].includes(t))) return slug;
+  }
+  return "novedades";
+}
+
 export async function getPaginatedBlogPosts(opts: {
   page?: number;
   pageSize?: number;
-  tag?: string;
+  category?: string;
 }): Promise<{
   posts: BlogPost[];
   total: number;
   totalPages: number;
   page: number;
   pageSize: number;
-  allTags: string[];
+  categoryCounts: Record<string, number>;
+  totalAll: number;
 }> {
   const pageSize = opts.pageSize ?? BLOG_POSTS_PER_PAGE;
   const page = Math.max(1, opts.page ?? 1);
 
   const all = await getAllBlogPosts();
-  const filtered = opts.tag
-    ? all.filter((p) => p.tags.includes(opts.tag!))
+  const filtered = opts.category
+    ? all.filter((p) => getPostCategory(p) === opts.category)
     : all;
 
   const total = filtered.length;
@@ -1163,9 +1396,14 @@ export async function getPaginatedBlogPosts(opts: {
   const start = (safePage - 1) * pageSize;
   const posts = filtered.slice(start, start + pageSize);
 
-  const allTags = Array.from(new Set(all.flatMap((p) => p.tags)));
+  // Counts per category over ALL posts, for the pill badges.
+  const categoryCounts: Record<string, number> = {};
+  for (const p of all) {
+    const c = getPostCategory(p);
+    categoryCounts[c] = (categoryCounts[c] || 0) + 1;
+  }
 
-  return { posts, total, totalPages, page: safePage, pageSize, allTags };
+  return { posts, total, totalPages, page: safePage, pageSize, categoryCounts, totalAll: all.length };
 }
 
 export async function getPostBySlugAsync(slug: string): Promise<BlogPost | undefined> {

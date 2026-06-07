@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminClient } from '@/lib/admin-auth'
-import { fetchGitHubStats, statsAreMeaningful } from '@/lib/github-service'
+import { fetchGitHubStats, statsAreMeaningful, statsAreComplete } from '@/lib/github-service'
 import { scoreService } from '@/lib/score-service'
 
 export const dynamic = 'force-dynamic'
@@ -14,9 +14,12 @@ export const maxDuration = 60
 // stay zeroed. This endpoint refreshes them in bulk via the same authenticated
 // GraphQL path (lib/github-service, GITHUB_TOKEN).
 //
-// Targets ONLY non-meaningful blocks (no stars/repos/followers/languages).
+// Targets blocks that lack a real sync (no syncedAt + populated heatmap). This
+// includes both fully-zeroed blocks AND legacy/partial ones that have old repo
+// counts but no real heatmap / per-month commits (statsAreMeaningful is true
+// for those, so it would wrongly skip them — statsAreComplete catches them).
 // Never overwrites existing data with zeros: a failed or empty fetch is skipped.
-// Re-run until "updated" is empty — fixed blocks become meaningful and drop out
+// Re-run until "updated" is empty — fixed blocks become complete and drop out
 // of the candidate set.
 
 const READ_PAGE = 1000 // Supabase default row cap per query
@@ -57,7 +60,7 @@ export async function POST(request: NextRequest) {
     const scanned = all.length
     const skippedNoHandle = all.filter((b) => !b.data?.username).length
     const candidates = all.filter(
-      (b) => b.data?.username && !statsAreMeaningful(b.data?.stats)
+      (b) => b.data?.username && !statsAreComplete(b.data?.stats)
     )
 
     if (dryRun) {

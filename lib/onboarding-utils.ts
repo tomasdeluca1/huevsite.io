@@ -124,7 +124,9 @@ export function buildOnboardingBlocks({
   const featuredLinks = [...projectLinks, ...utilityLinks].slice(0, 4);
 
   const githubStats = hasUsefulGitHubData(state.githubData)
-    ? {
+    ? // Prefer the full normalized stats (real heatmap + monthly commits) when
+      // the import provided them; otherwise derive a basic fallback.
+      state.githubData!.stats ?? {
         stars:
           state.githubData!.topRepos?.reduce((acc, repo) => acc + (repo.stars || 0), 0) || 0,
         repos: state.githubData!.publicRepos || 0,

@@ -40,6 +40,7 @@ export function StepGitHub({ state, hasGitHubIdentity = false, onConnect, onNext
           stars: repo.stars,
           description: repo.description,
         })),
+        stats: githubData.stats,
       });
       onNext();
     } catch (fetchError) {

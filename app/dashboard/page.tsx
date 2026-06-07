@@ -455,6 +455,29 @@ export default function DashboardPage() {
         });
 
         setProfile(prev => prev ? { ...prev, blocks } : null);
+
+        // Refresh GitHub block stats in the background (skips if fresh < 12h).
+        // Keeps real stars/repos/followers/heatmap/commits up to date without
+        // blocking the editor or the public profile pages.
+        if (blocks.some((b: any) => b.type === 'github')) {
+          fetch('/api/github/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({}),
+          })
+            .then(r => (r.ok ? r.json() : null))
+            .then(res => {
+              if (!res?.updated?.length) return;
+              setProfile(prev => prev ? {
+                ...prev,
+                blocks: prev.blocks.map(b => {
+                  const u = res.updated.find((x: any) => x.id === b.id);
+                  return u ? { ...b, stats: u.stats } : b;
+                }),
+              } : prev);
+            })
+            .catch(() => { /* non-blocking: keep existing stats on failure */ });
+        }
       } catch (e) {
         console.error('Error fetching site blocks:', e);
       } finally {

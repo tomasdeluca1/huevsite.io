@@ -1,4 +1,5 @@
 import { type LinktreeImportData } from "@/lib/linktree-import";
+import type { GitHubStats } from "@/lib/github-service";
 
 export type Role = "developer" | "designer" | "founder" | "indie_hacker";
 
@@ -21,6 +22,9 @@ export interface GitHubData {
   followers: number;
   topLanguages: string[];
   topRepos: Array<{ name: string; stars: number; description: string }>;
+  // Full normalized stats from the GitHub API (real heatmap + monthly commits),
+  // carried through so the github block is created with real data.
+  stats?: GitHubStats;
 }
 
 export interface OnboardingState {

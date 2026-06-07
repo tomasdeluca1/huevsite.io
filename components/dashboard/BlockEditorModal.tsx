@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence, Reorder } from "framer-motion";
 import { BlockData, EcosystemBlockData, getContrastColor } from "@/lib/profile-types";
-import { X, Save, Sparkles, Search, Github, GripVertical, Globe } from "lucide-react";
+import { X, Save, Sparkles, Search, Github, GripVertical, Globe, RefreshCw } from "lucide-react";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { ImageUpload } from "@/components/dashboard/ImageUpload";
@@ -23,6 +23,8 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
   const [mounted, setMounted] = useState(false);
   const [githubResults, setGithubResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [refreshingGithub, setRefreshingGithub] = useState(false);
+  const [githubRefreshError, setGithubRefreshError] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -71,6 +73,29 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
 
   const handleChange = (key: string, value: any) => {
     setFormData((prev: any) => ({ ...prev, [key]: value }));
+  };
+
+  // Pull fresh, real stats from the GitHub API (stars, repos, followers,
+  // real contribution heatmap, per-month commits). Saved when the user saves
+  // the block. Never clears existing stats on failure.
+  const handleRefreshGithub = async () => {
+    const username = (formData.username || "").trim();
+    if (!username || refreshingGithub) return;
+    setRefreshingGithub(true);
+    setGithubRefreshError(null);
+    try {
+      const res = await fetch(`/api/github/import?username=${encodeURIComponent(username)}`);
+      const data = res.ok ? await res.json() : null;
+      if (data?.stats) {
+        handleChange("stats", data.stats);
+      } else {
+        setGithubRefreshError(data?.error || "No pudimos traer GitHub ahora.");
+      }
+    } catch {
+      setGithubRefreshError("No pudimos traer GitHub ahora.");
+    } finally {
+      setRefreshingGithub(false);
+    }
   };
 
   const handleSave = () => {
@@ -571,26 +596,23 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                       onClick={async () => {
                         handleChange("username", user.login);
                         setGithubResults([]);
-                        // Auto sync stats
+                        // Pull full real stats (stars, repos, followers, heatmap,
+                        // monthly commits) via the authenticated GitHub service.
+                        setRefreshingGithub(true);
+                        setGithubRefreshError(null);
                         try {
-                          const [userRes, reposRes] = await Promise.all([
-                            fetch(`https://api.github.com/users/${user.login}`),
-                            fetch(`https://api.github.com/users/${user.login}/repos?sort=stars&per_page=100`)
-                          ]);
-
-                          if (!userRes.ok) return;
-
-                          const userData = await userRes.json();
-                          const repos = await reposRes.json();
-                          const totalStars = Array.isArray(repos) ? repos.reduce((sum: number, r: any) => sum + r.stargazers_count, 0) : 0;
-
-                          handleChange("stats", {
-                            stars: totalStars,
-                            repos: userData.public_repos,
-                            followers: userData.followers
-                          });
+                          const res = await fetch(`/api/github/import?username=${encodeURIComponent(user.login)}`);
+                          const data = res.ok ? await res.json() : null;
+                          if (data?.stats) {
+                            handleChange("stats", data.stats);
+                          } else {
+                            setGithubRefreshError(data?.error || "No pudimos traer GitHub ahora.");
+                          }
                         } catch (err) {
                           console.error(err);
+                          setGithubRefreshError("No pudimos traer GitHub ahora.");
+                        } finally {
+                          setRefreshingGithub(false);
                         }
                       }}
                       className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--surface2)] transition-all group text-left"
@@ -627,30 +649,33 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                 </div>
                 <button
                   type="button"
-                  onClick={() => {
-                    const show = !formData.showAdvanced;
-                    handleChange("showAdvanced", show);
-                    if (show && !formData.stats?.topLanguages) {
-                      // Mock some data if empty
-                      handleChange("stats", {
-                        ...formData.stats,
-                        topLanguages: [
-                          { name: "TypeScript", percent: 65 },
-                          { name: "React", percent: 25 },
-                          { name: "Node.js", percent: 10 }
-                        ],
-                        totalCommits: 842,
-                        issuesClosed: 124
-                      });
-                    }
-                  }}
+                  onClick={() => handleChange("showAdvanced", !formData.showAdvanced)}
                   className={`w-12 h-6 rounded-full transition-colors relative ${formData.showAdvanced ? 'bg-[#C8FF00]' : 'bg-white/10'}`}
                 >
                   <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${formData.showAdvanced ? 'left-7' : 'left-1'}`} />
                 </button>
               </div>
 
-              <div className="section-label !text-[9px] px-1">// estadísticas actuales</div>
+              <div className="flex items-center justify-between px-1">
+                <div className="section-label !text-[9px]">// estadísticas reales</div>
+                <button
+                  type="button"
+                  onClick={handleRefreshGithub}
+                  disabled={refreshingGithub || !formData.username}
+                  className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-[var(--accent)] hover:opacity-80 transition-opacity disabled:opacity-40"
+                >
+                  <RefreshCw size={12} className={refreshingGithub ? "animate-spin" : ""} />
+                  {refreshingGithub ? "Trayendo..." : "Refrescar"}
+                </button>
+              </div>
+              {githubRefreshError && (
+                <div className="text-[10px] text-red-300 px-1">{githubRefreshError}</div>
+              )}
+              {formData.stats?.syncedAt && (
+                <div className="text-[9px] text-[var(--text-disabled)] font-mono px-1">
+                  Sincronizado: {new Date(formData.stats.syncedAt).toLocaleDateString()}
+                </div>
+              )}
               <div className="grid grid-cols-3 gap-3">
                 <div className="p-4 bg-[var(--bg)] border border-[var(--border)] rounded-2xl text-center group hover:border-[var(--accent)] transition-all">
                   <div className="text-[9px] text-[var(--text-disabled)] uppercase tracking-wider mb-1 font-mono">Stars</div>
@@ -668,27 +693,26 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
 
               {formData.showAdvanced && (
                 <div className="p-5 bg-white/5 border border-white/10 rounded-2xl space-y-4">
-                  <div className="text-xs font-bold text-white mb-2">Advanced Metrics Configuration</div>
+                  <div className="text-xs font-bold text-white mb-2">Métricas avanzadas (auto)</div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <div className="text-[8px] text-[var(--text-muted)] uppercase font-mono">Commits / Year</div>
-                      <input
-                        type="number"
-                        value={formData.stats?.totalCommits || 0}
-                        onChange={(e) => handleChange("stats", { ...formData.stats, totalCommits: parseInt(e.target.value) })}
-                        className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-sm text-white"
-                      />
+                      <div className="text-[8px] text-[var(--text-muted)] uppercase font-mono">Commits (12 meses)</div>
+                      <div className="font-black text-2xl tracking-tighter text-white">{formData.stats?.commitsThisYear ?? formData.stats?.totalCommits ?? 0}</div>
                     </div>
                     <div className="space-y-1">
-                      <div className="text-[8px] text-[var(--text-muted)] uppercase font-mono">Issues Resolved</div>
-                      <input
-                        type="number"
-                        value={formData.stats?.issuesClosed || 0}
-                        onChange={(e) => handleChange("stats", { ...formData.stats, issuesClosed: parseInt(e.target.value) })}
-                        className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-sm text-white"
-                      />
+                      <div className="text-[8px] text-[var(--text-muted)] uppercase font-mono">Pull Requests</div>
+                      <div className="font-black text-2xl tracking-tighter text-white">{formData.stats?.pullRequests ?? 0}</div>
                     </div>
                   </div>
+                  {formData.stats?.topLanguages?.length ? (
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {formData.stats.topLanguages.map((l: any, i: number) => (
+                        <span key={i} className="text-[10px] font-mono text-[var(--text-dim)] bg-black/30 rounded-full px-2 py-0.5">
+                          {l.name} {l.percent}%
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
               )}
             </div>
@@ -696,7 +720,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
             <div className="p-5 bg-[var(--accent-dim)]/20 border border-[var(--accent)]/20 rounded-2xl flex gap-4 items-start">
               <div className="pt-1"><Sparkles size={16} className="text-[var(--accent)]" /></div>
               <p className="text-xs text-[var(--text-dim)] leading-relaxed">
-                Las estadísticas se actualizan automáticamente al elegir tu perfil. <br />
+                Las estadísticas se traen reales desde GitHub (stars, repos, followers, heatmap y commits por mes) y se refrescan solas. Usá <span className="text-white font-medium">Refrescar</span> para forzarlo. <br />
                 <span className="text-white font-medium">Click en Guardar para persistir los cambios en tu huevsite.</span>
               </p>
             </div>

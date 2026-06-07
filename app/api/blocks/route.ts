@@ -6,6 +6,7 @@ import { scoreService } from '@/lib/score-service'
 import { checkAndPostWelcomeTweet } from '@/lib/twitter'
 import { hasProAccess } from '@/lib/pro-access'
 import { rateLimit, getIdentifier } from '@/lib/rate-limit'
+import { fetchGitHubStats, statsAreMeaningful } from '@/lib/github-service'
 
 const blockCreateSchema = z.object({
   type: z.string().min(1),
@@ -146,38 +147,18 @@ export async function POST(request: NextRequest) {
       sub_site_id: body.sub_site_id || null,
     }
 
-    // Auto-sync GitHub stats if missing or empty
+    // Enrich GitHub blocks with real stats from the GitHub API (authenticated
+    // via GITHUB_TOKEN: stars, repos, followers, languages, real contribution
+    // heatmap, and per-month commits). Never overwrite with zeros — only write
+    // when the fetch returns meaningful data.
     if (insertData.type === 'github' && insertData.data?.username) {
-      const gData = insertData.data;
-      const stats = gData.stats || { stars: 0, repos: 0, followers: 0 };
-
-      if (stats.stars === 0 && stats.repos === 0) {
-        try {
-          const githubHandle = gData.username;
-          console.log(`// Syncing GitHub stats for new block: ${githubHandle}`);
-          const reposRes = await fetch(`https://api.github.com/users/${githubHandle}/repos?type=owner&per_page=100`, {
-            headers: { 'Accept': 'application/vnd.github.v3+json' }
-          });
-
-          if (reposRes.ok) {
-            const repos = await reposRes.json();
-            const userDataRes = await fetch(`https://api.github.com/users/${githubHandle}`, {
-              headers: { 'Accept': 'application/vnd.github.v3+json' }
-            });
-            const userData = userDataRes.ok ? await userDataRes.json() : {};
-
-            insertData.data.stats = {
-              stars: repos.reduce((acc: number, r: any) => acc + (r.stargazers_count || 0), 0) || 0,
-              repos: repos.length || 0,
-              followers: userData.followers || 0,
-              topLanguages: Array.from(new Set(repos.map((r: any) => r.language).filter(Boolean)))
-                .slice(0, 3)
-                .map(l => ({ name: l, percent: 33 }))
-            };
-          }
-        } catch (e) {
-          console.error('// GitHub block sync error:', e);
+      try {
+        const result = await fetchGitHubStats(insertData.data.username);
+        if (result && statsAreMeaningful(result.stats)) {
+          insertData.data = { ...insertData.data, stats: result.stats };
         }
+      } catch (e) {
+        console.error('// GitHub block sync error:', e);
       }
     }
 

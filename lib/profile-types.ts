@@ -159,6 +159,11 @@ export interface GitHubBlockData extends BaseBlock {
     issuesClosed?: number;
     totalCommits?: number;
     heatmap?: number[];
+    // Real commit data (populated by lib/github-service via GitHub GraphQL).
+    commitsByMonth?: Array<{ month: string; count: number }>; // month = "YYYY-MM"
+    commitsThisYear?: number;
+    pullRequests?: number;
+    syncedAt?: string; // ISO timestamp of the last successful GitHub sync
   };
 }
 

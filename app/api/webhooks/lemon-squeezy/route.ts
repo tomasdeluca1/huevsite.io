@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 import { postProUpgrade } from "@/lib/twitter";
 import { resolveXHandles } from "@/lib/twitter-utils";
+import { findUserIdByEmail } from "@/lib/find-user-by-email";
 
 export const dynamic = 'force-dynamic';
 
@@ -69,20 +70,14 @@ export async function POST(req: NextRequest) {
          }
 
          // Fallback por email del comprador: cubre checkouts que no llevaron
-         // custom_data.user_id (p.ej. la URL de checkout estática). Best-effort,
-         // case-insensitive. email es UNIQUE en profiles, así que maybeSingle.
+         // custom_data.user_id (p.ej. la URL de checkout estática). Matchea
+         // contra profiles.email y, si no, contra el email de auth (poblado al
+         // ~100%), que es lo que lo hace confiable.
          if (!userId) {
             const buyerEmail = payload.data.attributes?.user_email;
-            if (buyerEmail) {
-               const { data: byEmail } = await supabase
-                  .from("profiles")
-                  .select("id")
-                  .ilike("email", buyerEmail)
-                  .maybeSingle();
-               if (byEmail) {
-                  userId = byEmail.id;
-                  console.log(`Usuario mapeado por email (${buyerEmail}) para subscription ${subscriptionId}`);
-               }
+            userId = await findUserIdByEmail(supabase, buyerEmail);
+            if (userId) {
+               console.log(`Usuario mapeado por email (${buyerEmail}) para subscription ${subscriptionId}`);
             }
          }
 

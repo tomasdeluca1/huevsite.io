@@ -61,15 +61,33 @@ export async function POST(req: NextRequest) {
                .from("profiles")
                .select("id")
                .eq("lemon_squeezy_subscription_id", subscriptionId)
-               .single();
+               .maybeSingle();
 
             if (profile) {
                userId = profile.id;
             }
          }
 
+         // Fallback por email del comprador: cubre checkouts que no llevaron
+         // custom_data.user_id (p.ej. la URL de checkout estática). Best-effort,
+         // case-insensitive. email es UNIQUE en profiles, así que maybeSingle.
          if (!userId) {
-            console.error("No se pudo encontrar un usuario para esta suscripción (ni en custom_data ni en DB)");
+            const buyerEmail = payload.data.attributes?.user_email;
+            if (buyerEmail) {
+               const { data: byEmail } = await supabase
+                  .from("profiles")
+                  .select("id")
+                  .ilike("email", buyerEmail)
+                  .maybeSingle();
+               if (byEmail) {
+                  userId = byEmail.id;
+                  console.log(`Usuario mapeado por email (${buyerEmail}) para subscription ${subscriptionId}`);
+               }
+            }
+         }
+
+         if (!userId) {
+            console.error("No se pudo encontrar un usuario para esta suscripción (ni en custom_data, ni por subscription_id, ni por email)");
             return NextResponse.json({ error: "Missing user_id and subscription not found" }, { status: 400 });
          }
 

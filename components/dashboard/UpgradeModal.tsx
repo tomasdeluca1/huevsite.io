@@ -3,7 +3,8 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Sparkles, CheckCircle2, Loader2, BadgeCheck } from "lucide-react";
 import { createPortal } from "react-dom";
-import { lemonCheckoutUrl } from "@/lib/lemon-checkout-url";
+import { buildLemonCheckoutUrl } from "@/lib/lemon-checkout-url";
+import { supabase } from "@/lib/supabase";
 import { FreeTrialState } from "@/lib/profile-types";
 
 interface Props {
@@ -17,6 +18,13 @@ interface Props {
 
 export function UpgradeModal({ isOpen, onClose, accentColor, freeTrial, onClaimTrial, isClaimingTrial = false }: Props) {
   const showTrialCTA = !!freeTrial?.eligible && !!onClaimTrial;
+
+  // Redirect to checkout carrying the logged-in user's id + email so the LS
+  // webhook maps the purchase to them deterministically.
+  const handleUpgrade = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    window.location.href = buildLemonCheckoutUrl(user?.id, user?.email);
+  };
 
   if (!isOpen) return null;
 
@@ -87,7 +95,7 @@ export function UpgradeModal({ isOpen, onClose, accentColor, freeTrial, onClaimT
               </button>
             ) : (
               <button
-                onClick={() => window.location.href = lemonCheckoutUrl}
+                onClick={handleUpgrade}
                 className="btn btn-accent w-full py-4 text-base font-bold shadow-[0_0_20px_rgba(200,255,0,0.15)] flex justify-center items-center"
                 style={{ backgroundColor: accentColor, color: "black" }}
               >

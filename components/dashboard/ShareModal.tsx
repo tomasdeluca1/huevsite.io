@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Twitter, Sparkles, Loader2, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { lemonCheckoutUrl } from "@/lib/lemon-checkout-url";
+import { buildLemonCheckoutUrl } from "@/lib/lemon-checkout-url";
+import { supabase } from "@/lib/supabase";
 
 interface Props {
   isOpen: boolean;
@@ -20,6 +21,11 @@ export function ShareModal({ isOpen, onClose, accentColor, username, onUnlocked 
   const [step, setStep] = useState<Step>("prompt");
   const [isCapturing, setIsCapturing] = useState(false);
   const [tweetUrlInput, setTweetUrlInput] = useState("");
+
+  const handleUpgrade = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    window.location.href = buildLemonCheckoutUrl(user?.id, user?.email);
+  };
 
   const tweetText = encodeURIComponent(
     `Armé mi huevsite en huevsite.io — el portfolio para builders 🇦🇷\n\n👉 huevsite.io/${username}`
@@ -104,7 +110,7 @@ export function ShareModal({ isOpen, onClose, accentColor, username, onUnlocked 
                 setTweetUrlInput={setTweetUrlInput}
                 onTweet={handleTweet}
                 onConfirm={handleConfirmTweet}
-                onUpgrade={() => window.location.href = lemonCheckoutUrl}
+                onUpgrade={handleUpgrade}
               />
             )}
           </div>

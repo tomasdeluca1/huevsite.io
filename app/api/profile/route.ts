@@ -260,6 +260,13 @@ export async function PATCH(request: NextRequest) {
       }
     })
 
+    // custom_domain has a UNIQUE constraint. An empty string ('') collides
+    // across profiles (only one '' is allowed), throwing 23505 on save. Persist
+    // NULL for "no domain" — UNIQUE permits unlimited NULLs.
+    if (updateData.custom_domain === "") {
+      updateData.custom_domain = null
+    }
+
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json(
         { error: 'No hay datos para actualizar' },

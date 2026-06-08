@@ -35,15 +35,25 @@ export async function postBuilderOfTheWeek(
   mention: string,
   week: string,
   name?: string,
-  finalists?: { mention: string, count: number }[]
+  finalists?: { mention: string, count: number }[],
+  username?: string
 ) {
-  const isUrl = mention.startsWith('http');
-  const displayName = name || mention.replace('@', '').split('/').pop() || 'builder';
-  const profileUrl = isUrl ? mention : `${process.env.NEXT_PUBLIC_SITE_URL}/${mention.replace('@', '')}`;
-  const mentionText = isUrl ? displayName : mention;
+  // `mention` is the Twitter handle ("@handle") when the user has X linked,
+  // otherwise a fallback profile URL. The handle is ONLY for the @mention.
+  // `username` is the huevsite profile — the URL must always point to it, never
+  // to the Twitter handle.
+  const hasHandle = mention?.startsWith('@');
+  const displayName =
+    name || username || (hasHandle ? mention.replace('@', '') : mention.split('/').pop() || 'builder');
 
-  // When mention is a URL, mentionText and displayName are the same — avoid "Lucas (Lucas)"
-  const winnerLabel = (mentionText === displayName) ? mentionText : `${mentionText} (${displayName})`;
+  const profileUrl = username
+    ? `${process.env.NEXT_PUBLIC_SITE_URL}/${username}`
+    : (mention.startsWith('http') ? mention : `${process.env.NEXT_PUBLIC_SITE_URL}/${mention.replace('@', '')}`);
+
+  // Use the @handle as the mention; if there's no handle, just the name.
+  const winnerLabel = hasHandle
+    ? (mention === displayName ? mention : `${mention} (${displayName})`)
+    : displayName;
 
   let text = `🏆 ¡Atención builders! \n\nFelicitaciones a ${winnerLabel} por ser el Builder de la Semana (${week}) en Huevsite! 🥚✨\n\nMirá lo que está buildiando acá:\n${profileUrl}`;
 

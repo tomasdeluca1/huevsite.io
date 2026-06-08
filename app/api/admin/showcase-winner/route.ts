@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
             count: f.count
           }));
 
-          await postBuilderOfTheWeek(winnerMention, week, profile.name || undefined, finalistsWithMentions);
+          await postBuilderOfTheWeek(winnerMention, week, profile.name || undefined, finalistsWithMentions, profile.username);
         }
       } catch (twitterErr) {
         console.error("Error publicando en X:", twitterErr);

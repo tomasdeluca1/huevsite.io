@@ -135,7 +135,11 @@ export default async function BlogPostPage({
           <div className="flex flex-col sm:flex-row gap-6 sm:items-center justify-between mb-10 pb-10 border-b border-[var(--border)]">
             <div className="flex items-center gap-4">
               <Link href={getBlogAuthorHref(post.author)} className="shrink-0 hover:opacity-80 transition-opacity">
-                <Image src={post.author.avatarUrl} alt={post.author.name} width={40} height={40} className="rounded-full" />
+                {/* unoptimized: builder avatars come from arbitrary third-party hosts
+                    (Linktree/Twitter/custom CDNs imported into the profile) that aren't
+                    in next.config remotePatterns; the optimizer 400s on them. At 40px
+                    there's nothing to optimize, so load the source directly. */}
+                <Image src={post.author.avatarUrl} alt={post.author.name} width={40} height={40} className="rounded-full object-cover" unoptimized />
               </Link>
               <div>
                 <Link href={getBlogAuthorHref(post.author)} className="text-sm font-bold text-white tracking-tight hover:underline">

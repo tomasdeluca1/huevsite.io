@@ -259,6 +259,9 @@ function renderBuilderOfTheWeek(post: BlogPost) {
   return (
     <div
       style={{
+        // Explicit opaque dark base so the OG is never transparent — Twitter
+        // composites alpha-channel PNGs onto white, which read as "light mode".
+        background: BG_TOP,
         width: "100%",
         height: "100%",
         display: "flex",
@@ -465,6 +468,8 @@ function renderDefaultPost(post: BlogPost) {
   return (
     <div
       style={{
+        // Explicit opaque dark base — see renderBuilderOfTheWeek note.
+        background: BG_TOP,
         width: "100%",
         height: "100%",
         display: "flex",

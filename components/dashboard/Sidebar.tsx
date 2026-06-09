@@ -383,6 +383,7 @@ export function DashboardSidebar({
             <SidebarLink href="/explore" icon={<Compass size={18} />} label="Explorar Builders" />
             <SidebarLink href="/leaderboard" icon={<Medal size={18} />} label="Ranking" />
             <SidebarLink href="/showcase" icon={<Sparkles size={18} />} label="Showcase" />
+            <SidebarLink href="/testimonio" icon={<MessageSquare size={18} />} label="Dejá tu testimonio" />
           </div>
 
           {/* Settings & Tools */}

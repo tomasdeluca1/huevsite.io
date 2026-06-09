@@ -3,6 +3,7 @@ import Script from "next/script";
 import { getShowcaseData } from "@/lib/showcase-service";
 import LandingPageClient from "@/components/landing/LandingPageClient";
 import { SITE_URL } from "@/lib/site-url";
+import { fetchCurrentWinner } from "@/lib/og/shared";
 
 export const dynamic = "force-dynamic";
 
@@ -10,25 +11,40 @@ const OG_TITLE = "huevsite.io | Construí tu reputación como builder";
 const OG_DESCRIPTION =
   "Proyectos, métricas reales y endorsements de otros builders. Que te vean shippeando, no diciendo. Acá vive la red de LATAM.";
 
-export const metadata: Metadata = {
-  title: OG_TITLE,
-  description: OG_DESCRIPTION,
-  openGraph: {
+// The home OG image renders the current Builder de la Semana, which changes
+// weekly. Next stamps the image route with a 1-year immutable Cache-Control and
+// a file-content-hash URL that does NOT change when the winner changes — so the
+// CDN and social platforms (Twitter/LinkedIn) keep serving last week's image.
+// Fix: version the og:image URL by the current winner's username, so a new
+// winner ⇒ a new URL ⇒ every cache fetches the fresh image. The immutable cache
+// now works FOR us — each winner's image stays frozen at its own stable URL.
+export async function generateMetadata(): Promise<Metadata> {
+  const winner = await fetchCurrentWinner().catch(() => null);
+  const v = encodeURIComponent(winner?.username || "huevsite");
+  return {
     title: OG_TITLE,
     description: OG_DESCRIPTION,
-    url: SITE_URL,
-    type: "website",
-    siteName: "huevsite.io",
-    locale: "es_AR",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: OG_TITLE,
-    description: OG_DESCRIPTION,
-    site: "@huevsite",
-    creator: "@huevsite",
-  },
-};
+    openGraph: {
+      title: OG_TITLE,
+      description: OG_DESCRIPTION,
+      url: SITE_URL,
+      type: "website",
+      siteName: "huevsite.io",
+      locale: "es_AR",
+      images: [
+        { url: `${SITE_URL}/opengraph-image?v=${v}`, width: 1200, height: 630, alt: OG_TITLE },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: OG_TITLE,
+      description: OG_DESCRIPTION,
+      site: "@huevsite",
+      creator: "@huevsite",
+      images: [`${SITE_URL}/twitter-image?v=${v}`],
+    },
+  };
+}
 
 const organizationSchema = {
   "@context": "https://schema.org",

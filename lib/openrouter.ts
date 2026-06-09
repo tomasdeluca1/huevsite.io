@@ -200,7 +200,7 @@ async function callOpenRouter(
       "X-Title": "huevsite.io",
     },
     body: JSON.stringify({
-      model: "google/gemini-2.0-flash-001",
+      model: "google/gemini-2.5-flash",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },

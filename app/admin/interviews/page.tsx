@@ -8,6 +8,7 @@ import {
   Eye,
   Check,
   CheckCircle2,
+  RotateCw,
 } from "lucide-react";
 
 interface InterviewRow {
@@ -47,6 +48,7 @@ export default function InterviewsPage() {
     null
   );
   const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const fetchInterviews = async () => {
@@ -127,6 +129,28 @@ export default function InterviewsPage() {
       }
     } finally {
       setApprovingId(null);
+    }
+  };
+
+  const handleRegenerate = async (id: string, username: string) => {
+    setRegeneratingId(id);
+    setMsg(null);
+    try {
+      const res = await fetch(
+        `/api/admin/builder-interview/${id}/regenerate`,
+        { method: "POST" }
+      );
+      const json = await res.json();
+      if (res.ok) {
+        setMsg({ type: "ok", text: `Contenido regenerado para @${username} ✅` });
+        fetchInterviews();
+      } else {
+        setMsg({ type: "err", text: json.error || "Error al regenerar." });
+      }
+    } catch {
+      setMsg({ type: "err", text: "Error de conexión." });
+    } finally {
+      setRegeneratingId(null);
     }
   };
 
@@ -350,9 +374,31 @@ export default function InterviewsPage() {
                     )}
 
                     {iv.generation_error && (
-                      <span className="text-[10px] text-red-400 font-mono">
+                      <span
+                        className="text-[10px] text-red-400 font-mono"
+                        title={iv.generation_error}
+                      >
                         ⚠️ error
                       </span>
+                    )}
+
+                    {(isEnProceso || iv.generation_error) && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRegenerate(iv.id, iv.builder_username);
+                        }}
+                        disabled={regeneratingId === iv.id}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs font-mono text-amber-300 hover:bg-amber-500/20 disabled:opacity-40 transition-colors"
+                        title="Volver a generar el contenido AI desde las respuestas del builder"
+                      >
+                        {regeneratingId === iv.id ? (
+                          <Loader2 size={12} className="animate-spin" />
+                        ) : (
+                          <RotateCw size={12} />
+                        )}
+                        {regeneratingId === iv.id ? "Generando…" : "Regenerar"}
+                      </button>
                     )}
 
                     {isFinalizado && (

@@ -22,6 +22,7 @@ import {
   Video,
   Eye,
   EyeOff,
+  RotateCw,
 } from "lucide-react";
 
 interface Interview {
@@ -70,6 +71,7 @@ export default function InterviewEditPage({
   const [storyPrompt, setStoryPrompt] = useState("");
 
   const [saving, setSaving] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(
     null
   );
@@ -318,6 +320,45 @@ Cualquier duda me escribís. ¡Gracias por el tiempo! 🙌`;
     }
   };
 
+  const regenerate = async () => {
+    if (
+      !confirm(
+        "¿Volver a generar todo el contenido AI desde las respuestas del builder? Sobrescribe lo que haya ahora."
+      )
+    )
+      return;
+    setRegenerating(true);
+    setMsg(null);
+    try {
+      const res = await fetch(
+        `/api/admin/builder-interview/${id}/regenerate`,
+        { method: "POST" }
+      );
+      const json = await res.json();
+      if (!res.ok) {
+        setMsg({ type: "err", text: json.error ?? "Error al regenerar." });
+        return;
+      }
+      setMsg({ type: "ok", text: "Contenido regenerado ✅" });
+      // Reseed both the interview and the editable textareas with fresh content.
+      const refetch = await fetch(`/api/admin/builder-interview/${id}`);
+      if (refetch.ok) {
+        const fresh = await refetch.json();
+        setInterview(fresh);
+        setBlogMd(fresh.generated_blog_markdown ?? "");
+        setTwitterPost(fresh.generated_twitter_post ?? "");
+        setLinkedinPost(fresh.generated_linkedin_post ?? "");
+        setIgCaption(fresh.generated_instagram_caption ?? "");
+        setCarouselPrompt(fresh.generated_instagram_carousel_prompt ?? "");
+        setStoryPrompt(fresh.generated_instagram_story_prompt ?? "");
+      }
+    } catch {
+      setMsg({ type: "err", text: "Error de conexión." });
+    } finally {
+      setRegenerating(false);
+    }
+  };
+
   // Copy-to-clipboard for Creatibro prompts
   const [copiedPrompt, setCopiedPrompt] = useState<"carousel" | "story" | null>(null);
   const copyPrompt = async (kind: "carousel" | "story") => {
@@ -461,6 +502,23 @@ Cualquier duda me escribís. ¡Gracias por el tiempo! 🙌`;
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-sm font-mono text-white hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
           >
             <Check size={14} /> Publicar blog
+          </button>
+        )}
+        {(interview.status === "submitted" ||
+          interview.status === "generating" ||
+          interview.generation_error) && (
+          <button
+            onClick={regenerate}
+            disabled={regenerating}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-sm font-mono text-amber-300 hover:bg-amber-500/20 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            title="Volver a generar el contenido AI desde las respuestas del builder"
+          >
+            {regenerating ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <RotateCw size={14} />
+            )}
+            {regenerating ? "Generando…" : "Regenerar"}
           </button>
         )}
         <button

@@ -206,11 +206,68 @@ export async function POST(req: NextRequest) {
                subscription_tier: "free",
                // Don't remove the IDs just in case they resubscribe later
             })
-            .eq("lemon_squeezy_subscription_id", subscriptionId);
+            .eq("lemon_squeezy_subscription_id", subscriptionId)
+            // Never downgrade a lifetime (Founder) buyer over a stale sub event.
+            .eq("is_lifetime", false);
 
          if (error) {
             console.error("Error downgradeando el perfil en Supabase:", error);
             return NextResponse.json({ error: "Database downgrade failed" }, { status: 500 });
+         }
+      }
+      // Handle one-time "Founder / Lifetime" purchase. Subscriptions come through
+      // the subscription_* events; the lifetime product is a one-time order and
+      // ONLY surfaces here — without this, a lifetime buyer pays and never gets Pro.
+      else if (eventName === "order_created") {
+         const attrs = payload.data.attributes || {};
+
+         // Optional gate: if LEMON_LIFETIME_VARIANT_ID is set, only grant Pro for
+         // that variant (so any other one-time product won't grant Pro).
+         const lifetimeVariant = process.env.LEMON_LIFETIME_VARIANT_ID;
+         const orderVariant = attrs.first_order_item?.variant_id?.toString();
+         if (lifetimeVariant && orderVariant && orderVariant !== lifetimeVariant) {
+            console.log(`order_created ignorado: variant ${orderVariant} != lifetime ${lifetimeVariant}`);
+            return NextResponse.json({ message: "Order ignored (not lifetime)" }, { status: 200 });
+         }
+
+         // Only grant on a paid order.
+         if (attrs.status && attrs.status !== "paid") {
+            return NextResponse.json({ message: `Order status ${attrs.status} ignored` }, { status: 200 });
+         }
+
+         let userId = customData?.user_id;
+         if (!userId) {
+            userId = await findUserIdByEmail(supabase, attrs.user_email);
+            if (userId) console.log(`order_created mapeado por email (${attrs.user_email})`);
+         }
+         if (!userId) {
+            console.error("order_created: no se pudo mapear el comprador (ni custom_data ni email)");
+            return NextResponse.json({ error: "Missing user for order" }, { status: 400 });
+         }
+
+         const { error } = await supabase
+            .from("profiles")
+            .update({
+               subscription_tier: "pro",
+               is_lifetime: true,
+               pro_since: new Date().toISOString(),
+               lemon_squeezy_customer_id: attrs.customer_id?.toString() ?? null,
+            })
+            .eq("id", userId);
+
+         if (error) {
+            console.error("order_created: error actualizando el perfil:", error);
+            return NextResponse.json({ error: "Database update failed" }, { status: 500 });
+         }
+
+         try {
+            await supabase.from("activities").insert({
+               user_id: userId,
+               type: "pro_upgrade",
+               data: { event: eventName, lifetime: true },
+            });
+         } catch (e) {
+            console.error("order_created: activity insert (non-fatal):", e);
          }
       }
 

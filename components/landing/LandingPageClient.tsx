@@ -10,9 +10,11 @@ import { supabase } from "@/lib/supabase";
 import { lemonLifetimeCheckoutUrl, buildLemonCheckoutUrl } from "@/lib/lemon-checkout-url";
 import { User } from "@supabase/supabase-js";
 import { Activity, Compass, Users, PlusCircle, Layout, Check, BookOpen, Globe, BarChart3, Loader2, ArrowRight, Sparkles, Zap, Star, LayoutGrid, Eye } from "lucide-react";
+import type { LandingTestimonial } from "@/lib/testimonial-service";
 
 interface LandingPageClientProps {
   showcaseData: any;
+  testimonials?: LandingTestimonial[];
 }
 
 type HeroVariant = "claim" | "social" | "product";
@@ -25,7 +27,7 @@ declare global {
   }
 }
 
-export default function LandingPageClient({ showcaseData }: LandingPageClientProps) {
+export default function LandingPageClient({ showcaseData, testimonials = [] }: LandingPageClientProps) {
   const [heatmap, setHeatmap] = useState<string[]>([]);
   const [selectedRoles, setSelectedRoles] = useState<string[]>(['Developer', 'Founder']);
   const [user, setUser] = useState<User | null>(null);
@@ -641,6 +643,41 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
       </section>
 
       {/* PRO FEATURES PROMO */}
+      {/* TESTIMONIALS — social proof before the ask (Marc Lou #29). Hidden when empty. */}
+      {testimonials.length > 0 && (
+        <section style={{ padding: '90px 40px 0' }}>
+          <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+            <div className="section-label" style={{ justifyContent: 'center' }}>// lo que dicen los builders</div>
+            <h2 className="section-title text-center">No lo decimos nosotros.</h2>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-10">
+              {testimonials.map((t) => (
+                <div key={t.id} className="flex flex-col bg-white/[0.02] border border-white/5 rounded-2xl p-6">
+                  <p className="text-sm text-[var(--text-dim)] leading-relaxed flex-1">“{t.quote}”</p>
+                  <a href={`/${t.username}`} className="flex items-center gap-3 mt-5 group">
+                    {t.avatarUrl ? (
+                      <img src={t.avatarUrl} alt={t.name} className="w-10 h-10 rounded-full object-cover shrink-0" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold shrink-0">
+                        {t.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <div className="text-sm font-bold text-white truncate group-hover:underline">{t.name}</div>
+                      <div className="text-xs font-mono text-[var(--text-muted)] truncate">@{t.username}</div>
+                    </div>
+                  </a>
+                </div>
+              ))}
+            </div>
+            <div className="text-center mt-8">
+              <Link href="/testimonio" className="text-xs font-mono text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">
+                ¿Usás huevsite? Dejá el tuyo →
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
       <section id="precios" className="pro-promo-section" style={{ padding: '100px 40px', background: 'linear-gradient(180deg, transparent 0%, rgba(200,255,0,0.03) 100%)', borderTop: '1px solid rgba(255,255,255,0.05)', scrollMarginTop: '80px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <div className="section-label" style={{ color: 'var(--accent)' }}>// huevsite pro</div>

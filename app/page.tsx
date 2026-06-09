@@ -4,6 +4,7 @@ import { getShowcaseData } from "@/lib/showcase-service";
 import LandingPageClient from "@/components/landing/LandingPageClient";
 import { SITE_URL } from "@/lib/site-url";
 import { fetchCurrentWinner } from "@/lib/og/shared";
+import { getFeaturedTestimonials } from "@/lib/testimonial-service";
 
 export const dynamic = "force-dynamic";
 
@@ -117,7 +118,7 @@ const faqSchema = {
       name: "¿Cuánto cuesta Huevsite.io?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Huevsite.io tiene un período de prueba gratuito sin necesidad de tarjeta de crédito. El plan Pro cuesta $5 por mes e incluye dominio personalizado, prioridad en el feed y soporte prioritario.",
+        text: "Huevsite.io tiene un plan gratuito sin necesidad de tarjeta de crédito. El plan Pro cuesta $9 por mes e incluye dominio personalizado, insights, más visibilidad y badge verificado; también hay un plan Founder de pago único de por vida.",
       },
     },
     {
@@ -143,7 +144,10 @@ const speakableSchema = {
 };
 
 export default async function LandingPage() {
-  const data = await getShowcaseData();
+  const [data, testimonials] = await Promise.all([
+    getShowcaseData(),
+    getFeaturedTestimonials(),
+  ]);
 
   const jsonLd = [
     organizationSchema,
@@ -160,7 +164,7 @@ export default async function LandingPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         strategy="beforeInteractive"
       />
-      <LandingPageClient showcaseData={data} />
+      <LandingPageClient showcaseData={data} testimonials={testimonials} />
     </>
   );
 }

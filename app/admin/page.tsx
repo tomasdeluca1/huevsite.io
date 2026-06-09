@@ -346,6 +346,12 @@ export default function AdminDashboard() {
             hint="Votación del jingle"
           />
           <QuickLink
+            href="/admin/testimonios"
+            icon={<MessageSquare size={16} />}
+            label="Testimonios"
+            hint="Aprobar y destacar"
+          />
+          <QuickLink
             href="/admin/danger"
             icon={<AlertTriangle size={16} />}
             label="Danger zone"

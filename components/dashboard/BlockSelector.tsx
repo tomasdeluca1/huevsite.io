@@ -43,7 +43,9 @@ export function BlockSelector({
     : MAX_FREE_BLOCKS + extraBlocksFromShare;
 
   const atLimit = currentBlockCount >= effectiveLimit;
-  const canUnlockExtraBlocks = subscriptionTier !== "pro" && !twitterShareUnlocked;
+  // Pro users can claim the share-unlock too — so the +3 is banked in
+  // extra_blocks_from_share and they keep 8 (not 5) if they ever downgrade.
+  const canUnlockExtraBlocks = !twitterShareUnlocked;
 
   const categories = [
     {
@@ -128,13 +130,15 @@ export function BlockSelector({
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--accent)]">
-                Bonus free tier
+                {subscriptionTier === "pro" ? "Bonus que conservás" : "Bonus free tier"}
               </div>
               <p className="mt-1 text-sm font-bold text-white">
-                Desbloqueá +3 bloques gratis
+                {subscriptionTier === "pro" ? "Asegurá +3 bloques extra" : "Desbloqueá +3 bloques gratis"}
               </p>
               <p className="mt-1 text-[12px] leading-relaxed text-[var(--text-dim)]">
-                Compartí tu huevsite en Twitter, pegá el link del tweet y te acreditamos los 3 bloques.
+                {subscriptionTier === "pro"
+                  ? "Compartí tu huevsite en Twitter y te acreditamos 3 bloques que conservás aunque alguna vez pases a free."
+                  : "Compartí tu huevsite en Twitter, pegá el link del tweet y te acreditamos los 3 bloques."}
               </p>
             </div>
           </div>

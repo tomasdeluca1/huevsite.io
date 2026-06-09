@@ -771,6 +771,32 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
         </div>
       </section>
 
+      {/* FOUNDER — people buy from people (Marc Lou #15) */}
+      <section style={{ padding: '64px 40px 0' }}>
+        <div style={{ maxWidth: '720px', margin: '0 auto' }}>
+          <a
+            href="/_tomidelu"
+            className="flex flex-col sm:flex-row items-center gap-5 p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors text-center sm:text-left"
+          >
+            {/* plain img: avatar is webp; the landing renders avatars without next/image */}
+            <img
+              src="https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/39wv6adk9l8-1778691295879.webp"
+              alt="Tomas Deluca"
+              className="w-16 h-16 rounded-full object-cover shrink-0 border border-[var(--accent)]/30"
+            />
+            <div>
+              <div className="section-label" style={{ justifyContent: 'inherit' }}>// quién está detrás</div>
+              <p className="text-[15px] text-[var(--text-dim)] leading-relaxed mt-1.5 mb-2">
+                «Soy Tomas. Armé huevsite para que el laburo de los builders de LATAM <span style={{ color: 'var(--accent)' }}>se vea, no se cuente</span>. Es lo que uso yo todos los días.»
+              </p>
+              <div className="text-xs font-mono text-[var(--text-muted)]">
+                Tomas Deluca · <span style={{ color: 'var(--accent)' }}>@_tomidelu</span> · Product Engineer & v0 ambassador
+              </div>
+            </div>
+          </a>
+        </div>
+      </section>
+
       {/* FINAL CTA */}
       <section className="final-cta-section">
         <div className="final-cta-glow" aria-hidden="true" />

@@ -166,7 +166,9 @@ export default async function BlogIndexPage({
                         <div className="text-[10px] text-[var(--text-muted)] font-mono">@{post.author.username}</div>
                       )}
                     </div>
-                    <Image src={post.author.avatarUrl} alt={post.author.name} width={40} height={40} className="rounded-full" />
+                    {/* unoptimized: builder avatars come from arbitrary hosts (Linktree/Twitter/etc.)
+                        not in next.config remotePatterns; the optimizer 400s on them (see article page). */}
+                    <Image src={post.author.avatarUrl} alt={post.author.name} width={40} height={40} className="rounded-full object-cover" unoptimized />
                   </Link>
                 </div>
               </article>

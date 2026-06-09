@@ -281,6 +281,9 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
           <Link href="/blog" className="btn btn-ghost">
             <span>Blog</span>
           </Link>
+          <a href="#precios" className="btn btn-ghost">
+            <span>Precios</span>
+          </a>
           <Link href={user ? "/dashboard" : "/login"} className="btn btn-accent !px-6 ml-1">
             {user ? (
               <>
@@ -638,7 +641,7 @@ export default function LandingPageClient({ showcaseData }: LandingPageClientPro
       </section>
 
       {/* PRO FEATURES PROMO */}
-      <section className="pro-promo-section" style={{ padding: '100px 40px', background: 'linear-gradient(180deg, transparent 0%, rgba(200,255,0,0.03) 100%)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+      <section id="precios" className="pro-promo-section" style={{ padding: '100px 40px', background: 'linear-gradient(180deg, transparent 0%, rgba(200,255,0,0.03) 100%)', borderTop: '1px solid rgba(255,255,255,0.05)', scrollMarginTop: '80px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <div className="section-label" style={{ color: 'var(--accent)' }}>// huevsite pro</div>
           <h2 className="section-title">Llevá tu marca al <span style={{ color: 'var(--accent)' }}>próximo nivel.</span></h2>

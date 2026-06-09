@@ -1,4 +1,6 @@
-const FALLBACK_LEMON_CHECKOUT_URL = "https://huevsite.lemonsqueezy.com/checkout/buy/d1f67827-c296-4708-a267-c6666ea0f3ae";
+// $9 Pro product. The old $5 product (d1f67827…) stays alive in Lemon Squeezy
+// so existing $5 subscribers keep their price; only NEW checkouts use $9.
+const FALLBACK_LEMON_CHECKOUT_URL = "https://huevsite.lemonsqueezy.com/checkout/buy/a5f6003d-0d43-4e9d-80b8-27c61dbd08dc";
 
 export const lemonCheckoutUrl =
   process.env.NEXT_PUBLIC_LEMON_SQUEEZY_CHECKOUT_URL ||

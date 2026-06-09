@@ -221,9 +221,9 @@ export async function POST(req: NextRequest) {
       else if (eventName === "order_created") {
          const attrs = payload.data.attributes || {};
 
-         // Optional gate: if LEMON_LIFETIME_VARIANT_ID is set, only grant Pro for
-         // that variant (so any other one-time product won't grant Pro).
-         const lifetimeVariant = process.env.LEMON_LIFETIME_VARIANT_ID;
+         // Gate: only grant Pro for the lifetime variant, so any other one-time
+         // product (now or later) won't grant Pro. Env var overrides the default.
+         const lifetimeVariant = process.env.LEMON_LIFETIME_VARIANT_ID || "1769406";
          const orderVariant = attrs.first_order_item?.variant_id?.toString();
          if (lifetimeVariant && orderVariant && orderVariant !== lifetimeVariant) {
             console.log(`order_created ignorado: variant ${orderVariant} != lifetime ${lifetimeVariant}`);

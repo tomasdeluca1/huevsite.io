@@ -46,6 +46,32 @@ export async function POST(
     );
   }
 
+  // Resolve the builder profile (for blog authorship) and the canonical blog
+  // URL BEFORE generation, so the model puts the REAL link in the CTAs instead
+  // of hallucinating one. Slug is aligned with the cron + submit route.
+  const { data: builderProfile } = await supabase
+    .from("profiles")
+    .select("id, name, username, image")
+    .eq("username", iv.builder_username)
+    .maybeSingle();
+
+  let weekLabel: string | undefined;
+  if (builderProfile?.id) {
+    const { data: win } = await supabase
+      .from("showcase_winners")
+      .select("week")
+      .eq("user_id", builderProfile.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    weekLabel = win?.week || undefined;
+  }
+  const slugWeek = (weekLabel || "").toLowerCase();
+  const slug = slugWeek
+    ? `builder-de-la-semana-${iv.builder_username}-${slugWeek}`
+    : `builder-de-la-semana-${iv.builder_username}`;
+  const blogUrl = `https://huevsite.io/blog/${slug}`;
+
   // Mark in-flight + clear the previous error.
   await supabase
     .from("builder_interviews")
@@ -72,6 +98,7 @@ export async function POST(
       quickfireAdvice: iv.quickfire_advice || "",
       quickfireWhatsNext: iv.quickfire_whats_next || "",
       quickfireWhereToFind: iv.quickfire_where_to_find || "",
+      blogUrl,
     });
   } catch (aiError: any) {
     await supabase
@@ -97,13 +124,7 @@ export async function POST(
     })
     .eq("id", id);
 
-  // 3. Resolve the builder profile so the blog post is authored by THEM.
-  const { data: builderProfile } = await supabase
-    .from("profiles")
-    .select("id, name, username, image")
-    .eq("username", iv.builder_username)
-    .maybeSingle();
-
+  // 3. Blog authorship fields — the post is authored by the builder, not huevsite.
   const authorName = builderProfile?.name || iv.builder_name || iv.builder_username;
   const authorUsername = builderProfile?.username || iv.builder_username;
   const authorAvatarUrl =
@@ -112,24 +133,6 @@ export async function POST(
   const blogTags = Array.from(
     new Set([...(generated.blogTags || []), "builder-de-la-semana"])
   );
-
-  // Week suffix keeps the slug aligned with the cron + submit route so we
-  // update the same blog row instead of duplicating.
-  let weekLabel: string | undefined;
-  if (builderProfile?.id) {
-    const { data: win } = await supabase
-      .from("showcase_winners")
-      .select("week")
-      .eq("user_id", builderProfile.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    weekLabel = win?.week || undefined;
-  }
-  const slugWeek = (weekLabel || "").toLowerCase();
-  const slug = slugWeek
-    ? `builder-de-la-semana-${iv.builder_username}-${slugWeek}`
-    : `builder-de-la-semana-${iv.builder_username}`;
 
   // 4. Upsert the blog_post: prefer the already-linked row, then a slug match,
   //    else insert. Always is_published=false so the admin still reviews it.

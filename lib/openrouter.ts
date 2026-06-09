@@ -23,6 +23,9 @@ interface InterviewData {
   // overrides it with `generateJointCarouselPrompt` once all forms arrive.
   coWinners?: Array<{ name: string; username: string }>;
   weekLabel?: string;
+  // Canonical URL of this interview's blog post. Passed in so the model uses
+  // the REAL link in the LinkedIn/Twitter CTAs instead of hallucinating one.
+  blogUrl?: string;
 }
 
 // Subset of InterviewData carried per-builder for the joint carousel prompt.
@@ -67,8 +70,8 @@ FORMATO DE RESPUESTA (JSON estricto):
   "blogExcerpt": "2-3 líneas que resuman la historia y den ganas de leer (máx 200 chars)",
   "blogTags": ["entrevista", "builder-de-la-semana", "comunidad", ...tags relevantes del stack o tema],
   "blogMarkdown": "Post completo en Markdown con esta estructura:\\n> Quote potente del builder\\n\\n## Quién es [nombre]\\n(2-3 párrafos)\\n\\n## Lo que está construyendo\\n(3-4 párrafos sobre proyecto, problema, solución, stack)\\n\\n## El momento clave\\n(1-2 párrafos sobre el desafío más grande)\\n\\n## Para la comunidad\\n(1-2 párrafos con consejos y visión)\\n\\n## Dónde encontrarlo\\n- huevsite: huevsite.io/username\\n- links del builder\\n\\n---\\n*Esta entrevista es parte de la serie Builder de la Semana de huevsite.io.*",
-  "linkedinPost": "Post para LinkedIn (máx 1300 chars). Hook fuerte, 2-3 párrafos cortos, quote, CTA al blog. Hashtags: #buildinpublic #huevsite",
-  "twitterPost": "Tweet único (máx 270 chars). Nombre, quote corta, qué construye, link al blog. #buildinpublic #huevsite",
+  "linkedinPost": "Post para LinkedIn ESCRITO EN PRIMERA PERSONA por el fundador de huevsite (voz personal y cálida: 'esta semana quiero compartir', 'me quedo con'). El reconocimiento lo da LA COMUNIDAD de huevsite (la comunidad eligió a este builder como Builder de la Semana), no vos solo — dejalo claro. Mencioná al builder con su @handle. Dale CONTEXTO concreto: quién es, qué construye (proyecto + problema que resuelve + stack), y una quote textual potente entre comillas. Informativo pero SIN estirarse: máx ~1100 chars, párrafos cortos y escaneables. Cerrá con un CTA y el link EXACTO al blog (campo 'URL del blog' de la entrevista — NO inventes). Hashtags al final: #buildinpublic #huevsite",
+  "twitterPost": "Tweet único PUNCHY, MÁXIMO 220 caracteres TOTALES contando el link. Estructura: '🏆 Builder de la Semana: @handle' + 1 línea de qué construye + 1 quote corta entre comillas + el link EXACTO al blog (campo 'URL del blog' — NO inventes). Para el @handle usá el de X/Twitter del builder si aparece en sus respuestas, si no su nombre. SIN hashtags. Sin relleno ni signos de más.",
   "instagramCaption": "Caption para IG (máx 2200 chars). Storytelling con saltos de línea, emojis moderados, hashtags al final",
   "instagramCarouselPrompt": "Brief de 1-3 oraciones para Creatibro que produzca un carrusel de 7 slides sobre este builder. Ver REGLAS PROMPT CREATIBRO abajo.",
   "instagramStoryPrompt": "Brief de 1-2 oraciones para Creatibro que produzca UNA story de IG (1 slide) reflejando el perfil individual de este builder. Ver REGLAS PROMPT CREATIBRO abajo."
@@ -125,6 +128,7 @@ INSTRUCCIÓN IMPORTANTE: Este blog post + tweet + LinkedIn + caption son SOBRE $
 
 Builder: ${data.builderName} (@${data.builderUsername})
 Perfil: https://huevsite.io/${data.builderUsername}
+URL del blog de esta entrevista (USÁ EXACTAMENTE ESTA en los CTAs de LinkedIn y Twitter — NO inventes ni acortes URLs): ${data.blogUrl || `https://huevsite.io/${data.builderUsername}`}
 ${coWinnersBlock}
 
 --- INTRO ---

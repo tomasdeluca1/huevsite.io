@@ -179,6 +179,17 @@ export async function POST(
       console.error("Co-winner lookup error (non-fatal):", e);
     }
 
+    // Slug aligned with the cron pipeline so a builder upgrading a cron-armed
+    // draft regenerates THE SAME blog post (instead of duplicating). The week
+    // suffix also makes future repeat winners safe (each pick gets its own
+    // slug). Computed BEFORE generation so the AI puts the real blog URL in the
+    // LinkedIn/Twitter CTAs instead of hallucinating one.
+    const slugWeek = (weekLabel || "").toLowerCase();
+    const slug = slugWeek
+      ? `builder-de-la-semana-${interview.builder_username}-${slugWeek}`
+      : `builder-de-la-semana-${interview.builder_username}`;
+    const blogUrl = `https://huevsite.io/blog/${slug}`;
+
     // Generate content with AI
     let generated;
     try {
@@ -201,6 +212,7 @@ export async function POST(
         quickfireWhereToFind: body.quickfire_where_to_find || "",
         coWinners,
         weekLabel,
+        blogUrl,
       });
     } catch (aiError: any) {
       await supabase
@@ -330,14 +342,8 @@ export async function POST(
     // listing can badge/filter these posts reliably.
     const blogTags = Array.from(new Set([...(generated.blogTags || []), "builder-de-la-semana"]));
 
-    // Slug aligned with the cron pipeline so a builder upgrading a
-    // cron-armed draft regenerates THE SAME blog post (instead of
-    // duplicating). The week suffix also makes future repeat winners
-    // safe (each pick gets its own slug).
-    const slugWeek = (weekLabel || "").toLowerCase();
-    const slug = slugWeek
-      ? `builder-de-la-semana-${interview.builder_username}-${slugWeek}`
-      : `builder-de-la-semana-${interview.builder_username}`;
+    // `slug` is computed before generation (above) so the blog URL could be
+    // passed to the AI; reused here for the blog row resolution.
 
     // Resolve the target blog row: prefer the one already linked from
     // the interview (set by the cron), then fall back to slug match.

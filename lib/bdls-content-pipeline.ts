@@ -380,6 +380,7 @@ export async function processWinnerForWeek(
     ...answers,
     coWinners,
     weekLabel: week,
+    blogUrl: `https://huevsite.io/blog/${slug}`,
   });
 
   const blogTags = Array.from(new Set([...(aiOut.blogTags || []), "builder-de-la-semana"]));

@@ -40,16 +40,23 @@ function truncate(text: string, max: number) {
   return `${text.slice(0, max - 1).trimEnd()}…`;
 }
 
-// BDLS titles lead with the builder's name (e.g. "Martín Pulitano: De
-// hackathon…", "Rober, el Builder que…"). The portrait card already shows the
-// name big, so strip that prefix to use the rest as a clean headline.
-function headlineFromTitle(title: string, name: string) {
-  const lower = title.toLowerCase();
-  const candidates = [name.toLowerCase(), name.split(" ")[0].toLowerCase()];
-  for (const n of candidates) {
-    if (n && lower.startsWith(n)) {
-      const rest = title.slice(n.length).replace(/^[\s:,.;–—-]+/, "").trim();
-      if (rest) return rest.charAt(0).toUpperCase() + rest.slice(1);
+// BDLS titles lead with the builder's name then ": " or ", " then the hook
+// (e.g. "Martín Pulitano: De hackathons…", "Rober: De Freelance…"). The portrait
+// card already shows the name big, so drop that prefix and use the hook as a
+// clean headline. The title's name form often differs from author_name
+// ("Rober" vs "Robertino", "Martín Pulitano" vs "Martín Ezequiel Pulitano"), so
+// match on any shared name/username token — and only strip when the early
+// prefix actually looks like the name (guards hook-led titles).
+function headlineFromTitle(title: string, name: string, username: string) {
+  const m = title.match(/^(.{1,30}?)\s*[:,]\s+(.+)$/);
+  if (m) {
+    const prefix = m[1].toLowerCase();
+    const rest = m[2].trim();
+    const tokens = [...name.toLowerCase().split(/\s+/), username.toLowerCase()].filter(
+      (t) => t.length >= 3
+    );
+    if (rest && tokens.some((t) => prefix.includes(t) || t.includes(prefix))) {
+      return rest.charAt(0).toUpperCase() + rest.slice(1);
     }
   }
   return title;
@@ -244,7 +251,10 @@ function renderBuilderOfTheWeek(post: BlogPost) {
   // the source format (webp uploads, Linktree/Twitter imports, etc.).
   const photoUrl = ogAvatarUrl(post.author.avatarUrl, 240);
   const name = truncate(post.author.name, 34);
-  const headline = truncate(headlineFromTitle(post.title, post.author.name), 92);
+  const headline = truncate(
+    headlineFromTitle(post.title, post.author.name, post.author.username),
+    92
+  );
 
   return (
     <div

@@ -5,6 +5,17 @@ import crypto from "crypto";
 import { postProUpgrade } from "@/lib/twitter";
 import { resolveXHandles } from "@/lib/twitter-utils";
 import { findUserIdByEmail } from "@/lib/find-user-by-email";
+import { scoreService } from "@/lib/score-service";
+
+// Recompute the builder score after a tier change (pro/free affects it).
+// Non-fatal: a webhook must still 200 even if the score RPC hiccups.
+async function recomputeScoreSafe(userId: string) {
+   try {
+      await scoreService.recomputeScore(userId);
+   } catch (e) {
+      console.error("recompute score (non-fatal) for", userId, e);
+   }
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -103,6 +114,9 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Database update failed" }, { status: 500 });
          }
 
+         // Tier changed → recompute the builder score.
+         await recomputeScoreSafe(userId);
+
          if (eventName === "subscription_created" && isPro) {
             await supabase.from("activities").insert({
                user_id: userId,
@@ -178,16 +192,21 @@ export async function POST(req: NextRequest) {
          const status = payload.data.attributes.status;
          const isPro = status === "active" || status === "on_trial";
 
-         const { error } = await supabase
+         const { data: resumed, error } = await supabase
             .from("profiles")
             .update({
                subscription_tier: isPro ? "pro" : "free",
             })
-            .eq("lemon_squeezy_subscription_id", subscriptionId);
+            .eq("lemon_squeezy_subscription_id", subscriptionId)
+            .select("id");
 
          if (error) {
             console.error("Error resumiendo el perfil en Supabase:", error);
             return NextResponse.json({ error: "Database resume failed" }, { status: 500 });
+         }
+
+         for (const row of resumed || []) {
+            await recomputeScoreSafe(row.id);
          }
       }
       // Handle Subscription Expired/Payment Failed/Paused/Cancelled
@@ -200,7 +219,7 @@ export async function POST(req: NextRequest) {
          // Find the user by subscription ID
          const subscriptionId = payload.data.id.toString();
 
-         const { error } = await supabase
+         const { data: downgraded, error } = await supabase
             .from("profiles")
             .update({
                subscription_tier: "free",
@@ -208,11 +227,18 @@ export async function POST(req: NextRequest) {
             })
             .eq("lemon_squeezy_subscription_id", subscriptionId)
             // Never downgrade a lifetime (Founder) buyer over a stale sub event.
-            .eq("is_lifetime", false);
+            .eq("is_lifetime", false)
+            .select("id");
 
          if (error) {
             console.error("Error downgradeando el perfil en Supabase:", error);
             return NextResponse.json({ error: "Database downgrade failed" }, { status: 500 });
+         }
+
+         // Downgraded to free → recompute the builder score so it reflects the
+         // free-tier state (the block cap stays dynamic: 5 + share-unlock bonus).
+         for (const row of downgraded || []) {
+            await recomputeScoreSafe(row.id);
          }
       }
       // Handle one-time "Founder / Lifetime" purchase. Subscriptions come through
@@ -259,6 +285,9 @@ export async function POST(req: NextRequest) {
             console.error("order_created: error actualizando el perfil:", error);
             return NextResponse.json({ error: "Database update failed" }, { status: 500 });
          }
+
+         // Granted lifetime Pro → recompute the builder score.
+         await recomputeScoreSafe(userId);
 
          try {
             await supabase.from("activities").insert({

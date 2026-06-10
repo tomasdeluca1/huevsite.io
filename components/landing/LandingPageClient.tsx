@@ -854,7 +854,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
       )}
 
       {/* FOUNDER — people buy from people (Marc Lou #15). Video if set in admin, else text. */}
-      <section style={{ padding: '80px 24px 0' }}>
+      <section style={{ padding: '80px 24px 72px' }}>
         <div style={{ maxWidth: '760px', margin: '0 auto' }}>
           {founderVideo && (founderVideo.embed || founderVideo.file) ? (
             <div>

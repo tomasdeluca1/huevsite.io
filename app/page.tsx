@@ -6,6 +6,7 @@ import { SITE_URL } from "@/lib/site-url";
 import { fetchCurrentWinner } from "@/lib/og/shared";
 import { getFeaturedTestimonials } from "@/lib/testimonial-service";
 import { getPublishedFaqs } from "@/lib/faq-service";
+import { getSiteSettings } from "@/lib/site-settings-service";
 
 export const dynamic = "force-dynamic";
 
@@ -145,10 +146,11 @@ const speakableSchema = {
 };
 
 export default async function LandingPage() {
-  const [data, testimonials, faqs] = await Promise.all([
+  const [data, testimonials, faqs, settings] = await Promise.all([
     getShowcaseData(),
     getFeaturedTestimonials(),
     getPublishedFaqs(),
+    getSiteSettings(),
   ]);
 
   // FAQPage schema from the admin-managed FAQs; falls back to the static one
@@ -181,7 +183,13 @@ export default async function LandingPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         strategy="beforeInteractive"
       />
-      <LandingPageClient showcaseData={data} testimonials={testimonials} faqs={faqs} />
+      <LandingPageClient
+        showcaseData={data}
+        testimonials={testimonials}
+        faqs={faqs}
+        founderVideoUrl={settings.founder_video_url || ""}
+        founderQuote={settings.founder_quote || ""}
+      />
     </>
   );
 }

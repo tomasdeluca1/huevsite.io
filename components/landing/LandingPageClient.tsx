@@ -12,11 +12,14 @@ import { User } from "@supabase/supabase-js";
 import { Activity, Compass, Users, PlusCircle, Layout, Check, BookOpen, Globe, BarChart3, Loader2, ArrowRight, Sparkles, Zap, Star, LayoutGrid, Eye, ChevronDown } from "lucide-react";
 import type { LandingTestimonial } from "@/lib/testimonial-service";
 import type { Faq } from "@/lib/faq-service";
+import { toEmbedUrl } from "@/lib/site-settings-service";
 
 interface LandingPageClientProps {
   showcaseData: any;
   testimonials?: LandingTestimonial[];
   faqs?: Faq[];
+  founderVideoUrl?: string;
+  founderQuote?: string;
 }
 
 type HeroVariant = "claim" | "social" | "product";
@@ -29,7 +32,8 @@ declare global {
   }
 }
 
-export default function LandingPageClient({ showcaseData, testimonials = [], faqs = [] }: LandingPageClientProps) {
+export default function LandingPageClient({ showcaseData, testimonials = [], faqs = [], founderVideoUrl = "", founderQuote = "" }: LandingPageClientProps) {
+  const founderVideo = founderVideoUrl ? toEmbedUrl(founderVideoUrl) : null;
   const [heatmap, setHeatmap] = useState<string[]>([]);
   const [selectedRoles, setSelectedRoles] = useState<string[]>(['Developer', 'Founder']);
   const [user, setUser] = useState<User | null>(null);
@@ -849,36 +853,74 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
         </section>
       )}
 
-      {/* FOUNDER — people buy from people (Marc Lou #15) */}
+      {/* FOUNDER — people buy from people (Marc Lou #15). Video if set in admin, else text. */}
       <section style={{ padding: '80px 24px 0' }}>
         <div style={{ maxWidth: '760px', margin: '0 auto' }}>
-          <a
-            href="/_tomidelu"
-            className="group flex flex-col sm:flex-row sm:items-stretch gap-6 sm:gap-7 p-7 sm:p-9 rounded-[2rem] bg-[linear-gradient(135deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] border border-white/[0.07] hover:border-[var(--accent)]/30 transition-colors text-center sm:text-left"
-          >
-            <div className="flex flex-col items-center sm:items-start shrink-0">
-              {/* plain img: avatar is webp; the landing renders avatars without next/image */}
-              <img
-                src="https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/39wv6adk9l8-1778691295879.webp"
-                alt="Tomas Deluca"
-                className="w-20 h-20 rounded-full object-cover border-2 border-[var(--accent)]/40 shadow-lg shadow-[var(--accent)]/10"
-              />
-            </div>
-            <div className="flex-1 min-w-0 flex flex-col justify-center">
-              <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-[var(--accent)] mb-3">
+          {founderVideo && (founderVideo.embed || founderVideo.file) ? (
+            <div>
+              <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-[var(--accent)] mb-4 text-center">
                 Quién está detrás
               </div>
-              <p className="text-base sm:text-[19px] text-white/90 leading-relaxed font-medium mb-4">
-                “Soy Tomas. Armé huevsite para que el laburo de los builders de LATAM <span style={{ color: 'var(--accent)' }}>se vea, no se cuente</span>. Es lo que uso yo todos los días.”
-              </p>
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-2.5 gap-y-1 text-[13px] font-mono text-[var(--text-muted)]">
-                <span className="font-bold text-white/80">Tomas Deluca</span>
-                <span className="text-[var(--accent)] group-hover:underline">@_tomidelu</span>
-                <span className="hidden sm:inline text-white/20">·</span>
-                <span className="hidden sm:inline">Product Engineer &amp; v0 ambassador</span>
+              <div className="rounded-[1.5rem] overflow-hidden border border-white/[0.08] bg-black aspect-video shadow-2xl shadow-[var(--accent)]/5">
+                {founderVideo.file ? (
+                  <video src={founderVideo.file} controls playsInline className="w-full h-full object-cover" />
+                ) : (
+                  <iframe
+                    src={founderVideo.embed!}
+                    title="El founder de huevsite"
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                    allowFullScreen
+                  />
+                )}
               </div>
+              <a href="/_tomidelu" className="group flex items-center justify-center gap-3 mt-5">
+                <img
+                  src="https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/39wv6adk9l8-1778691295879.webp"
+                  alt="Tomas Deluca"
+                  className="w-11 h-11 rounded-full object-cover border border-[var(--accent)]/40"
+                />
+                <div className="text-left text-[13px] font-mono">
+                  <div className="font-bold text-white/85 group-hover:underline">
+                    Tomas Deluca <span className="text-[var(--accent)]">@_tomidelu</span>
+                  </div>
+                  <div className="text-[var(--text-muted)]">Founder de huevsite</div>
+                </div>
+              </a>
             </div>
-          </a>
+          ) : (
+            <a
+              href="/_tomidelu"
+              className="group flex flex-col sm:flex-row sm:items-stretch gap-6 sm:gap-7 p-7 sm:p-9 rounded-[2rem] bg-[linear-gradient(135deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] border border-white/[0.07] hover:border-[var(--accent)]/30 transition-colors text-center sm:text-left"
+            >
+              <div className="flex flex-col items-center sm:items-start shrink-0">
+                {/* plain img: avatar is webp; the landing renders avatars without next/image */}
+                <img
+                  src="https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/39wv6adk9l8-1778691295879.webp"
+                  alt="Tomas Deluca"
+                  className="w-20 h-20 rounded-full object-cover border-2 border-[var(--accent)]/40 shadow-lg shadow-[var(--accent)]/10"
+                />
+              </div>
+              <div className="flex-1 min-w-0 flex flex-col justify-center">
+                <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-[var(--accent)] mb-3">
+                  Quién está detrás
+                </div>
+                <p className="text-base sm:text-[19px] text-white/90 leading-relaxed font-medium mb-4">
+                  {founderQuote
+                    ? `“${founderQuote}”`
+                    : (
+                      <>“Soy Tomas. Armé huevsite para que el laburo de los builders de LATAM <span style={{ color: 'var(--accent)' }}>se vea, no se cuente</span>. Es lo que uso yo todos los días.”</>
+                    )}
+                </p>
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-2.5 gap-y-1 text-[13px] font-mono text-[var(--text-muted)]">
+                  <span className="font-bold text-white/80">Tomas Deluca</span>
+                  <span className="text-[var(--accent)] group-hover:underline">@_tomidelu</span>
+                  <span className="hidden sm:inline text-white/20">·</span>
+                  <span className="hidden sm:inline">Product Engineer &amp; v0 ambassador</span>
+                </div>
+              </div>
+            </a>
+          )}
         </div>
       </section>
 

@@ -225,11 +225,36 @@ async function callOpenRouter(
   return content;
 }
 
+// Deterministically guarantee the tweet fits within `max` chars and carries the
+// correct blog URL — LLMs count characters poorly, so the prompt cap isn't
+// reliable. Strip any URL the model embedded, trim the prose to a word boundary,
+// then re-append the canonical blog URL.
+const TWEET_MAX = 220;
+export function enforceTweetLimit(tweet: string, blogUrl?: string, max = TWEET_MAX): string {
+  if (!tweet) return tweet;
+  if (!blogUrl) {
+    return tweet.length <= max
+      ? tweet
+      : tweet.slice(0, max - 1).replace(/\s+\S*$/, "").trim() + "…";
+  }
+  const text = tweet.replace(/https?:\/\/\S+/g, "").replace(/\n{3,}/g, "\n\n").trim();
+  const suffix = `\n${blogUrl}`;
+  const budget = max - suffix.length;
+  const trimmed =
+    text.length > budget
+      ? text.slice(0, budget - 1).replace(/\s+\S*$/, "").trim() + "…"
+      : text;
+  return `${trimmed}${suffix}`;
+}
+
 export async function generateInterviewContent(
   data: InterviewData
 ): Promise<GeneratedContent> {
   const content = await callOpenRouter(SYSTEM_PROMPT, formatInterviewForAI(data));
-  return JSON.parse(content) as GeneratedContent;
+  const parsed = JSON.parse(content) as GeneratedContent;
+  // Hard cap the tweet (the prompt asks for <=220 but the model overshoots).
+  parsed.twitterPost = enforceTweetLimit(parsed.twitterPost, data.blogUrl, TWEET_MAX);
+  return parsed;
 }
 
 // Generate ONE Creatibro prompt presenting all co-winners of the same week.

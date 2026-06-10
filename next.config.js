@@ -21,6 +21,12 @@ const nextConfig = {
             },
         ],
     },
+    async redirects() {
+        return [
+            // The testimonial page is /testimonio; accept the plural too.
+            { source: '/testimonios', destination: '/testimonio', permanent: false },
+        ];
+    },
 }
 
 module.exports = nextConfig

@@ -359,6 +359,12 @@ export default function AdminDashboard() {
             hint="Preguntas de la home"
           />
           <QuickLink
+            href="/admin/landing"
+            icon={<Video size={16} />}
+            label="Landing"
+            hint="Video y quote del founder"
+          />
+          <QuickLink
             href="/admin/danger"
             icon={<AlertTriangle size={16} />}
             label="Danger zone"

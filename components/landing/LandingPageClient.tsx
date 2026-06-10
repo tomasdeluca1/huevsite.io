@@ -88,8 +88,8 @@ export default function LandingPageClient({ showcaseData, testimonials = [] }: L
       description: "Tu portfolio vivo: proyectos, código y métricas reales en un link que se actualiza solo. Donde los builders de LATAM se muestran de verdad.",
       primaryHref: user ? "/dashboard" : "/login",
       primaryLabel: user ? "Ir a mi dashboard" : "Armá el tuyo — gratis",
-      secondaryHref: "/feed",
-      secondaryLabel: "Ver el feed",
+      secondaryHref: "/explore",
+      secondaryLabel: "Ver perfiles reales",
     },
     product: {
       eyebrow: "Así luce tu perfil en producción",
@@ -649,7 +649,14 @@ export default function LandingPageClient({ showcaseData, testimonials = [] }: L
           <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
             <div className="section-label" style={{ justifyContent: 'center' }}>// lo que dicen los builders</div>
             <h2 className="section-title text-center">No lo decimos nosotros.</h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-10">
+            {/* Adaptive: 1 → centered card, 2 → pair, 3+ → grid (never a lonely card). */}
+            <div className={`mt-10 ${
+              testimonials.length === 1
+                ? "max-w-2xl mx-auto"
+                : testimonials.length === 2
+                ? "grid sm:grid-cols-2 gap-4 max-w-3xl mx-auto"
+                : "grid sm:grid-cols-2 lg:grid-cols-3 gap-4"
+            }`}>
               {testimonials.map((t) => (
                 <div key={t.id} className="flex flex-col bg-white/[0.02] border border-white/5 rounded-2xl p-6">
                   <p className="text-sm text-[var(--text-dim)] leading-relaxed flex-1">“{t.quote}”</p>
@@ -681,8 +688,8 @@ export default function LandingPageClient({ showcaseData, testimonials = [] }: L
       <section id="precios" className="pro-promo-section" style={{ padding: '100px 40px', background: 'linear-gradient(180deg, transparent 0%, rgba(200,255,0,0.03) 100%)', borderTop: '1px solid rgba(255,255,255,0.05)', scrollMarginTop: '80px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <div className="section-label" style={{ color: 'var(--accent)' }}>// huevsite pro</div>
-          <h2 className="section-title">Llevá tu marca al <span style={{ color: 'var(--accent)' }}>próximo nivel.</span></h2>
-          <p className="section-sub" style={{ marginBottom: '60px' }}>Features avanzadas para builders que quieren destacar y ser descubiertos.</p>
+          <h2 className="section-title">Que te <span style={{ color: 'var(--accent)' }}>encuentren.</span></h2>
+          <p className="section-sub" style={{ marginBottom: '60px' }}>Recruiters, clientes y otros builders te descubren cuando destacás. Eso es Pro.</p>
 
           <div style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', display: 'grid', gap: '20px' }}>
             {[
@@ -809,25 +816,32 @@ export default function LandingPageClient({ showcaseData, testimonials = [] }: L
       </section>
 
       {/* FOUNDER — people buy from people (Marc Lou #15) */}
-      <section style={{ padding: '64px 40px 0' }}>
-        <div style={{ maxWidth: '720px', margin: '0 auto' }}>
+      <section style={{ padding: '80px 24px 0' }}>
+        <div style={{ maxWidth: '760px', margin: '0 auto' }}>
           <a
             href="/_tomidelu"
-            className="flex flex-col sm:flex-row items-center gap-5 p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors text-center sm:text-left"
+            className="group flex flex-col sm:flex-row sm:items-stretch gap-6 sm:gap-7 p-7 sm:p-9 rounded-[2rem] bg-[linear-gradient(135deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] border border-white/[0.07] hover:border-[var(--accent)]/30 transition-colors text-center sm:text-left"
           >
-            {/* plain img: avatar is webp; the landing renders avatars without next/image */}
-            <img
-              src="https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/39wv6adk9l8-1778691295879.webp"
-              alt="Tomas Deluca"
-              className="w-16 h-16 rounded-full object-cover shrink-0 border border-[var(--accent)]/30"
-            />
-            <div>
-              <div className="section-label" style={{ justifyContent: 'inherit' }}>// quién está detrás</div>
-              <p className="text-[15px] text-[var(--text-dim)] leading-relaxed mt-1.5 mb-2">
-                «Soy Tomas. Armé huevsite para que el laburo de los builders de LATAM <span style={{ color: 'var(--accent)' }}>se vea, no se cuente</span>. Es lo que uso yo todos los días.»
+            <div className="flex flex-col items-center sm:items-start shrink-0">
+              {/* plain img: avatar is webp; the landing renders avatars without next/image */}
+              <img
+                src="https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/39wv6adk9l8-1778691295879.webp"
+                alt="Tomas Deluca"
+                className="w-20 h-20 rounded-full object-cover border-2 border-[var(--accent)]/40 shadow-lg shadow-[var(--accent)]/10"
+              />
+            </div>
+            <div className="flex-1 min-w-0 flex flex-col justify-center">
+              <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-[var(--accent)] mb-3">
+                Quién está detrás
+              </div>
+              <p className="text-base sm:text-[19px] text-white/90 leading-relaxed font-medium mb-4">
+                “Soy Tomas. Armé huevsite para que el laburo de los builders de LATAM <span style={{ color: 'var(--accent)' }}>se vea, no se cuente</span>. Es lo que uso yo todos los días.”
               </p>
-              <div className="text-xs font-mono text-[var(--text-muted)]">
-                Tomas Deluca · <span style={{ color: 'var(--accent)' }}>@_tomidelu</span> · Product Engineer & v0 ambassador
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-2.5 gap-y-1 text-[13px] font-mono text-[var(--text-muted)]">
+                <span className="font-bold text-white/80">Tomas Deluca</span>
+                <span className="text-[var(--accent)] group-hover:underline">@_tomidelu</span>
+                <span className="hidden sm:inline text-white/20">·</span>
+                <span className="hidden sm:inline">Product Engineer &amp; v0 ambassador</span>
               </div>
             </div>
           </a>

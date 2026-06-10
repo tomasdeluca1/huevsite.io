@@ -9,12 +9,14 @@ import { LatamFlags } from "@/components/landing/LatamFlags";
 import { supabase } from "@/lib/supabase";
 import { lemonLifetimeCheckoutUrl, buildLemonCheckoutUrl } from "@/lib/lemon-checkout-url";
 import { User } from "@supabase/supabase-js";
-import { Activity, Compass, Users, PlusCircle, Layout, Check, BookOpen, Globe, BarChart3, Loader2, ArrowRight, Sparkles, Zap, Star, LayoutGrid, Eye } from "lucide-react";
+import { Activity, Compass, Users, PlusCircle, Layout, Check, BookOpen, Globe, BarChart3, Loader2, ArrowRight, Sparkles, Zap, Star, LayoutGrid, Eye, ChevronDown } from "lucide-react";
 import type { LandingTestimonial } from "@/lib/testimonial-service";
+import type { Faq } from "@/lib/faq-service";
 
 interface LandingPageClientProps {
   showcaseData: any;
   testimonials?: LandingTestimonial[];
+  faqs?: Faq[];
 }
 
 type HeroVariant = "claim" | "social" | "product";
@@ -27,12 +29,13 @@ declare global {
   }
 }
 
-export default function LandingPageClient({ showcaseData, testimonials = [] }: LandingPageClientProps) {
+export default function LandingPageClient({ showcaseData, testimonials = [], faqs = [] }: LandingPageClientProps) {
   const [heatmap, setHeatmap] = useState<string[]>([]);
   const [selectedRoles, setSelectedRoles] = useState<string[]>(['Developer', 'Founder']);
   const [user, setUser] = useState<User | null>(null);
   const [showMobileNav, setShowMobileNav] = useState(false);
   const [heroVariant] = useState<HeroVariant>("social");
+  const [openFaq, setOpenFaq] = useState<string | null>(null);
   const [claimInput, setClaimInput] = useState("");
   const [claimStatus, setClaimStatus] = useState<"idle" | "checking" | "available" | "taken" | "invalid" | "error">("idle");
   const [claimSuggestions, setClaimSuggestions] = useState<string[]>([]);
@@ -814,6 +817,37 @@ export default function LandingPageClient({ showcaseData, testimonials = [] }: L
           )}
         </div>
       </section>
+
+      {/* FAQ — objection handling at the decision point (admin-managed). Hidden when empty. */}
+      {faqs.length > 0 && (
+        <section style={{ padding: '90px 24px 0' }}>
+          <div style={{ maxWidth: '760px', margin: '0 auto' }}>
+            <div className="section-label" style={{ justifyContent: 'center' }}>// preguntas frecuentes</div>
+            <h2 className="section-title text-center">Lo que te estás preguntando.</h2>
+            <div className="mt-10 space-y-3">
+              {faqs.map((f) => {
+                const open = openFaq === f.id;
+                return (
+                  <div key={f.id} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden transition-colors hover:border-white/10">
+                    <button
+                      onClick={() => setOpenFaq(open ? null : f.id)}
+                      className="w-full flex items-center justify-between gap-4 p-5 text-left"
+                    >
+                      <span className="text-[15px] font-bold text-white">{f.question}</span>
+                      <ChevronDown size={18} className={`shrink-0 text-[var(--text-muted)] transition-transform ${open ? 'rotate-180' : ''}`} />
+                    </button>
+                    {open && (
+                      <div className="px-5 pb-5 -mt-1 text-sm text-[var(--text-dim)] leading-relaxed">
+                        {f.answer}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* FOUNDER — people buy from people (Marc Lou #15) */}
       <section style={{ padding: '80px 24px 0' }}>

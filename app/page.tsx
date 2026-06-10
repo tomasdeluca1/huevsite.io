@@ -5,6 +5,7 @@ import LandingPageClient from "@/components/landing/LandingPageClient";
 import { SITE_URL } from "@/lib/site-url";
 import { fetchCurrentWinner } from "@/lib/og/shared";
 import { getFeaturedTestimonials } from "@/lib/testimonial-service";
+import { getPublishedFaqs } from "@/lib/faq-service";
 
 export const dynamic = "force-dynamic";
 
@@ -144,15 +145,31 @@ const speakableSchema = {
 };
 
 export default async function LandingPage() {
-  const [data, testimonials] = await Promise.all([
+  const [data, testimonials, faqs] = await Promise.all([
     getShowcaseData(),
     getFeaturedTestimonials(),
+    getPublishedFaqs(),
   ]);
+
+  // FAQPage schema from the admin-managed FAQs; falls back to the static one
+  // before the migration is applied (so SEO never loses the FAQ markup).
+  const dynamicFaqSchema =
+    faqs.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqs.map((f) => ({
+            "@type": "Question",
+            name: f.question,
+            acceptedAnswer: { "@type": "Answer", text: f.answer },
+          })),
+        }
+      : faqSchema;
 
   const jsonLd = [
     organizationSchema,
     websiteSchema,
-    faqSchema,
+    dynamicFaqSchema,
     speakableSchema,
   ];
 
@@ -164,7 +181,7 @@ export default async function LandingPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         strategy="beforeInteractive"
       />
-      <LandingPageClient showcaseData={data} testimonials={testimonials} />
+      <LandingPageClient showcaseData={data} testimonials={testimonials} faqs={faqs} />
     </>
   );
 }

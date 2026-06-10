@@ -17,6 +17,7 @@ import {
   Bug,
   Lightbulb,
   Music,
+  HelpCircle,
 } from "lucide-react";
 
 interface InterviewRow {
@@ -350,6 +351,12 @@ export default function AdminDashboard() {
             icon={<MessageSquare size={16} />}
             label="Testimonios"
             hint="Aprobar y destacar"
+          />
+          <QuickLink
+            href="/admin/faq"
+            icon={<HelpCircle size={16} />}
+            label="FAQ del landing"
+            hint="Preguntas de la home"
           />
           <QuickLink
             href="/admin/danger"

@@ -20,6 +20,7 @@ interface LandingPageClientProps {
   faqs?: Faq[];
   founderVideoUrl?: string;
   founderQuote?: string;
+  activeThisWeek?: number;
 }
 
 type HeroVariant = "claim" | "social" | "product";
@@ -32,7 +33,7 @@ declare global {
   }
 }
 
-export default function LandingPageClient({ showcaseData, testimonials = [], faqs = [], founderVideoUrl = "", founderQuote = "" }: LandingPageClientProps) {
+export default function LandingPageClient({ showcaseData, testimonials = [], faqs = [], founderVideoUrl = "", founderQuote = "", activeThisWeek = 0 }: LandingPageClientProps) {
   const founderVideo = founderVideoUrl ? toEmbedUrl(founderVideoUrl) : null;
   const [heatmap, setHeatmap] = useState<string[]>([]);
   const [selectedRoles, setSelectedRoles] = useState<string[]>(['Developer', 'Founder']);
@@ -405,6 +406,17 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
               </div>
               <span className="social-proof-text"><strong>+{(Math.floor((showcaseData.total_builders || 50) / 10) * 10).toLocaleString()} builders</strong> ya armaron su huevsite</span>
             </div>
+
+            {/* Live pulse — proof of an active network, not just volume (CRO #7). */}
+            {activeThisWeek >= 10 && (
+              <div className="flex items-center gap-2 mt-3 text-[13px] text-[var(--text-muted)] justify-center xl:justify-start">
+                <span className="relative flex h-2 w-2 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400" />
+                </span>
+                <span><strong className="text-white/90">+{(Math.floor(activeThisWeek / 10) * 10).toLocaleString()} builders</strong> activos esta semana</span>
+              </div>
+            )}
           </div>
 
           {(

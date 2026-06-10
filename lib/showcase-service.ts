@@ -189,3 +189,25 @@ export async function getShowcaseData(requestedWeek?: string | null) {
     return { week: currentWeek, winners: [], finalists: [], randoms: [] };
   }
 }
+
+// Distinct builders who edited their profile (any block) in the last 7 days —
+// a "proof of life" metric for the landing (an active network, not just volume).
+export async function getActiveBuildersThisWeek(): Promise<number> {
+  try {
+    const supabase = createServiceRoleClient();
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { data, error } = await supabase
+      .from("blocks")
+      .select("user_id")
+      .gte("updated_at", weekAgo)
+      .limit(5000);
+    if (error) {
+      console.error("getActiveBuildersThisWeek:", error);
+      return 0;
+    }
+    return new Set((data || []).map((b: any) => b.user_id)).size;
+  } catch (e) {
+    console.error("getActiveBuildersThisWeek exception:", e);
+    return 0;
+  }
+}

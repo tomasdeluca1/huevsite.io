@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { profileService } from "@/lib/profile-service";
 import { ProfileGrid } from "@/components/profile/ProfileGrid";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { MobileBottomNav, MobileStickyHeader } from "@/components/profile/MobileProfileUI";
 import { createClient } from "@/lib/supabase/server";
@@ -75,9 +75,13 @@ export default async function SubSitePage({ params }: Props) {
         // ignore auth error
     }
 
-    // Sub-sites are a Pro feature — only the owner can view them when not Pro
-    if (!profile.hasProAccess && currentUserId !== profile.id) {
-        notFound();
+    // Sub-sites are a Pro feature. When the owner loses Pro:
+    //  - visitors get redirected to the builder's main profile (not a silent 404)
+    //  - the owner still sees the sub-site, with a banner telling them it's not public
+    const ownerLostPro = !profile.hasProAccess;
+    const isOwner = currentUserId === profile.id;
+    if (ownerLostPro && !isOwner) {
+        redirect(isCustomDomain ? "/" : `/${username}`);
     }
 
     return (
@@ -102,6 +106,17 @@ export default async function SubSitePage({ params }: Props) {
             --radius-xl: ${profile.borderRadius || '1.5rem'};
           }
         `}} />
+
+                {ownerLostPro && isOwner && (
+                    <div className="relative z-20 max-w-3xl mx-auto mb-8 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-5 py-4 text-sm text-amber-200">
+                        <span className="font-bold">Solo vos podés ver este sub-site.</span>{" "}
+                        Los sub-sites son una feature Pro — mientras tu plan sea free, los visitantes
+                        van a ser redirigidos a tu perfil principal.{" "}
+                        <Link href="/dashboard" className="underline underline-offset-4 font-bold hover:text-amber-100">
+                            Reactivá Pro para publicarlo de nuevo →
+                        </Link>
+                    </div>
+                )}
 
                 <MobileStickyHeader
                     displayName={profile.displayName}

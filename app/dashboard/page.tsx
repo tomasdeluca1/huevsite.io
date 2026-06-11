@@ -1718,11 +1718,11 @@ export default function DashboardPage() {
                   </div>
                 )}
 
-                {!isPro && (
-                  <div ref={referralsSectionRef} className="mt-12 max-w-[1200px] mx-auto scroll-mt-28">
-                     <ReferralDashboard profile={profile} />
-                  </div>
-                )}
+                {/* Visible también para Pros: /referrals manda acá con ?scrollTo=referrals
+                    y el reward (referral_reward_expires_at) les extiende la cobertura igual. */}
+                <div ref={referralsSectionRef} className="mt-12 max-w-[1200px] mx-auto scroll-mt-28">
+                   <ReferralDashboard profile={profile} />
+                </div>
               </motion.div>
             )}
 

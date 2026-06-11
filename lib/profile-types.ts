@@ -76,6 +76,17 @@ export function getContrastColor(hexColor: string): string {
   return yiq >= 145 ? "#000000" : "#FFFFFF";
 }
 
+// Canonical accent-color format. accent_color is interpolated UNESCAPED into a
+// `<style dangerouslySetInnerHTML>` tag on every public profile page, so a value
+// that isn't a strict 6-digit hex can break out of the style context (stored
+// XSS). Validate on every write path AND sanitize on render against this.
+export const HEX_COLOR_REGEX = /^#[0-9A-Fa-f]{6}$/;
+export const DEFAULT_ACCENT_COLOR = "#C8FF00";
+
+export function isValidAccentColor(value: unknown): value is string {
+  return typeof value === "string" && HEX_COLOR_REGEX.test(value);
+}
+
 export function isDarkColor(hexColor: string): boolean {
   if (!hexColor || typeof hexColor !== "string") return true;
   const hex = hexColor.replace("#", "");
@@ -87,12 +98,15 @@ export function isDarkColor(hexColor: string): boolean {
 }
 
 export function getAdjustedAccentColor(hexColor: string): string {
-  if (isDarkColor(hexColor)) {
+  // Defense-in-depth: never let a non-hex value reach the public style tag,
+  // regardless of how it was stored. Falls back to the brand default.
+  const safe = isValidAccentColor(hexColor) ? hexColor : DEFAULT_ACCENT_COLOR;
+  if (isDarkColor(safe)) {
     // Si es demasiado oscuro para fondo negro, devolvemos un color que sea legible
     // pero que mantenga la esencia del color elegido (en este caso un gris claro/blanco)
     return "#A1A1AA"; // zinc-400 (visible sobre negro)
   }
-  return hexColor;
+  return safe;
 }
 
 export type BlockType =

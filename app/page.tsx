@@ -7,6 +7,7 @@ import { fetchCurrentWinner } from "@/lib/og/shared";
 import { getFeaturedTestimonials } from "@/lib/testimonial-service";
 import { getPublishedFaqs } from "@/lib/faq-service";
 import { getSiteSettings } from "@/lib/site-settings-service";
+import { safeJsonLd } from "@/lib/json-ld";
 
 export const dynamic = "force-dynamic";
 
@@ -182,7 +183,7 @@ export default async function LandingPage() {
       <Script
         id="jsonld-landing"
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
         strategy="beforeInteractive"
       />
       <LandingPageClient

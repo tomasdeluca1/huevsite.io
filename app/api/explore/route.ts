@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { sanitizeOrFilterValue } from "@/lib/postgrest-filter";
 
 export const dynamic = "force-dynamic";
 
@@ -69,8 +70,10 @@ export async function GET(request: NextRequest) {
     if (q) {
       // Improved text search over username, name or tagline
       // Replace spaces with % to allow fuzzy matching (e.g. "Joaquin Giorgis" matches "JoaquinGiorgis")
-      const fuzzyQ = q.trim().replace(/\s+/g, '%');
-      query = query.or(`username.ilike.%${fuzzyQ}%,name.ilike.%${fuzzyQ}%,tagline.ilike.%${fuzzyQ}%`);
+      const fuzzyQ = sanitizeOrFilterValue(q).replace(/\s+/g, '%');
+      if (fuzzyQ) {
+        query = query.or(`username.ilike.%${fuzzyQ}%,name.ilike.%${fuzzyQ}%,tagline.ilike.%${fuzzyQ}%`);
+      }
     }
 
     // We might need the user object for certain filters

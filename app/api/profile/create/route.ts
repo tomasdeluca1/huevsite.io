@@ -5,6 +5,7 @@ import { buildOnboardingBlocks, selectOnboardingLayout } from '@/lib/onboarding-
 import { checkAndPostCommunityMilestone } from '@/lib/twitter'
 import { type LinktreeImportData } from '@/lib/linktree-import'
 import { scoreService } from '@/lib/score-service'
+import { isValidAccentColor } from '@/lib/profile-types'
 
 export const dynamic = 'force-dynamic'
 
@@ -84,6 +85,16 @@ export async function POST(request: NextRequest) {
     if (!body.accentColor || !body.roles || body.roles.length === 0) {
       return NextResponse.json(
         { error: 'Datos incompletos' },
+        { status: 400 }
+      )
+    }
+
+    // accent_color is interpolated UNESCAPED into a <style> tag on every public
+    // profile page. Enforce the same strict hex format the PATCH route uses, so
+    // this path can't be used to store a CSS/HTML-injection payload.
+    if (!isValidAccentColor(body.accentColor)) {
+      return NextResponse.json(
+        { error: 'accent_color debe ser un color hex de 6 dígitos (ej: #C8FF00)' },
         { status: 400 }
       )
     }

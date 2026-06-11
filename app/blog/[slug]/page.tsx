@@ -17,6 +17,7 @@ import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github-dark.css";
 import Image from "next/image";
 import { SITE_URL } from "@/lib/site-url";
+import { safeJsonLd } from "@/lib/json-ld";
 
 // DB-backed BDLS posts are published ad-hoc — avoid serving cached shells
 // from the previous build that don't know about them yet.
@@ -114,7 +115,7 @@ export default async function BlogPostPage({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       <div className="min-h-screen bg-[var(--bg)] font-display py-12 px-4 max-w-3xl mx-auto">
         <header className="mb-12">

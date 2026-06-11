@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/admin-auth";
+import { sanitizeOrFilterValue } from "@/lib/postgrest-filter";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +10,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
 
-  const q = request.nextUrl.searchParams.get("q")?.trim();
+  const q = sanitizeOrFilterValue(request.nextUrl.searchParams.get("q")?.trim() || "");
   if (!q || q.length < 2) {
     return NextResponse.json([]);
   }

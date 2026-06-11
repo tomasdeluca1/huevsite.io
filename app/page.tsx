@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import Script from "next/script";
-import { getShowcaseData, getActiveBuildersThisWeek } from "@/lib/showcase-service";
+import { getShowcaseData, getActiveBuildersThisWeek, getNetworkPulse } from "@/lib/showcase-service";
 import LandingPageClient from "@/components/landing/LandingPageClient";
 import { SITE_URL } from "@/lib/site-url";
 import { fetchCurrentWinner } from "@/lib/og/shared";
@@ -146,12 +146,13 @@ const speakableSchema = {
 };
 
 export default async function LandingPage() {
-  const [data, testimonials, faqs, settings, activeThisWeek] = await Promise.all([
+  const [data, testimonials, faqs, settings, activeThisWeek, networkPulse] = await Promise.all([
     getShowcaseData(),
     getFeaturedTestimonials(),
     getPublishedFaqs(),
     getSiteSettings(),
     getActiveBuildersThisWeek(),
+    getNetworkPulse(),
   ]);
 
   // FAQPage schema from the admin-managed FAQs; falls back to the static one
@@ -191,6 +192,7 @@ export default async function LandingPage() {
         founderVideoUrl={settings.founder_video_url || ""}
         founderQuote={settings.founder_quote || ""}
         activeThisWeek={activeThisWeek}
+        networkPulse={networkPulse}
       />
     </>
   );

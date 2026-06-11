@@ -9,9 +9,10 @@ import { LatamFlags } from "@/components/landing/LatamFlags";
 import { supabase } from "@/lib/supabase";
 import { lemonLifetimeCheckoutUrl, buildLemonCheckoutUrl } from "@/lib/lemon-checkout-url";
 import { User } from "@supabase/supabase-js";
-import { Activity, Compass, Users, PlusCircle, Layout, Check, BookOpen, Globe, BarChart3, Loader2, ArrowRight, Sparkles, Zap, Star, LayoutGrid, Eye, ChevronDown } from "lucide-react";
+import { Activity, Compass, Users, PlusCircle, Layout, Check, BookOpen, Globe, BarChart3, Loader2, ArrowRight, Sparkles, Zap, Star, LayoutGrid, Eye, ChevronDown, X, Trophy, TrendingUp, HeartHandshake } from "lucide-react";
 import type { LandingTestimonial } from "@/lib/testimonial-service";
 import type { Faq } from "@/lib/faq-service";
+import type { NetworkPulse } from "@/lib/showcase-service";
 import { toEmbedUrl } from "@/lib/site-settings-service";
 
 interface LandingPageClientProps {
@@ -21,6 +22,7 @@ interface LandingPageClientProps {
   founderVideoUrl?: string;
   founderQuote?: string;
   activeThisWeek?: number;
+  networkPulse?: NetworkPulse;
 }
 
 type HeroVariant = "claim" | "social" | "product";
@@ -33,7 +35,7 @@ declare global {
   }
 }
 
-export default function LandingPageClient({ showcaseData, testimonials = [], faqs = [], founderVideoUrl = "", founderQuote = "", activeThisWeek = 0 }: LandingPageClientProps) {
+export default function LandingPageClient({ showcaseData, testimonials = [], faqs = [], founderVideoUrl = "", founderQuote = "", activeThisWeek = 0, networkPulse }: LandingPageClientProps) {
   const founderVideo = founderVideoUrl ? toEmbedUrl(founderVideoUrl) : null;
   const [heatmap, setHeatmap] = useState<string[]>([]);
   const [selectedRoles, setSelectedRoles] = useState<string[]>(['Developer', 'Founder']);
@@ -83,7 +85,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
       primaryHref: "/explore",
       primaryLabel: "Ver cómo se ve uno bueno",
       secondaryHref: "/onboarding",
-      secondaryLabel: "Crear el mío gratis",
+      secondaryLabel: "Armá tu huevsite — gratis",
     },
     social: {
       eyebrow: "mostrá lo que buildeás",
@@ -93,9 +95,9 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
           <span className="accent">Probalo.</span>
         </>
       ),
-      description: "Tu portfolio vivo: proyectos, código y métricas reales en un link que se actualiza solo. Donde los builders de LATAM se muestran de verdad.",
+      description: "El perfil vivo donde los builders de LATAM se muestran, se rankean y se descubren. Tus proyectos, tu código y tus métricas reales — en una URL que pelea por la portada.",
       primaryHref: user ? "/dashboard" : "/login",
-      primaryLabel: user ? "Ir a mi dashboard" : "Armá el tuyo — gratis",
+      primaryLabel: user ? "Ir a mi dashboard" : "Armá tu huevsite — gratis",
       secondaryHref: "/explore",
       secondaryLabel: "Ver perfiles reales",
     },
@@ -112,7 +114,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
       primaryHref: "/explore",
       primaryLabel: "Ver perfiles reales →",
       secondaryHref: user ? "/dashboard" : "/login",
-      secondaryLabel: user ? "Ir a mi dashboard" : "Crear el mío gratis",
+      secondaryLabel: user ? "Ir a mi dashboard" : "Armá tu huevsite — gratis",
     },
   } satisfies Record<HeroVariant, {
     eyebrow: string;
@@ -302,7 +304,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
               </>
             ) : (
               <>
-                <span>Crear mi huevsite →</span>
+                <span>Armá tu huevsite →</span>
               </>
             )}
           </Link>
@@ -353,8 +355,22 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
         <div className={`hero-shell ${(user && heroVariant !== "product") ? "hero-shell--solo" : "hero-shell--with-claim"}`}>
           <div className="hero-copy">
             <div className="badge">
-              <span className="dot"></span>
-              {currentHero.eyebrow}
+              {/* Prime slot: the network's liveness beats a static tagline (falls
+                  back to the eyebrow when the number would read weak). */}
+              {activeThisWeek >= 10 ? (
+                <>
+                  <span className="relative flex h-2 w-2 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400" />
+                  </span>
+                  <span>+{(Math.round(activeThisWeek / 10) * 10).toLocaleString()} builders activos esta semana</span>
+                </>
+              ) : (
+                <>
+                  <span className="dot"></span>
+                  {currentHero.eyebrow}
+                </>
+              )}
               <LatamFlags />
             </div>
 
@@ -379,8 +395,67 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
               >
                 {currentHero.secondaryLabel}
               </Link>
-              <span className="hero-username-preview">huevsite.io/<strong style={{ color: 'var(--accent)' }}>{normalizedClaim || 'tuusuario'}</strong></span>
             </div>
+
+            {/* Live username claim — the highest-intent hook on the page: a typed
+                username means the visitor already owns the URL in their head.
+                Validates in real time against /api/username/check. */}
+            {!user && (
+              <div className="mt-4 flex flex-col items-center xl:items-start gap-2">
+                <div
+                  className={`flex items-center rounded-2xl border bg-black/30 overflow-hidden transition-colors ${
+                    claimStatus === "available"
+                      ? "border-[var(--accent)]/50"
+                      : claimStatus === "taken" || claimStatus === "invalid"
+                      ? "border-red-400/40"
+                      : "border-white/10"
+                  }`}
+                >
+                  <span className="pl-4 py-3 text-sm font-mono text-[var(--text-muted)] select-none">huevsite.io/</span>
+                  <input
+                    value={claimInput}
+                    onChange={(e) => setClaimInput(e.target.value.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase())}
+                    onKeyDown={(e) => { if (e.key === "Enter") submitClaim(); }}
+                    placeholder="tuusuario"
+                    maxLength={20}
+                    aria-label="Probá tu username"
+                    className="bg-transparent py-3 pr-1 text-sm font-mono text-white outline-none w-[110px] sm:w-[140px] placeholder:text-white/25"
+                  />
+                  <span className="flex w-5 shrink-0 items-center justify-center">
+                    {claimStatus === "checking" && <Loader2 size={14} className="animate-spin text-white/40" />}
+                    {claimStatus === "available" && <Check size={14} className="text-[var(--accent)]" />}
+                    {(claimStatus === "taken" || claimStatus === "invalid") && <X size={14} className="text-red-400" />}
+                  </span>
+                  <button
+                    onClick={submitClaim}
+                    disabled={claimStatus !== "available"}
+                    className="m-1.5 ml-2 rounded-xl bg-[var(--accent)] px-4 py-2 text-sm font-bold text-black transition-opacity disabled:opacity-30 disabled:cursor-not-allowed whitespace-nowrap"
+                  >
+                    Reclamar →
+                  </button>
+                </div>
+                {claimStatus === "invalid" && (
+                  <div className="text-[11px] font-mono text-red-300/80">Solo minúsculas, números y _ (3 a 20 caracteres).</div>
+                )}
+                {claimStatus === "taken" && (
+                  <div className="flex flex-wrap items-center justify-center xl:justify-start gap-1.5">
+                    <span className="text-[11px] font-mono text-red-300/80">Ese ya fue reclamado. Probá:</span>
+                    {claimSuggestions.map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        onClick={() => {
+                          setClaimInput(suggestion);
+                          trackLandingEvent("landing_claim_suggestion_click", { variant: heroVariant, suggestion });
+                        }}
+                        className="rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[11px] font-mono text-[var(--text-dim)] hover:border-[var(--accent)]/40 hover:text-white transition-colors"
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="social-proof">
               <div className="avatars">
@@ -404,19 +479,9 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                   );
                 })()}
               </div>
-              <span className="social-proof-text"><strong>+{(Math.floor((showcaseData.total_builders || 50) / 10) * 10).toLocaleString()} builders</strong> ya armaron su huevsite</span>
+              {/* Round to NEAREST 10 — flooring understated our own proof (188 → "+180"). */}
+              <span className="social-proof-text"><strong>+{(Math.round((showcaseData.total_builders || 50) / 10) * 10).toLocaleString()} builders</strong> ya armaron su huevsite</span>
             </div>
-
-            {/* Live pulse — proof of an active network, not just volume (CRO #7). */}
-            {activeThisWeek >= 10 && (
-              <div className="flex items-center gap-2 mt-3 text-[13px] text-[var(--text-muted)] justify-center xl:justify-start">
-                <span className="relative flex h-2 w-2 shrink-0">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400" />
-                </span>
-                <span><strong className="text-white/90">+{(Math.floor(activeThisWeek / 10) * 10).toLocaleString()} builders</strong> activos esta semana</span>
-              </div>
-            )}
           </div>
 
           {(
@@ -474,94 +539,6 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
             </div>
           )}
 
-          {false && (
-            <div className={`hero-claim-panel hero-claim-panel--${claimStatus}`}>
-              <div className="hero-claim-orb" aria-hidden="true" />
-              <div className="hero-claim-eyebrow">
-                <Sparkles size={14} />
-                Reclamá tu huevsite
-              </div>
-
-              <div className="hero-claim-title">Probá tu username ahora</div>
-              <p className="hero-claim-sub">
-                Si está libre, te llevamos al onboarding con ese nombre ya cargado.
-              </p>
-
-              <div className="hero-claim-action">
-                <div className="hero-claim-url-label">Tu URL potencial</div>
-
-                <div className="hero-claim-input-wrap">
-                  <span className="hero-claim-prefix">huevsite.io/</span>
-                  <input
-                    value={claimInput}
-                    onChange={(e) => setClaimInput(e.target.value.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase())}
-                    placeholder="tuusuario"
-                    className="hero-claim-input"
-                  />
-                  <div className="hero-claim-status">
-                    {claimStatus === "checking" && <Loader2 size={16} className="animate-spin text-white/40" />}
-                    {claimStatus === "available" && <Check size={16} className="text-[var(--accent)]" />}
-                  </div>
-                </div>
-
-                <button
-                  onClick={submitClaim}
-                  disabled={claimStatus !== "available"}
-                  className="hero-claim-button"
-                >
-                  {claimStatus === "available" ? (
-                    <>
-                      Reclamar {normalizedClaim}
-                      <ArrowRight size={16} />
-                    </>
-                  ) : claimStatus === "checking" ? (
-                    "Chequeando disponibilidad..."
-                  ) : (
-                    "Elegí un username disponible"
-                  )}
-                </button>
-
-                <div className={`hero-claim-feedback hero-claim-feedback--${claimStatus}`}>
-                  {claimStatus === "idle" && "Usá entre 3 y 20 caracteres. Solo minúsculas, números y guión bajo."}
-                  {claimStatus === "invalid" && "Ese formato no va. Probá con minúsculas, números o _."}
-                  {claimStatus === "available" && `Disponible. ${user ? "Vamos a prellenarlo." : "Te lo preparamos para el login."}`}
-                  {claimStatus === "taken" && "Ese ya fue reclamado. Probá una variante."}
-                  {claimStatus === "error" && "No pudimos validar ahora mismo. Reintentá en unos segundos."}
-                </div>
-              </div>
-
-              {claimSuggestions.length > 0 && (
-                <div className="hero-claim-suggestions-wrap">
-                  <div className="hero-claim-suggestions-label">Probá alguna de estas</div>
-                  <div className="hero-claim-suggestions">
-                    {claimSuggestions.map((suggestion) => (
-                      <button
-                        key={suggestion}
-                        onClick={() => {
-                          setClaimInput(suggestion);
-                          trackLandingEvent("landing_claim_suggestion_click", { variant: heroVariant, suggestion });
-                        }}
-                        className="hero-claim-chip"
-                      >
-                        {suggestion}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="hero-claim-metrics">
-                <div className="hero-metric-card">
-                  <span className="hero-metric-label">Tiempo hasta publicar</span>
-                  <strong>~3 min</strong>
-                </div>
-                <div className="hero-metric-card">
-                  <span className="hero-metric-label">Desde el hero</span>
-                  <strong>username validado</strong>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="w-full max-w-6xl mt-8 grid gap-3 md:grid-cols-3">
@@ -587,6 +564,73 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
           })}
         </div>
       </section>
+
+      {/* NETWORK PULSE — live proof this is a network, not a link tool: real
+          ranking, real growth, real endorsements. Each cell hides below its
+          threshold so a weak number never ships as anti-proof. */}
+      {(networkPulse?.top3?.length ?? 0) >= 3 && (() => {
+        const cells: ReactNode[] = [];
+        cells.push(
+          <Link key="rank" href="/leaderboard" className="group rounded-[1.6rem] border border-white/8 bg-white/[0.025] p-5 transition-all hover:-translate-y-0.5 hover:border-[var(--accent)]/30 hover:bg-white/[0.04]">
+            <div className="mb-4 flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.18em] text-[var(--accent)]">
+              <Trophy size={13} /> Ranking en vivo
+            </div>
+            <div className="space-y-2.5">
+              {networkPulse!.top3.map((b, i) => (
+                <div key={b.username} className="flex items-center gap-3">
+                  <span className="w-4 text-xs font-black text-white/30">#{i + 1}</span>
+                  {b.image ? (
+                    <img src={b.image} alt={b.name || b.username} className="h-7 w-7 rounded-full object-cover" />
+                  ) : (
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-[11px] font-bold">{(b.name || b.username).charAt(0).toUpperCase()}</div>
+                  )}
+                  <span className="min-w-0 flex-1 truncate text-sm font-bold text-white">{b.name || b.username}</span>
+                  <span className="text-xs font-mono text-[var(--accent)]">{b.builder_score.toLocaleString()} pts</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 text-xs font-mono text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors">Ver el ranking →</div>
+          </Link>
+        );
+        if ((networkPulse!.newThisWeek ?? 0) >= 5) {
+          cells.push(
+            <Link key="new" href="/explore" className="group flex flex-col justify-between rounded-[1.6rem] border border-white/8 bg-white/[0.025] p-5 transition-all hover:-translate-y-0.5 hover:border-[var(--accent)]/30 hover:bg-white/[0.04]">
+              <div className="mb-4 flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.18em] text-[var(--accent)]">
+                <TrendingUp size={13} /> La red crece
+              </div>
+              <div>
+                <div className="text-4xl font-black tracking-tight text-white">+{networkPulse!.newThisWeek}</div>
+                <div className="mt-1 text-sm text-[var(--text-dim)]">builders se unieron esta semana</div>
+              </div>
+              <div className="mt-4 text-xs font-mono text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors">Explorar builders →</div>
+            </Link>
+          );
+        }
+        if ((networkPulse!.endorsementsTotal ?? 0) >= 50) {
+          cells.push(
+            <Link key="endorse" href="/explore" className="group flex flex-col justify-between rounded-[1.6rem] border border-white/8 bg-white/[0.025] p-5 transition-all hover:-translate-y-0.5 hover:border-[var(--accent)]/30 hover:bg-white/[0.04]">
+              <div className="mb-4 flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.18em] text-[var(--accent)]">
+                <HeartHandshake size={13} /> Entre builders
+              </div>
+              <div>
+                <div className="text-4xl font-black tracking-tight text-white">+{networkPulse!.endorsementsTotal.toLocaleString()}</div>
+                <div className="mt-1 text-sm text-[var(--text-dim)]">endorsements de builder a builder</div>
+              </div>
+              <div className="mt-4 text-xs font-mono text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors">Ver la comunidad →</div>
+            </Link>
+          );
+        }
+        return (
+          <section style={{ padding: '56px 24px 0' }}>
+            <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+              <div className="section-label" style={{ justifyContent: 'center', marginBottom: '20px' }}>// la red, en vivo</div>
+              <div className={`grid gap-3 ${cells.length === 3 ? "sm:grid-cols-3" : cells.length === 2 ? "sm:grid-cols-2 max-w-3xl mx-auto" : "max-w-md mx-auto"}`}>
+                {cells}
+              </div>
+            </div>
+          </section>
+        );
+      })()}
 
       <WinnerSection initialData={showcaseData} user={user} />
 
@@ -624,7 +668,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                 <div className="step-num">4</div>
                 <div className="step-content">
                   <div className="step-title">Publicás con tu username</div>
-                  <div className="step-desc">huevsite.io/tuusuario. Compartís el link. Profit.</div>
+                  <div className="step-desc">huevsite.io/tuusuario. Entrás al feed, al showcase y al leaderboard desde el día uno. Profit.</div>
                 </div>
               </div>
             </div>
@@ -708,7 +752,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <div className="section-label" style={{ color: 'var(--accent)' }}>// huevsite pro</div>
           <h2 className="section-title">Que te <span style={{ color: 'var(--accent)' }}>encuentren.</span></h2>
-          <p className="section-sub" style={{ marginBottom: '60px' }}>Recruiters, clientes y otros builders te descubren cuando destacás. Eso es Pro.</p>
+          <p className="section-sub" style={{ marginBottom: '60px' }}>Recruiters, clientes y otros builders te descubren cuando destacás. Los perfiles Pro aparecen primero en el feed, el showcase y el leaderboard.</p>
 
           <div style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', display: 'grid', gap: '20px' }}>
             {[
@@ -759,7 +803,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                   href={user ? "/dashboard" : "/login"}
                   className="btn btn-ghost w-full !py-4 !rounded-2xl text-center justify-center"
                 >
-                  {user ? "Ir a mi huevsite" : "Empezá gratis"}
+                  {user ? "Ir a mi huevsite" : "Armá tu huevsite — gratis"}
                 </Link>
               </div>
 
@@ -804,7 +848,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                   <span className="text-5xl font-black text-white">$79</span>
                   <span className="text-sm font-mono text-[var(--text-muted)]">una vez</span>
                 </div>
-                <p className="text-xs text-[var(--text-muted)] mb-8">Pro de por vida. Sin suscripción, para siempre.</p>
+                <p className="text-xs text-[var(--text-muted)] mb-8">Pro de por vida, pagás una vez. Para los primeros que apuestan al proyecto.</p>
                 <ul className="space-y-3 text-left mb-8 flex-1">
                   {['Todo lo de Pro, para siempre', 'Sin pagos mensuales nunca más', 'Badge Founder exclusivo', 'Apoyás a un proyecto indie de LATAM'].map(item => (
                     <li key={item} className="flex items-start gap-3 text-sm text-[var(--text-dim)]">
@@ -955,7 +999,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                   <span>Mi huevsite</span>
                 </>
               ) : (
-                <span>Crear mi huevsite →</span>
+                <span>Armá tu huevsite →</span>
               )}
             </Link>
             {!user && (

@@ -435,7 +435,7 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
               href={user ? "/dashboard" : "/login"}
               className="w-full px-6 py-3 bg-[var(--surface2)] hover:bg-[var(--border-bright)] border border-[var(--border-bright)] rounded-lg text-[14px] font-bold transition-all text-white text-center whitespace-nowrap hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(200,255,0,0.1)]"
             >
-              {user ? "Ir a mi dashboard →" : "Subir mi perfil ahora →"}
+              {user ? "Ir a mi dashboard →" : "Armá tu huevsite →"}
             </Link>
           </div>
         </div>

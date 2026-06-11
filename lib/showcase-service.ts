@@ -190,6 +190,48 @@ export async function getShowcaseData(requestedWeek?: string | null) {
   }
 }
 
+// Live network proofs for the landing "network pulse" strip. Each consumer
+// cell hides itself below a threshold so a weak number never ships as
+// anti-proof. Defensive: any failure returns empty/zero values.
+export type NetworkPulse = {
+  top3: Array<{ username: string; name: string | null; image: string | null; builder_score: number }>;
+  newThisWeek: number;
+  endorsementsTotal: number;
+};
+
+export async function getNetworkPulse(): Promise<NetworkPulse> {
+  const empty: NetworkPulse = { top3: [], newThisWeek: 0, endorsementsTotal: 0 };
+  try {
+    const supabase = createServiceRoleClient();
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    const [topRes, newRes, endRes] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("username, name, image, builder_score")
+        .not("username", "is", null)
+        .order("builder_score", { ascending: false })
+        .limit(3),
+      supabase
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .gte("created_at", weekAgo),
+      supabase
+        .from("endorsements")
+        .select("id", { count: "exact", head: true }),
+    ]);
+
+    return {
+      top3: (topRes.data || []).filter((p: any) => p.username) as NetworkPulse["top3"],
+      newThisWeek: newRes.count || 0,
+      endorsementsTotal: endRes.count || 0,
+    };
+  } catch (e) {
+    console.error("getNetworkPulse exception:", e);
+    return empty;
+  }
+}
+
 // Distinct builders who edited their profile (any block) in the last 7 days —
 // a "proof of life" metric for the landing (an active network, not just volume).
 export async function getActiveBuildersThisWeek(): Promise<number> {

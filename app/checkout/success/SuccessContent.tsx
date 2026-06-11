@@ -7,40 +7,58 @@ import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, Loader2, Sparkles, ChevronRight } from "lucide-react";
 
+// ~30s de polling antes de mostrar el estado "delayed" (el webhook a veces tarda
+// o falla — sin esto la pantalla queda en spinner infinito).
+const MAX_POLL_ATTEMPTS = 15;
+const POLL_INTERVAL_MS = 2000;
+
 export default function SuccessContent() {
-    const [status, setStatus] = useState<"processing" | "success">("processing");
+    const [status, setStatus] = useState<"processing" | "success" | "delayed">("processing");
     const [user, setUser] = useState<any>(null);
     const router = useRouter();
     const supabase = createClient();
 
     useEffect(() => {
+        let cancelled = false;
+        let interval: ReturnType<typeof setInterval> | null = null;
+
         const checkStatus = async () => {
             const { data: { user: authUser } } = await supabase.auth.getUser();
             if (!authUser) {
                 router.push("/login");
                 return;
             }
+            if (cancelled) return;
             setUser(authUser);
 
-            // Polling logic
-            const interval = setInterval(async () => {
+            let attempts = 0;
+            interval = setInterval(async () => {
+                attempts += 1;
                 const { data: profile } = await supabase
                     .from("profiles")
                     .select("subscription_tier")
                     .eq("id", authUser.id)
                     .single();
 
+                if (cancelled) return;
+
                 if (profile?.subscription_tier === "pro") {
                     setStatus("success");
-                    clearInterval(interval);
+                    if (interval) clearInterval(interval);
                     triggerConfetti();
+                } else if (attempts >= MAX_POLL_ATTEMPTS) {
+                    setStatus("delayed");
+                    if (interval) clearInterval(interval);
                 }
-            }, 2000);
-
-            return () => clearInterval(interval);
+            }, POLL_INTERVAL_MS);
         };
 
         checkStatus();
+
+        return () => {
+            cancelled = true;
+            if (interval) clearInterval(interval);
+        };
     }, [supabase, router]);
 
     const triggerConfetti = () => {
@@ -86,6 +104,40 @@ export default function SuccessContent() {
                                 Estamos confirmando tu pago con Lemon Squeezy. Esto solo tomará unos segundos...
                             </p>
                         </div>
+                    </motion.div>
+                ) : status === "delayed" ? (
+                    <motion.div
+                        key="delayed"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="space-y-6"
+                    >
+                        <div className="relative inline-block">
+                            <div className="absolute inset-0 bg-yellow-500/10 blur-3xl rounded-full" />
+                            <Loader2 className="w-12 h-12 text-zinc-500 animate-spin relative" />
+                        </div>
+                        <div className="space-y-3">
+                            <h1 className="text-3xl font-bold tracking-tight">Está tardando más de lo normal</h1>
+                            <p className="text-zinc-400">
+                                Tu pago se procesó, pero la confirmación de Lemon Squeezy a veces demora unos minutos.
+                                Tu cuenta se va a activar sola apenas llegue — no hace falta que pagues de nuevo.
+                            </p>
+                            <p className="text-zinc-500 text-sm">
+                                Si en 10 minutos no ves Pro en tu dashboard, escribinos a{" "}
+                                <a href="mailto:hi@huevsite.studio" className="text-white underline underline-offset-4">hi@huevsite.studio</a>{" "}
+                                y lo activamos a mano.
+                            </p>
+                        </div>
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => router.push("/dashboard")}
+                            className="group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-full bg-white px-8 font-medium text-black transition-all hover:bg-zinc-200"
+                        >
+                            <span>Ir a mi Dashboard</span>
+                            <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                        </motion.button>
                     </motion.div>
                 ) : (
                     <motion.div

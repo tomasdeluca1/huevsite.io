@@ -130,21 +130,14 @@ export function OnboardingExperience({
           window.localStorage.removeItem("huevsite_pending_claim");
         }
 
+        // No auto-redirect: the Done screen has the share CTAs — let the user
+        // celebrate and share before moving on at their own pace.
         setDone(true);
-        setTimeout(() => {
-          router.push("/dashboard");
-        }, 2000);
         return;
       }
 
       await onComplete?.({ ...completion, blocks });
       setDone(true);
-
-      if (onSkip) {
-        setTimeout(() => {
-          onSkip();
-        }, 1200);
-      }
     } catch (err) {
       console.error("Error finishing onboarding:", err);
       setError(err instanceof Error ? err.message : "Algo falló. Reintentá.");
@@ -153,7 +146,18 @@ export function OnboardingExperience({
   };
 
   if (done) {
-    return <OnboardingDone state={state} />;
+    return (
+      <OnboardingDone
+        state={state}
+        onContinue={() => {
+          if (mode === "create") {
+            router.push("/dashboard");
+          } else {
+            onSkip?.();
+          }
+        }}
+      />
+    );
   }
 
   return (

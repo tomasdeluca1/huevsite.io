@@ -38,7 +38,7 @@ export default function TermsPage() {
               huevsite.io es una plataforma de portfolio social para builders y creadores. Permite crear perfiles públicos, mostrar proyectos y habilidades, conectar cuentas de GitHub, interactuar con otros builders y acceder a herramientas premium mediante suscripción Pro.
             </p>
             <p className="text-gray-300 leading-relaxed mt-3">
-              El plan gratuito incluye funcionalidades básicas. El plan Pro ($5/mes, procesado mediante LemonSqueezy) desbloquea funcionalidades adicionales como más bloques de contenido, dominios personalizados y herramientas avanzadas.
+              El plan gratuito incluye funcionalidades básicas. El plan Pro ($9 USD/mes, procesado mediante Lemon Squeezy) desbloquea funcionalidades adicionales como más bloques de contenido, dominios personalizados y herramientas avanzadas. También ofrecemos el plan Founder ($79 USD, pago único) con acceso de por vida a las funcionalidades Pro. Los precios pueden actualizarse; los cambios no afectan retroactivamente a suscripciones activas.
             </p>
           </section>
 

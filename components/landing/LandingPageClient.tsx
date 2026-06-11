@@ -760,7 +760,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
               { icon: BarChart3, title: 'Insights de Builder', desc: 'No vueles a ciegas. Mirá quién te visita, de dónde vienen y qué es lo que más les gusta de tu trabajo.' },
               { icon: Zap, title: 'Explosión de Visibilidad', desc: 'Sumá puntos extra a tu Builder Score automáticamente. Tracción real para aparecer antes que nadie en el feed.' },
               { icon: LayoutGrid, title: 'Sub-sitios ilimitados', desc: '¿Tenés un SaaS? ¿Un newsletter? ¿Un curso? Creá landing pages específicas para cada proyecto bajo un mismo techo.' },
-              { icon: Layout, title: 'Grid Expandido', desc: 'Hasta 32 bloques para que no falte nada. El doble de espacio para tus proyectos, links y obsesiones.' },
+              { icon: Layout, title: 'Grid Expandido', desc: 'Hasta 22 bloques para que no falte nada. Más de 4× el espacio del plan free para tus proyectos, links y obsesiones.' },
               { icon: Star, title: 'Estatus de Elite', desc: 'El badge de Verificado no es solo estética: es confianza inmediata para recruiters y clientes.' }
             ].map((f, i) => {
               const Icon = f.icon;
@@ -821,7 +821,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                   </div>
                   <p className="text-xs text-[var(--text-muted)] mb-8">Para builders que quieren destacar y ser descubiertos.</p>
                   <ul className="space-y-3 text-left mb-8 flex-1">
-                    {['Dominio .com personalizado', 'Insights y métricas en tiempo real', 'Boost de Scoring (más visibilidad)', 'Sub-sitios ilimitados', 'Hasta 32 bloques en tu grid', 'Verified Badge oficial'].map(item => (
+                    {['Dominio .com personalizado', 'Insights y métricas en tiempo real', 'Boost de Scoring (más visibilidad)', 'Sub-sitios ilimitados', 'Hasta 22 bloques en tu grid', 'Verified Badge oficial'].map(item => (
                       <li key={item} className="flex items-start gap-3 text-sm text-[var(--text-dim)]">
                         <Check size={14} className="text-[var(--accent)] shrink-0 mt-0.5" />
                         <span>{item}</span>

@@ -103,7 +103,7 @@ export function UpgradeModal({ isOpen, onClose, accentColor, freeTrial, onClaimT
               </button>
             )}
             <p className="text-center text-[10px] text-[var(--text-muted)] mt-4 font-mono uppercase tracking-widest">
-              {showTrialCTA ? "14 días gratis · una vez por usuario" : "Pago único anual · Cancela cuando quieras"}
+              {showTrialCTA ? "14 días gratis · una vez por usuario" : "$9 USD/mes · Cancelás cuando quieras"}
             </p>
           </div>
         </motion.div>

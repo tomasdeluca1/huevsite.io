@@ -8,9 +8,10 @@ import { Share2, Twitter, LineChart } from "lucide-react";
 
 interface OnboardingDoneProps {
   state: OnboardingState;
+  onContinue?: () => void;
 }
 
-export function OnboardingDone({ state }: OnboardingDoneProps) {
+export function OnboardingDone({ state, onContinue }: OnboardingDoneProps) {
   const [copied, setCopied] = useState(false);
   const accent = state.accentColor;
   const displayName = state.linktreeData?.displayName || state.githubData?.name || state.username || "builder";
@@ -21,6 +22,10 @@ export function OnboardingDone({ state }: OnboardingDoneProps) {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+    `Armé mi huevsite — mi portfolio de builder 🚀 https://huevsite.io/${state.username}`
+  )}`;
 
   return (
     <div className="landing min-h-screen bg-[var(--bg)] flex items-center justify-center p-6 relative overflow-hidden font-display">
@@ -85,16 +90,30 @@ export function OnboardingDone({ state }: OnboardingDoneProps) {
           </Link>
 
           <div className="grid grid-cols-2 gap-3">
-            <button className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border-bright)] text-sm font-bold hover:bg-[var(--surface)] transition-all">
+            <a
+              href={tweetUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border-bright)] text-sm font-bold hover:bg-[var(--surface)] transition-all"
+            >
               <Twitter size={18} /> Twitear
-            </button>
-            <button 
+            </a>
+            <button
               onClick={copyLink}
               className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border-bright)] text-sm font-bold hover:bg-[var(--surface)] transition-all"
             >
               <Share2 size={18} /> Compartir
             </button>
           </div>
+
+          {onContinue && (
+            <button
+              onClick={onContinue}
+              className="w-full text-center text-xs font-mono uppercase tracking-widest text-[var(--text-dim)] hover:text-white transition-colors py-2"
+            >
+              ir a mi dashboard →
+            </button>
+          )}
         </div>
 
         <div className="mt-12 text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-[0.3em] opacity-40">

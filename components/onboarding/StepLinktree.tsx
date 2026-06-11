@@ -62,7 +62,7 @@ export function StepLinktree({ state, onImport, onNext }: StepLinktreeProps) {
           <div className="section-label mb-2">// paso 02</div>
           <h1 className="ou-q !text-4xl">Links importados</h1>
           <p className="ou-sub !text-base">
-            Ya trajimos tus links visibles. Ahora seguimos con GitHub para sumar más señal técnica.
+            Ya trajimos tus links visibles. Ahora elegí el color que va a identificar a tu huevsite.
           </p>
         </div>
 
@@ -90,7 +90,7 @@ export function StepLinktree({ state, onImport, onNext }: StepLinktreeProps) {
 
         <div className="flex flex-col gap-3">
           <button onClick={onNext} className="ou-next !py-5 !text-lg">
-            Seguir con GitHub →
+            Elegir mi color →
           </button>
           <button
             onClick={() => setMode("input")}
@@ -136,7 +136,7 @@ export function StepLinktree({ state, onImport, onNext }: StepLinktreeProps) {
           >
             <div className="text-lg font-bold text-white">No tengo</div>
             <p className="mt-2 text-sm text-[var(--text-muted)]">
-              Seguimos directo con GitHub y armamos el board desde ahí.
+              Seguimos directo: elegís tu color, tu username y publicás.
             </p>
           </button>
         </div>

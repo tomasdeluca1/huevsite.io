@@ -191,7 +191,7 @@ function PromptView({
               onClick={onUpgrade}
               className="w-full py-3 rounded-2xl border border-[var(--border-bright)] text-sm font-medium text-[var(--text-dim)] hover:text-white hover:border-white transition-all flex items-center justify-center gap-2"
             >
-              Ir a Pro — $5/mes
+              Ir a Pro — $9/mes
             </button>
           </div>
         </>

@@ -50,7 +50,6 @@ import { InsightsTab } from "@/components/dashboard/InsightsTab";
 import { CreateSubSiteModal } from "@/components/dashboard/CreateSubSiteModal";
 import { DomainConnectionCard } from "@/components/dashboard/DomainConnectionCard";
 import { TwitterWarning } from "@/components/dashboard/TwitterWarning";
-import { PriceBanner } from "@/components/marketing/PriceBanner";
 import { ReferralDashboard } from "@/components/dashboard/ReferralDashboard";
 import { GitHubData, OnboardingCompletionData, Role, LayoutOption } from "@/lib/onboarding-types";
 import { DeleteAccountModal } from "@/components/dashboard/DeleteAccountModal";
@@ -1325,12 +1324,6 @@ export default function DashboardPage() {
 
         <div className="max-w-[1600px] mx-auto relative">
           <div className="absolute inset-x-6 top-0 h-24 md:h-32 bg-[radial-gradient(circle,rgba(var(--accent-rgb),0.12)_0%,transparent_72%)] blur-3xl pointer-events-none opacity-70" />
-          {!isPro && !profile.freeTrial?.eligible && !profile.freeTrial?.active && (
-            <div className="relative z-20 mb-6 md:mb-8 lg:mb-10">
-              <PriceBanner className="top-0 sm:top-2" userId={profile.id || profile.username} />
-            </div>
-          )}
-
           {!isPro && profile.freeTrial?.eligible && (
             <div className="relative z-20 mt-6 md:mt-8 mb-6 border border-[var(--accent)]/20 bg-[linear-gradient(135deg,rgba(200,255,0,0.12),rgba(255,255,255,0.02))] p-5 md:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.18)]" style={{ borderRadius: "var(--dashboard-radius)" }}>
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -1989,11 +1982,13 @@ export default function DashboardPage() {
         }}
       />
 
-      {/* Trial expired: let user choose which blocks to keep */}
+      {/* Trial expired: let user choose which blocks to keep.
+          Counts only VISIBLE blocks — hidden ones already resolved a past chooser,
+          otherwise the modal would reappear on every session forever. */}
       {!isPro && !blockChooserResolved && profile.freeTrial?.claimed && !profile.freeTrial?.active &&
-        profile.blocks.length > MAX_FREE_BLOCKS + (profile.extraBlocksFromShare || 0) && (
+        profile.blocks.filter(b => b.visible !== false).length > MAX_FREE_BLOCKS + (profile.extraBlocksFromShare || 0) && (
         <TrialExpiredBlockChooser
-          blocks={profile.blocks}
+          blocks={profile.blocks.filter(b => b.visible !== false)}
           extraBlocksFromShare={profile.extraBlocksFromShare || 0}
           accentColor={profile.accentColor}
           onConfirm={handleBlockChooserConfirm}

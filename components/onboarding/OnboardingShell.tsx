@@ -16,7 +16,7 @@ export function OnboardingShell({
   currentStep,
   children,
   stepKey,
-  skipHref = "/dashboard",
+  skipHref,
   onSkip,
 }: OnboardingShellProps) {
   const progress = ((currentStep + 1) / STEPS.length) * 100;
@@ -79,6 +79,8 @@ export function OnboardingShell({
             })}
           </div>
 
+          {/* Sin onSkip/skipHref no hay adónde saltar: en modo create el usuario
+              todavía no tiene perfil y /dashboard lo devuelve acá (loop infinito). */}
           {onSkip ? (
             <button
               type="button"
@@ -87,10 +89,12 @@ export function OnboardingShell({
             >
               saltar todo →
             </button>
-          ) : (
+          ) : skipHref ? (
             <Link href={skipHref} className="text-[var(--text-dim)] hover:text-white text-[10px] font-mono uppercase tracking-widest transition-colors">
               saltar todo →
             </Link>
+          ) : (
+            <span />
           )}
         </div>
       </header>

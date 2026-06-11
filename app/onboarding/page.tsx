@@ -61,7 +61,6 @@ function OnboardingPageContent() {
       mode="create"
       initialState={resolvedClaim ? { username: resolvedClaim } : undefined}
       referredBy={searchParams.get("ref") || undefined}
-      skipHref="/dashboard"
     />
   );
 }

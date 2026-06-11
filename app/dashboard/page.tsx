@@ -286,6 +286,7 @@ export default function DashboardPage() {
         displayName: data.profile.name || data.profile.username,
         email: data.profile.email || "",
         accentColor: data.profile.accent_color,
+        borderRadius: data.profile.border_radius || "1.5rem",
         roles: data.profile.roles || [],
         layout: data.profile.layout || null,
         subscriptionTier: (data.profile.subscription_tier === 'pro' || !!data.profile.pro_since) ? 'pro' : 'free',
@@ -809,7 +810,9 @@ export default function DashboardPage() {
       });
 
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
         setProfile((prev) => prev ? { ...prev, blocks: prev.blocks.filter(b => b.id !== newId) } : prev);
+        alert(errorData.error || 'No se pudo crear el bloque. Probá de nuevo.');
         return;
       }
 
@@ -895,30 +898,38 @@ export default function DashboardPage() {
   };
 
   const handleColorChange = async (color: string, confirmed: boolean) => {
+    const previousColor = profile?.accentColor;
     setProfile(prev => prev ? { ...prev, accentColor: color } : null);
     if (confirmed) {
       try {
-        await fetch('/api/profile', {
+        const res = await fetch('/api/profile', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ accent_color: color }),
         });
+        if (!res.ok) throw new Error(`save failed (${res.status})`);
       } catch (e) {
         console.error('Error saving color:', e);
+        setProfile(prev => prev && previousColor ? { ...prev, accentColor: previousColor } : prev);
+        alert('No se pudo guardar el color. Esperá unos segundos y probá de nuevo.');
       }
     }
   };
 
   const handleBorderRadiusChange = async (value: string) => {
+    const previousRadius = profile?.borderRadius;
     setProfile(prev => prev ? { ...prev, borderRadius: value } : null);
     try {
-      await fetch('/api/profile', {
+      const res = await fetch('/api/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ border_radius: value }),
       });
+      if (!res.ok) throw new Error(`save failed (${res.status})`);
     } catch (e) {
       console.error('Error saving border radius:', e);
+      setProfile(prev => prev ? { ...prev, borderRadius: previousRadius } : prev);
+      alert('No se pudo guardar el redondeo. Esperá unos segundos y probá de nuevo.');
     }
   };
 
@@ -1902,7 +1913,21 @@ export default function DashboardPage() {
                 : block
             )
           } : null); 
-          await fetch('/api/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: tempProfileData.username, name: tempProfileData.display_name, tagline: tempProfileData.tagline, image: tempProfileData.avatarUrl, email: tempProfileData.email }) });
+          try {
+            // email: "" fails z.string().email() and would reject the WHOLE patch —
+            // only send it when the user actually typed one.
+            const resp = await fetch('/api/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: tempProfileData.username, name: tempProfileData.display_name, tagline: tempProfileData.tagline, image: tempProfileData.avatarUrl, ...(tempProfileData.email ? { email: tempProfileData.email } : {}) }) });
+            if (!resp.ok) {
+              const data = await resp.json().catch(() => ({}));
+              alert(data.error || 'No se pudo guardar el perfil. Revisá los datos y probá de nuevo.');
+              await fetchProfile();
+              return;
+            }
+          } catch {
+            alert('Error de red al guardar el perfil.');
+            await fetchProfile();
+            return;
+          }
         }
         setIsProfileModalOpen(false); 
       }} className="flex-[2] py-4 rounded-2xl bg-[var(--accent)] text-black font-black text-sm shadow-xl" style={{ backgroundColor: profile.accentColor, color: getContrastColor(profile.accentColor) }}>Guardar</button></div></motion.div></div>}</AnimatePresence>

@@ -11,7 +11,9 @@ import { subscribeToBeehiiv, unsubscribeFromBeehiiv } from '@/lib/beehiiv'
 const profilePatchSchema = z.object({
   name: z.string().max(100).optional(),
   username: z.string().min(1).max(50).regex(/^[a-zA-Z0-9_-]+$/, 'Username solo puede tener letras, números, guiones y guiones bajos').optional(),
-  email: z.string().email().optional(),
+  // Accept "" so the dashboard can send the field unconditionally without a
+  // 400. An empty string is normalized to null below (clears the email).
+  email: z.string().email().or(z.literal('')).optional(),
   tagline: z.string().max(200).optional(),
   // CSS injection guard: accent_color is interpolated into a <style dangerouslySetInnerHTML>
   // tag on public profile pages. Must be a strict 6-digit hex color.
@@ -265,6 +267,11 @@ export async function PATCH(request: NextRequest) {
     // NULL for "no domain" — UNIQUE permits unlimited NULLs.
     if (updateData.custom_domain === "") {
       updateData.custom_domain = null
+    }
+
+    // Empty email means "no email" — persist NULL, never the empty string.
+    if (updateData.email === "") {
+      updateData.email = null
     }
 
     if (Object.keys(updateData).length === 0) {

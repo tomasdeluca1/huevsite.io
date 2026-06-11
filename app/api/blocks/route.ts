@@ -76,7 +76,6 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    console.log('POST /api/blocks - body:', body)
 
     // Validaciones
     const parsed = blockCreateSchema.safeParse(body)
@@ -134,7 +133,6 @@ export async function POST(request: NextRequest) {
       .maybeSingle()
 
     const newOrder = lastBlock ? lastBlock.order + 1 : 0
-    console.log('POST - New order:', newOrder)
 
     const insertData: any = {
       user_id: user.id,
@@ -162,8 +160,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log('POST - Insert data:', insertData)
-
     // Crear bloque
     const { data: block, error: createError } = await supabase
       .from('blocks')
@@ -178,8 +174,6 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
-
-    console.log('POST - Success:', block)
 
     if (body.type === 'hero') {
       await syncOwnerAvatarFromHero(

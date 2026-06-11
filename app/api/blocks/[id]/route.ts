@@ -113,8 +113,6 @@ export async function PATCH(
       )
     }
 
-    console.log('Update block payload:', { blockId, updateData })
-
     // Actualizar bloque
     const { data: block, error: updateError } = await supabase
       .from('blocks')
@@ -196,7 +194,6 @@ export async function DELETE(
     const supabase = createServiceRoleClient()
 
     const blockId = params.id
-    console.log('DELETE block:', { blockId, userId: user.id })
 
     // Primero verificar que existe y pertenece al usuario
     const { data: existingBlock, error: fetchError } = await supabase
@@ -240,7 +237,6 @@ export async function DELETE(
     // Recompute score
     await scoreService.recomputeScore(user.id);
 
-    console.log('DELETE - Success:', blockId)
     return NextResponse.json({
       success: true,
     })

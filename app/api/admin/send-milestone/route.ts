@@ -49,6 +49,11 @@ export async function GET(request: NextRequest) {
     const preview = searchParams.get("preview") === "1";
     const testEmail = searchParams.get("test_email");
     const startPage = Math.max(1, parseInt(searchParams.get("start_page") || "1", 10) || 1);
+    // only_page=N procesa SOLO esa página de 50 auth users (no de N al final como
+    // start_page). Es el modo seguro de envío por lotes acotados: cada llamada
+    // toca una franja distinta de 50, sin solape y sin riesgo de timeout.
+    const onlyPageParam = searchParams.get("only_page");
+    const onlyPage = onlyPageParam ? Math.max(1, parseInt(onlyPageParam, 10) || 1) : null;
 
     if (!secret || secret !== process.env.ADMIN_SECRET) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -58,6 +63,16 @@ export async function GET(request: NextRequest) {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
+
+    // Trae los auth users a procesar: una sola página (only_page) o todas desde startPage.
+    const getAuthUsers = async () => {
+      if (onlyPage !== null) {
+        const { data, error } = await supabase.auth.admin.listUsers({ page: onlyPage, perPage: 50 });
+        if (error) throw error;
+        return data?.users || [];
+      }
+      return listAllAuthUsers(supabase, startPage);
+    };
 
     // Conteo en vivo de huevsites publicados (truthful al momento del envío).
     const { count: liveCount } = await supabase
@@ -87,14 +102,15 @@ export async function GET(request: NextRequest) {
     const profMap = new Map((profs || []).map((p) => [p.id, p]));
 
     if (preview) {
-      const authUsers = await listAllAuthUsers(supabase, startPage);
-      const eligible = authUsers.filter((u) => {
+      const authUsers = await getAuthUsers();
+      const eligible = authUsers.filter((u: any) => {
         const p = profMap.get(u.id);
         return u.email && p && !p.community_digest_unsubscribed;
       });
       return NextResponse.json({
         preview: true,
         startPage,
+        onlyPage,
         memberCount,
         authUsers: authUsers.length,
         eligibleRecipients: eligible.length,
@@ -112,7 +128,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: true, test: true, sentTo: testEmail, memberCount });
     }
 
-    const authUsers = await listAllAuthUsers(supabase, startPage);
+    const authUsers = await getAuthUsers();
 
     let emailsSent = 0;
     const errors: string[] = [];
@@ -133,7 +149,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ success: true, emailsSent, errors, memberCount });
+    return NextResponse.json({ success: true, onlyPage, startPage, processed: authUsers.length, emailsSent, errors, memberCount });
   } catch (error: any) {
     console.error("[send-milestone] error:", error);
     return NextResponse.json({ error: error?.message || "Algo salió mal." }, { status: 500 });

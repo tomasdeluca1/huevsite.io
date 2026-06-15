@@ -45,7 +45,14 @@ export async function POST(request: NextRequest) {
       if (error.code === "23505") {
         return NextResponse.json({ error: "Ya seguís a este usuario." }, { status: 409 });
       }
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      if (error.code === "23503") {
+        return NextResponse.json(
+          { error: "Creá tu perfil para poder seguir builders.", needsProfile: true },
+          { status: 403 }
+        );
+      }
+      console.error("Follow insert error:", error);
+      return NextResponse.json({ error: "Algo salió mal." }, { status: 500 });
     }
 
     // Registrar actividad de "new_follow"

@@ -130,7 +130,15 @@ export async function POST(request: NextRequest) {
       if (insertError.code === "23505") {
         return NextResponse.json({ error: "Ya nominaste a este builder esta semana." }, { status: 409 });
       }
-      return NextResponse.json({ error: insertError.message }, { status: 500 });
+      if (insertError.code === "23503") {
+        // FK sobre nominated_by: el viewer tiene cuenta pero nunca creó su perfil
+        return NextResponse.json(
+          { error: "Creá tu perfil para poder nominar.", needsProfile: true },
+          { status: 403 }
+        );
+      }
+      console.error("Nominate insert error:", insertError);
+      return NextResponse.json({ error: "Algo salió mal." }, { status: 500 });
     }
 
     // Registrar actividad de "new_nomination"

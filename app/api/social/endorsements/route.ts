@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     // Verificar que el usuario sigue al perfil o lo ha nominado
     const [{ data: follow }, { data: nomination }] = await Promise.all([
       supabase.from("follows").select("id").eq("follower_id", user.id).eq("following_id", toId).maybeSingle(),
-      supabase.from("showcase_nominations").select("id").eq("from_id", user.id).eq("user_id", toId).maybeSingle()
+      supabase.from("showcase_nominations").select("id").eq("nominated_by", user.id).eq("user_id", toId).maybeSingle()
     ]);
 
     if (!follow && !nomination) {
@@ -109,7 +109,14 @@ export async function POST(request: NextRequest) {
       if (error.code === "23505") {
         return NextResponse.json({ error: "Ya endorsaste esta skill a este builder." }, { status: 409 });
       }
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      if (error.code === "23503") {
+        return NextResponse.json(
+          { error: "Creá tu perfil para poder endorsar.", needsProfile: true },
+          { status: 403 }
+        );
+      }
+      console.error("Endorsement insert error:", error);
+      return NextResponse.json({ error: "Algo salió mal." }, { status: 500 });
     }
 
     // Registrar actividad de "new_endorsement"

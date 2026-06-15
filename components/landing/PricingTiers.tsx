@@ -7,6 +7,12 @@ interface PricingUser {
   email?: string | null;
 }
 
+// Appendea un query string (sin ? ni & inicial) a una URL, respetando si ya tiene ?.
+function appendQuery(url: string, qs?: string): string {
+  if (!qs) return url;
+  return `${url}${url.includes("?") ? "&" : "?"}${qs}`;
+}
+
 /**
  * Los 3 tiers (Free / Pro / Founder) como bloque reusable, fuente única de verdad
  * para la landing (#precios) y la página dedicada /precios.
@@ -21,14 +27,20 @@ interface PricingUser {
 export function PricingTiers({
   user,
   loginNext = "/precios",
+  utm,
 }: {
   user: PricingUser | null;
   loginNext?: string;
+  /** Query string de UTMs (sin ? inicial), p.ej. "utm_source=email&utm_campaign=somos-200". */
+  utm?: string;
 }) {
-  const loginHref = `/login?next=${encodeURIComponent(loginNext)}`;
-  const proHref = user ? buildLemonCheckoutUrl(user.id, user.email) : loginHref;
+  // Deslogueado: volvemos a la misma página CON los UTMs, así tras loguearse el
+  // checkout ya los arrastra. Logueado: van directo a la URL de Lemon.
+  const nextTarget = appendQuery(loginNext, utm);
+  const loginHref = `/login?next=${encodeURIComponent(nextTarget)}`;
+  const proHref = user ? appendQuery(buildLemonCheckoutUrl(user.id, user.email), utm) : loginHref;
   const founderHref = user
-    ? buildLemonCheckoutUrl(user.id, user.email, lemonLifetimeCheckoutUrl)
+    ? appendQuery(buildLemonCheckoutUrl(user.id, user.email, lemonLifetimeCheckoutUrl), utm)
     : loginHref;
 
   return (

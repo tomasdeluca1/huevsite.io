@@ -16,8 +16,11 @@ const NAME_MARKER = "__FIRST_NAME__";
 // Los CTAs siempre apuntan a prod (el dominio canónico), igual que ProductUpdateEmail.
 // Así el email es correcto aunque la ruta se ejecute en local (donde SITE_URL es localhost).
 const SITE = "https://huevsite.io";
-const PRO_HREF = `${SITE}/precios`;
-const TESTIMONIAL_HREF = `${SITE}/testimonio`;
+// UTMs por campaña: umami los captura en el pageview de /precios y /testimonio,
+// y /precios los arrastra hasta el checkout de Lemon Squeezy (atribución de venta).
+const UTM_BASE = "utm_source=email&utm_medium=email&utm_campaign=somos-200";
+const PRO_HREF = `${SITE}/precios?${UTM_BASE}&utm_content=pro`;
+const TESTIMONIAL_HREF = `${SITE}/testimonio?${UTM_BASE}&utm_content=testimonio`;
 
 // Saludo personalizado: primer nombre, si no el @username, si no algo cálido.
 function greeting(name: string | null | undefined, username: string | null | undefined): string {

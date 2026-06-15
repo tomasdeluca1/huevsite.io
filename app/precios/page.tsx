@@ -9,13 +9,32 @@ export const metadata = {
   description: "Free, Pro y Founder. Elegí cómo querés que te encuentren.",
 };
 
-export default async function PreciosPage() {
+// Reconstruye SOLO los utm_* entrantes como query string saneado (evita arrastrar
+// params arbitrarios al checkout / login).
+function buildUtmQuery(sp?: { [key: string]: string | string[] | undefined }): string {
+  if (!sp) return "";
+  const keys = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"];
+  const parts: string[] = [];
+  for (const k of keys) {
+    const raw = sp[k];
+    const val = Array.isArray(raw) ? raw[0] : raw;
+    if (val) parts.push(`${k}=${encodeURIComponent(val)}`);
+  }
+  return parts.join("&");
+}
+
+export default async function PreciosPage({
+  searchParams,
+}: {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   const pricingUser = user ? { id: user.id, email: user.email } : null;
+  const utm = buildUtmQuery(searchParams);
 
   return (
     <main className="landing min-h-screen bg-[var(--bg)] font-display">
@@ -43,7 +62,7 @@ export default async function PreciosPage() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-5 items-stretch">
-          <PricingTiers user={pricingUser} loginNext="/precios" />
+          <PricingTiers user={pricingUser} loginNext="/precios" utm={utm} />
         </div>
 
         <p className="text-center text-[11px] font-mono text-[var(--text-muted)] uppercase tracking-widest mt-12 opacity-50">

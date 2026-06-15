@@ -8,6 +8,10 @@ import { buildUnsubscribeUrl } from "@/lib/email-unsubscribe";
 import { listAllAuthUsers } from "@/lib/list-auth-users";
 
 export const dynamic = "force-dynamic";
+// El envío recorre cientos de usuarios con delay entre cada send; sin esto la
+// función corta a la mitad (default del plan ~10-15s) y, como no hay dedup,
+// re-enviar duplicaría. 60s da margen holgado por lote de start_page (50 users).
+export const maxDuration = 60;
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const UNSUB_MARKER = "__UNSUB_URL__";

@@ -2,8 +2,8 @@
 
 import { useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Upload, X, Loader2, Image as ImageIcon } from "lucide-react";
-import { optimizeImage } from "@/lib/image-utils";
+import { Upload, X, Loader2, Image as ImageIcon, AlertTriangle } from "lucide-react";
+import { uploadAsset } from "@/lib/upload-asset";
 
 interface Props {
   value?: string;
@@ -15,6 +15,7 @@ interface Props {
 export function ImageUpload({ value, onChange, label, folder = "general" }: Props) {
   const supabase = createClient();
   const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -22,36 +23,18 @@ export function ImageUpload({ value, onChange, label, folder = "general" }: Prop
     if (!file) return;
 
     setIsUploading(true);
+    setError(null);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No user found");
-
-      // Optimizar imagen antes de subir (max 1200px, quality 0.8)
-      const optimizedBlob = await optimizeImage(file);
-      
-      // Siempre usamos .webp para mejor compresión
-      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.webp`;
-      const filePath = `${user.id}/${folder}/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("assets")
-        .upload(filePath, optimizedBlob, {
-          contentType: 'image/webp',
-          upsert: true
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("assets")
-        .getPublicUrl(filePath);
-
+      const publicUrl = await uploadAsset(supabase, file, folder);
       onChange(publicUrl);
-    } catch (error) {
-      console.error("Error uploading image:", error);
+    } catch (err: any) {
+      console.error("Error uploading image:", err);
+      setError(err?.message || "No se pudo subir la imagen.");
     } finally {
       setIsUploading(false);
+      // Permite reintentar el MISMO archivo (onChange no dispara si el value no cambia)
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -118,6 +101,13 @@ export function ImageUpload({ value, onChange, label, folder = "general" }: Prop
           className="hidden"
         />
       </div>
+
+      {error && (
+        <div className="flex items-start gap-2 text-[11px] text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2">
+          <AlertTriangle size={13} className="shrink-0 mt-0.5" />
+          <span>{error}</span>
+        </div>
+      )}
     </div>
   );
 }

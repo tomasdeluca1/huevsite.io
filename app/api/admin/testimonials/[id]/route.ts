@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/admin-auth";
+import { scoreService } from "@/lib/score-service";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +48,7 @@ export async function PATCH(
     .from("testimonials")
     .update(updates)
     .eq("id", id)
-    .select("id, status, featured")
+    .select("id, status, featured, user_id")
     .single();
 
   if (error || !data) {
@@ -57,5 +58,11 @@ export async function PATCH(
     );
   }
 
-  return NextResponse.json(data);
+  // Un cambio de status puede sumar/quitar el +50 de testimonio: recalcular el
+  // score del dueño (no bloqueante).
+  if ("status" in body && data.user_id) {
+    await scoreService.recomputeScore(data.user_id).catch(() => {});
+  }
+
+  return NextResponse.json({ id: data.id, status: data.status, featured: data.featured });
 }

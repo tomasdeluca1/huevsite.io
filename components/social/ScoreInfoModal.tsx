@@ -1,8 +1,9 @@
 "use client";
 
-import { X, Zap, Target, Users, TrendingUp, Sparkles, Star } from "lucide-react";
+import { X, Zap, Target, Users, TrendingUp, Sparkles, Star, MessageSquare, ArrowRight } from "lucide-react";
 import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 
@@ -75,6 +76,15 @@ export function ScoreInfoModal({ isOpen, onClose, accentColor = "#C8FF00", profi
                 `Nominación recibida: ${breakdown ? breakdown.breakdown.social_received.details.nominations + ' (+15 c/u)' : '+15 pts c/u'}`,
                 `Seguidores: ${breakdown ? breakdown.breakdown.social_received.details.followers + ' (+10 c/u)' : '+10 pts c/u'}`,
                 `Reciprocidad: ${breakdown ? breakdown.breakdown.social_given.score + ' pts' : '+5 pts p/ feedback dado'}`
+            ]
+        },
+        {
+            title: "Testimonio",
+            icon: <MessageSquare className="text-pink-400" size={18} />,
+            points: breakdown?.breakdown?.testimonial ? `+${breakdown.breakdown.testimonial.score} pts` : "+50 pts",
+            items: [
+                `Dejar tu testimonio: ${breakdown?.breakdown?.testimonial ? (breakdown.breakdown.testimonial.details.has_testimonial ? '+50' : '0') + ' / 50' : '+50 pts'} (una vez)`,
+                "Contás cómo te sirve huevsite y, si entra, sale en la home"
             ]
         },
         {
@@ -198,6 +208,31 @@ export function ScoreInfoModal({ isOpen, onClose, accentColor = "#C8FF00", profi
                                             </div>
                                         ))}
                                     </div>
+
+                                    {/* CTA testimonio: suma directa de score + prueba social para la home */}
+                                    <Link
+                                        href="/testimonio"
+                                        className="block p-4 rounded-2xl border border-[var(--accent)]/25 bg-[var(--accent)]/[0.06] hover:bg-[var(--accent)]/[0.1] transition-colors group"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-full bg-[var(--accent)]/15 flex items-center justify-center">
+                                                <MessageSquare size={16} className="text-[var(--accent)]" />
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <h4 className="text-[10px] md:text-xs font-bold text-white mb-0.5">
+                                                    {breakdown?.breakdown?.testimonial?.details?.has_testimonial
+                                                        ? "Ya sumaste +50 por tu testimonio ✓"
+                                                        : "Dejá tu testimonio y sumá +50"}
+                                                </h4>
+                                                <p className="text-[9px] md:text-[10px] text-[var(--text-dim)] leading-tight">
+                                                    {breakdown?.breakdown?.testimonial?.details?.has_testimonial
+                                                        ? "Editalo o revisá su estado en /testimonio."
+                                                        : "Contá cómo te sirve huevsite — 30 segundos, +50 al score."}
+                                                </p>
+                                            </div>
+                                            <ArrowRight size={16} className="text-[var(--accent)] shrink-0 group-hover:translate-x-1 transition-transform" />
+                                        </div>
+                                    </Link>
 
                                     <div className="pt-2">
                                         <div className="p-4 rounded-2xl border border-dashed border-white/10 bg-white/[0.02] flex items-center gap-4">

@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getUserTestimonial, upsertTestimonial } from "@/lib/testimonial-service";
+import { scoreService } from "@/lib/score-service";
+
+// +50 al builder score por dejar un testimonio (no rechazado). El RPC lo
+// considera; recalculamos acá para que el puntaje se refleje al instante.
+const TESTIMONIAL_SCORE_BONUS = 50;
 
 export const dynamic = "force-dynamic";
 
@@ -33,5 +38,9 @@ export async function POST(request: NextRequest) {
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
-  return NextResponse.json({ ok: true, status: "pending" });
+
+  // Recalcular score para reflejar el +50 al instante (no bloqueante).
+  await scoreService.recomputeScore(user.id).catch(() => {});
+
+  return NextResponse.json({ ok: true, status: "pending", scoreBonus: TESTIMONIAL_SCORE_BONUS });
 }

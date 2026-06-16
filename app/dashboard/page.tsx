@@ -41,6 +41,7 @@ import { OnboardingModal } from "@/components/dashboard/OnboardingModal";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
+import { TestimonialNudgeToast } from "@/components/dashboard/TestimonialNudgeToast";
 import { UpgradeModal } from "@/components/dashboard/UpgradeModal";
 import { DashboardSidebar } from "@/components/dashboard/Sidebar";
 import { ShareProfileModal } from "@/components/share/ShareProfileModal";
@@ -2023,6 +2024,8 @@ export default function DashboardPage() {
           }}
         />
       )}
+
+      <TestimonialNudgeToast username={profile.username} />
     </div>
   );
 }

@@ -31,6 +31,9 @@ const profilePatchSchema = z.object({
   border_radius: z.string().regex(/^(0|\d+(\.\d+)?(rem|px|em))$/, 'border_radius debe ser un valor CSS válido (ej: 1.5rem, 12px, 0)').optional(),
   is_onboarding_test_user: z.boolean().optional(),
   newsletter_subscribed: z.boolean().optional(),
+  // Board presets (Pro): qué board está publicado (0-2) y sus nombres.
+  published_board: z.number().int().min(0).max(2).optional(),
+  board_names: z.record(z.string().max(40)).optional(),
 })
 
 const profileUpdateLimiter = rateLimit({ interval: 60_000, uniqueTokenPerInterval: 500 })
@@ -214,7 +217,25 @@ export async function PATCH(request: NextRequest) {
       'is_onboarding_test_user',
       'newsletter_subscribed',
       'community_digest_unsubscribed',
+      'published_board',
+      'board_names',
     ]
+
+    // Board presets son Pro: publicar un board != 0 requiere acceso Pro.
+    // (Un free solo tiene el board 0, así que nunca llega acá con > 0.)
+    if (typeof body.published_board === 'number' && body.published_board !== 0) {
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('subscription_tier, pro_since, referral_reward_expires_at, free_trial_ends_at')
+        .eq('id', user.id)
+        .single();
+      if (!prof || !hasProAccess(prof)) {
+        return NextResponse.json(
+          { error: 'Los boards múltiples son una función Pro.' },
+          { status: 403 }
+        );
+      }
+    }
 
     // Segurizar: Solo usuarios PRO pueden configurar custom_domain
     if (body.custom_domain !== undefined) {

@@ -100,9 +100,15 @@ export default function DashboardPage() {
   const [copied, setCopied] = useState(false);
   const [referralCopied, setReferralCopied] = useState(false);
   const [selectedSubSiteId, setSelectedSubSiteId] = useState<string | null>(null);
+  // Board preset que se está editando en el dashboard (0-2). Arranca en el publicado.
+  const [selectedBoardIndex, setSelectedBoardIndex] = useState<number>(0);
+  const [isPublishingBoard, setIsPublishingBoard] = useState(false);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(() => (typeof window !== "undefined" ? localStorage.getItem("huevsite_autosave") === "true" : false));
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedVersionRef = useRef<string>("");
+  // Solo en la primera carga alineamos el board editado con el publicado; en
+  // refetches posteriores respetamos el board que el usuario está editando.
+  const boardInitRef = useRef(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [badgesCollapsed, setBadgesCollapsed] = useState(true);
   const [activeTab, setActiveTab] = useState<'board' | 'insights' | 'subsites' | 'domain' | 'transfer'>('board');
@@ -316,6 +322,8 @@ export default function DashboardPage() {
         freeTrialLastInsightsViewedAt: data.profile.free_trial_last_insights_viewed_at || null,
         freeTrial: getFreeTrialState(data.profile),
         subSites: normalizeSubSites(data.subSites || []),
+        publishedBoard: data.profile.published_board ?? 0,
+        boardNames: data.profile.board_names ?? {},
         blocks: data.blocks.map((block: any) => {
           const { id: _, type: __, order: ___, col_span: ____, row_span: _____, visible: ______, ...cleanData } = block.data || {};
           return {
@@ -325,6 +333,7 @@ export default function DashboardPage() {
             col_span: block.col_span,
             row_span: block.row_span,
             visible: block.visible,
+            board_index: block.board_index ?? 0,
             ...cleanData
           };
         }),
@@ -336,6 +345,10 @@ export default function DashboardPage() {
       };
 
       setProfile(transformedProfile);
+      if (!boardInitRef.current) {
+        boardInitRef.current = true;
+        setSelectedBoardIndex(transformedProfile.publishedBoard ?? 0);
+      }
       setTempProfileData({
         username: transformedProfile.username,
         display_name: transformedProfile.displayName,
@@ -513,6 +526,30 @@ export default function DashboardPage() {
     }
   };
 
+  // Publica un board (lo hace el público). Pro-only en el server.
+  const publishBoard = async (index: number) => {
+    if (!profile || index === (profile.publishedBoard ?? 0)) return;
+    const prevPublished = profile.publishedBoard ?? 0;
+    setIsPublishingBoard(true);
+    setProfile((p) => p ? { ...p, publishedBoard: index } : p);
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ published_board: index }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        setProfile((p) => p ? { ...p, publishedBoard: prevPublished } : p);
+        alert(d.error || 'No se pudo publicar el board.');
+      }
+    } catch {
+      setProfile((p) => p ? { ...p, publishedBoard: prevPublished } : p);
+    } finally {
+      setIsPublishingBoard(false);
+    }
+  };
+
   const removeBlock = async (id: string) => {
     if (!id.startsWith('temp-')) {
       try {
@@ -577,8 +614,10 @@ export default function DashboardPage() {
     }
   };
 
-  const visibleBlocks = profile?.blocks.filter(b => b.visible !== false) || [];
-  const hiddenBlocks = profile?.blocks.filter(b => b.visible === false) || [];
+  // Solo los bloques del board que se está editando (perfil principal).
+  const boardBlocks = (profile?.blocks || []).filter(b => (b.board_index ?? 0) === selectedBoardIndex);
+  const visibleBlocks = boardBlocks.filter(b => b.visible !== false);
+  const hiddenBlocks = boardBlocks.filter(b => b.visible === false);
 
   // One-time celebration: when a brand-new profile becomes "shareable" (complete
   // enough), open the share modal with confetti exactly once. Persisted in
@@ -655,6 +694,7 @@ export default function DashboardPage() {
       col_span: colSpan,
       row_span: rowSpan,
       visible: true,
+      board_index: selectedBoardIndex,
     };
 
     switch (type) {
@@ -796,7 +836,7 @@ export default function DashboardPage() {
     setProfile((prev) => prev ? { ...prev, blocks: [...prev.blocks, initialData as BlockData] } : prev);
 
     try {
-      const { id, type: blockType, order, col_span, row_span, visible, ...blockSpecificData } = initialData;
+      const { id, type: blockType, order, col_span, row_span, visible, board_index, ...blockSpecificData } = initialData;
       const response = await fetch('/api/blocks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -807,6 +847,7 @@ export default function DashboardPage() {
           data: blockSpecificData,
           visible: true,
           sub_site_id: selectedSubSiteId,
+          board_index: selectedBoardIndex,
         }),
       });
 
@@ -1656,6 +1697,53 @@ export default function DashboardPage() {
           <AnimatePresence mode="wait">
             {activeTab === 'board' && (
               <motion.div key="board" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }}>
+                {/* Board presets switcher (Pro): hasta 3 boards, uno publicado. */}
+                <div className="mb-5 flex flex-wrap items-center gap-2">
+                  <span className="text-[9px] font-black uppercase tracking-[0.18em] text-white/30 mr-1">// boards</span>
+                  {[0, 1, 2].map((i) => {
+                    const isSelected = selectedBoardIndex === i;
+                    const isPublished = (profile.publishedBoard ?? 0) === i;
+                    const locked = !isPro && i !== (profile.publishedBoard ?? 0);
+                    const name = profile.boardNames?.[String(i)] || `Board ${i + 1}`;
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => locked ? setIsUpgradeModalOpen(true) : setSelectedBoardIndex(i)}
+                        className="group relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all border"
+                        style={{
+                          backgroundColor: isSelected ? "var(--accent)" : "rgba(255,255,255,0.03)",
+                          color: isSelected ? "#000" : (locked ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.7)"),
+                          borderColor: isSelected ? "transparent" : "rgba(255,255,255,0.08)",
+                        }}
+                        title={locked ? "Boards múltiples son Pro" : name}
+                      >
+                        {locked && <Lock size={11} />}
+                        <span>{name}</span>
+                        {isPublished && (
+                          <span
+                            className="inline-flex h-1.5 w-1.5 rounded-full"
+                            style={{ backgroundColor: isSelected ? "#000" : profile.accentColor }}
+                            title="Publicado"
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
+                  {isPro && (profile.publishedBoard ?? 0) !== selectedBoardIndex && (
+                    <button
+                      onClick={() => publishBoard(selectedBoardIndex)}
+                      disabled={isPublishingBoard}
+                      className="px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-wider border border-[var(--accent)]/40 text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-all disabled:opacity-50"
+                    >
+                      {isPublishingBoard ? "Publicando…" : "Publicar este board"}
+                    </button>
+                  )}
+                  {isPro && (profile.publishedBoard ?? 0) === selectedBoardIndex && (
+                    <span className="px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-[var(--accent)]/60">
+                      ● en vivo
+                    </span>
+                  )}
+                </div>
                 <div className="mb-6 md:mb-8 flex items-center justify-between gap-4 px-1">
                   <p className="text-[11px] text-white/30 font-medium">
                     Arrastrá, redimensioná y hacé click en cada bloque para editarlo.
@@ -2012,9 +2100,9 @@ export default function DashboardPage() {
           Counts only VISIBLE blocks — hidden ones already resolved a past chooser,
           otherwise the modal would reappear on every session forever. */}
       {!isPro && !blockChooserResolved && profile.freeTrial?.claimed && !profile.freeTrial?.active &&
-        profile.blocks.filter(b => b.visible !== false).length > MAX_FREE_BLOCKS + (profile.extraBlocksFromShare || 0) && (
+        profile.blocks.filter(b => b.visible !== false && (b.board_index ?? 0) === (profile.publishedBoard ?? 0)).length > MAX_FREE_BLOCKS + (profile.extraBlocksFromShare || 0) && (
         <TrialExpiredBlockChooser
-          blocks={profile.blocks.filter(b => b.visible !== false)}
+          blocks={profile.blocks.filter(b => b.visible !== false && (b.board_index ?? 0) === (profile.publishedBoard ?? 0))}
           extraBlocksFromShare={profile.extraBlocksFromShare || 0}
           accentColor={profile.accentColor}
           onConfirm={handleBlockChooserConfirm}

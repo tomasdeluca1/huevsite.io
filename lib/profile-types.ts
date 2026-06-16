@@ -140,6 +140,8 @@ export interface BaseBlock {
   col_span: number;
   row_span: number;
   visible: boolean;
+  // Board preset al que pertenece el bloque del perfil principal (0-2).
+  board_index?: number;
 }
 
 export interface HeroBlockData extends BaseBlock {
@@ -330,6 +332,9 @@ export interface ProfileData {
   newsletterSubscribed?: boolean;
   subSites: SubSite[];
   blocks: BlockData[];
+  // Board presets (Pro): cuál board está publicado y sus nombres.
+  publishedBoard?: number;
+  boardNames?: Record<string, string>;
   sourceUrl?: string;
   referralCode?: string;
   referredBy?: string;

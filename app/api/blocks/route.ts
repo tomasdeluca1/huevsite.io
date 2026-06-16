@@ -16,6 +16,8 @@ const blockCreateSchema = z.object({
   rowSpan: z.number().int().min(1).max(4).optional(),
   visible: z.boolean().optional(),
   sub_site_id: z.string().uuid().nullable().optional(),
+  // Board preset (perfil principal): a qué board pertenece el bloque (0-2).
+  board_index: z.number().int().min(0).max(2).optional(),
 })
 
 const blockCreateLimiter = rateLimit({ interval: 60_000, uniqueTokenPerInterval: 500 })
@@ -87,17 +89,40 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Limit logic
-    const { data: profileData } = await supabase
+    // Limit logic. Intentamos traer published_board (board presets); si la
+    // columna no está migrada, reintentamos sin ella (degrada a board 0).
+    const PROFILE_LIMIT_COLS = 'subscription_tier, pro_since, referral_reward_expires_at, free_trial_claimed_at, free_trial_started_at, free_trial_ends_at, free_trial_last_insights_viewed_at, extra_blocks_from_share'
+    let profileData: any = null
+    ;({ data: profileData } = await supabase
       .from('profiles')
-      .select('subscription_tier, pro_since, referral_reward_expires_at, free_trial_claimed_at, free_trial_started_at, free_trial_ends_at, free_trial_last_insights_viewed_at, extra_blocks_from_share')
+      .select(PROFILE_LIMIT_COLS + ', published_board')
       .eq('id', user.id)
-      .single()
+      .single())
+    if (!profileData) {
+      ({ data: profileData } = await supabase
+        .from('profiles')
+        .select(PROFILE_LIMIT_COLS)
+        .eq('id', user.id)
+        .single())
+    }
+    const publishedBoard = profileData?.published_board ?? 0
 
     // Contar bloques del mismo scope (main profile o sub-site específico).
     // El frontend limita por scope, así que la API debe alinearse — si no,
     // usuarios Pro con muchos sub-sites quedan bloqueados incorrectamente.
     const targetSubSiteId = body.sub_site_id || null
+    // Board del perfil principal (0-2). Los sub-sites no usan boards → siempre 0.
+    const boardIndex = targetSubSiteId ? 0 : (body.board_index ?? 0)
+
+    // Boards múltiples son Pro: un free solo puede editar su board publicado
+    // (board 0 en el caso normal; o el que tenía publicado si era Pro y bajó).
+    if (boardIndex !== publishedBoard && !(profileData && hasProAccess(profileData))) {
+      return NextResponse.json(
+        { error: 'Los boards múltiples son una función Pro.' },
+        { status: 403 }
+      )
+    }
+
     let blockCountQuery = supabase
       .from('blocks')
       .select('*', { count: 'exact', head: true })
@@ -106,7 +131,7 @@ export async function POST(request: NextRequest) {
 
     blockCountQuery = targetSubSiteId
       ? blockCountQuery.eq('sub_site_id', targetSubSiteId)
-      : blockCountQuery.is('sub_site_id', null)
+      : blockCountQuery.is('sub_site_id', null).eq('board_index', boardIndex)
 
     const { count: blockCount } = await blockCountQuery
 
@@ -143,6 +168,7 @@ export async function POST(request: NextRequest) {
       data: body.data,
       visible: body.visible !== undefined ? body.visible : true,
       sub_site_id: body.sub_site_id || null,
+      board_index: boardIndex,
     }
 
     // Enrich GitHub blocks with real stats from the GitHub API (authenticated
@@ -161,11 +187,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Crear bloque
-    const { data: block, error: createError } = await supabase
+    let { data: block, error: createError } = await supabase
       .from('blocks')
       .insert(insertData)
       .select()
       .single()
+
+    // Si la migración de board_index no está aplicada todavía, reintentamos sin
+    // esa columna para no romper la creación de bloques (degrada a un solo board).
+    if (createError && /board_index/i.test(createError.message || '')) {
+      const { board_index: _omit, ...legacyInsert } = insertData;
+      ({ data: block, error: createError } = await supabase
+        .from('blocks')
+        .insert(legacyInsert)
+        .select()
+        .single())
+    }
 
     if (createError) {
       console.error('POST - Create error:', createError)

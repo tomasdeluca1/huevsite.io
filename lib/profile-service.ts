@@ -26,13 +26,41 @@ export const profileService = {
   async getProfile(username: string): Promise<ProfileData | null> {
     const supabase = getServerClient();
 
-    const { data: profile, error: profileError } = await supabase
+    const PROFILE_COLS = 'id, username, name, tagline, image, github_handle, accent_color, border_radius, subscription_tier, pro_since, extra_blocks_from_share, twitter_share_unlocked, builder_score, ai_credits, custom_domain, referral_code, referred_by, pro_referrals_count, referral_reward_expires_at, is_onboarding_test_user, is_profile_verified, has_good_reputation, is_top_matchmaker, free_trial_claimed_at, free_trial_started_at, free_trial_ends_at, free_trial_last_insights_viewed_at, newsletter_subscribed, updated_at';
+
+    // Intentamos traer published_board (board presets). Si la columna no está
+    // migrada aún, el select falla y caemos al legacy (un solo board) — así el
+    // deploy nunca rompe las páginas públicas antes de aplicar la migración.
+    let profile: any = null;
+    let profileError: any = null;
+    ({ data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('id, username, name, tagline, image, github_handle, accent_color, border_radius, subscription_tier, pro_since, extra_blocks_from_share, twitter_share_unlocked, builder_score, ai_credits, custom_domain, referral_code, referred_by, pro_referrals_count, referral_reward_expires_at, is_onboarding_test_user, is_profile_verified, has_good_reputation, is_top_matchmaker, free_trial_claimed_at, free_trial_started_at, free_trial_ends_at, free_trial_last_insights_viewed_at, newsletter_subscribed, updated_at')
+      .select(PROFILE_COLS + ', published_board')
       .eq('username', username)
-      .single();
+      .single());
+    if (profileError) {
+      ({ data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select(PROFILE_COLS)
+        .eq('username', username)
+        .single());
+    }
 
     if (profileError || !profile) return null;
+
+    const boardMigrated =
+      (profile as any).published_board !== undefined && (profile as any).published_board !== null;
+    const publishedBoard = boardMigrated ? (profile as any).published_board : 0;
+
+    // Bloques del board PUBLICADO (perfil principal). Pre-migración no filtra.
+    let mainBlocksQuery = supabase
+      .from('blocks')
+      .select('id, type, order, col_span, row_span, visible, data')
+      .eq('user_id', profile.id)
+      .is('sub_site_id', null)
+      .eq('visible', true);
+    if (boardMigrated) mainBlocksQuery = mainBlocksQuery.eq('board_index', publishedBoard);
+    mainBlocksQuery = mainBlocksQuery.order('order', { ascending: true });
 
     // Run these in parallel for faster response
     const [
@@ -41,13 +69,7 @@ export const profileService = {
       { data: latestWinnerData },
       { data: subSites, error: subSitesError }
     ] = await Promise.all([
-      supabase
-        .from('blocks')
-        .select('id, type, order, col_span, row_span, visible, data')
-        .eq('user_id', profile.id)
-        .is('sub_site_id', null)
-        .eq('visible', true)
-        .order('order', { ascending: true }),
+      mainBlocksQuery,
       supabase
         .from('showcase_winners')
         .select('week')

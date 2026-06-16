@@ -1,5 +1,6 @@
 import * as React from "react";
 import { EmailLayout } from "./EmailLayout";
+import { EmailCtaStrip } from "./EmailCtaStrip";
 
 interface Mover {
   name: string;
@@ -126,9 +127,9 @@ export const WeeklyDigestEmail: React.FC<WeeklyDigestEmailProps> = ({
     )}
 
     {/* CTA */}
-    <div style={{ textAlign: "center", marginTop: "28px", marginBottom: "24px" }}>
+    <div style={{ textAlign: "center", marginTop: "28px", marginBottom: "20px" }}>
       <a
-        href={`${SITE}/leaderboard`}
+        href={`${SITE}/leaderboard?utm_source=email&utm_medium=email&utm_campaign=weekly-digest&utm_content=leaderboard`}
         style={{
           backgroundColor: ACCENT,
           color: "#000",
@@ -143,6 +144,9 @@ export const WeeklyDigestEmail: React.FC<WeeklyDigestEmailProps> = ({
         Ver el leaderboard →
       </a>
     </div>
+
+    {/* QUICK ACTIONS */}
+    <EmailCtaStrip campaign="weekly-digest" />
 
     {/* UNSUBSCRIBE */}
     <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: "20px", textAlign: "center" }}>

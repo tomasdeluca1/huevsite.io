@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { EmailLayout } from './EmailLayout';
+import { EmailCtaStrip } from './EmailCtaStrip';
 
 interface MonthlyDigestEmailProps {
   monthName: string;
@@ -163,7 +164,7 @@ export const MonthlyDigestEmail: React.FC<Readonly<MonthlyDigestEmailProps>> = (
           <div key={i} style={{ marginBottom: '24px' }}>
             <h4 style={{ fontSize: '17px', fontWeight: '700', margin: '0 0 8px 0', color: '#C8FF00' }}>{f.title}</h4>
             <p style={{ fontSize: '14px', lineHeight: '1.5', color: '#a1a1aa', margin: '0 0 12px 0' }}>{f.excerpt}</p>
-            <a href={`https://huevsite.io/blog/${f.slug}`} style={{ color: '#ffffff', textDecoration: 'underline', fontSize: '13px' }}>Leer más</a>
+            <a href={`https://huevsite.io/blog/${f.slug}?utm_source=email&utm_medium=email&utm_campaign=monthly-digest&utm_content=blog`} style={{ color: '#ffffff', textDecoration: 'underline', fontSize: '13px' }}>Leer más</a>
           </div>
         ))}
       </div>
@@ -194,12 +195,17 @@ export const MonthlyDigestEmail: React.FC<Readonly<MonthlyDigestEmailProps>> = (
       </div>
     </div>
 
+    {/* Quick actions */}
+    <div style={{ marginBottom: '40px' }}>
+      <EmailCtaStrip campaign="monthly-digest" />
+    </div>
+
     {/* Final CTA */}
     <div style={{ textAlign: 'center' }}>
       <p style={{ fontSize: '16px', color: '#a1a1aa', marginBottom: '24px' }}>
         ¡Gracias por ser parte de Huevsite! Seguí buildeando cosas increíbles.
       </p>
-      <a href="https://huevsite.io/explore" style={{
+      <a href="https://huevsite.io/explore?utm_source=email&utm_medium=email&utm_campaign=monthly-digest&utm_content=explore" style={{
         backgroundColor: '#C8FF00',
         color: '#000000',
         padding: '16px 32px',

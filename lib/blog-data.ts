@@ -17,6 +17,62 @@ export interface BlogPost {
 
 const RAW_BLOG_POSTS: Omit<BlogPost, 'readingTime'>[] = [
   {
+    slug: "somos-200-huevsites",
+    title: "Somos 200 huevsites",
+    excerpt: "La comunidad llegó a 200 builders con su perfil armado. Qué significa, por qué importa, y lo que se viene.",
+    date: "2026-06-15",
+    tags: ["comunidad", "vision"],
+    author: {
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
+    },
+    content: `
+Hace unos meses huevsite era una idea media loca y un dominio raro. Hoy somos **200 builders** con su perfil armado, mostrando lo que construyen. Gracias por ser parte de esto.
+
+## Por qué 200 importa
+huevsite no es un "link in bio" más. Es una **red**: cada perfil que se suma hace que los demás valgan más —más builders para descubrir, más proyectos para mirar, más gente con la que cruzarte.
+
+200 no es un número de vanidad. Son 200 portfolios reales, 200 personas construyendo en público en LATAM. Y cuanto más grande es la red, más fuerte pega para todos: aparecés ante más gente, te encuentran recruiters y clientes, y te cruzás con otros que están en la misma.
+
+## Lo que se viene
+Seguimos sumando cosas para que la red se mueva: el leaderboard, el showcase semanal, el resumen de los viernes, el Builder de la Semana. Y formas nuevas de sumar puntos y aparecer primero —como dejar tu testimonio.
+
+Si todavía no armaste el tuyo, es el mejor momento: la red está más viva que nunca.
+
+Por los próximos 200. Gracias por construir con nosotros.
+
+¡A buildeaRRR!
+    `,
+  },
+  {
+    slug: "testimonios-suma-50-al-builder-score",
+    title: "Dejá tu testimonio y sumá +50 al Builder Score",
+    excerpt: "Contar cómo te sirve huevsite ahora suma puntos: +50 al Builder Score, una sola vez, y queda. Además, si entra, sale en la home.",
+    date: "2026-06-15",
+    tags: ["feature", "comunidad", "gamification"],
+    author: {
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
+    },
+    content: `
+Tu testimonio ahora vale puntos. Si dejás uno contando cómo te sirve huevsite, sumás **+50 al Builder Score** —una sola vez, y queda.
+
+## Cómo funciona
+Andá a [/testimonio](/testimonio), escribí dos líneas honestas sobre tu experiencia y enviá. Eso es todo. Apenas lo dejás, el +50 se suma a tu score y lo ves reflejado al toque.
+
+Lo revisamos rápido y, si entra, **sale en la home** con tu nombre, tu foto y un link a tu perfil. Prueba social para vos y para la red.
+
+## Por qué lo sumamos
+El Builder Score mide tu **impacto en la escena**, no solo qué tan lleno está tu portfolio. Dejar un testimonio es aportar a la comunidad —igual que nominar, endorsar o seguir a otros builders—, así que suma. Lo vas a ver como una categoría nueva en el desglose del score: tocá tu score para abrir el detalle y ahí está, con su acceso directo.
+
+¿Ya dejaste el tuyo? Lo podés editar cuando quieras. ¿Todavía no? Son 30 segundos y son +50.
+
+¡A buildeaRRR!
+    `,
+  },
+  {
     slug: "tu-github-con-numeros-de-verdad",
     title: "Tu GitHub, con números de verdad",
     excerpt: "El bloque de GitHub ahora trae datos reales —stars, repos, followers—, un heatmap de contribuciones de verdad y un contador de commits que podés navegar mes a mes.",

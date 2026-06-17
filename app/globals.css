@@ -837,14 +837,18 @@ nav {
      long titles) blows the grid past the viewport and the whole profile
      scrolls sideways on mobile. */
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-auto-rows: minmax(110px, auto);
+  grid-auto-rows: minmax(100px, auto);
   gap: 12px;
   grid-auto-flow: dense;
   width: 100%;
 }
 
-/* Stable break: Above 1128px (Desktop), we go to 4 columns */
-@media (min-width: 1128px) {
+/* Landscape tablets + desktop (≥1024px): 4 columns. Lowered from 1128px so
+   iPad-landscape-width screens get the real 4-col grid where paired col-span-2
+   blocks (the common "two half-width cards" row) sit side by side, faithful to
+   how the profile was designed on desktop. 4 (and 2) are the only column counts
+   where col-span-2 tiles cleanly — 3 columns would break the pair (2+2 > 3). */
+@media (min-width: 1024px) {
   .huevsite-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     grid-auto-rows: minmax(130px, auto);
@@ -852,11 +856,36 @@ nav {
   }
 }
 
-/* Tablet refinement (if needed, but 2 cols is very stable) */
-@media (min-width: 768px) and (max-width: 1127px) {
+/* Tablet portrait (768–1023px): stay at 2 columns. 2 is the only narrow grid
+   where a col-span-2 | col-span-2 pair tiles cleanly — both go full width and
+   stack. col-span-1 blocks pair 2-up. (Spans handled by the base rules below.) */
+@media (min-width: 768px) and (max-width: 1023px) {
   .huevsite-grid {
     gap: 16px;
-    padding: 0 10px;
+  }
+}
+
+/* ── Phones (≤767px): single full-width column ──────────────────────────
+   Every block spans the full width and row-spans are flattened so blocks
+   stack tightly by content height with no staircase gaps. Half-width blocks
+   are avoided on purpose: a lone small block at half width leaves the other
+   half empty, which wastes more space than a clean full-width stack. No grid
+   padding (the page already pads via px-3); slightly tighter block padding. */
+@media (max-width: 767px) {
+  .huevsite-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: minmax(96px, auto);
+    gap: 12px;
+    padding: 0;
+  }
+
+  .huevsite-grid > * {
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important;
+  }
+
+  .huevsite-block {
+    padding: 18px;
   }
 }
 
@@ -912,6 +941,11 @@ nav {
   grid-column: span 2;
 }
 
+/* No-hero fallback header */
+.col-2 {
+  grid-column: span 2;
+}
+
 .bento-row-1,
 .row-span-1 {
   grid-row: span 1;
@@ -932,7 +966,7 @@ nav {
   grid-row: span 4;
 }
 
-@media (min-width: 1128px) {
+@media (min-width: 1024px) {
 
   .bento-col-3,
   .col-span-3 {
@@ -2338,31 +2372,7 @@ footer {
 }
 
 @media (max-width: 640px) {
-  .huevsite-grid {
-    /* minmax(0, 1fr), not 1fr: a single 1fr column still grows to the widest
-       block's min-content (wide avatars/titles), pushing the profile past the
-       viewport and causing horizontal scroll. minmax(0,...) lets it shrink. */
-    grid-template-columns: minmax(0, 1fr);
-    padding: 16px;
-  }
-
-  /* En mobile, todos los bloques ocupan 1 columna */
-  .col-span-1,
-  .col-span-2,
-  .col-span-3,
-  .col-span-4,
-  .col-2,
-  .col-3,
-  .col-4,
-  .row-2,
-  .row-3,
-  .row-4,
-  .row-span-2,
-  .row-span-3,
-  .row-span-4 {
-    grid-column: span 1 !important;
-    grid-row: auto !important;
-  }
+  /* Grid responsiveness for phones is handled by the ≤767px single-column block above. */
 
   /* Dashboard layout mobile */
   .landing main {

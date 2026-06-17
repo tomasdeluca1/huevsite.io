@@ -144,35 +144,13 @@ function FrameBackground({ tinted = false }: { tinted?: boolean }) {
 }
 
 function Logo() {
+  // Real site logo: "huev" + "site" (accent) + ".io" (dim). Matches the shared
+  // OG Wordmark and /api/og/[username] — no floating brand-lime dot.
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 16,
-      }}
-    >
-      <div
-        style={{
-          width: 12,
-          height: 12,
-          borderRadius: 999,
-          background: ACCENT,
-          display: "flex",
-          boxShadow: `0 0 24px ${ACCENT}`,
-        }}
-      />
-      <span
-        style={{
-          color: "white",
-          fontSize: 22,
-          fontWeight: 900,
-          letterSpacing: "-0.04em",
-          display: "flex",
-        }}
-      >
-        huevsite.io
-      </span>
+    <div style={{ display: "flex", alignItems: "baseline" }}>
+      <span style={{ color: "white", fontSize: 22, fontWeight: 900, letterSpacing: "-0.04em" }}>huev</span>
+      <span style={{ color: ACCENT, fontSize: 22, fontWeight: 900, letterSpacing: "-0.04em" }}>site</span>
+      <span style={{ color: "white", opacity: 0.4, fontSize: 22, fontWeight: 900, letterSpacing: "-0.04em" }}>.io</span>
     </div>
   );
 }

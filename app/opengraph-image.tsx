@@ -15,6 +15,7 @@ import {
   fetchCurrentWinner,
   type Winner,
 } from "@/lib/og/shared";
+import { getContrastColor } from "@/lib/profile-types";
 
 export const dynamic = "force-dynamic";
 export const runtime = "edge";
@@ -39,7 +40,7 @@ function renderWithWinner(winner: Winner) {
           justifyContent: "space-between",
         }}
       >
-        <Wordmark />
+        <Wordmark accent={accent} />
         <Eyebrow label="Builder de la Semana" accent={accent} />
       </div>
 
@@ -192,8 +193,8 @@ function renderWithWinner(winner: Winner) {
             display: "flex",
             padding: "12px 22px",
             borderRadius: 14,
-            background: ACCENT,
-            color: "black",
+            background: accent,
+            color: getContrastColor(accent),
             fontSize: 16,
             fontWeight: 900,
             letterSpacing: "-0.01em",

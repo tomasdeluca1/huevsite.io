@@ -9,6 +9,8 @@
  * JSX-returning helpers (not React components) — fine for ImageResponse.
  */
 
+import { getContrastColor } from "@/lib/profile-types";
+
 export const OG_SIZE = { width: 1200, height: 630 };
 export const OG_CONTENT_TYPE = "image/png";
 
@@ -60,22 +62,17 @@ export function InnerBorder() {
   );
 }
 
-export function Wordmark() {
+export function Wordmark({ accent = ACCENT }: { accent?: string } = {}) {
+  // Mirror the real site logo (.logo span { color: var(--accent) }): "huev" +
+  // "site" (accent) + ".io" (dim). No floating brand-lime dot — it read as a
+  // foreign second color whenever the image's accent wasn't lime. With "site"
+  // carrying the page accent, the wordmark belongs to the same palette as the
+  // rest of the image.
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-      <div
-        style={{
-          width: 12,
-          height: 12,
-          borderRadius: 999,
-          background: ACCENT,
-          display: "flex",
-          boxShadow: `0 0 24px ${ACCENT}`,
-        }}
-      />
-      <span style={{ color: "white", fontSize: 28, fontWeight: 900, letterSpacing: "-0.04em", display: "flex" }}>
-        huevsite.io
-      </span>
+    <div style={{ display: "flex", alignItems: "baseline" }}>
+      <span style={{ color: "white", fontSize: 28, fontWeight: 900, letterSpacing: "-0.04em" }}>huev</span>
+      <span style={{ color: accent, fontSize: 28, fontWeight: 900, letterSpacing: "-0.04em" }}>site</span>
+      <span style={{ color: "white", opacity: 0.4, fontSize: 28, fontWeight: 900, letterSpacing: "-0.04em" }}>.io</span>
     </div>
   );
 }
@@ -178,7 +175,7 @@ export function FooterCTA({
           padding: "12px 22px",
           borderRadius: 14,
           background: accent,
-          color: "black",
+          color: getContrastColor(accent),
           fontSize: 16,
           fontWeight: 900,
           letterSpacing: "-0.01em",
@@ -217,7 +214,7 @@ export function OgFrame({
     <div style={rootStyle(accent)}>
       <InnerBorder />
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <Wordmark />
+        <Wordmark accent={accent} />
         {eyebrow ?? null}
       </div>
       <div style={{ display: "flex", flex: 1, width: "100%", marginTop: 32 }}>{children}</div>

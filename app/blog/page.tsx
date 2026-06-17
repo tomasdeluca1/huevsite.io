@@ -27,20 +27,16 @@ export const metadata = {
     description: "Noticias, guías y casos de estudio de la comunidad de huevsite.io para empoderar a creadores y builders.",
     url: `${SITE_URL}/blog`,
     type: "website",
-    images: [
-      {
-        url: `${SITE_URL}/blog-og-image.png`,
-        width: 1200,
-        height: 630,
-        alt: "huevsite.io blog",
-      },
-    ],
+    // og:image is provided by the file-based app/blog/opengraph-image.tsx (the
+    // branded dynamic OG, consistent with the rest of the site). Do NOT set a
+    // static `images` here — a config-based images array OVERRIDES the file-based
+    // OG in Next, silently shadowing the dynamic image.
   },
   twitter: {
     card: "summary_large_image",
     title: "Blog - huevsite.io",
     description: "Noticias, guías y casos de estudio de la comunidad de huevsite.io.",
-    images: [`${SITE_URL}/blog-og-image.png`],
+    // twitter:image comes from app/blog/twitter-image.tsx — same reason as above.
   }
 };
 

@@ -17,6 +17,70 @@ export interface BlogPost {
 
 const RAW_BLOG_POSTS: Omit<BlogPost, 'readingTime'>[] = [
   {
+    slug: "api-publica-de-perfiles",
+    title: "API pública de perfiles: embebé huevsites donde quieras",
+    excerpt: "Abrimos una API JSON abierta + modo embed para iframes, así cualquier plataforma puede mostrar tu huevsite. La estrenamos en nordelta.tech.",
+    date: "2026-06-17",
+    tags: ["api", "integraciones", "builders"],
+    author: {
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
+    },
+    content: `
+Tu huevsite ya no vive solo en huevsite.io. Abrimos una **API pública de perfiles** para que cualquier plataforma pueda traer tu card y tu perfil completo. La estrenamos integrándola en **nordelta.tech**, la comunidad tech de zona norte: cada miembro conecta su huevsite y aparece con una card custom + el perfil embebido.
+
+## El endpoint
+
+Un GET, sin auth, con CORS abierto —los datos son los mismos que ya se ven en tu perfil público:
+
+    GET https://huevsite.io/api/public/profile/{username}
+
+Respuesta:
+
+    {
+      "username": "ada",
+      "name": "Ada Lovelace",
+      "headline": "Building the future, one block at a time",
+      "avatar": "https://.../ada.png",
+      "accentColor": "#C8FF00",
+      "builderScore": 420,
+      "url": "https://huevsite.io/ada"
+    }
+
+Si el usuario no existe, devuelve 404. La respuesta cachea 5 minutos.
+
+## Modo embed para iframes
+
+Además del JSON, cualquier perfil se puede embeber sin el chrome de la plataforma (nav, footer) agregando \`?embed=1\`:
+
+    https://huevsite.io/{username}?embed=1
+
+Eso deja el header + el board del builder, listo para meter en un \`<iframe>\`. No bloqueamos el framing, así que funciona out of the box.
+
+## Ejemplo: card + perfil expandido
+
+La idea que usamos en nordelta: una card condensada con los datos del JSON, y al tocar "Ver huevsite" se abre el perfil completo en un iframe.
+
+    // 1. Traés los datos para tu card
+    const res = await fetch(\`https://huevsite.io/api/public/profile/\${username}\`);
+    const profile = await res.json();
+
+    // 2. Para el perfil expandido, un iframe en modo embed
+    <iframe src={\`https://huevsite.io/\${username}?embed=1\`} />
+
+Con eso tenés avatar, nombre, headline, color de acento y Builder Score para pintar tu propia UI, y el perfil completo a un clic.
+
+## Por qué nos importa
+
+huevsite es una red: cuantos más lugares muestren tu huevsite, más vale tener uno. Si tenés una comunidad, un directorio o tu propio sitio, ahora podés mostrar los huevsites de tu gente y mandar tráfico de vuelta a cada builder.
+
+¿Lo vas a integrar en algún lado? Mostranos qué construís.
+
+¡A buildeaRRR!
+    `,
+  },
+  {
     slug: "somos-200-huevsites",
     title: "Somos 200 huevsites",
     excerpt: "La comunidad llegó a 200 builders con su perfil armado. Qué significa, por qué importa, y lo que se viene.",

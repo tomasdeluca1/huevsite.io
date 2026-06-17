@@ -17,7 +17,7 @@ import { SITE_URL } from "@/lib/site-url";
 
 interface Props {
   params: { username: string };
-  searchParams?: { from?: string; return_to?: string };
+  searchParams?: { from?: string; return_to?: string; embed?: string };
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -97,6 +97,9 @@ export default async function ProfilePage({ params, searchParams }: Props) {
   const profile = await profileService.getProfile(username);
   const navigationOrigin = searchParams?.from;
   const returnTo = searchParams?.return_to || (navigationOrigin === "feed" ? "/feed" : "/dashboard?tab=insights");
+  // Embed mode (?embed=1): chrome-less profile for iframing on other platforms
+  // (e.g. nordelta.tech community cards). Hides nav + footer, keeps header/grid.
+  const embed = searchParams?.embed === "1";
 
   if (!profile) {
     notFound();
@@ -202,8 +205,8 @@ export default async function ProfilePage({ params, searchParams }: Props) {
       
       <AnalyticsTracker userId={profile.id!} visitorUserInfo={visitorUserInfo} />
 
-      <main className="min-h-screen pt-8 md:pt-12 pb-16 md:pb-24 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto relative">
-        <ExploreNavigation currentUsername={username} isCustomDomain={isCustomDomain} />
+      <main className={`min-h-screen ${embed ? "pt-4" : "pt-8 md:pt-12"} pb-16 md:pb-24 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto relative`}>
+        {!embed && <ExploreNavigation currentUsername={username} isCustomDomain={isCustomDomain} />}
         {/* Dynamic Cinematic Backgrounds */}
         <div
           className="fixed top-[-10%] left-[-10%] w-[80%] md:w-[50%] h-[50%] opacity-[0.08] blur-[120px] pointer-events-none transition-all duration-1000"
@@ -230,16 +233,20 @@ export default async function ProfilePage({ params, searchParams }: Props) {
         `}} />
 
         {/* Mobile Specific UI */}
-        <MobileStickyHeader
-          displayName={profile.displayName || profile.username}
-          avatarUrl={profile.avatarUrl}
-          builderScore={profile.builderScore || 0}
-          accentColor={profile.accentColor}
-          username={profile.username}
-          isCustomDomain={isCustomDomain}
-          isWinner={profile.isWinner}
-        />
-        <MobileBottomNav accentColor={profile.accentColor} currentUserId={currentUserId} isCustomDomain={isCustomDomain} />
+        {!embed && (
+          <>
+            <MobileStickyHeader
+              displayName={profile.displayName || profile.username}
+              avatarUrl={profile.avatarUrl}
+              builderScore={profile.builderScore || 0}
+              accentColor={profile.accentColor}
+              username={profile.username}
+              isCustomDomain={isCustomDomain}
+              isWinner={profile.isWinner}
+            />
+            <MobileBottomNav accentColor={profile.accentColor} currentUserId={currentUserId} isCustomDomain={isCustomDomain} />
+          </>
+        )}
 
         {/* Header / Nav */}
         {(navigationOrigin === "insights" || navigationOrigin === "feed") && (
@@ -307,14 +314,16 @@ export default async function ProfilePage({ params, searchParams }: Props) {
         )}
 
         {/* Footer message */}
-        <footer className="mt-20 md:mt-32 text-center relative z-10 border-t border-white/5 pt-12 pb-8">
-          <div className="section-label !text-[var(--text-muted)] opacity-30">
-            // builder logic • {profile.displayName} &apos;s huevsite
-          </div>
-          {profile.subscriptionTier !== "pro" && (
-            <div className="logo mt-4 scale-75 opacity-10 filter grayscale select-none">huev<span>site</span>.io</div>
-          )}
-        </footer>
+        {!embed && (
+          <footer className="mt-20 md:mt-32 text-center relative z-10 border-t border-white/5 pt-12 pb-8">
+            <div className="section-label !text-[var(--text-muted)] opacity-30">
+              // builder logic • {profile.displayName} &apos;s huevsite
+            </div>
+            {profile.subscriptionTier !== "pro" && (
+              <div className="logo mt-4 scale-75 opacity-10 filter grayscale select-none">huev<span>site</span>.io</div>
+            )}
+          </footer>
+        )}
       </main>
     </div>
   );

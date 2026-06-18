@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { type LinktreeImportData } from "@/lib/linktree-import";
 import {
   STEPS,
@@ -46,6 +47,7 @@ export function OnboardingExperience({
   onComplete,
 }: OnboardingExperienceProps) {
   const router = useRouter();
+  const t = useTranslations("onboarding");
   const [step, setStep] = useState(0);
   const [done, setDone] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -123,7 +125,7 @@ export function OnboardingExperience({
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error || "Error al crear perfil");
+          throw new Error(data.error || t("createProfileError"));
         }
 
         if (typeof window !== "undefined") {
@@ -140,7 +142,7 @@ export function OnboardingExperience({
       setDone(true);
     } catch (err) {
       console.error("Error finishing onboarding:", err);
-      setError(err instanceof Error ? err.message : "Algo falló. Reintentá.");
+      setError(err instanceof Error ? err.message : t("genericError"));
       setCreating(false);
     }
   };

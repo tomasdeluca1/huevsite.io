@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Plus, X, Layout as LayoutIcon, MessageSquare, Rocket, Github, Star, Layers, Users, BookOpen, Sparkles, FileText, Image, Award, Trophy, PenTool, Globe, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { BlockType, MAX_FREE_BLOCKS, MAX_PRO_BLOCKS, isDarkColor } from "@/lib/profile-types";
 import { UpgradeModal } from "@/components/dashboard/UpgradeModal";
 import { ShareModal } from "@/components/dashboard/ShareModal";
@@ -29,6 +30,7 @@ export function BlockSelector({
   extraBlocksFromShare = 0,
   onShareUnlocked,
 }: BlockSelectorProps) {
+  const t = useTranslations("dashboard");
   const [isOpen, setIsOpen] = useState(false);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -49,33 +51,33 @@ export function BlockSelector({
 
   const categories = [
     {
-      name: "Social & Stats",
+      name: t("blockSelector.cat_socialStats"),
       blocks: [
-        { type: "github", icon: <Github size={18} />, label: "GitHub Stats", desc: "Heatmap y repos destacados" },
-        { type: "social", icon: <MessageSquare size={18} />, label: "Redes Sociales", desc: "Twitter, Farcaster, etc." },
-        { type: "community", icon: <Users size={18} />, label: "Comunidad", desc: "Badges de comunidades" },
+        { type: "github", icon: <Github size={18} />, label: t("blockSelector.github_label"), desc: t("blockSelector.github_desc") },
+        { type: "social", icon: <MessageSquare size={18} />, label: t("blockSelector.social_label"), desc: t("blockSelector.social_desc") },
+        { type: "community", icon: <Users size={18} />, label: t("blockSelector.community_label"), desc: t("blockSelector.community_desc") },
       ],
     },
     {
-      name: "Proyectos y Logros",
+      name: t("blockSelector.cat_projects"),
       blocks: [
-        { type: "project", icon: <LayoutIcon size={18} />, label: "Proyecto", desc: "Imagen, link y métricas" },
-        { type: "building", icon: <Rocket size={18} />, label: "Building", desc: "¿Qué estás buildando ahora?" },
-        { type: "achievement", icon: <Trophy size={18} />, label: "Logro", desc: "Hitos y victorias importantes" },
-        { type: "certification", icon: <Award size={18} />, label: "Certificación", desc: "Cursos y certificados" },
-        { type: "ecosystem", icon: <Globe size={18} />, label: "Ecosistema", desc: "Tus sub-sites en un bloque", proOnly: true },
-        { type: "stack", icon: <Layers size={18} />, label: "Tech Stack", desc: "Tus herramientas favoritas" },
+        { type: "project", icon: <LayoutIcon size={18} />, label: t("blockSelector.project_label"), desc: t("blockSelector.project_desc") },
+        { type: "building", icon: <Rocket size={18} />, label: t("blockSelector.building_label"), desc: t("blockSelector.building_desc") },
+        { type: "achievement", icon: <Trophy size={18} />, label: t("blockSelector.achievement_label"), desc: t("blockSelector.achievement_desc") },
+        { type: "certification", icon: <Award size={18} />, label: t("blockSelector.certification_label"), desc: t("blockSelector.certification_desc") },
+        { type: "ecosystem", icon: <Globe size={18} />, label: t("blockSelector.ecosystem_label"), desc: t("blockSelector.ecosystem_desc"), proOnly: true },
+        { type: "stack", icon: <Layers size={18} />, label: t("blockSelector.stack_label"), desc: t("blockSelector.stack_desc") },
       ],
     },
     {
-      name: "Contenido",
+      name: t("blockSelector.cat_content"),
       blocks: [
-        { type: "media", icon: <Image size={18} />, label: "Media", desc: "Imágenes o videos" },
-        { type: "writing", icon: <BookOpen size={18} />, label: "Escritura", desc: "Tus últimos posts o blog" },
-        { type: "metric", icon: <Star size={18} />, label: "Métrica", desc: "Números que importan (MRR, etc.)" },
-        { type: "hero", icon: <Sparkles size={18} />, label: "Bio / Hero", desc: "Tu carta de presentación" },
-        { type: "cv", icon: <FileText size={18} />, label: "CV / Resume", desc: "Subí tu CV en PDF" },
-        { type: "custom", icon: <PenTool size={18} />, label: "Custom", desc: "Bloque a tu medida" },
+        { type: "media", icon: <Image size={18} />, label: t("blockSelector.media_label"), desc: t("blockSelector.media_desc") },
+        { type: "writing", icon: <BookOpen size={18} />, label: t("blockSelector.writing_label"), desc: t("blockSelector.writing_desc") },
+        { type: "metric", icon: <Star size={18} />, label: t("blockSelector.metric_label"), desc: t("blockSelector.metric_desc") },
+        { type: "hero", icon: <Sparkles size={18} />, label: t("blockSelector.hero_label"), desc: t("blockSelector.hero_desc") },
+        { type: "cv", icon: <FileText size={18} />, label: t("blockSelector.cv_label"), desc: t("blockSelector.cv_desc") },
+        { type: "custom", icon: <PenTool size={18} />, label: t("blockSelector.custom_label"), desc: t("blockSelector.custom_desc") },
       ],
     },
   ];
@@ -103,14 +105,14 @@ export function BlockSelector({
     <div className="relative">
       <div className="flex items-center justify-between mb-2">
         <div className="text-[9px] font-mono text-[var(--text-muted)] uppercase tracking-[0.1em]">
-          {currentBlockCount} / {effectiveLimit} bloques
+          {t("blockSelector.blockCount", { current: currentBlockCount, max: effectiveLimit })}
         </div>
         {subscriptionTier !== "pro" && (
           <div className="text-[9px] font-mono text-[var(--text-muted)]">
             {atLimit ? (
-              <span className="text-yellow-400">límite alcanzado</span>
+              <span className="text-yellow-400">{t("blockSelector.limitReached")}</span>
             ) : (
-              <span>{effectiveLimit - currentBlockCount} restantes</span>
+              <span>{t("blockSelector.remaining", { n: effectiveLimit - currentBlockCount })}</span>
             )}
           </div>
         )}
@@ -130,15 +132,15 @@ export function BlockSelector({
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--accent)]">
-                {subscriptionTier === "pro" ? "Bonus que conservás" : "Bonus free tier"}
+                {subscriptionTier === "pro" ? t("blockSelector.bonusEyebrowPro") : t("blockSelector.bonusEyebrowFree")}
               </div>
               <p className="mt-1 text-sm font-bold text-white">
-                {subscriptionTier === "pro" ? "Asegurá +3 bloques extra" : "Desbloqueá +3 bloques gratis"}
+                {subscriptionTier === "pro" ? t("blockSelector.bonusTitlePro") : t("blockSelector.bonusTitleFree")}
               </p>
               <p className="mt-1 text-[12px] leading-relaxed text-[var(--text-dim)]">
                 {subscriptionTier === "pro"
-                  ? "Compartí tu huevsite en Twitter y te acreditamos 3 bloques que conservás aunque alguna vez pases a free."
-                  : "Compartí tu huevsite en Twitter, pegá el link del tweet y te acreditamos los 3 bloques."}
+                  ? t("blockSelector.bonusDescPro")
+                  : t("blockSelector.bonusDescFree")}
               </p>
             </div>
           </div>
@@ -154,7 +156,7 @@ export function BlockSelector({
         }}
       >
         {isOpen ? <X size={20} /> : <Plus size={20} />}
-        {isOpen ? "Cerrar" : "Agregar Bloque"}
+        {isOpen ? t("blockSelector.close") : t("blockSelector.addBlock")}
       </button>
 
       {mounted && createPortal(
@@ -177,8 +179,8 @@ export function BlockSelector({
               >
                 <div className="w-12 h-1.5 bg-[var(--border-bright)] rounded-full mx-auto md:hidden mb-4 shrink-0" />
                 <div className="p-6 md:p-8 shrink-0 bg-transparent md:bg-black/40 border-b border-[var(--border)]">
-                  <div className="section-label mb-2 hidden md:block">// biblioteca de bloques</div>
-                  <h3 className="text-2xl md:text-3xl font-extrabold tracking-tight">¿Qué querés mostrar?</h3>
+                  <div className="section-label mb-2 hidden md:block">// {t("blockSelector.library")}</div>
+                  <h3 className="text-2xl md:text-3xl font-extrabold tracking-tight">{t("blockSelector.libraryTitle")}</h3>
                 </div>
 
                 <div className="p-4 md:p-6 overflow-y-auto custom-scrollbar flex-1">
@@ -198,7 +200,7 @@ export function BlockSelector({
                               {isLocked && (
                                 <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30">
                                   <Lock size={10} className="text-amber-500" />
-                                  <span className="text-[9px] font-black text-amber-500 uppercase tracking-wider">Pro</span>
+                                  <span className="text-[9px] font-black text-amber-500 uppercase tracking-wider">{t("blockSelector.proBadge")}</span>
                                 </div>
                               )}
                               <div
@@ -222,7 +224,7 @@ export function BlockSelector({
 
                 <div className="p-4 bg-black/20 text-center border-t border-[var(--border)]">
                   <p className="text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-[0.1em]">
-                    Próximamente: bloques de comunidad custom 🇦🇷
+                    {t("blockSelector.comingSoon")}
                   </p>
                 </div>
               </motion.div>

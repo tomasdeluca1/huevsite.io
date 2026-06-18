@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
@@ -23,107 +24,31 @@ interface InterviewFormProps {
 const SECTIONS = [
   {
     id: "intro",
-    title: "Contanos sobre vos",
-    subtitle: "Quién sos, de dónde venís y por qué buildeás en público.",
     fields: [
-      {
-        key: "intro_who_are_you",
-        label: "¿Quién sos? Contanos en unas líneas.",
-        placeholder: "Soy diseñador, dev, maker... lo que se te ocurra. Contá lo que quieras.",
-        type: "textarea" as const,
-      },
-      {
-        key: "intro_origin_story",
-        label: "¿Cómo arrancaste a buildear cosas por tu cuenta?",
-        placeholder: "Tu origin story. ¿Qué te motivó? ¿Cuándo fue el click?",
-        type: "textarea" as const,
-      },
-      {
-        key: "intro_build_in_public",
-        label: "¿Qué significa build in public para vos?",
-        placeholder: "¿Cómo lo practicás? ¿Por qué te parece importante?",
-        type: "textarea" as const,
-      },
+      { key: "intro_who_are_you", type: "textarea" as const },
+      { key: "intro_origin_story", type: "textarea" as const },
+      { key: "intro_build_in_public", type: "textarea" as const },
     ],
   },
   {
     id: "projects",
-    title: "Mostrame lo que construiste",
-    subtitle: "Tu proyecto principal, el stack, los desafíos y la tracción.",
     fields: [
-      {
-        key: "projects_main_project",
-        label: "¿En qué proyecto estás laburando ahora?",
-        placeholder: "Contalo como si se lo explicaras a un amigo.",
-        type: "textarea" as const,
-      },
-      {
-        key: "projects_problem_solved",
-        label: "¿Qué problema real resuelve?",
-        placeholder: "¿Cómo se te ocurrió? ¿A quién le sirve?",
-        type: "textarea" as const,
-      },
-      {
-        key: "projects_stack",
-        label: "¿Qué stack usás y por qué?",
-        placeholder: "Lenguajes, frameworks, servicios... y por qué elegiste esas herramientas.",
-        type: "textarea" as const,
-      },
-      {
-        key: "projects_biggest_challenge",
-        label: "¿Cuál fue el momento más difícil del proyecto?",
-        placeholder: "Un bug, una decisión complicada, un momento donde quisiste tirar todo...",
-        type: "textarea" as const,
-      },
-      {
-        key: "projects_users_traction",
-        label: "¿Tenés usuarios reales? ¿Cómo conseguiste los primeros?",
-        placeholder: "Números, anécdotas, lo que tengas.",
-        type: "textarea" as const,
-      },
-      {
-        key: "projects_links",
-        label: "Links a tus proyectos (URLs)",
-        placeholder: "https://miproyecto.com, https://github.com/...",
-        type: "textarea" as const,
-      },
+      { key: "projects_main_project", type: "textarea" as const },
+      { key: "projects_problem_solved", type: "textarea" as const },
+      { key: "projects_stack", type: "textarea" as const },
+      { key: "projects_biggest_challenge", type: "textarea" as const },
+      { key: "projects_users_traction", type: "textarea" as const },
+      { key: "projects_links", type: "textarea" as const },
     ],
   },
   {
     id: "quickfire",
-    title: "Ping pong rápido",
-    subtitle: "Respuestas cortas. Lo primero que se te venga a la cabeza.",
     fields: [
-      {
-        key: "quickfire_tool",
-        label: "Una herramienta que no podrías dejar de usar",
-        placeholder: "Esa herramienta que si te la sacan llorás.",
-        type: "input" as const,
-      },
-      {
-        key: "quickfire_inspiration",
-        label: "Un builder o creador que te inspire",
-        placeholder: "¿Quién te parece que la tiene clara?",
-        type: "input" as const,
-      },
-      {
-        key: "quickfire_advice",
-        label: "Un consejo para alguien que recién arranca a buildear",
-        placeholder: "Lo que te hubiera gustado saber al principio.",
-        type: "textarea" as const,
-      },
-      {
-        key: "quickfire_whats_next",
-        label: "¿Qué viene después? Tu próximo milestone.",
-        placeholder: "¿Qué estás por lanzar, mejorar o experimentar?",
-        type: "input" as const,
-      },
-      {
-        key: "quickfire_where_to_find",
-        label: "¿Dónde te pueden encontrar?",
-        placeholder: "Twitter, LinkedIn, web, lo que uses.",
-        type: "input" as const,
-      },
+      { key: "quickfire_tool", type: "input" as const },
+      { key: "quickfire_inspiration", type: "input" as const },
+      { key: "quickfire_advice", type: "textarea" as const },
+      { key: "quickfire_whats_next", type: "input" as const },
+      { key: "quickfire_where_to_find", type: "input" as const },
     ],
   },
 ];
@@ -134,6 +59,7 @@ export function InterviewForm({
   builderUsername,
   onComplete,
 }: InterviewFormProps) {
+  const t = useTranslations("bdls");
   const PREVIEW_INDEX = SECTIONS.length;
   const [currentSection, setCurrentSection] = useState(0);
   const [formData, setFormData] = useState<Record<string, string>>({});
@@ -172,7 +98,7 @@ export function InterviewForm({
 
       if (!res.ok) {
         const json = await res.json();
-        throw new Error(json.error || "Error al enviar.");
+        throw new Error(json.error || t("form.submitError"));
       }
 
       onComplete();
@@ -197,11 +123,16 @@ export function InterviewForm({
             <Mic className="w-5 h-5 text-[#C8FF00] shrink-0 mt-0.5" />
             <div className="flex-1">
               <p className="text-sm text-zinc-300">
-                <strong className="text-white">Tip:</strong> Podés grabar tus respuestas con el micrófono{" "}
-                <span className="inline-flex items-center align-middle px-1.5 py-0.5 rounded-lg bg-white/5 border border-white/10">
-                  <Mic className="w-3 h-3 text-zinc-400" />
-                </span>{" "}
-                en cada campo. Es más rápido y natural que escribir.
+                {t.rich("form.voiceTip", {
+                  strong: (chunks) => (
+                    <strong className="text-white">{chunks}</strong>
+                  ),
+                  micIcon: () => (
+                    <span className="inline-flex items-center align-middle px-1.5 py-0.5 rounded-lg bg-white/5 border border-white/10">
+                      <Mic className="w-3 h-3 text-zinc-400" />
+                    </span>
+                  ),
+                })}
               </p>
             </div>
             <button
@@ -241,9 +172,9 @@ export function InterviewForm({
                 {currentSection + 1} / {SECTIONS.length}
               </p>
               <h2 className="text-3xl font-extrabold tracking-tight text-white">
-                {section.title}
+                {t(`form.sections.${section.id}.title`)}
               </h2>
-              <p className="text-zinc-500 mt-2">{section.subtitle}</p>
+              <p className="text-zinc-500 mt-2">{t(`form.sections.${section.id}.subtitle`)}</p>
             </div>
 
             {/* Fields */}
@@ -251,14 +182,14 @@ export function InterviewForm({
               {section.fields.map((field) => (
                 <div key={field.key}>
                   <label className="block text-sm font-bold text-zinc-300 mb-2">
-                    {field.label}
+                    {t(`form.fields.${field.key}.label`)}
                   </label>
                   <div className="relative">
                     {field.type === "textarea" ? (
                       <textarea
                         value={formData[field.key] ?? ""}
                         onChange={(e) => updateField(field.key, e.target.value)}
-                        placeholder={field.placeholder}
+                        placeholder={t(`form.fields.${field.key}.placeholder`)}
                         rows={4}
                         className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 pr-14 text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#C8FF00]/50 focus:ring-1 focus:ring-[#C8FF00]/20 transition-colors resize-none text-sm leading-relaxed"
                       />
@@ -267,7 +198,7 @@ export function InterviewForm({
                         type="text"
                         value={formData[field.key] ?? ""}
                         onChange={(e) => updateField(field.key, e.target.value)}
-                        placeholder={field.placeholder}
+                        placeholder={t(`form.fields.${field.key}.placeholder`)}
                         className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 pr-14 text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#C8FF00]/50 focus:ring-1 focus:ring-[#C8FF00]/20 transition-colors text-sm"
                       />
                     )}
@@ -301,7 +232,7 @@ export function InterviewForm({
                 }`}
               >
                 <ArrowLeft className="w-4 h-4" />
-                Anterior
+                {t("form.previous")}
               </button>
 
               <button
@@ -309,7 +240,7 @@ export function InterviewForm({
                 disabled={!canAdvance}
                 className="flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-bold bg-[#C8FF00] text-black hover:bg-[#d4ff33] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {isLastFormSection ? "Revisar antes de enviar" : "Siguiente"}
+                {isLastFormSection ? t("form.reviewBeforeSend") : t("form.next")}
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -325,13 +256,13 @@ export function InterviewForm({
             {/* Preview header */}
             <div className="mb-10">
               <p className="text-[10px] font-mono uppercase tracking-widest text-[#C8FF00] mb-2">
-                Revisión final
+                {t("form.preview.eyebrow")}
               </p>
               <h2 className="text-3xl font-extrabold tracking-tight text-white">
-                Repasá tus respuestas
+                {t("form.preview.title")}
               </h2>
               <p className="text-zinc-500 mt-2">
-                Editá lo que quieras antes de enviar. Cuando esté todo bien, dale a enviar.
+                {t("form.preview.subtitle")}
               </p>
             </div>
 
@@ -345,7 +276,7 @@ export function InterviewForm({
                         {sIndex + 1} / {SECTIONS.length}
                       </p>
                       <h3 className="text-lg font-extrabold tracking-tight text-white">
-                        {s.title}
+                        {t(`form.sections.${s.id}.title`)}
                       </h3>
                     </div>
                     <button
@@ -353,7 +284,7 @@ export function InterviewForm({
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-mono uppercase tracking-widest text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
                     >
                       <Pencil className="w-3 h-3" />
-                      Ir a la sección
+                      {t("form.preview.goToSection")}
                     </button>
                   </div>
 
@@ -361,14 +292,14 @@ export function InterviewForm({
                     {s.fields.map((field) => (
                       <div key={field.key}>
                         <label className="block text-sm font-bold text-zinc-300 mb-2">
-                          {field.label}
+                          {t(`form.fields.${field.key}.label`)}
                         </label>
                         <div className="relative">
                           {field.type === "textarea" ? (
                             <textarea
                               value={formData[field.key] ?? ""}
                               onChange={(e) => updateField(field.key, e.target.value)}
-                              placeholder={field.placeholder}
+                              placeholder={t(`form.fields.${field.key}.placeholder`)}
                               rows={4}
                               className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 pr-14 text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#C8FF00]/50 focus:ring-1 focus:ring-[#C8FF00]/20 transition-colors resize-none text-sm leading-relaxed"
                             />
@@ -377,7 +308,7 @@ export function InterviewForm({
                               type="text"
                               value={formData[field.key] ?? ""}
                               onChange={(e) => updateField(field.key, e.target.value)}
-                              placeholder={field.placeholder}
+                              placeholder={t(`form.fields.${field.key}.placeholder`)}
                               className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 pr-14 text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#C8FF00]/50 focus:ring-1 focus:ring-[#C8FF00]/20 transition-colors text-sm"
                             />
                           )}
@@ -412,7 +343,7 @@ export function InterviewForm({
                 className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
-                Anterior
+                {t("form.previous")}
               </button>
 
               <button
@@ -423,11 +354,11 @@ export function InterviewForm({
                 {submitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Generando contenido...
+                    {t("form.generating")}
                   </>
                 ) : (
                   <>
-                    Enviar respuestas
+                    {t("form.submit")}
                     <Send className="w-4 h-4" />
                   </>
                 )}
@@ -435,7 +366,7 @@ export function InterviewForm({
             </div>
             {!canAdvance && (
               <p className="mt-3 text-[10px] font-mono text-zinc-600 text-right">
-                Te falta completar algún campo arriba.
+                {t("form.incompleteFields")}
               </p>
             )}
           </motion.div>

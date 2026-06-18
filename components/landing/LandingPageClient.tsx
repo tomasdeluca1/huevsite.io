@@ -3,6 +3,8 @@
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
+import LocaleToggle from "@/components/LocaleToggle";
 import { WinnerSection } from "@/components/landing/WinnerSection";
 import { BuilderSpotlightCard } from "@/components/landing/BuilderSpotlightCard";
 import { LatamFlags } from "@/components/landing/LatamFlags";
@@ -36,6 +38,9 @@ declare global {
 }
 
 export default function LandingPageClient({ showcaseData, testimonials = [], faqs = [], founderVideoUrl = "", founderQuote = "", activeThisWeek = 0, networkPulse }: LandingPageClientProps) {
+  const t = useTranslations("landing");
+  const tNav = useTranslations("nav");
+  const tFooter = useTranslations("footer");
   const founderVideo = founderVideoUrl ? toEmbedUrl(founderVideoUrl) : null;
   const [heatmap, setHeatmap] = useState<string[]>([]);
   const [selectedRoles, setSelectedRoles] = useState<string[]>(['Developer', 'Founder']);
@@ -71,50 +76,38 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
     return [];
   }, [showcaseData]);
 
+  const heroRich = {
+    accent: (chunks: ReactNode) => <span className="accent">{chunks}</span>,
+    br: () => <br className="hidden md:block" />,
+  };
+
   const heroExperiment = {
     claim: {
-      eyebrow: "Reclamá tu URL antes de seguir scrolleando",
-      title: (
-        <>
-          Tu <span className="accent">nombre</span>, tu trabajo, <br className="hidden md:block" />
-          tu rincón en <br className="hidden md:block" />
-          internet.
-        </>
-      ),
-      description: "Tu URL única, lista en 3 minutos. Probá si tu username está libre ahora mismo — sin crear cuenta todavía.",
+      eyebrow: t("heroClaimEyebrow"),
+      title: t.rich("heroClaimTitle", heroRich),
+      description: t("heroClaimDescription"),
       primaryHref: "/explore",
-      primaryLabel: "Ver cómo se ve uno bueno",
+      primaryLabel: t("heroClaimPrimary"),
       secondaryHref: "/onboarding",
-      secondaryLabel: "Armá tu huevsite — gratis",
+      secondaryLabel: t("heroClaimSecondary"),
     },
     social: {
-      eyebrow: "mostrá lo que buildeás",
-      title: (
-        <>
-          No digas que sos builder.<br className="hidden md:block" />{" "}
-          <span className="accent">Probalo.</span>
-        </>
-      ),
-      description: "El perfil vivo donde los builders de LATAM se muestran, se rankean y se descubren. Tus proyectos, tu código y tus métricas reales — en una URL que pelea por la portada.",
+      eyebrow: t("heroSocialEyebrow"),
+      title: t.rich("heroSocialTitle", heroRich),
+      description: t("heroSocialDescription"),
       primaryHref: user ? "/dashboard" : "/login",
-      primaryLabel: user ? "Ir a mi dashboard" : "Armá tu huevsite — gratis",
+      primaryLabel: user ? t("heroDashboardCta") : t("heroBuildCta"),
       secondaryHref: "/explore",
-      secondaryLabel: "Ver perfiles reales",
+      secondaryLabel: t("heroSocialSecondary"),
     },
     product: {
-      eyebrow: "Así luce tu perfil en producción",
-      title: (
-        <>
-          Tu perfil. <span className="accent">Vivo</span>. <br className="hidden md:block" />
-          Listo para <br className="hidden md:block" />
-          compartir.
-        </>
-      ),
-      description: "Un bento grid con tus proyectos, GitHub y stack. Una URL que dice más que cualquier CV en dos líneas.",
+      eyebrow: t("heroProductEyebrow"),
+      title: t.rich("heroProductTitle", heroRich),
+      description: t("heroProductDescription"),
       primaryHref: "/explore",
-      primaryLabel: "Ver perfiles reales →",
+      primaryLabel: t("heroProductPrimary"),
       secondaryHref: user ? "/dashboard" : "/login",
-      secondaryLabel: user ? "Ir a mi dashboard" : "Armá tu huevsite — gratis",
+      secondaryLabel: user ? t("heroDashboardCta") : t("heroBuildCta"),
     },
   } satisfies Record<HeroVariant, {
     eyebrow: string;
@@ -129,20 +122,20 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
   const contentPath = [
     {
       href: "/explore",
-      label: "Explorar builders",
-      copy: "Mirar cómo se presentan otros y sacar ideas rápido.",
+      label: t("contentPathExploreLabel"),
+      copy: t("contentPathExploreCopy"),
       icon: Compass,
     },
     {
       href: "/feed",
-      label: "Ver lanzamientos",
-      copy: "Entrar por actividad real, no por una landing abstracta.",
+      label: t("contentPathFeedLabel"),
+      copy: t("contentPathFeedCopy"),
       icon: Activity,
     },
     {
       href: "/blog",
-      label: "Entender el sistema",
-      copy: "Leer cómo funciona el score, los sub-sites y la visibilidad.",
+      label: t("contentPathBlogLabel"),
+      copy: t("contentPathBlogCopy"),
       icon: BookOpen,
     },
   ];
@@ -285,35 +278,37 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
         <Link href="/" className="logo">huev<span style={{ color: 'var(--accent)' }}>site</span>.io</Link>
         <div className="nav-right hidden md:flex">
           <Link href="/feed" className="btn btn-ghost">
-            <span>Lanzamientos</span>
+            <span>{tNav("launches")}</span>
           </Link>
           <Link href="/explore" className="btn btn-ghost">
-            <span>Explorar</span>
+            <span>{tNav("explore")}</span>
           </Link>
           <Link href="/blog" className="btn btn-ghost">
-            <span>Blog</span>
+            <span>{tNav("blog")}</span>
           </Link>
           <a href="#precios" className="btn btn-ghost">
-            <span>Precios</span>
+            <span>{tNav("pricing")}</span>
           </a>
+          <LocaleToggle className="ml-1" />
           <Link href={user ? "/dashboard" : "/login"} className="btn btn-accent !px-6 ml-1">
             {user ? (
               <>
                 <Layout size={16} className="mr-2" />
-                <span>Mi huevsite</span>
+                <span>{tNav("myHuevsite")}</span>
               </>
             ) : (
               <>
-                <span>Armá tu huevsite →</span>
+                <span>{tNav("buildCta")}</span>
               </>
             )}
           </Link>
         </div>
 
         {/* Mobile Mini Nav (just Login/Dashboard for space) */}
-        <div className="md:hidden">
+        <div className="md:hidden flex items-center gap-2">
+          <LocaleToggle />
           <Link href={user ? "/dashboard" : "/login"} className="btn btn-accent !py-1.5 !px-4 !text-[11px] !font-bold">
-            {user ? "Dashboard" : "Entrar"}
+            {user ? tNav("dashboard") : tNav("enter")}
           </Link>
         </div>
       </nav>
@@ -331,19 +326,19 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
             <div className="bg-black/80 backdrop-blur-xl border border-white/10 rounded-full p-2 flex items-center justify-between shadow-2xl">
               <Link href="/feed" className="flex-1 flex flex-col items-center gap-1 py-1.5 text-[var(--text-dim)] hover:text-[var(--accent)] transition-colors">
                 <Activity size={18} />
-                <span className="text-[9px] font-bold uppercase tracking-tighter">Feed</span>
+                <span className="text-[9px] font-bold uppercase tracking-tighter">{tNav("feed")}</span>
               </Link>
               <Link href="/explore" className="flex-1 flex flex-col items-center gap-1 py-1.5 text-[var(--text-dim)] hover:text-[var(--accent)] transition-colors">
                 <Compass size={18} />
-                <span className="text-[9px] font-bold uppercase tracking-tighter">Explorar</span>
+                <span className="text-[9px] font-bold uppercase tracking-tighter">{tNav("explore")}</span>
               </Link>
               <Link href="/blog" className="flex-1 flex flex-col items-center gap-1 py-1.5 text-[var(--text-dim)] hover:text-[var(--accent)] transition-colors">
                 <BookOpen size={18} />
-                <span className="text-[9px] font-bold uppercase tracking-tighter">Blog</span>
+                <span className="text-[9px] font-bold uppercase tracking-tighter">{tNav("blog")}</span>
               </Link>
               <Link href={user ? "/dashboard" : "/login"} className="flex-1 flex flex-col items-center gap-1 py-1.5 text-[var(--accent)] transition-colors">
                 {user ? <Layout size={18} /> : <PlusCircle size={18} />}
-                <span className="text-[9px] font-bold uppercase tracking-tighter">{user ? 'Mi huevsite' : 'Crear'}</span>
+                <span className="text-[9px] font-bold uppercase tracking-tighter">{user ? tNav("myHuevsite") : tNav("create")}</span>
               </Link>
             </div>
           </motion.div>
@@ -363,7 +358,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400" />
                   </span>
-                  <span>+{(Math.round(activeThisWeek / 10) * 10).toLocaleString()} builders activos esta semana</span>
+                  <span>{t("heroActiveBuilders", { count: (Math.round(activeThisWeek / 10) * 10).toLocaleString() })}</span>
                 </>
               ) : (
                 <>
@@ -416,9 +411,9 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                     value={claimInput}
                     onChange={(e) => setClaimInput(e.target.value.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase())}
                     onKeyDown={(e) => { if (e.key === "Enter") submitClaim(); }}
-                    placeholder="tuusuario"
+                    placeholder={t("claimPlaceholder")}
                     maxLength={20}
-                    aria-label="Probá tu username"
+                    aria-label={t("claimAriaLabel")}
                     className="bg-transparent py-3 pr-1 text-sm font-mono text-white outline-none w-[110px] sm:w-[140px] placeholder:text-white/25"
                   />
                   <span className="flex w-5 shrink-0 items-center justify-center">
@@ -431,15 +426,15 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                     disabled={claimStatus !== "available"}
                     className="m-1.5 ml-2 rounded-xl bg-[var(--accent)] px-4 py-2 text-sm font-bold text-black transition-opacity disabled:opacity-30 disabled:cursor-not-allowed whitespace-nowrap"
                   >
-                    Reclamar →
+                    {t("claimButton")}
                   </button>
                 </div>
                 {claimStatus === "invalid" && (
-                  <div className="text-[11px] font-mono text-red-300/80">Solo minúsculas, números y _ (3 a 20 caracteres).</div>
+                  <div className="text-[11px] font-mono text-red-300/80">{t("claimInvalid")}</div>
                 )}
                 {claimStatus === "taken" && (
                   <div className="flex flex-wrap items-center justify-center xl:justify-start gap-1.5">
-                    <span className="text-[11px] font-mono text-red-300/80">Ese ya fue reclamado. Probá:</span>
+                    <span className="text-[11px] font-mono text-red-300/80">{t("claimTaken")}</span>
                     {claimSuggestions.map((suggestion) => (
                       <button
                         key={suggestion}
@@ -480,7 +475,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                 })()}
               </div>
               {/* Round to NEAREST 10 — flooring understated our own proof (188 → "+180"). */}
-              <span className="social-proof-text"><strong>+{(Math.round((showcaseData.total_builders || 50) / 10) * 10).toLocaleString()} builders</strong> ya armaron su huevsite</span>
+              <span className="social-proof-text">{t.rich("socialProof", { count: (Math.round((showcaseData.total_builders || 50) / 10) * 10).toLocaleString(), strong: (chunks) => <strong>{chunks}</strong> })}</span>
             </div>
           </div>
 
@@ -488,7 +483,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
             <div className="hero-product-preview">
               <div className="hpp-badge">
                 <Eye size={12} />
-                Vista previa real
+                {t("heroPreviewBadge")}
               </div>
               {heroProfiles.length > 0 ? (
                 <BuilderSpotlightCard builders={heroProfiles} />
@@ -497,24 +492,24 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                   <div className="hpp-header">
                     <div className="hpp-avatar">B</div>
                     <div className="hpp-info">
-                      <div className="hpp-name">Builder Name</div>
-                      <div className="hpp-role">Developer · Indie Hacker</div>
+                      <div className="hpp-name">{t("heroFallbackName")}</div>
+                      <div className="hpp-role">{t("heroFallbackRole")}</div>
                     </div>
                     <div className="hpp-score">847 pts</div>
                   </div>
-                  <div className="hpp-tagline">"Construyendo cosas que no existían ayer."</div>
+                  <div className="hpp-tagline">{t("heroFallbackTagline")}</div>
                   <div className="hpp-grid">
                     <div className="hpp-block hpp-block--span2">
-                      <div className="hpp-block-label">Building now</div>
-                      <div className="hpp-block-title">SaaS en progreso</div>
+                      <div className="hpp-block-label">{t("heroFallbackBuildingLabel")}</div>
+                      <div className="hpp-block-title">{t("heroFallbackBuildingTitle")}</div>
                       <div className="hpp-block-tech">Next.js · Supabase · TypeScript</div>
                     </div>
                     <div className="hpp-block hpp-block--accent">
-                      <div className="hpp-block-label">Score</div>
+                      <div className="hpp-block-label">{t("heroFallbackScoreLabel")}</div>
                       <div className="hpp-block-num">847</div>
                     </div>
                     <div className="hpp-block">
-                      <div className="hpp-block-label">Stack</div>
+                      <div className="hpp-block-label">{t("heroFallbackStackLabel")}</div>
                       <div className="hpp-stack-tags">
                         <span>React</span><span>Node</span><span>Figma</span>
                       </div>
@@ -522,18 +517,18 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                   </div>
                   <div className="hpp-url">
                     <span className="hpp-url-prefix">huevsite.io/</span>
-                    <span style={{ color: 'var(--accent)', fontWeight: 700 }}>tu_username</span>
+                    <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{t("heroFallbackUsername")}</span>
                   </div>
                 </div>
               )}
               <div className="hpp-metrics">
                 <div className="hpp-metric">
                   <strong>~3 min</strong>
-                  <span>para publicar</span>
+                  <span>{t("heroMetricPublish")}</span>
                 </div>
                 <div className="hpp-metric">
-                  <strong>gratis</strong>
-                  <span>para empezar</span>
+                  <strong>{t("heroMetricFreeValue")}</strong>
+                  <span>{t("heroMetricFreeLabel")}</span>
                 </div>
               </div>
             </div>
@@ -557,7 +552,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                 <div className="text-sm font-black tracking-tight text-white">{item.label}</div>
                 <p className="mt-2 text-sm leading-6 text-[var(--text-dim)]">{item.copy}</p>
                 <div className="mt-4 text-[11px] font-mono uppercase tracking-[0.18em] text-white/35 transition-colors group-hover:text-[var(--accent)]">
-                  Seguir por aca
+                  {t("contentPathFollow")}
                 </div>
               </Link>
             );
@@ -573,7 +568,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
         cells.push(
           <Link key="rank" href="/leaderboard" className="group rounded-[1.6rem] border border-white/8 bg-white/[0.025] p-5 transition-all hover:-translate-y-0.5 hover:border-[var(--accent)]/30 hover:bg-white/[0.04]">
             <div className="mb-4 flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.18em] text-[var(--accent)]">
-              <Trophy size={13} /> Ranking en vivo
+              <Trophy size={13} /> {t("pulseRankingLabel")}
             </div>
             <div className="space-y-2.5">
               {networkPulse!.top3.map((b, i) => (
@@ -589,20 +584,20 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                 </div>
               ))}
             </div>
-            <div className="mt-4 text-xs font-mono text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors">Ver el ranking →</div>
+            <div className="mt-4 text-xs font-mono text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors">{t("pulseRankingCta")}</div>
           </Link>
         );
         if ((networkPulse!.newThisWeek ?? 0) >= 5) {
           cells.push(
             <Link key="new" href="/explore" className="group flex flex-col justify-between rounded-[1.6rem] border border-white/8 bg-white/[0.025] p-5 transition-all hover:-translate-y-0.5 hover:border-[var(--accent)]/30 hover:bg-white/[0.04]">
               <div className="mb-4 flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.18em] text-[var(--accent)]">
-                <TrendingUp size={13} /> La red crece
+                <TrendingUp size={13} /> {t("pulseGrowthLabel")}
               </div>
               <div>
                 <div className="text-4xl font-black tracking-tight text-white">+{networkPulse!.newThisWeek}</div>
-                <div className="mt-1 text-sm text-[var(--text-dim)]">builders se unieron esta semana</div>
+                <div className="mt-1 text-sm text-[var(--text-dim)]">{t("pulseGrowthDesc")}</div>
               </div>
-              <div className="mt-4 text-xs font-mono text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors">Explorar builders →</div>
+              <div className="mt-4 text-xs font-mono text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors">{t("pulseGrowthCta")}</div>
             </Link>
           );
         }
@@ -610,20 +605,20 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
           cells.push(
             <Link key="endorse" href="/explore" className="group flex flex-col justify-between rounded-[1.6rem] border border-white/8 bg-white/[0.025] p-5 transition-all hover:-translate-y-0.5 hover:border-[var(--accent)]/30 hover:bg-white/[0.04]">
               <div className="mb-4 flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.18em] text-[var(--accent)]">
-                <HeartHandshake size={13} /> Entre builders
+                <HeartHandshake size={13} /> {t("pulseEndorseLabel")}
               </div>
               <div>
                 <div className="text-4xl font-black tracking-tight text-white">+{networkPulse!.endorsementsTotal.toLocaleString()}</div>
-                <div className="mt-1 text-sm text-[var(--text-dim)]">endorsements de builder a builder</div>
+                <div className="mt-1 text-sm text-[var(--text-dim)]">{t("pulseEndorseDesc")}</div>
               </div>
-              <div className="mt-4 text-xs font-mono text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors">Ver la comunidad →</div>
+              <div className="mt-4 text-xs font-mono text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors">{t("pulseEndorseCta")}</div>
             </Link>
           );
         }
         return (
           <section style={{ padding: '56px 24px 0' }}>
             <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-              <div className="section-label" style={{ justifyContent: 'center', marginBottom: '20px' }}>// la red, en vivo</div>
+              <div className="section-label" style={{ justifyContent: 'center', marginBottom: '20px' }}>{t("pulseSectionLabel")}</div>
               <div className={`grid gap-3 ${cells.length === 3 ? "sm:grid-cols-3" : cells.length === 2 ? "sm:grid-cols-2 max-w-3xl mx-auto" : "max-w-md mx-auto"}`}>
                 {cells}
               </div>
@@ -638,69 +633,69 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
       <section className="onboarding-section">
         <div className="onboarding-inner">
           <div>
-            <div className="section-label">// onboarding</div>
-            <h2 className="section-title">Listo en 3 minutos.<br /><span style={{ color: 'var(--accent)' }}>En serio.</span></h2>
-            <p className="section-sub" style={{ marginBottom: '36px' }}>Sin plantillas vacías. Sin lienzo en blanco. El sistema arma tu perfil solo, vos solo lo afinás.</p>
+            <div className="section-label">{t("onboardingSectionLabel")}</div>
+            <h2 className="section-title">{t("onboardingTitleLine1")}<br /><span style={{ color: 'var(--accent)' }}>{t("onboardingTitleLine2")}</span></h2>
+            <p className="section-sub" style={{ marginBottom: '36px' }}>{t("onboardingSub")}</p>
 
             <div className="steps">
               <div className="step active">
                 <div className="step-num">1</div>
                 <div className="step-content">
-                  <div className="step-title">¿Qué sos?</div>
-                  <div className="step-desc">Elegís tu perfil (dev, diseñador, founder, todo lo anterior). Sin formularios aburridos.</div>
+                  <div className="step-title">{t("onboardingStep1Title")}</div>
+                  <div className="step-desc">{t("onboardingStep1Desc")}</div>
                 </div>
               </div>
               <div className="step">
                 <div className="step-num">2</div>
                 <div className="step-content">
-                  <div className="step-title">Importás Linktree o GitHub</div>
-                  <div className="step-desc">Traemos señal real para arrancar sin bloques vacíos ni mock data.</div>
+                  <div className="step-title">{t("onboardingStep2Title")}</div>
+                  <div className="step-desc">{t("onboardingStep2Desc")}</div>
                 </div>
               </div>
               <div className="step">
                 <div className="step-num">3</div>
                 <div className="step-content">
-                  <div className="step-title">Elegís color y username</div>
-                  <div className="step-desc">El sistema te crea un board base prolijo y vos sólo lo afinás después.</div>
+                  <div className="step-title">{t("onboardingStep3Title")}</div>
+                  <div className="step-desc">{t("onboardingStep3Desc")}</div>
                 </div>
               </div>
               <div className="step">
                 <div className="step-num">4</div>
                 <div className="step-content">
-                  <div className="step-title">Publicás con tu username</div>
-                  <div className="step-desc">huevsite.io/tuusuario. Entrás al feed, al showcase y al leaderboard desde el día uno. Profit.</div>
+                  <div className="step-title">{t("onboardingStep4Title")}</div>
+                  <div className="step-desc">{t("onboardingStep4Desc")}</div>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="onboard-ui">
-            <div className="ou-q">¿Qué perfil tenés?</div>
-            <div className="ou-sub">Podés elegir más de uno.</div>
+            <div className="ou-q">{t("onboardingUiQuestion")}</div>
+            <div className="ou-sub">{t("onboardingUiSub")}</div>
             <div className="ou-options">
               <div className={`ou-option ${selectedRoles.includes('Developer') ? 'selected' : ''}`} onClick={() => toggleRole('Developer')}>
                 <div className="em" style={{ fontSize: '28px', marginBottom: '6px' }}>⌨️</div>
                 <div className="nm">Developer</div>
-                <div className="dc">Código, repos, commits</div>
+                <div className="dc">{t("onboardingRoleDeveloperDesc")}</div>
               </div>
               <div className={`ou-option ${selectedRoles.includes('Designer') ? 'selected' : ''}`} onClick={() => toggleRole('Designer')}>
                 <div className="em" style={{ fontSize: '28px', marginBottom: '6px' }}>🎨</div>
                 <div className="nm">Designer</div>
-                <div className="dc">Figma, UI, sistemas</div>
+                <div className="dc">{t("onboardingRoleDesignerDesc")}</div>
               </div>
               <div className={`ou-option ${selectedRoles.includes('Founder') ? 'selected' : ''}`} onClick={() => toggleRole('Founder')}>
                 <div className="em" style={{ fontSize: '28px', marginBottom: '6px' }}>🚀</div>
                 <div className="nm">Founder</div>
-                <div className="dc">Startups, MRR, tracción</div>
+                <div className="dc">{t("onboardingRoleFounderDesc")}</div>
               </div>
               <div className={`ou-option ${selectedRoles.includes('Indie Hacker') ? 'selected' : ''}`} onClick={() => toggleRole('Indie Hacker')}>
                 <div className="em" style={{ fontSize: '28px', marginBottom: '6px' }}>🛠</div>
                 <div className="nm">Indie Hacker</div>
-                <div className="dc">Side projects, solodev</div>
+                <div className="dc">{t("onboardingRoleIndieDesc")}</div>
               </div>
             </div>
-            <button className="ou-next">Seguir →</button>
-            <div className="ou-skip">también podés conectar GitHub directamente</div>
+            <button className="ou-next">{t("onboardingUiNext")}</button>
+            <div className="ou-skip">{t("onboardingUiSkip")}</div>
           </div>
         </div>
       </section>
@@ -710,8 +705,8 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
       {testimonials.length > 0 && (
         <section style={{ padding: '90px 40px 0' }}>
           <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-            <div className="section-label" style={{ justifyContent: 'center' }}>// lo que dicen los builders</div>
-            <h2 className="section-title text-center">No lo decimos nosotros.</h2>
+            <div className="section-label" style={{ justifyContent: 'center' }}>{t("testimonialsSectionLabel")}</div>
+            <h2 className="section-title text-center">{t("testimonialsTitle")}</h2>
             {/* Adaptive: 1 → centered card, 2 → pair, 3+ → grid (never a lonely card). */}
             <div className={`mt-10 ${
               testimonials.length === 1
@@ -741,7 +736,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
             </div>
             <div className="text-center mt-8">
               <Link href="/testimonio" className="text-xs font-mono text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">
-                ¿Usás huevsite? Dejá el tuyo →
+                {t("testimonialsCta")}
               </Link>
             </div>
           </div>
@@ -750,18 +745,18 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
 
       <section id="precios" className="pro-promo-section" style={{ padding: '100px 40px', background: 'linear-gradient(180deg, transparent 0%, rgba(200,255,0,0.03) 100%)', borderTop: '1px solid rgba(255,255,255,0.05)', scrollMarginTop: '80px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div className="section-label" style={{ color: 'var(--accent)' }}>// huevsite pro</div>
-          <h2 className="section-title">Que te <span style={{ color: 'var(--accent)' }}>encuentren.</span></h2>
-          <p className="section-sub" style={{ marginBottom: '60px' }}>Recruiters, clientes y otros builders te descubren cuando destacás. Los perfiles Pro aparecen primero en el feed, el showcase y el leaderboard.</p>
+          <div className="section-label" style={{ color: 'var(--accent)' }}>{t("proSectionLabel")}</div>
+          <h2 className="section-title">{t("proTitlePrefix")} <span style={{ color: 'var(--accent)' }}>{t("proTitleAccent")}</span></h2>
+          <p className="section-sub" style={{ marginBottom: '60px' }}>{t("proSub")}</p>
 
           <div style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', display: 'grid', gap: '20px' }}>
             {[
-              { icon: Globe, title: 'Tu propio dominio', desc: 'Conectá dominio.com en segundos. Dale a tu portfolio la autoridad que merece con una URL 100% tuya.' },
-              { icon: BarChart3, title: 'Insights de Builder', desc: 'No vueles a ciegas. Mirá quién te visita, de dónde vienen y qué es lo que más les gusta de tu trabajo.' },
-              { icon: Zap, title: 'Explosión de Visibilidad', desc: 'Sumá puntos extra a tu Builder Score automáticamente. Tracción real para aparecer antes que nadie en el feed.' },
-              { icon: LayoutGrid, title: 'Sub-sitios ilimitados', desc: '¿Tenés un SaaS? ¿Un newsletter? ¿Un curso? Creá landing pages específicas para cada proyecto bajo un mismo techo.' },
-              { icon: Layout, title: 'Grid Expandido', desc: 'Hasta 22 bloques para que no falte nada. Más de 4× el espacio del plan free para tus proyectos, links y obsesiones.' },
-              { icon: Star, title: 'Estatus de Elite', desc: 'El badge de Verificado no es solo estética: es confianza inmediata para recruiters y clientes.' }
+              { icon: Globe, title: t("proFeatureDomainTitle"), desc: t("proFeatureDomainDesc") },
+              { icon: BarChart3, title: t("proFeatureInsightsTitle"), desc: t("proFeatureInsightsDesc") },
+              { icon: Zap, title: t("proFeatureVisibilityTitle"), desc: t("proFeatureVisibilityDesc") },
+              { icon: LayoutGrid, title: t("proFeatureSubsitesTitle"), desc: t("proFeatureSubsitesDesc") },
+              { icon: Layout, title: t("proFeatureGridTitle"), desc: t("proFeatureGridDesc") },
+              { icon: Star, title: t("proFeatureEliteTitle"), desc: t("proFeatureEliteDesc") }
             ].map((f, i) => {
               const Icon = f.icon;
               return (
@@ -794,8 +789,8 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
       {faqs.length > 0 && (
         <section style={{ padding: '90px 24px 0' }}>
           <div style={{ maxWidth: '760px', margin: '0 auto' }}>
-            <div className="section-label" style={{ justifyContent: 'center' }}>// preguntas frecuentes</div>
-            <h2 className="section-title text-center">Lo que te estás preguntando.</h2>
+            <div className="section-label" style={{ justifyContent: 'center' }}>{t("faqSectionLabel")}</div>
+            <h2 className="section-title text-center">{t("faqTitle")}</h2>
             <div className="mt-10 space-y-3">
               {faqs.map((f) => {
                 const open = openFaq === f.id;
@@ -827,7 +822,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
           {founderVideo && (founderVideo.embed || founderVideo.file) ? (
             <div>
               <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-[var(--accent)] mb-4 text-center">
-                Quién está detrás
+                {t("founderEyebrow")}
               </div>
               <div className="rounded-[1.5rem] overflow-hidden border border-white/[0.08] bg-black aspect-video shadow-2xl shadow-[var(--accent)]/5">
                 {founderVideo.file ? (
@@ -835,7 +830,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                 ) : (
                   <iframe
                     src={founderVideo.embed!}
-                    title="El founder de huevsite"
+                    title={t("founderVideoTitle")}
                     className="w-full h-full"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                     allowFullScreen
@@ -852,7 +847,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                   <div className="font-bold text-white/85 group-hover:underline">
                     Tomas Deluca <span className="text-[var(--accent)]">@_tomidelu</span>
                   </div>
-                  <div className="text-[var(--text-muted)]">Founder de huevsite</div>
+                  <div className="text-[var(--text-muted)]">{t("founderRole")}</div>
                 </div>
               </a>
             </div>
@@ -871,20 +866,22 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
               </div>
               <div className="flex-1 min-w-0 flex flex-col justify-center">
                 <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-[var(--accent)] mb-3">
-                  Quién está detrás
+                  {t("founderEyebrow")}
                 </div>
                 <p className="text-base sm:text-[19px] text-white/90 leading-relaxed font-medium mb-4">
                   {founderQuote
                     ? `“${founderQuote}”`
                     : (
-                      <>“Soy Tomas. Armé huevsite para que el laburo de los builders de LATAM <span style={{ color: 'var(--accent)' }}>se vea, no se cuente</span>. Es lo que uso yo todos los días.”</>
+                      t.rich("founderQuoteFallback", {
+                        accent: (chunks) => <span style={{ color: 'var(--accent)' }}>{chunks}</span>,
+                      })
                     )}
                 </p>
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-2.5 gap-y-1 text-[13px] font-mono text-[var(--text-muted)]">
                   <span className="font-bold text-white/80">Tomas Deluca</span>
                   <span className="text-[var(--accent)] group-hover:underline">@_tomidelu</span>
                   <span className="hidden sm:inline text-white/20">·</span>
-                  <span className="hidden sm:inline">Product Engineer &amp; v0 ambassador</span>
+                  <span className="hidden sm:inline">{t("founderTagline")}</span>
                 </div>
               </div>
             </a>
@@ -896,36 +893,36 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
       <section className="final-cta-section">
         <div className="final-cta-glow" aria-hidden="true" />
         <div className="final-cta-inner">
-          <div className="section-label" style={{ justifyContent: 'center' }}>// para builders de verdad</div>
+          <div className="section-label" style={{ justifyContent: 'center' }}>{t("finalCtaSectionLabel")}</div>
           <h2 className="final-cta-title">
-            Tu obra.<br /><span style={{ color: 'var(--accent)' }}>Tu URL.</span>
+            {t("finalCtaTitleLine1")}<br /><span style={{ color: 'var(--accent)' }}>{t("finalCtaTitleLine2")}</span>
           </h2>
           <p className="final-cta-sub">
-            Gratis para empezar.<br />Pasate a PRO cuando necesites romper los límites.
+            {t("finalCtaSubLine1")}<br />{t("finalCtaSubLine2")}
           </p>
           <div className="final-cta-actions">
             <Link href={user ? "/dashboard" : "/login"} className="btn btn-accent" style={{ fontSize: '17px', padding: '16px 40px' }}>
               {user ? (
                 <>
                   <Layout size={18} className="mr-2 inline" />
-                  <span>Mi huevsite</span>
+                  <span>{t("finalCtaUserButton")}</span>
                 </>
               ) : (
-                <span>Armá tu huevsite →</span>
+                <span>{t("finalCtaGuestButton")}</span>
               )}
             </Link>
             {!user && (
               <Link href="/explore" className="btn btn-ghost" style={{ fontSize: '15px', padding: '16px 28px' }}>
-                Ver ejemplos primero
+                {t("finalCtaSecondary")}
               </Link>
             )}
           </div>
           <div className="final-cta-meta">
-            <span>Sin tarjeta de crédito</span>
+            <span>{t("finalCtaMetaNoCard")}</span>
             <span className="final-cta-dot">·</span>
-            <span>Listo en 3 minutos</span>
+            <span>{t("finalCtaMetaReady")}</span>
             <span className="final-cta-dot">·</span>
-            <span>Hecho por y para builders</span>
+            <span>{t("finalCtaMetaByBuilders")}</span>
           </div>
         </div>
       </section>
@@ -935,7 +932,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <div className="logo">huev<span style={{ color: 'var(--accent)' }}>site</span>.io</div>
           <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-            Mostrá lo que buildeás. A project by{' '}
+            {tFooter("tagline")}{' '}
             <a
               href="https://huevsite.studio"
               target="_blank"
@@ -947,11 +944,12 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
             .
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-          <Link href="/blog" style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textDecoration: 'none' }}>Blog</Link>
+        <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <Link href="/blog" style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textDecoration: 'none' }}>{tFooter("blog")}</Link>
           <Link href="https://x.com/i/communities/2026312282527932637" target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textDecoration: 'none' }}>X Community</Link>
           <Link href="https://discord.gg/qE4CWG6D" target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textDecoration: 'none' }}>Discord Community</Link>
           <Link href="https://github.com/tomasdeluca1" target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textDecoration: 'none' }}>GitHub</Link>
+          <LocaleToggle />
         </div>
       </footer>
     </div>

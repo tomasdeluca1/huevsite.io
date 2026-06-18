@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { Mic, MicOff, Loader2 } from "lucide-react";
 
 interface VoiceRecorderProps {
@@ -8,6 +9,7 @@ interface VoiceRecorderProps {
 }
 
 export function VoiceRecorder({ onTranscription }: VoiceRecorderProps) {
+  const t = useTranslations("bdls");
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -89,7 +91,7 @@ export function VoiceRecorder({ onTranscription }: VoiceRecorderProps) {
           ? "bg-red-500/20 border-red-500/40 text-red-400 animate-pulse"
           : "bg-white/5 border-white/10 text-zinc-500 hover:text-[#C8FF00] hover:border-[#C8FF00]/30"
       }`}
-      title={recording ? "Parar grabación" : "Grabar respuesta"}
+      title={recording ? t("voiceRecorder.stop") : t("voiceRecorder.record")}
     >
       {recording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
     </button>

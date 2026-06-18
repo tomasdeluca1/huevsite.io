@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { Upload, X, Loader2, Image as ImageIcon, AlertTriangle } from "lucide-react";
 import { uploadAsset } from "@/lib/upload-asset";
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function ImageUpload({ value, onChange, label, folder = "general" }: Props) {
+  const t = useTranslations("dashboard");
   const supabase = createClient();
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +32,7 @@ export function ImageUpload({ value, onChange, label, folder = "general" }: Prop
       onChange(publicUrl);
     } catch (err: any) {
       console.error("Error uploading image:", err);
-      setError(err?.message || "No se pudo subir la imagen.");
+      setError(err?.message || t("imageUpload.uploadError"));
     } finally {
       setIsUploading(false);
       // Permite reintentar el MISMO archivo (onChange no dispara si el value no cambia)
@@ -54,14 +56,14 @@ export function ImageUpload({ value, onChange, label, folder = "general" }: Prop
               <button
                 onClick={() => fileInputRef.current?.click()}
                 className="p-3 rounded-xl bg-white text-black hover:scale-110 active:scale-95 transition-all shadow-lg"
-                title="Cambiar imagen"
+                title={t("imageUpload.change")}
               >
                 <ImageIcon size={20} />
               </button>
               <button
                 onClick={removeImage}
                 className="p-3 rounded-xl bg-red-500 text-white hover:scale-110 active:scale-95 transition-all shadow-lg"
-                title="Eliminar imagen"
+                title={t("imageUpload.remove")}
               >
                 <X size={20} />
               </button>
@@ -77,7 +79,7 @@ export function ImageUpload({ value, onChange, label, folder = "general" }: Prop
             {isUploading ? (
               <div className="flex flex-col items-center gap-2">
                 <Loader2 className="animate-spin text-[var(--accent)]" size={32} />
-                <span className="text-[10px] font-mono text-[var(--accent)] uppercase animate-pulse">subiendo...</span>
+                <span className="text-[10px] font-mono text-[var(--accent)] uppercase animate-pulse">{t("imageUpload.uploading")}</span>
               </div>
             ) : (
               <>
@@ -85,8 +87,8 @@ export function ImageUpload({ value, onChange, label, folder = "general" }: Prop
                   <Upload size={28} className="text-[var(--text-muted)] group-hover:text-white" />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm font-bold tracking-tight">Elegir archivo</p>
-                  <p className="text-[9px] font-mono text-[var(--text-muted)] uppercase tracking-widest mt-1">PNG, JPG hasta 5MB</p>
+                  <p className="text-sm font-bold tracking-tight">{t("imageUpload.choose")}</p>
+                  <p className="text-[9px] font-mono text-[var(--text-muted)] uppercase tracking-widest mt-1">{t("imageUpload.formats")}</p>
                 </div>
               </>
             )}

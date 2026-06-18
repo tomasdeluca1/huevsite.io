@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Award, Zap } from "lucide-react";
 
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export function RecruiterTalentBoard({ talent }: Props) {
+    const t = useTranslations("recruiter");
     const [stackQuery, setStackQuery] = useState("");
     const [locationQuery, setLocationQuery] = useState("");
     const [onlyOpenToWork, setOnlyOpenToWork] = useState(false);
@@ -50,26 +52,26 @@ export function RecruiterTalentBoard({ talent }: Props) {
             {/* Sidebar Filters */}
             <aside className="lg:col-span-1 space-y-6">
                 <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
-                    <h3 className="font-bold text-sm uppercase tracking-widest text-[#C8FF00] mb-6">// Filtros</h3>
+                    <h3 className="font-bold text-sm uppercase tracking-widest text-[#C8FF00] mb-6">{t('filtersTitle')}</h3>
 
                     <div className="space-y-4">
                         <div>
-                            <label className="text-xs font-mono text-[var(--text-muted)] block mb-2">Tech Stack</label>
+                            <label className="text-xs font-mono text-[var(--text-muted)] block mb-2">{t('techStackLabel')}</label>
                             <input
                                 type="text"
                                 value={stackQuery}
                                 onChange={(e) => setStackQuery(e.target.value)}
-                                placeholder="ej. React, Python..."
+                                placeholder={t('techStackPlaceholder')}
                                 className="w-full bg-black/40 border border-[var(--border-bright)] rounded-xl px-4 py-3 text-sm focus:border-[#C8FF00] outline-none transition-colors"
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-mono text-[var(--text-muted)] block mb-2">Ubicación</label>
+                            <label className="text-xs font-mono text-[var(--text-muted)] block mb-2">{t('locationLabel')}</label>
                             <input
                                 type="text"
                                 value={locationQuery}
                                 onChange={(e) => setLocationQuery(e.target.value)}
-                                placeholder="ej. Argentina, Remoto..."
+                                placeholder={t('locationPlaceholder')}
                                 className="w-full bg-black/40 border border-[var(--border-bright)] rounded-xl px-4 py-3 text-sm focus:border-[#C8FF00] outline-none transition-colors"
                             />
                         </div>
@@ -80,20 +82,20 @@ export function RecruiterTalentBoard({ talent }: Props) {
                                 onChange={(e) => setOnlyOpenToWork(e.target.checked)}
                                 className="accent-[#C8FF00]"
                             />
-                            <span className="text-sm font-bold">Solo Open to Work</span>
+                            <span className="text-sm font-bold">{t('onlyOpenToWork')}</span>
                         </label>
                     </div>
                 </div>
                 <div className="p-4 rounded-xl bg-[#C8FF00]/10 border border-[#C8FF00]/20 text-xs text-[#C8FF00] font-mono leading-relaxed">
-                    ℹ️ El Builder Score se recalcula de forma automática basándose en proyectos, validación de la comunidad y actividad open source.
+                    {t('scoreHint')}
                 </div>
             </aside>
 
             {/* List */}
             <div className="lg:col-span-3 space-y-4">
                 <div className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-widest">
-                    {filtered.length} {filtered.length === 1 ? "builder" : "builders"}
-                    {filtered.length !== talent.length && ` (de ${talent.length})`}
+                    {t('builderCount', { count: filtered.length })}
+                    {filtered.length !== talent.length && ` ${t('builderCountOf', { total: talent.length })}`}
                 </div>
 
                 {filtered.map((dev) => (
@@ -113,11 +115,11 @@ export function RecruiterTalentBoard({ talent }: Props) {
                                 )}
                                 <div className="flex flex-col justify-center">
                                     <h2 className="text-xl font-bold tracking-tight text-white mb-1 group-hover:text-[#C8FF00] transition-colors">{dev.name || dev.username}</h2>
-                                    <div className="text-sm text-[var(--text-dim)] line-clamp-1">{dev.tagline || "Builder"}</div>
+                                    <div className="text-sm text-[var(--text-dim)] line-clamp-1">{dev.tagline || t('builderFallback')}</div>
                                     <div className="flex items-center gap-2 mt-1.5">
                                         {dev.openToWork && (
                                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#C8FF00]/10 border border-[#C8FF00]/25 text-[10px] font-bold text-[#C8FF00] uppercase tracking-wider">
-                                                ● Open to work
+                                                {t('openToWorkBadge')}
                                             </span>
                                         )}
                                         {dev.location && (
@@ -137,13 +139,13 @@ export function RecruiterTalentBoard({ talent }: Props) {
                                         ))}
                                     </div>
                                 ) : (
-                                    <div className="text-xs font-mono text-white/20 italic">No stack indexado</div>
+                                    <div className="text-xs font-mono text-white/20 italic">{t('noStackIndexed')}</div>
                                 )}
                             </div>
 
                             <div className="flex items-center justify-end gap-6 shrink-0 md:min-w-[200px] mt-4 md:mt-0 pt-4 md:pt-0 border-t border-[var(--border)] md:border-none">
                                 <div className="flex flex-col items-end">
-                                    <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest font-bold mb-1">Score</div>
+                                    <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest font-bold mb-1">{t('scoreLabel')}</div>
                                     <div className="flex items-center gap-2">
                                         <Award size={18} className="text-[#C8FF00]" />
                                         <span className="text-2xl font-black font-mono">{dev.builder_score || 0}</span>
@@ -161,8 +163,8 @@ export function RecruiterTalentBoard({ talent }: Props) {
                 {filtered.length === 0 && (
                     <div className="text-center py-20 text-[var(--text-dim)] font-mono border border-dashed border-[var(--border)] rounded-3xl">
                         {talent.length === 0
-                            ? "No se encontró talento rankeado aún."
-                            : "Ningún builder matchea esos filtros. Probá aflojando alguno."}
+                            ? t('emptyNoTalent')
+                            : t('emptyNoMatch')}
                     </div>
                 )}
             </div>

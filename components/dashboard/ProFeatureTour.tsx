@@ -3,75 +3,8 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { X, ArrowRight, BarChart3, LayoutGrid, Globe, Layers, Sparkles } from "lucide-react";
-
-const STEPS = [
-  {
-    icon: BarChart3,
-    eyebrow: "Feature 1 de 5",
-    title: "Insights de tu perfil",
-    hook: "Entendé exactamente qué está pasando con tu perfil.",
-    bullets: [
-      "Visitantes únicos y vistas por bloque",
-      "Fuentes de tráfico (directo, LinkedIn, Twitter…)",
-      "Evolución de tu actividad en el tiempo",
-    ],
-    cta: null,
-    accentOpacity: "15",
-  },
-  {
-    icon: LayoutGrid,
-    eyebrow: "Feature 2 de 5",
-    title: "Hasta 22 bloques",
-    hook: "Dejá de limitarte: armá el board más completo del ecosistema.",
-    bullets: [
-      "5 bloques en free → 22 bloques en Pro",
-      "Proyectos, métricas, multimedia, certificaciones y más",
-      "Reorganizá y ocultá bloques cuando quieras",
-    ],
-    cta: null,
-    accentOpacity: "15",
-  },
-  {
-    icon: Layers,
-    eyebrow: "Feature 3 de 5",
-    title: "Sub-sites por proyecto",
-    hook: "Cada proyecto tuyo, en su propia URL dentro de tu perfil.",
-    bullets: [
-      "huevsite.io/tuusuario/mi-startup",
-      "Bloques independientes por sub-site",
-      "Ideal para landing pages de proyectos o clientes",
-    ],
-    cta: null,
-    accentOpacity: "15",
-  },
-  {
-    icon: Globe,
-    eyebrow: "Feature 4 de 5",
-    title: "Dominio propio",
-    hook: "Tu perfil, servido desde tu propio dominio.",
-    bullets: [
-      "Conectá cualquier dominio (ej: tomas.dev)",
-      "Configuración guiada con verificación TXT",
-      "Funciona con Vercel y cualquier DNS",
-    ],
-    cta: null,
-    accentOpacity: "15",
-  },
-  {
-    icon: Sparkles,
-    eyebrow: "Feature 5 de 5",
-    title: "Todo lo demás de Pro",
-    hook: "El acceso completo al ecosistema de huevsite.",
-    bullets: [
-      "Badge Pro visible en tu perfil y OG image",
-      "Análisis avanzado de dominios y sub-sites",
-      "Acceso prioritario a nuevas features y betas",
-    ],
-    cta: "Ir a mis Insights",
-    accentOpacity: "15",
-  },
-];
 
 interface ProFeatureTourProps {
   isOpen: boolean;
@@ -87,8 +20,77 @@ const variants = {
 };
 
 export function ProFeatureTour({ isOpen, onClose, accentColor, onFinish }: ProFeatureTourProps) {
+  const t = useTranslations("dashboard");
   const [step, setStep] = useState(0);
   const [dir, setDir] = useState(1);
+
+  const STEPS = [
+    {
+      icon: BarChart3,
+      eyebrow: t("proTour.step1.eyebrow"),
+      title: t("proTour.step1.title"),
+      hook: t("proTour.step1.hook"),
+      bullets: [
+        t("proTour.step1.bullet1"),
+        t("proTour.step1.bullet2"),
+        t("proTour.step1.bullet3"),
+      ],
+      cta: null,
+      accentOpacity: "15",
+    },
+    {
+      icon: LayoutGrid,
+      eyebrow: t("proTour.step2.eyebrow"),
+      title: t("proTour.step2.title"),
+      hook: t("proTour.step2.hook"),
+      bullets: [
+        t("proTour.step2.bullet1"),
+        t("proTour.step2.bullet2"),
+        t("proTour.step2.bullet3"),
+      ],
+      cta: null,
+      accentOpacity: "15",
+    },
+    {
+      icon: Layers,
+      eyebrow: t("proTour.step3.eyebrow"),
+      title: t("proTour.step3.title"),
+      hook: t("proTour.step3.hook"),
+      bullets: [
+        t("proTour.step3.bullet1"),
+        t("proTour.step3.bullet2"),
+        t("proTour.step3.bullet3"),
+      ],
+      cta: null,
+      accentOpacity: "15",
+    },
+    {
+      icon: Globe,
+      eyebrow: t("proTour.step4.eyebrow"),
+      title: t("proTour.step4.title"),
+      hook: t("proTour.step4.hook"),
+      bullets: [
+        t("proTour.step4.bullet1"),
+        t("proTour.step4.bullet2"),
+        t("proTour.step4.bullet3"),
+      ],
+      cta: null,
+      accentOpacity: "15",
+    },
+    {
+      icon: Sparkles,
+      eyebrow: t("proTour.step5.eyebrow"),
+      title: t("proTour.step5.title"),
+      hook: t("proTour.step5.hook"),
+      bullets: [
+        t("proTour.step5.bullet1"),
+        t("proTour.step5.bullet2"),
+        t("proTour.step5.bullet3"),
+      ],
+      cta: t("proTour.step5.cta"),
+      accentOpacity: "15",
+    },
+  ];
 
   if (!isOpen) return null;
 
@@ -229,7 +231,7 @@ export function ProFeatureTour({ isOpen, onClose, accentColor, onFinish }: ProFe
                 onClick={() => goTo(step - 1)}
                 className="flex-none px-5 py-3.5 rounded-xl border border-white/10 bg-white/[0.03] text-sm font-bold text-white/40 hover:text-white/70 hover:border-white/20 transition-all"
               >
-                Atrás
+                {t("proTour.back")}
               </button>
             )}
             <button
@@ -247,7 +249,7 @@ export function ProFeatureTour({ isOpen, onClose, accentColor, onFinish }: ProFe
                 </>
               ) : (
                 <>
-                  Siguiente
+                  {t("proTour.next")}
                   <ArrowRight size={16} />
                 </>
               )}

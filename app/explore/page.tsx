@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
+import LocaleToggle from "@/components/LocaleToggle";
 import { ExploreClient } from "@/components/explore/ExploreClient";
 
 export const revalidate = 60; // Revalidate simple cache every 60s
@@ -29,6 +31,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
 
   const totalRegistered = count || 0;
   const { data: { user } } = await supabase.auth.getUser();
+  const t = await getTranslations("explore");
 
   if (error) {
     console.error("Error fetching explore profiles:", error);
@@ -42,14 +45,15 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
           huev<span>site</span>.io
         </Link>
         <div className="flex items-center gap-2">
+          <LocaleToggle />
           <Link
             href="/leaderboard"
             className="hidden sm:flex items-center text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] hover:text-white transition-colors px-4 py-3"
           >
-            Ranking
+            {t("navRanking")}
           </Link>
           <Link href={user ? "/dashboard" : "/login"} className="btn btn-accent text-xs md:text-sm font-bold !px-6 !py-3 !rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-lg shadow-[var(--accent)]/20">
-            {user ? "Mi huevsite" : "Crear mi huevsite"}
+            {user ? t("myHuevsite") : t("createMyHuevsite")}
           </Link>
         </div>
       </nav>
@@ -59,18 +63,18 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(200,255,0,0.05)_0%,transparent_60%)] pointer-events-none" />
         <div className="max-w-3xl mx-auto relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--surface2)] border border-[var(--border-bright)] text-[var(--accent)] text-xs font-mono mb-8 justify-center">
-            <Sparkles size={14} /> // HALL OF FAME — {totalRegistered} BUILDERS
+            <Sparkles size={14} /> {t("badge", { count: totalRegistered })}
           </div>
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-6">
-            Inspirate con
+            {t("titlePrefix")}
             <br />
             <span className="text-[var(--text-muted)] line-through mr-2 inline-block -rotate-1 decoration-[var(--accent)] text-4xl md:text-6xl">
-              portfolios
+              {t("titleStrikethrough")}
             </span>
-            huevsites.
+            {t("titleSuffix")}
           </h1>
           <p className="text-lg md:text-xl text-[var(--text-dim)] max-w-xl mx-auto leading-relaxed">
-            Mirá los perfiles de los builders más piolas de LATAM. Buscá inspiración y armá el tuyo en 3 minutos.
+            {t("subtitle")}
           </p>
         </div>
       </header>
@@ -86,7 +90,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
           <div className="logo text-[var(--text-muted)] text-sm font-mono font-bold tracking-tight">
             huevsite.io
           </div>
-          <div className="text-xs text-[var(--text-dim)]">Mostrá lo que buildeás.</div>
+          <div className="text-xs text-[var(--text-dim)]">{t("footerTagline")}</div>
         </div>
         <div className="flex gap-6">
           <Link href="https://x.com/i/communities/2026312282527932637" target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">X Community</Link>

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Target, ChevronDown, ChevronRight } from "lucide-react";
 import { ProfileData, BlockType } from "@/lib/profile-types";
 import { getBadgeProgress, summarizeQuests, BadgeProgress, QuestAction } from "@/lib/badge-progress";
@@ -28,6 +29,7 @@ export function QuestPanel({
   onShare,
   onUpgrade,
 }: QuestPanelProps) {
+  const t = useTranslations("dashboard");
   const [expanded, setExpanded] = useState(true);
 
   const { nextUp, earnedBadges, earned, total } = useMemo(() => {
@@ -86,9 +88,9 @@ export function QuestPanel({
             <Target size={16} />
           </div>
           <div className="text-left">
-            <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] block">Próximos logros</span>
+            <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] block">{t("questPanel.nextAchievements")}</span>
             <span className="text-sm font-black text-white">
-              {earned}<span className="text-white/30">/{total}</span> <span className="text-white/40 font-bold text-xs">desbloqueados</span>
+              {earned}<span className="text-white/30">/{total}</span> <span className="text-white/40 font-bold text-xs">{t("questPanel.unlocked")}</span>
             </span>
           </div>
         </div>
@@ -106,7 +108,7 @@ export function QuestPanel({
             <div className="px-5 pb-5 space-y-2.5">
               {allDone ? (
                 <p className="text-[11px] text-white/40 leading-relaxed italic py-2">
-                  ¡Conseguiste todos los logros! Seguí sumando bloques y compartiendo para escalar el ranking.
+                  {t("questPanel.allDone")}
                 </p>
               ) : (
                 nextUp.slice(0, 4).map((q) => (
@@ -116,7 +118,7 @@ export function QuestPanel({
 
               {earnedBadges.length > 0 && (
                 <div className="pt-3 mt-1 border-t border-white/5">
-                  <span className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] block mb-2">Logrados</span>
+                  <span className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] block mb-2">{t("questPanel.earned")}</span>
                   <div className="flex flex-wrap gap-1.5">
                     {earnedBadges.map((b) => (
                       <div

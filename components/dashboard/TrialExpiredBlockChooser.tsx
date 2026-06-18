@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { AlertTriangle, Check, Crown } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { BlockData, MAX_FREE_BLOCKS } from "@/lib/profile-types";
 
 interface Props {
@@ -14,31 +15,33 @@ interface Props {
   onUpgrade: () => void;
 }
 
-const BLOCK_TYPE_LABELS: Record<string, string> = {
-  hero: "Bio / Hero",
-  building: "Building",
-  github: "GitHub Stats",
-  project: "Proyecto",
-  stack: "Tech Stack",
-  metric: "Métrica",
-  social: "Redes Sociales",
-  community: "Comunidad",
-  writing: "Escritura",
-  cv: "CV / Resume",
-  media: "Media",
-  certification: "Certificación",
-  achievement: "Logro",
-  custom: "Custom",
-  collab: "Colaboración",
-  ecosystem: "Ecosistema",
+const BLOCK_TYPE_LABEL_KEYS: Record<string, string> = {
+  hero: "trialExpired.blockType.hero",
+  building: "trialExpired.blockType.building",
+  github: "trialExpired.blockType.github",
+  project: "trialExpired.blockType.project",
+  stack: "trialExpired.blockType.stack",
+  metric: "trialExpired.blockType.metric",
+  social: "trialExpired.blockType.social",
+  community: "trialExpired.blockType.community",
+  writing: "trialExpired.blockType.writing",
+  cv: "trialExpired.blockType.cv",
+  media: "trialExpired.blockType.media",
+  certification: "trialExpired.blockType.certification",
+  achievement: "trialExpired.blockType.achievement",
+  custom: "trialExpired.blockType.custom",
+  collab: "trialExpired.blockType.collab",
+  ecosystem: "trialExpired.blockType.ecosystem",
 };
 
-function getBlockTitle(block: BlockData): string {
-  const data = block as any;
-  return data.title || data.name || data.project || data.label || BLOCK_TYPE_LABELS[block.type] || block.type;
-}
-
 export function TrialExpiredBlockChooser({ blocks, extraBlocksFromShare, accentColor, onConfirm, onUpgrade }: Props) {
+  const t = useTranslations("dashboard");
+  const blockTypeLabel = (type: string): string =>
+    BLOCK_TYPE_LABEL_KEYS[type] ? t(BLOCK_TYPE_LABEL_KEYS[type]) : type;
+  const getBlockTitle = (block: BlockData): string => {
+    const data = block as any;
+    return data.title || data.name || data.project || data.label || blockTypeLabel(block.type);
+  };
   const limit = MAX_FREE_BLOCKS + extraBlocksFromShare;
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => {
     // Pre-select the first N blocks by order
@@ -74,17 +77,17 @@ export function TrialExpiredBlockChooser({ blocks, extraBlocksFromShare, accentC
           <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-4">
             <AlertTriangle size={22} className="text-amber-500" />
           </div>
-          <h2 className="text-xl font-[950] text-white tracking-tight">Tu prueba Pro terminó</h2>
+          <h2 className="text-xl font-[950] text-white tracking-tight">{t("trialExpired.title")}</h2>
           <p className="mt-2 text-sm text-white/50 leading-relaxed">
-            Tu perfil tiene <span className="text-white font-bold">{blocks.length} bloques</span> pero el plan gratuito permite <span className="text-white font-bold">{limit}</span>.
-            Elegí cuáles querés mantener visibles — el resto se va a ocultar.
+            {t("trialExpired.descriptionPrefix")} <span className="text-white font-bold">{t("trialExpired.blocksCount", { n: blocks.length })}</span> {t("trialExpired.descriptionMiddle")} <span className="text-white font-bold">{limit}</span>.
+            {" "}{t("trialExpired.descriptionSuffix")}
           </p>
         </div>
 
         {/* Block list */}
         <div className="p-6 max-h-[50vh] overflow-y-auto custom-scrollbar">
           <div className="text-[10px] font-black text-white/25 uppercase tracking-[0.2em] mb-3">
-            Seleccioná {limit} bloques ({selectedIds.size}/{limit})
+            {t("trialExpired.selectInstruction", { limit })} ({selectedIds.size}/{limit})
           </div>
           <div className="space-y-2">
             {blocks.map((block) => {
@@ -114,7 +117,7 @@ export function TrialExpiredBlockChooser({ blocks, extraBlocksFromShare, accentC
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-bold text-white truncate">{getBlockTitle(block)}</div>
                     <div className="text-[10px] text-white/30 uppercase tracking-wider font-black">
-                      {BLOCK_TYPE_LABELS[block.type] || block.type}
+                      {blockTypeLabel(block.type)}
                     </div>
                   </div>
                 </button>
@@ -134,14 +137,14 @@ export function TrialExpiredBlockChooser({ blocks, extraBlocksFromShare, accentC
               color: selectedIds.size === limit ? "black" : "rgba(255,255,255,0.3)",
             }}
           >
-            Confirmar selección
+            {t("trialExpired.confirmSelection")}
           </button>
           <button
             onClick={onUpgrade}
             className="w-full py-3 rounded-2xl border border-white/10 bg-white/[0.03] text-white/70 font-bold text-sm flex items-center justify-center gap-2 hover:border-white/20 hover:bg-white/[0.06] transition-all"
           >
             <Crown size={16} className="text-amber-400" />
-            Mantener todo con Pro
+            {t("trialExpired.keepAllWithPro")}
           </button>
         </div>
       </motion.div>

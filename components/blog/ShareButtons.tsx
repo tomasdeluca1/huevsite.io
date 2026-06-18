@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Copy, Twitter, Linkedin, Check } from "lucide-react";
 
 interface ShareButtonsProps {
@@ -9,6 +10,7 @@ interface ShareButtonsProps {
 }
 
 export function ShareButtons({ url, title }: ShareButtonsProps) {
+  const t = useTranslations("blogUi");
   const [copied, setCopied] = useState(false);
 
   const encodedUrl = encodeURIComponent(url);
@@ -31,14 +33,14 @@ export function ShareButtons({ url, title }: ShareButtonsProps) {
 
   return (
     <div className="flex items-center gap-3">
-      <span className="text-sm font-medium text-[var(--text-muted)] mr-2">Compartir:</span>
+      <span className="text-sm font-medium text-[var(--text-muted)] mr-2">{t("shareLabel")}</span>
       
       <a
         href={shareLinks.twitter}
         target="_blank"
         rel="noopener noreferrer"
         className="p-2.5 rounded-full bg-[var(--surface)] hover:bg-[var(--surface2)] text-[var(--text-dim)] hover:text-white border border-[var(--border)] transition-all hover:scale-105"
-        aria-label="Share on Twitter"
+        aria-label={t("shareOnTwitter")}
       >
         <Twitter className="w-4 h-4" />
       </a>
@@ -48,7 +50,7 @@ export function ShareButtons({ url, title }: ShareButtonsProps) {
         target="_blank"
         rel="noopener noreferrer"
         className="p-2.5 rounded-full bg-[var(--surface)] hover:bg-[var(--surface2)] text-[var(--text-dim)] hover:text-white border border-[var(--border)] transition-all hover:scale-105"
-        aria-label="Share on LinkedIn"
+        aria-label={t("shareOnLinkedin")}
       >
         <Linkedin className="w-4 h-4" />
       </a>
@@ -60,8 +62,8 @@ export function ShareButtons({ url, title }: ShareButtonsProps) {
             ? "bg-[var(--accent)]/10 border-[var(--accent)]/50 text-[var(--accent)]" 
             : "bg-[var(--surface)] hover:bg-[var(--surface2)] text-[var(--text-dim)] hover:text-white border-[var(--border)]"
         }`}
-        aria-label="Copy link"
-        title="Copy link"
+        aria-label={t("copyLink")}
+        title={t("copyLink")}
       >
         {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
       </button>

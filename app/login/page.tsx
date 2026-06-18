@@ -6,8 +6,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Github, Loader2, Info, AlertTriangle, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 function LoginContent() {
+  const t = useTranslations("login");
   const searchParams = useSearchParams();
   const supabase = createClient();
   const [isLoading, setIsLoading] = useState(false);
@@ -21,7 +23,7 @@ function LoginContent() {
   useEffect(() => {
     const error = searchParams.get("error");
     if (error === "auth_failed") {
-      setErrorMsg("No pudimos validar tu sesión. Intentá de nuevo.");
+      setErrorMsg(t("errorAuthFailed"));
     }
   }, [searchParams]);
 
@@ -93,10 +95,10 @@ function LoginContent() {
           className="onboard-ui w-full max-w-md relative z-10 !p-10 shadow-2xl"
         >
           <div className="mb-10 text-center">
-            <div className="section-label mb-2 mx-auto w-fit">// auth gateway</div>
-            <h1 className="ou-q !text-3xl tracking-tight">Bienvenido, builder.</h1>
+            <div className="section-label mb-2 mx-auto w-fit">{t("authGatewayLabel")}</div>
+            <h1 className="ou-q !text-3xl tracking-tight">{t("title")}</h1>
             <p className="ou-sub !text-base">
-              Entrá para gestionar tu huevsite y mostrar lo nuevo.
+              {t("subtitle")}
             </p>
           </div>
 
@@ -117,12 +119,12 @@ function LoginContent() {
               className="w-full flex items-center justify-center gap-3 p-4 rounded-2xl border border-[var(--border-bright)] bg-[var(--surface2)] hover:bg-[var(--surface)] hover:border-[var(--accent)] transition-all font-bold text-sm disabled:opacity-50 group"
             >
               {isLoading ? <Loader2 className="animate-spin" size={20} /> : <Github size={20} className="group-hover:rotate-12 transition-transform" />}
-              Continuar con GitHub
+              {t("continueWithGithub")}
             </button>
 
             <div className="relative py-6 flex items-center">
               <div className="flex-grow border-t border-[var(--border)]"></div>
-              <span className="flex-shrink mx-4 text-[10px] uppercase font-mono text-[var(--text-muted)] tracking-widest">o magic link</span>
+              <span className="flex-shrink mx-4 text-[10px] uppercase font-mono text-[var(--text-muted)] tracking-widest">{t("orMagicLink")}</span>
               <div className="flex-grow border-t border-[var(--border)]"></div>
             </div>
 
@@ -138,7 +140,7 @@ function LoginContent() {
                   <div className="space-y-2">
                     <input
                       type="email"
-                      placeholder="tu@email.com"
+                      placeholder={t("emailPlaceholder")}
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -152,7 +154,7 @@ function LoginContent() {
                   >
                     {isLoading ? <Loader2 className="animate-spin" size={20} /> : (
                       <>
-                        Enviame el link <ArrowRight size={18} />
+                        {t("sendMeTheLink")} <ArrowRight size={18} />
                       </>
                     )}
                   </button>
@@ -167,16 +169,16 @@ function LoginContent() {
                   <div className="w-16 h-16 rounded-full bg-[var(--accent)] text-black flex items-center justify-center mx-auto mb-2">
                     <ArrowRight size={32} className="-rotate-45" />
                   </div>
-                  <h3 className="text-xl font-bold tracking-tight text-white">¡Checkeá tu correo!</h3>
+                  <h3 className="text-xl font-bold tracking-tight text-white">{t("checkYourEmail")}</h3>
                   <p className="text-[var(--text-dim)] text-sm leading-relaxed">
-                    Te mandamos un link mágico a <br />
+                    {t("magicLinkSentTo")} <br />
                     <strong className="text-[var(--accent)]">{email}</strong>
                   </p>
                   <button
                     onClick={() => setSent(false)}
                     className="text-[10px] uppercase font-mono text-[var(--text-muted)] hover:text-white transition-colors pt-4 block w-full"
                   >
-                    ¿Te equivocaste de mail?
+                    {t("wrongEmail")}
                   </button>
                 </motion.div>
               )}
@@ -186,13 +188,13 @@ function LoginContent() {
           <div className="mt-10 flex items-start gap-3 p-4 bg-white/[0.02] rounded-2xl border border-[var(--border-bright)]">
             <Info size={18} className="text-[var(--accent)] shrink-0 mt-0.5" />
             <p className="text-[11px] text-[var(--text-dim)] leading-relaxed">
-              <strong>Tip:</strong> Si entrás con GitHub, después podemos traer tu perfil técnico más fácil. Si entrás por magic link, también podés sumar GitHub más adelante.
+              <strong>{t("tipLabel")}</strong> {t("tipBody")}
             </p>
           </div>
         </motion.div>
 
         <div className="mt-12 text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-[0.3em] opacity-30">
-          builder logic • real recognized real
+          {t("footerTagline")}
         </div>
       </main>
     </div>
@@ -200,10 +202,11 @@ function LoginContent() {
 }
 
 export default function LoginPage() {
+  const t = useTranslations("login");
   return (
     <Suspense fallback={
       <div className="landing min-h-screen bg-[var(--bg)] font-display flex items-center justify-center">
-        <div className="text-[var(--text-muted)] font-mono text-sm">Cargando...</div>
+        <div className="text-[var(--text-muted)] font-mono text-sm">{t("loading")}</div>
       </div>
     }>
       <LoginContent />

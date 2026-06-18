@@ -1,20 +1,24 @@
 import { createClient } from "@/lib/supabase/server";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { Medal } from "lucide-react";
+import LocaleToggle from "@/components/LocaleToggle";
 import { LeaderboardClient } from "@/components/leaderboard/LeaderboardClient";
 import type { Metadata } from "next";
 
 export const revalidate = 60;
 
-export const metadata: Metadata = {
-  title: "Ranking de Builders — huevsite.io",
-  description:
-    "El ranking de los builders más activos de LATAM. Subí tu builder score, sumá seguidores y escalá posiciones.",
-  openGraph: {
-    title: "Ranking de Builders — huevsite.io",
-    description: "Mirá quiénes lideran la comunidad de builders y competí por el primer puesto.",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("leaderboard");
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+    openGraph: {
+      title: t("metaTitle"),
+      description: t("metaOgDescription"),
+    },
+  };
+}
 
 export default async function LeaderboardPage({
   searchParams,
@@ -24,6 +28,7 @@ export default async function LeaderboardPage({
   const supabase = await createClient();
   const params = await searchParams;
   const fromDashboard = params.from === "dashboard";
+  const t = await getTranslations("leaderboard");
 
   const {
     data: { user },
@@ -37,17 +42,18 @@ export default async function LeaderboardPage({
           huev<span>site</span>.io
         </Link>
         <div className="flex items-center gap-2">
+          <LocaleToggle />
           <Link
             href="/explore"
             className="hidden sm:flex items-center text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] hover:text-white transition-colors px-4 py-3"
           >
-            Explorar
+            {t("navExplore")}
           </Link>
           <Link
             href={user ? "/dashboard" : "/login"}
             className="btn btn-accent text-xs md:text-sm font-bold !px-6 !py-3 !rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-lg shadow-[var(--accent)]/20"
           >
-            {user ? "Mi huevsite" : "Crear mi huevsite"}
+            {user ? t("myHuevsite") : t("createMyHuevsite")}
           </Link>
         </div>
       </nav>
@@ -57,16 +63,15 @@ export default async function LeaderboardPage({
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(200,255,0,0.06)_0%,transparent_60%)] pointer-events-none" />
         <div className="max-w-3xl mx-auto relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--surface2)] border border-[var(--border-bright)] text-[var(--accent)] text-xs font-mono mb-8 justify-center">
-            <Medal size={14} /> // RANKING DE BUILDERS
+            <Medal size={14} /> {t("badge")}
           </div>
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-6">
-            Los builders que
+            {t("titleLine1")}
             <br />
-            <span className="text-[var(--accent)]">la están rompiendo.</span>
+            <span className="text-[var(--accent)]">{t("titleLine2")}</span>
           </h1>
           <p className="text-base md:text-lg text-[var(--text-dim)] max-w-xl mx-auto leading-relaxed">
-            Subí tu builder score, sumá seguidores, conseguí recomendaciones y escalá
-            posiciones. ¿Llegás al podio?
+            {t("subtitle")}
           </p>
         </div>
       </header>
@@ -80,12 +85,12 @@ export default async function LeaderboardPage({
       <footer className="py-10 px-6 border-t border-[var(--border)] flex flex-col md:flex-row items-center justify-between gap-4 max-w-6xl mx-auto w-full">
         <div className="flex flex-col items-center md:items-start gap-1">
           <div className="logo text-[var(--text-muted)] text-sm font-mono font-bold tracking-tight">huevsite.io</div>
-          <div className="text-xs text-[var(--text-dim)]">Mostrá lo que buildeás.</div>
+          <div className="text-xs text-[var(--text-dim)]">{t("footerTagline")}</div>
         </div>
         <div className="flex gap-6">
-          <Link href="/explore" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">Explorar</Link>
-          <Link href="/showcase" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">Showcase</Link>
-          <Link href="/feed" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">Feed</Link>
+          <Link href="/explore" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">{t("navExplore")}</Link>
+          <Link href="/showcase" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">{t("footerShowcase")}</Link>
+          <Link href="/feed" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">{t("footerFeed")}</Link>
         </div>
       </footer>
     </div>

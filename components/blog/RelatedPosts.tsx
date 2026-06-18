@@ -1,16 +1,19 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { BlogPost } from "@/lib/blog-data";
 
 interface RelatedPostsProps {
   posts: BlogPost[];
 }
 
-export function RelatedPosts({ posts }: RelatedPostsProps) {
+export async function RelatedPosts({ posts }: RelatedPostsProps) {
   if (!posts || posts.length === 0) return null;
+
+  const t = await getTranslations("blogUi");
 
   return (
     <div className="mt-16 pt-12 border-t border-[var(--border)]">
-      <h3 className="text-xl font-bold text-white mb-6">Te puede interesar</h3>
+      <h3 className="text-xl font-bold text-white mb-6">{t("relatedHeading")}</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {posts.map((post) => (
           <Link

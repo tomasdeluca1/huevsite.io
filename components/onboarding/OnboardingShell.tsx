@@ -1,8 +1,10 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { STEPS, type StepId } from "@/lib/onboarding-types";
 import Link from "next/link";
+import LocaleToggle from "@/components/LocaleToggle";
 
 interface OnboardingShellProps {
   currentStep: number;
@@ -19,6 +21,7 @@ export function OnboardingShell({
   skipHref,
   onSkip,
 }: OnboardingShellProps) {
+  const t = useTranslations("onboarding");
   const progress = ((currentStep + 1) / STEPS.length) * 100;
 
   return (
@@ -81,21 +84,22 @@ export function OnboardingShell({
 
           {/* Sin onSkip/skipHref no hay adónde saltar: en modo create el usuario
               todavía no tiene perfil y /dashboard lo devuelve acá (loop infinito). */}
-          {onSkip ? (
-            <button
-              type="button"
-              onClick={onSkip}
-              className="text-[var(--text-dim)] hover:text-white text-[10px] font-mono uppercase tracking-widest transition-colors"
-            >
-              saltar todo →
-            </button>
-          ) : skipHref ? (
-            <Link href={skipHref} className="text-[var(--text-dim)] hover:text-white text-[10px] font-mono uppercase tracking-widest transition-colors">
-              saltar todo →
-            </Link>
-          ) : (
-            <span />
-          )}
+          <div className="flex items-center gap-3">
+            <LocaleToggle />
+            {onSkip ? (
+              <button
+                type="button"
+                onClick={onSkip}
+                className="text-[var(--text-dim)] hover:text-white text-[10px] font-mono uppercase tracking-widest transition-colors"
+              >
+                {t("skipAll")}
+              </button>
+            ) : skipHref ? (
+              <Link href={skipHref} className="text-[var(--text-dim)] hover:text-white text-[10px] font-mono uppercase tracking-widest transition-colors">
+                {t("skipAll")}
+              </Link>
+            ) : null}
+          </div>
         </div>
       </header>
 
@@ -118,7 +122,7 @@ export function OnboardingShell({
       </main>
 
       <footer className="text-center py-6 text-[var(--text-muted)] text-[10px] font-mono uppercase tracking-[0.2em] relative z-10">
-        paso {currentStep + 1} de {STEPS.length} • builder logic
+        {t("shellFooter", { current: currentStep + 1, total: STEPS.length })}
       </footer>
     </div>
   );

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X, Globe, Plus, Sparkles, ArrowRight, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 interface Props {
     isOpen: boolean;
@@ -19,6 +20,7 @@ export function CreateSubSiteModal({
     onAddSubSite,
     username
 }: Props) {
+    const t = useTranslations("dashboard");
     const [creationMode, setCreationMode] = useState<"magic" | "manual">("magic");
     const [newSubSite, setNewSubSite] = useState({ title: "", slug: "" });
     const [aiUrl, setAiUrl] = useState("");
@@ -31,13 +33,13 @@ export function CreateSubSiteModal({
         setIsGenerating(true);
         
         const messages = [
-            "Analizando la URL 🕵🏻...",
-            "Extrayendo contexto de valor 🧠...",
-            "Buscando imágenes clave 📸...",
-            "Diseñando la grilla ideal 🍱...",
-            "Escribiendo copy con punch ✍🏻...",
-            "Ensamblando los bloques 🧱...",
-            "Afinando los detalles finales 🪄...",
+            t("createSubSite.loadingAnalyzing"),
+            t("createSubSite.loadingExtracting"),
+            t("createSubSite.loadingImages"),
+            t("createSubSite.loadingGrid"),
+            t("createSubSite.loadingCopy"),
+            t("createSubSite.loadingBlocks"),
+            t("createSubSite.loadingFinal"),
         ];
         
         let msgIndex = 0;
@@ -56,7 +58,7 @@ export function CreateSubSiteModal({
 
             if (!res.ok) {
                 const data = await res.json();
-                throw new Error(data.error || "Falló la generación");
+                throw new Error(data.error || t("createSubSite.generationFailed"));
             }
 
             // The API already created the sub-site in the DB — just refresh the list
@@ -73,7 +75,7 @@ export function CreateSubSiteModal({
             onClose();
             setAiUrl("");
         } catch (error: any) {
-            alert(error.message || "Hubo un error con la IA.");
+            alert(error.message || t("createSubSite.aiError"));
         } finally {
             clearInterval(msgInterval);
             setIsGenerating(false);
@@ -119,10 +121,10 @@ export function CreateSubSiteModal({
                                 </div>
                                 <div>
                                     <h2 className="text-2xl font-black tracking-tighter">
-                                        Crear Nuevo <span className="text-[var(--accent)]" style={{ color: accentColor }}>Sub-site</span>
+                                        {t("createSubSite.titlePrefix")} <span className="text-[var(--accent)]" style={{ color: accentColor }}>{t("createSubSite.titleHighlight")}</span>
                                     </h2>
                                     <p className="text-[10px] font-mono text-white/30 uppercase tracking-[0.2em] mt-1">
-                                        // Expandí tu ecosistema digital
+                                        {t("createSubSite.subtitle")}
                                     </p>
                                 </div>
                             </div>
@@ -142,21 +144,21 @@ export function CreateSubSiteModal({
                                         onClick={() => setCreationMode("magic")}
                                         className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-[14px] text-xs font-black uppercase tracking-widest transition-all ${creationMode === "magic" ? "bg-white/[0.05] text-white" : "text-white/30 hover:text-white/60"}`}
                                     >
-                                        <Sparkles size={16} style={{ color: creationMode === "magic" ? accentColor : undefined }} /> IA Mágica
+                                        <Sparkles size={16} style={{ color: creationMode === "magic" ? accentColor : undefined }} /> {t("createSubSite.tabMagic")}
                                     </button>
                                     <button
                                         onClick={() => setCreationMode("manual")}
                                         className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-[14px] text-xs font-black uppercase tracking-widest transition-all ${creationMode === "manual" ? "bg-white/[0.05] text-white" : "text-white/30 hover:text-white/60"}`}
                                     >
-                                        <Plus size={16} /> Manual
+                                        <Plus size={16} /> {t("createSubSite.tabManual")}
                                     </button>
                                 </div>
 
                                 {creationMode === "magic" ? (
                                     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
                                         <div className="space-y-4 text-center">
-                                            <h4 className="text-2xl md:text-3xl font-black text-white leading-tight tracking-tighter">Cloná cualquier sitio.</h4>
-                                            <p className="text-sm text-white/50 leading-relaxed max-w-sm mx-auto">Nuestra IA analizará la URL y reconstruirá su contenido principal en un formato bento perfecto.</p>
+                                            <h4 className="text-2xl md:text-3xl font-black text-white leading-tight tracking-tighter">{t("createSubSite.magicHeading")}</h4>
+                                            <p className="text-sm text-white/50 leading-relaxed max-w-sm mx-auto">{t("createSubSite.magicDescription")}</p>
                                         </div>
 
                                         <div className="space-y-4 bg-black/20 p-6 rounded-[2rem] border border-white/5 backdrop-blur-md">
@@ -164,7 +166,7 @@ export function CreateSubSiteModal({
                                                 <Globe className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 transition-colors group-focus-within:text-[var(--accent)]" size={20} style={{ color: aiUrl ? accentColor : undefined }} />
                                                 <input
                                                     type="text"
-                                                    placeholder="ej: https://stripe.com"
+                                                    placeholder={t("createSubSite.urlPlaceholder")}
                                                     value={aiUrl}
                                                     onChange={(e) => setAiUrl(e.target.value)}
                                                     className="w-full bg-black/60 border border-white/10 rounded-[1.5rem] pl-16 pr-6 py-5 text-base font-mono focus:border-[var(--accent)]/40 outline-none transition-all placeholder:text-white/20 text-white"
@@ -197,7 +199,7 @@ export function CreateSubSiteModal({
                                                             exit={{ opacity: 0 }}
                                                             className="flex items-center gap-2 absolute"
                                                         >
-                                                            Transformar URL <ArrowRight size={18} />
+                                                            {t("createSubSite.transformUrl")} <ArrowRight size={18} />
                                                         </motion.div>
                                                     )}
                                                 </AnimatePresence>
@@ -207,28 +209,28 @@ export function CreateSubSiteModal({
                                 ) : (
                                     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
                                         <div className="space-y-4 text-center">
-                                            <h4 className="text-2xl md:text-3xl font-black text-white leading-tight tracking-tighter">Empezá de cero.</h4>
-                                            <p className="text-sm text-white/50 leading-relaxed max-w-sm mx-auto">Creá un sub-site vacío y personalizalo a tu gusto asignándole bloques desde el editor.</p>
+                                            <h4 className="text-2xl md:text-3xl font-black text-white leading-tight tracking-tighter">{t("createSubSite.manualHeading")}</h4>
+                                            <p className="text-sm text-white/50 leading-relaxed max-w-sm mx-auto">{t("createSubSite.manualDescription")}</p>
                                         </div>
 
                                         <div className="space-y-6 bg-black/20 p-6 rounded-[2rem] border border-white/5 backdrop-blur-md">
                                             <div className="space-y-2">
-                                                <label className="text-[10px] uppercase tracking-widest font-black text-white/30 ml-2">Visible Como</label>
+                                                <label className="text-[10px] uppercase tracking-widest font-black text-white/30 ml-2">{t("createSubSite.labelVisibleAs")}</label>
                                                 <input
                                                     type="text"
-                                                    placeholder="Ej: Mi Portfolio..."
+                                                    placeholder={t("createSubSite.titlePlaceholder")}
                                                     value={newSubSite.title}
                                                     onChange={(e) => setNewSubSite({ ...newSubSite, title: e.target.value })}
                                                     className="w-full bg-black/60 border border-white/10 rounded-[1.5rem] px-6 py-5 text-base font-bold focus:border-[var(--accent)]/50 outline-none transition-all placeholder:text-white/20"
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-[10px] uppercase tracking-widest font-black text-white/30 ml-2">Ruta URL (Slug)</label>
+                                                <label className="text-[10px] uppercase tracking-widest font-black text-white/30 ml-2">{t("createSubSite.labelUrlPath")}</label>
                                                 <div className="flex items-center gap-2 bg-black/60 border border-white/10 rounded-[1.5rem] px-5 focus-within:border-[var(--accent)]/50 transition-all font-mono">
                                                     <span className="text-xs text-white/30 shrink-0">/{username}/</span>
                                                     <input
                                                         type="text"
-                                                        placeholder="ruta-url"
+                                                        placeholder={t("createSubSite.slugPlaceholder")}
                                                         value={newSubSite.slug}
                                                         onChange={(e) => setNewSubSite({ ...newSubSite, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })}
                                                         className="flex-1 w-full bg-transparent py-5 text-base outline-none text-white font-bold"
@@ -241,7 +243,7 @@ export function CreateSubSiteModal({
                                                 disabled={!newSubSite.title || !newSubSite.slug || loading}
                                                 className="w-full h-16 rounded-[1.2rem] bg-white text-black font-black uppercase tracking-[0.2em] hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-30 flex items-center justify-center gap-3 text-sm"
                                             >
-                                                {loading ? <Loader2 className="animate-spin" /> : <>Crear Página Manual <Plus size={20} /></>}
+                                                {loading ? <Loader2 className="animate-spin" /> : <>{t("createSubSite.createManualButton")} <Plus size={20} /></>}
                                             </button>
                                         </div>
                                     </div>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Sparkles, Loader2, Check, X, RotateCcw, PenTool, Zap, MessageSquare } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 interface Props {
     text: string;
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export function AIRewriteButton({ text, onSelect, accentColor }: Props) {
+    const t = useTranslations("dashboard");
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [variations, setVariations] = useState<{ professional: string; fun: string; short: string } | null>(null);
@@ -30,7 +32,7 @@ export function AIRewriteButton({ text, onSelect, accentColor }: Props) {
             });
             
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Algo falló");
+            if (!res.ok) throw new Error(data.error || t("aiRewrite.genericError"));
             
             setVariations(data.variations);
             setCredits(data.remainingCredits);
@@ -49,7 +51,7 @@ export function AIRewriteButton({ text, onSelect, accentColor }: Props) {
                 onClick={handleRewrite}
                 disabled={isLoading || !text}
                 className={`p-2 rounded-lg transition-all hover:scale-110 active:scale-90 ${isLoading ? 'opacity-50' : 'hover:bg-white/10 group'}`}
-                title="Mejorame esto con IA"
+                title={t("aiRewrite.buttonTitle")}
             >
                 {isLoading ? (
                     <Loader2 size={16} className="animate-spin text-white/40" />
@@ -82,29 +84,29 @@ export function AIRewriteButton({ text, onSelect, accentColor }: Props) {
                                 </div>
                                 {credits !== null && (
                                     <div className="text-[9px] font-mono text-white/30 uppercase bg-white/5 px-2 py-1 rounded-md">
-                                        {credits} créditos
+                                        {t("aiRewrite.credits", { credits })}
                                     </div>
                                 )}
                             </div>
 
                             <div className="p-2 space-y-1">
-                                <VariationItem 
-                                    label="Profesional" 
-                                    text={variations.professional} 
+                                <VariationItem
+                                    label={t("aiRewrite.professional")}
+                                    text={variations.professional}
                                     icon={<PenTool size={12} />}
                                     onSelect={(t: string) => { onSelect(t); setIsOpen(false); }}
                                     accentColor={accentColor}
                                 />
-                                <VariationItem 
-                                    label="Divertido" 
-                                    text={variations.fun} 
+                                <VariationItem
+                                    label={t("aiRewrite.fun")}
+                                    text={variations.fun}
                                     icon={<Zap size={12} />}
                                     onSelect={(t: string) => { onSelect(t); setIsOpen(false); }}
                                     accentColor={accentColor}
                                 />
-                                <VariationItem 
-                                    label="Corto" 
-                                    text={variations.short} 
+                                <VariationItem
+                                    label={t("aiRewrite.short")}
+                                    text={variations.short}
                                     icon={<MessageSquare size={12} />}
                                     onSelect={(t: string) => { onSelect(t); setIsOpen(false); }}
                                     accentColor={accentColor}
@@ -116,13 +118,13 @@ export function AIRewriteButton({ text, onSelect, accentColor }: Props) {
                                     onClick={() => setIsOpen(false)}
                                     className="text-[10px] font-bold text-white/20 hover:text-white transition-colors uppercase tracking-widest"
                                 >
-                                    Cerrar
+                                    {t("aiRewrite.close")}
                                 </button>
                                 <button
                                     onClick={handleRewrite}
                                     className="flex items-center gap-1.5 text-[10px] font-black text-white/40 hover:text-white transition-colors uppercase tracking-widest"
                                 >
-                                    <RotateCcw size={10} /> Regenerar
+                                    <RotateCcw size={10} /> {t("aiRewrite.regenerate")}
                                 </button>
                             </div>
                         </motion.div>

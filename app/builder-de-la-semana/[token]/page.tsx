@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { InterviewForm } from "@/components/builder-interview/InterviewForm";
 import { ThankYouScreen } from "@/components/builder-interview/ThankYouScreen";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
+import LocaleToggle from "@/components/LocaleToggle";
 
 type PageState =
   | { type: "loading" }
@@ -16,6 +18,7 @@ type PageState =
   | { type: "error"; message: string };
 
 export default function BuilderInterviewPage() {
+  const t = useTranslations("bdls");
   const { token } = useParams<{ token: string }>();
   const [state, setState] = useState<PageState>({ type: "loading" });
 
@@ -36,14 +39,14 @@ export default function BuilderInterviewPage() {
           setState({ type: "already_submitted" });
         } else {
           const data = await res.json();
-          setState({ type: "error", message: data.error || "Algo salió mal." });
+          setState({ type: "error", message: data.error || t("page.genericError") });
         }
       } catch {
-        setState({ type: "error", message: "Error de conexión." });
+        setState({ type: "error", message: t("page.connectionError") });
       }
     }
     load();
-  }, [token]);
+  }, [token, t]);
 
   return (
     <div className="min-h-screen bg-[#050505] text-white font-display flex flex-col">
@@ -52,9 +55,12 @@ export default function BuilderInterviewPage() {
         <Link href="/" className="text-lg font-black tracking-tighter">
           HUEV<span className="text-[#C8FF00]">SITE</span>.IO
         </Link>
-        <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-600">
-          Builder de la Semana
-        </span>
+        <div className="flex items-center gap-4">
+          <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-600">
+            {t("page.headerLabel")}
+          </span>
+          <LocaleToggle />
+        </div>
       </header>
 
       {/* Content */}
@@ -62,7 +68,7 @@ export default function BuilderInterviewPage() {
         {state.type === "loading" && (
           <div className="text-center">
             <Loader2 className="w-8 h-8 animate-spin text-[#C8FF00] mx-auto mb-4" />
-            <p className="text-zinc-500 text-sm">Cargando...</p>
+            <p className="text-zinc-500 text-sm">{t("page.loading")}</p>
           </div>
         )}
 
@@ -91,9 +97,9 @@ export default function BuilderInterviewPage() {
         {state.type === "expired" && (
           <div className="text-center max-w-md">
             <div className="text-4xl mb-4">⏰</div>
-            <h1 className="text-2xl font-extrabold text-white mb-3">Link expirado</h1>
+            <h1 className="text-2xl font-extrabold text-white mb-3">{t("page.expiredTitle")}</h1>
             <p className="text-zinc-500">
-              Este link ya no es válido. Si creés que es un error, contactá a Tomas.
+              {t("page.expiredBody")}
             </p>
           </div>
         )}
@@ -101,9 +107,9 @@ export default function BuilderInterviewPage() {
         {state.type === "already_submitted" && (
           <div className="text-center max-w-md">
             <div className="text-4xl mb-4">✅</div>
-            <h1 className="text-2xl font-extrabold text-white mb-3">Ya respondiste</h1>
+            <h1 className="text-2xl font-extrabold text-white mb-3">{t("page.alreadySubmittedTitle")}</h1>
             <p className="text-zinc-500">
-              Tu entrevista ya fue enviada. Estamos procesando tu contenido.
+              {t("page.alreadySubmittedBody")}
             </p>
           </div>
         )}
@@ -111,7 +117,7 @@ export default function BuilderInterviewPage() {
         {state.type === "error" && (
           <div className="text-center max-w-md">
             <div className="text-4xl mb-4">😕</div>
-            <h1 className="text-2xl font-extrabold text-white mb-3">Algo salió mal</h1>
+            <h1 className="text-2xl font-extrabold text-white mb-3">{t("page.errorTitle")}</h1>
             <p className="text-zinc-500">{state.message}</p>
           </div>
         )}

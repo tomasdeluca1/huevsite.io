@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertCircle, CheckCircle2, Copy, Globe, Loader2, ShieldCheck } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface DomainGuide {
   normalized: string;
@@ -46,6 +47,7 @@ export function DomainConnectionCard({
   onSave,
   onVerify,
 }: Props) {
+  const t = useTranslations("dashboard");
   const [mounted, setMounted] = useState(false);
   const [visibleNotification, setVisibleNotification] = useState<VerificationResult | null>(null);
   const hasInput = domainGuide.normalized.length > 0;
@@ -56,21 +58,21 @@ export function DomainConnectionCard({
 
   const setupCards = [
     {
-      label: "Tipo",
+      label: t("domainCard.setupTypeLabel"),
       value: domainGuide.targetType,
-      help: "Tipo de registro que tenés que crear.",
+      help: t("domainCard.setupTypeHelp"),
       copyable: false,
     },
     {
-      label: "Host",
+      label: t("domainCard.setupHostLabel"),
       value: domainGuide.host,
-      help: "Campo host o name en tu proveedor DNS.",
+      help: t("domainCard.setupHostHelp"),
       copyable: true,
     },
     {
-      label: "Apunta a",
+      label: t("domainCard.setupTargetLabel"),
       value: domainGuide.targetValue,
-      help: "Destino al que debe apuntar el registro.",
+      help: t("domainCard.setupTargetHelp"),
       copyable: true,
     },
   ];
@@ -171,10 +173,10 @@ export function DomainConnectionCard({
                   </div>
                   <div className="min-w-0">
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">
-                      {visibleNotification.isValid ? "Success" : "Warning"}
+                      {visibleNotification.isValid ? t("domainCard.toastSuccessLabel") : t("domainCard.toastWarningLabel")}
                     </p>
                     <p className="mt-1 text-base font-[900] tracking-tight text-white">
-                      {visibleNotification.isValid ? "Dominio verificado" : "Chequeo pendiente"}
+                      {visibleNotification.isValid ? t("domainCard.toastSuccessTitle") : t("domainCard.toastWarningTitle")}
                     </p>
                     <p className="mt-1 text-sm leading-relaxed text-white/78">{visibleNotification.message}</p>
                   </div>
@@ -191,23 +193,23 @@ export function DomainConnectionCard({
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--accent)]">
               <ShieldCheck size={12} />
-              Dominio custom
+              {t("domainCard.badgeCustomDomain")}
             </div>
             <div>
-              <h3 className="text-2xl md:text-3xl font-[950] tracking-tighter text-white">Conectá tu dominio con un flujo claro.</h3>
-              <p className="mt-2 max-w-2xl text-sm md:text-[15px] text-white/50 leading-relaxed">Guardalo, copiá el DNS correcto y corré el check cuando propague.</p>
+              <h3 className="text-2xl md:text-3xl font-[950] tracking-tighter text-white">{t("domainCard.headerTitle")}</h3>
+              <p className="mt-2 max-w-2xl text-sm md:text-[15px] text-white/50 leading-relaxed">{t("domainCard.headerSubtitle")}</p>
             </div>
           </div>
           <div className="hidden md:flex items-center gap-2 rounded-full border border-white/10 bg-black/20 px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-white/45">
             <span className={`inline-flex h-2.5 w-2.5 rounded-full ${domainGuide.isSubdomain ? "bg-sky-400" : "bg-emerald-400"}`} />
-            {domainGuide.isSubdomain ? "Subdominio" : "Dominio raiz"}
+            {domainGuide.isSubdomain ? t("domainCard.subdomainLabel") : t("domainCard.rootDomainLabelNoAccent")}
           </div>
         </div>
       </div>
 
       <div className="space-y-5 md:space-y-6">
         <div className="flex items-center gap-3 overflow-x-auto pb-1">
-          {["Dominio", "DNS", "Check"].map((step, index) => (
+          {[t("domainCard.stepDomain"), t("domainCard.stepDns"), t("domainCard.stepCheck")].map((step, index) => (
             <div key={step} className="flex items-center gap-3 shrink-0">
               <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-2">
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/[0.06] text-[10px] font-black text-white/70">
@@ -223,9 +225,9 @@ export function DomainConnectionCard({
         <div className="rounded-[1.9rem] border border-white/8 bg-black/20 p-5 md:p-6 space-y-5">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--accent)]">Dominio</p>
-              <h4 className="mt-2 text-xl md:text-2xl font-[950] tracking-tight text-white">Elegí el host exacto que querés usar.</h4>
-              <p className="mt-2 text-sm text-white/50 leading-relaxed">Nosotros lo registramos automáticamente. Vos sólo configurás el DNS.</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--accent)]">{t("domainCard.domainEyebrow")}</p>
+              <h4 className="mt-2 text-xl md:text-2xl font-[950] tracking-tight text-white">{t("domainCard.domainCardTitle")}</h4>
+              <p className="mt-2 text-sm text-white/50 leading-relaxed">{t("domainCard.domainCardSubtitle")}</p>
             </div>
             <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] ${
               isSavedMatch
@@ -235,7 +237,7 @@ export function DomainConnectionCard({
                   : "border-white/10 bg-white/[0.03] text-white/40"
             }`}>
               {isSavedMatch ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
-              {isSavedMatch ? "Coincide con el guardado" : hasSavedDomain ? "Distinto al guardado" : "Sin guardar"}
+              {isSavedMatch ? t("domainCard.savedMatch") : hasSavedDomain ? t("domainCard.savedDifferent") : t("domainCard.savedNone")}
             </div>
           </div>
 
@@ -244,7 +246,7 @@ export function DomainConnectionCard({
             <input
               value={domain}
               onChange={(e) => onDomainChange(e.target.value)}
-              placeholder="midominio.com"
+              placeholder={t("domainCard.inputPlaceholder")}
               className="w-full bg-white/[0.03] border border-white/10 rounded-[1.5rem] pl-14 pr-5 py-5 text-lg md:text-xl font-bold focus:outline-none focus:border-[var(--accent)] transition-all"
             />
           </div>
@@ -254,27 +256,27 @@ export function DomainConnectionCard({
               onClick={onSave}
               className="w-full py-4 rounded-[1.25rem] bg-[var(--accent)] text-black font-black uppercase tracking-widest shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all text-xs md:text-sm"
             >
-              Guardar y registrar dominio
+              {t("domainCard.saveButton")}
             </button>
             <div className="flex items-center justify-center px-4 rounded-[1.25rem] border border-white/10 bg-white/[0.03] text-[10px] font-black uppercase tracking-[0.2em] text-white/45 md:col-span-2">
-              {hasSavedDomain ? "Listo para verificar" : "Guardalo primero"}
+              {hasSavedDomain ? t("domainCard.readyToVerify") : t("domainCard.saveFirst")}
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] gap-3">
             <div className="rounded-[1.4rem] border border-white/8 bg-white/[0.02] p-4 space-y-2">
-              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">Dominio a guardar</p>
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">{t("domainCard.domainToSaveLabel")}</p>
               <code className="block break-all text-sm md:text-base font-mono text-white">
-                {domainGuide.normalized || "tudominio.com"}
+                {domainGuide.normalized || t("domainCard.domainPlaceholderValue")}
               </code>
               <p className="text-xs text-white/40 leading-relaxed">
-                Este valor tiene que coincidir exactamente con el host que querés abrir en el navegador.
+                {t("domainCard.domainToSaveHelp")}
               </p>
             </div>
             <div className="rounded-[1.4rem] border border-white/8 bg-white/[0.02] p-4 space-y-2">
-              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">Modo</p>
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">{t("domainCard.modeLabel")}</p>
               <p className="text-sm font-semibold text-white">
-                {domainGuide.isSubdomain ? "Subdominio" : "Dominio raíz"}
+                {domainGuide.isSubdomain ? t("domainCard.subdomainLabel") : t("domainCard.rootDomainLabel")}
               </p>
               <p className="text-xs text-white/40 leading-relaxed">{domainGuide.recommendation}</p>
             </div>
@@ -284,8 +286,8 @@ export function DomainConnectionCard({
         <div className="rounded-[1.85rem] border border-white/8 bg-white/[0.02] p-5 md:p-6 space-y-4">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--accent)]">DNS</p>
-              <h5 className="mt-2 text-lg font-[900] tracking-tight text-white">Creá este registro en tu proveedor.</h5>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--accent)]">{t("domainCard.dnsEyebrow")}</p>
+              <h5 className="mt-2 text-lg font-[900] tracking-tight text-white">{t("domainCard.dnsTitle")}</h5>
             </div>
             <div className="px-3 py-1.5 rounded-full border border-white/10 bg-black/20 text-[10px] font-black uppercase tracking-widest text-white/45">
               {domainGuide.targetType}
@@ -326,14 +328,14 @@ export function DomainConnectionCard({
 
           <div className="text-xs text-white/45 leading-relaxed">
             {domainGuide.isSubdomain
-              ? <>En subdominios usá el host exacto. Ej: <code className="font-mono">huevsite</code>, no <code className="font-mono">@</code>.</>
-              : <>Si querés sumar <code className="font-mono">www</code>, agregá un <code className="font-mono">CNAME</code> a <code className="font-mono">cname.vercel-dns.com</code>.</>}
+              ? <>{t("domainCard.subdomainHintPrefix")}<code className="font-mono">huevsite</code>{t("domainCard.subdomainHintMiddle")}<code className="font-mono">@</code>{t("domainCard.subdomainHintSuffix")}</>
+              : <>{t("domainCard.rootHintPrefix")}<code className="font-mono">www</code>{t("domainCard.rootHintMiddle1")}<code className="font-mono">CNAME</code>{t("domainCard.rootHintMiddle2")}<code className="font-mono">cname.vercel-dns.com</code>{t("domainCard.rootHintSuffix")}</>}
           </div>
 
           {/* Proactive TXT notice */}
           {!verificationResult?.needsTxtVerification && (
             <div className="text-[11px] text-white/30 leading-relaxed mt-3 border-t border-white/5 pt-3">
-              💡 Si tu dominio ya está conectado a otra cuenta de Vercel, vas a necesitar un registro TXT adicional para verificar ownership. Hacé click en <strong className="text-white/50">Verificar</strong> después de configurar el DNS y te mostramos los detalles.
+              💡 {t("domainCard.txtNoticePrefix")}<strong className="text-white/50">{t("domainCard.txtNoticeBold")}</strong>{t("domainCard.txtNoticeSuffix")}
             </div>
           )}
         </div>
@@ -341,10 +343,10 @@ export function DomainConnectionCard({
         {verificationResult?.needsTxtVerification && verificationResult.txtRecord && (
           <div className="rounded-[1.85rem] border border-amber-500/20 bg-amber-500/5 p-5 md:p-6 space-y-4">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">Verificación de ownership</p>
-              <h5 className="mt-2 text-lg font-[900] tracking-tight text-white">Tu dominio está en otra cuenta de Vercel.</h5>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">{t("domainCard.ownershipEyebrow")}</p>
+              <h5 className="mt-2 text-lg font-[900] tracking-tight text-white">{t("domainCard.ownershipTitle")}</h5>
               <p className="mt-2 text-sm text-white/50 leading-relaxed">
-                Para reclamar el ownership, agregá este registro TXT en tu proveedor DNS y luego corré el check nuevamente.
+                {t("domainCard.ownershipDescription")}
               </p>
             </div>
 
@@ -353,7 +355,7 @@ export function DomainConnectionCard({
                 onClick={() => copy(verificationResult.txtRecord!.host)}
                 className="rounded-[1.4rem] border border-white/8 bg-black/20 p-4 text-left hover:bg-white/[0.04] transition-all"
               >
-                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">Tipo / Host</p>
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">{t("domainCard.txtTypeHostLabel")}</p>
                 <div className="mt-2 flex items-start justify-between gap-3">
                   <div>
                     <code className="block text-xs font-mono text-amber-300 mb-1">TXT</code>
@@ -366,7 +368,7 @@ export function DomainConnectionCard({
                 onClick={() => copy(verificationResult.txtRecord!.value)}
                 className="rounded-[1.4rem] border border-white/8 bg-black/20 p-4 text-left hover:bg-white/[0.04] transition-all"
               >
-                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">Valor</p>
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">{t("domainCard.txtValueLabel")}</p>
                 <div className="mt-2 flex items-start justify-between gap-3">
                   <code className="block break-all text-sm md:text-base font-mono text-white">{verificationResult.txtRecord.value}</code>
                   <Copy size={14} className="text-white/30 shrink-0" />
@@ -375,7 +377,7 @@ export function DomainConnectionCard({
             </div>
 
             <p className="text-xs text-white/40 leading-relaxed">
-              Una vez que el registro TXT propague (puede tardar unos minutos), volvé a correr el check.
+              {t("domainCard.txtPropagationNote")}
             </p>
           </div>
         )}
@@ -383,9 +385,9 @@ export function DomainConnectionCard({
         <div className="rounded-[1.85rem] border border-white/8 bg-black/20 p-5 md:p-6 space-y-4">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--accent)]">Estado</p>
-              <h5 className="mt-2 text-lg font-[900] tracking-tight text-white">Cuando termines el DNS, corré el check.</h5>
-              <p className="mt-2 text-sm text-white/50 leading-relaxed">Si da OK y todavía no abre, normalmente falta SSL.</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--accent)]">{t("domainCard.statusEyebrow")}</p>
+              <h5 className="mt-2 text-lg font-[900] tracking-tight text-white">{t("domainCard.statusTitle")}</h5>
+              <p className="mt-2 text-sm text-white/50 leading-relaxed">{t("domainCard.statusSubtitle")}</p>
             </div>
             {verificationResult ? (
               <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-widest ${
@@ -394,24 +396,24 @@ export function DomainConnectionCard({
                   : "bg-amber-500/10 border border-amber-500/20 text-amber-200"
               }`}>
                 {verificationResult.isValid ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
-                {verificationResult.isValid ? "DNS detectado" : "Pendiente"}
+                {verificationResult.isValid ? t("domainCard.statusDnsDetected") : t("domainCard.statusPending")}
               </div>
             ) : null}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="rounded-[1.25rem] border border-white/8 bg-white/[0.02] p-4">
-              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">Dominio guardado</p>
-              <code className="mt-2 block break-all text-sm font-mono text-white">{currentDomain || "Todavia no guardaste ninguno"}</code>
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">{t("domainCard.savedDomainLabel")}</p>
+              <code className="mt-2 block break-all text-sm font-mono text-white">{currentDomain || t("domainCard.savedDomainNone")}</code>
             </div>
             <div className="rounded-[1.25rem] border border-white/8 bg-white/[0.02] p-4">
-              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">Siguiente paso</p>
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">{t("domainCard.nextStepLabel")}</p>
               <p className="mt-2 text-sm text-white/60 leading-relaxed">
                 {verificationResult?.needsTxtVerification
-                  ? "Agregá el registro TXT de arriba en tu DNS y corré el check de nuevo."
+                  ? t("domainCard.nextStepTxt")
                   : hasSavedDomain
-                    ? "Corré el check. Si da OK y no abre, esperá un poco más por SSL."
-                    : "Guardá el dominio y después configurá el DNS."}
+                    ? t("domainCard.nextStepCheck")
+                    : t("domainCard.nextStepSave")}
               </p>
             </div>
           </div>
@@ -424,17 +426,17 @@ export function DomainConnectionCard({
             {verifying ? (
               <span className="inline-flex items-center gap-2">
                 <Loader2 size={14} className="animate-spin" />
-                Verificando
+                {t("domainCard.verifying")}
               </span>
             ) : (
-              "Check status"
+              t("domainCard.checkStatus")
             )}
           </button>
         </div>
 
         {!hasInput && (
           <div className="rounded-[1.25rem] border border-white/8 bg-white/[0.02] p-4 text-xs text-white/45 leading-relaxed">
-            Tip: si escribís un subdominio como <code className="font-mono">app.tudominio.com</code>, la guía cambia sola y te muestra el host exacto que tenés que crear.
+            {t("domainCard.tipPrefix")}<code className="font-mono">app.tudominio.com</code>{t("domainCard.tipSuffix")}
           </div>
         )}
       </div>

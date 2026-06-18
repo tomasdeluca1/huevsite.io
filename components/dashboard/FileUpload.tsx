@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { Upload, X, Loader2, FileText, AlertTriangle } from "lucide-react";
 import { uploadAsset } from "@/lib/upload-asset";
@@ -18,8 +19,9 @@ export function FileUpload({
   onChange, 
   label, 
   folder = "general", 
-  accept = "application/pdf,image/*,video/*" 
+  accept = "application/pdf,image/*,video/*"
 }: Props) {
+  const t = useTranslations("dashboard");
   const supabase = createClient();
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +39,7 @@ export function FileUpload({
       onChange(publicUrl);
     } catch (err: any) {
       console.error("Error uploading file:", err);
-      setError(err?.message || "No se pudo subir el archivo.");
+      setError(err?.message || t("fileUpload.uploadError"));
     } finally {
       setIsUploading(false);
       // Permite reintentar el MISMO archivo
@@ -77,14 +79,14 @@ export function FileUpload({
                <button
                  onClick={() => window.open(value, "_blank")}
                  className="p-2 rounded-xl bg-black/40 text-white hover:scale-110 active:scale-95 transition-all shadow-lg"
-                 title="Ver archivo"
+                 title={t("fileUpload.viewFile")}
                >
-                 Abrir
+                 {t("fileUpload.open")}
                </button>
                <button
                  onClick={removeFile}
                  className="p-2 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white active:scale-95 transition-all shadow-lg"
-                 title="Eliminar archivo"
+                 title={t("fileUpload.removeFile")}
                >
                  <X size={18} />
                </button>
@@ -100,7 +102,7 @@ export function FileUpload({
             {isUploading ? (
               <div className="flex flex-col items-center gap-2">
                 <Loader2 className="animate-spin text-[var(--accent)]" size={32} />
-                <span className="text-[10px] font-mono text-[var(--accent)] uppercase animate-pulse">subiendo...</span>
+                <span className="text-[10px] font-mono text-[var(--accent)] uppercase animate-pulse">{t("fileUpload.uploading")}</span>
               </div>
             ) : (
               <>
@@ -108,11 +110,11 @@ export function FileUpload({
                   <Upload size={28} className="text-[var(--text-muted)] group-hover:text-white" />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm font-bold tracking-tight">Seleccionar archivo</p>
+                  <p className="text-sm font-bold tracking-tight">{t("fileUpload.choose")}</p>
                   <p className="text-[9px] font-mono text-[var(--text-muted)] uppercase tracking-widest mt-1">
-                    {accept.includes('pdf') ? 'PDF' : ''} 
-                    {accept.includes('image') ? 'Imagen' : ''} 
-                    {accept.includes('video') ? 'Video' : ''} hasta 5MB
+                    {accept.includes('pdf') ? 'PDF' : ''}
+                    {accept.includes('image') ? t("fileUpload.typeImage") : ''}
+                    {accept.includes('video') ? t("fileUpload.typeVideo") : ''} {t("fileUpload.maxSize")}
                   </p>
                 </div>
               </>

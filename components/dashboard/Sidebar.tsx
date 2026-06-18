@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Trophy, Settings, ArrowLeft, Copy, Check, Globe, Activity,
@@ -12,6 +13,7 @@ import { ProfileData, BlockType, PRESET_BORDER_RADIUS } from "@/lib/profile-type
 import { ColorPicker } from "./ColorPicker";
 import { BlockSelector } from "./BlockSelector";
 import { QuestPanel } from "./QuestPanel";
+import LocaleToggle from "@/components/LocaleToggle";
 
 interface SidebarProps {
   profile: ProfileData;
@@ -76,7 +78,8 @@ export function DashboardSidebar({
   onShareProfile,
   visibleBlockCount
 }: SidebarProps) {
-  
+  const t = useTranslations("dashboard");
+
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
   const currentSubSite = profile.subSites.find(s => s.id === selectedSubSiteId);
 
@@ -86,14 +89,14 @@ export function DashboardSidebar({
   };
 
   const tabs = [
-    { id: 'board', label: 'Editor', icon: LayoutIcon },
-    { id: 'insights', label: 'Estadísticas', icon: Activity },
-    { id: 'subsites', label: 'Sub-sites', icon: Compass },
-    { id: 'domain', label: 'Dominio', icon: Globe },
-    { id: 'transfer', label: 'Transferir', icon: ArrowUpRight },
+    { id: 'board', label: t("sidebar.tabEditor"), icon: LayoutIcon },
+    { id: 'insights', label: t("sidebar.tabInsights"), icon: Activity },
+    { id: 'subsites', label: t("sidebar.tabSubsites"), icon: Compass },
+    { id: 'domain', label: t("sidebar.tabDomain"), icon: Globe },
+    { id: 'transfer', label: t("sidebar.tabTransfer"), icon: ArrowUpRight },
   ];
 
-  const currentBoardTitle = selectedSubSiteId ? currentSubSite?.title : "Perfil Principal";
+  const currentBoardTitle = selectedSubSiteId ? currentSubSite?.title : t("sidebar.mainProfile");
   const currentBoardSlug = selectedSubSiteId ? `/${profile.username}/${currentSubSite?.slug}` : `/${profile.username}`;
   const currentBoardAvatar = selectedSubSiteId ? currentSubSite?.avatarUrl : profile.avatarUrl;
   const isPro = profile.hasProAccess === true;
@@ -134,7 +137,7 @@ export function DashboardSidebar({
           {/* Board Switcher Popover */}
           <div className="relative mb-6">
              <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] px-2 mb-2 block">
-               {isPro ? "Board Activo" : "Tu Perfil"}
+               {isPro ? t("sidebar.activeBoard") : t("sidebar.yourProfile")}
              </span>
              <div
                className={`w-full group p-3 rounded-2xl bg-white/[0.03] border border-white/5 transition-all flex items-center gap-3 text-left relative ${isPro ? "hover:border-white/20 hover:bg-white/[0.05]" : ""}`}
@@ -188,7 +191,7 @@ export function DashboardSidebar({
                              )}
                            </div>
                            <div className="flex-1 min-w-0">
-                             <p className="text-[11px] font-black">{profile.displayName || 'Perfil Principal'}</p>
+                             <p className="text-[11px] font-black">{profile.displayName || t("sidebar.mainProfile")}</p>
                              <p className="text-[9px] font-mono opacity-40">/{profile.username}</p>
                            </div>
                            {!selectedSubSiteId && <Check size={12} className="text-[var(--accent)]" />}
@@ -220,7 +223,7 @@ export function DashboardSidebar({
                             onClick={() => { openModal(setIsCreateSubSiteOpen); setIsSwitcherOpen(false); }}
                             className="w-full mt-2 p-3 rounded-xl border border-dashed border-white/10 hover:border-[var(--accent)]/30 transition-all flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[var(--accent)]"
                           >
-                            <PlusCircle size={14} /> Crear Nuevo Sub-site
+                            <PlusCircle size={14} /> {t("sidebar.createNewSubsite")}
                           </button>
                         )}
                       </div>
@@ -243,16 +246,19 @@ export function DashboardSidebar({
               <Share2 size={16} />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-black text-white">Compartir mi huevsite</div>
-              <div className="text-[10px] font-mono text-white/40 truncate">Link, QR y redes para difundir tu board</div>
+              <div className="text-sm font-black text-white">{t("sidebar.shareCtaTitle")}</div>
+              <div className="text-[10px] font-mono text-white/40 truncate">{t("sidebar.shareCtaSubtitle")}</div>
             </div>
             <ChevronRight size={14} className="text-white/30 group-hover:translate-x-0.5 transition-transform" />
           </button>
 
           {/* Main Actions Section */}
           <div className="space-y-3">
-            <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] pl-1 mb-2">Editor</div>
-            
+            <div className="flex items-center justify-between pl-1 mb-2">
+              <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">{t("sidebar.editorSectionLabel")}</div>
+              <LocaleToggle />
+            </div>
+
             <ColorPicker
               value={profile.accentColor}
               onChange={handleColorChange}
@@ -262,7 +268,7 @@ export function DashboardSidebar({
             {/* Border Radius Selector — Pro only */}
             <div className={`p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06] relative ${!isPro ? 'opacity-50 pointer-events-none' : ''}`}>
               <div className="flex items-center justify-between mb-2.5">
-                <div className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Redondeo</div>
+                <div className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">{t("sidebar.borderRadiusLabel")}</div>
                 {!isPro && (
                   <button
                     onClick={() => openModal(setIsUpgradeModalOpen)}
@@ -316,7 +322,7 @@ export function DashboardSidebar({
             
             <div className="flex justify-between items-start mb-4 relative z-10">
               <div>
-                <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] block mb-1">Impacto Builder</span>
+                <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] block mb-1">{t("sidebar.builderImpact")}</span>
                 <div className="flex items-baseline gap-1">
                   <span className="text-3xl font-[950] text-white tracking-tighter">{profile.builderScore || 0}</span>
                   <span className="text-xs font-bold text-[var(--accent)]">pts</span>
@@ -336,7 +342,7 @@ export function DashboardSidebar({
             </div>
 
             <p className="text-[10px] text-white/40 leading-relaxed italic line-clamp-2">
-              {(profile.builderScore || 0) < 100 ? "Validá tu perfil para aparecer en el ranking." : "¡Vas por buen camino! Agregá más proyectos."}
+              {(profile.builderScore || 0) < 100 ? t("sidebar.scoreHintLow") : t("sidebar.scoreHintHigh")}
             </p>
           </motion.div>
 
@@ -362,8 +368,8 @@ export function DashboardSidebar({
                 <Sparkles size={14} />
               </div>
               <div>
-                <span className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] block">Créditos IA</span>
-                <span className="text-xs font-bold text-white/60">{profile.aiCredits ?? 0} disponibles</span>
+                <span className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] block">{t("sidebar.aiCredits")}</span>
+                <span className="text-xs font-bold text-white/60">{t("sidebar.aiCreditsAvailable", { n: profile.aiCredits ?? 0 })}</span>
               </div>
             </div>
             {!isPro && (
@@ -378,17 +384,17 @@ export function DashboardSidebar({
 
           {/* Navigation Links */}
           <div className="space-y-1">
-            <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] pl-1 mb-3">Comunidad</div>
-            <SidebarLink href="/feed" icon={<Activity size={18} />} label="Feed Global" />
-            <SidebarLink href="/explore" icon={<Compass size={18} />} label="Explorar Builders" />
-            <SidebarLink href="/leaderboard" icon={<Medal size={18} />} label="Ranking" />
-            <SidebarLink href="/showcase" icon={<Sparkles size={18} />} label="Showcase" />
-            <SidebarLink href="/testimonio" icon={<MessageSquare size={18} />} label="Dejá tu testimonio" />
+            <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] pl-1 mb-3">{t("sidebar.communitySection")}</div>
+            <SidebarLink href="/feed" icon={<Activity size={18} />} label={t("sidebar.navFeed")} />
+            <SidebarLink href="/explore" icon={<Compass size={18} />} label={t("sidebar.navExplore")} />
+            <SidebarLink href="/leaderboard" icon={<Medal size={18} />} label={t("sidebar.navLeaderboard")} />
+            <SidebarLink href="/showcase" icon={<Sparkles size={18} />} label={t("sidebar.navShowcase")} />
+            <SidebarLink href="/testimonio" icon={<MessageSquare size={18} />} label={t("sidebar.navTestimonial")} />
           </div>
 
           {/* Settings & Tools */}
           <div className="space-y-1 pb-4">
-            <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] pl-1 mb-3">Plataforma</div>
+            <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] pl-1 mb-3">{t("sidebar.platformSection")}</div>
             
             <button 
               onClick={() => openModal(setIsProfileModalOpen)}
@@ -398,7 +404,7 @@ export function DashboardSidebar({
                 <div className="p-2 rounded-lg bg-white/5 text-white/40">
                   <User size={18} />
                 </div>
-                <span className="text-sm font-bold text-white/70">Editar {selectedSubSiteId ? 'Sub-site' : 'Perfil'}</span>
+                <span className="text-sm font-bold text-white/70">{selectedSubSiteId ? t("sidebar.editSubsite") : t("sidebar.editProfile")}</span>
               </div>
             </button>
 
@@ -407,7 +413,7 @@ export function DashboardSidebar({
                 <div className={`p-2 rounded-lg ${autoSaveEnabled ? 'bg-blue-500/10 text-blue-400' : 'bg-white/5 text-white/40'}`}>
                   <Save size={18} />
                 </div>
-                <span className="text-sm font-bold text-white/70">Auto-Guardado</span>
+                <span className="text-sm font-bold text-white/70">{t("sidebar.autoSave")}</span>
               </div>
               <button
                 onClick={toggleAutoSave}
@@ -423,16 +429,16 @@ export function DashboardSidebar({
                   <Mail size={18} />
                 </div>
                 <div className="flex-1 text-left">
-                  <div className="text-sm font-bold text-white/70">Newsletter de Tomás</div>
+                  <div className="text-sm font-bold text-white/70">{t("sidebar.newsletterTitle")}</div>
                   <div className="text-[10px] font-mono text-white/25">
-                    {newsletterSubscribed ? "Suscripto" : "SEO + huevsite + creatibro"}
+                    {newsletterSubscribed ? t("sidebar.newsletterSubscribed") : t("sidebar.newsletterPitch")}
                   </div>
                 </div>
               </div>
               <button
                 onClick={toggleNewsletter}
                 className={`w-10 h-5 rounded-full relative transition-all duration-300 shrink-0 ${newsletterSubscribed ? 'bg-[var(--accent)]' : 'bg-white/10'}`}
-                aria-label={newsletterSubscribed ? "Darse de baja del newsletter" : "Suscribirse al newsletter"}
+                aria-label={newsletterSubscribed ? t("sidebar.newsletterUnsubscribeAria") : t("sidebar.newsletterSubscribeAria")}
               >
                 <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all duration-300 ${newsletterSubscribed ? 'right-1' : 'left-1'}`} />
               </button>
@@ -445,7 +451,7 @@ export function DashboardSidebar({
               <div className="p-2 rounded-lg bg-white/5">
                 <MessageSquare size={18} />
               </div>
-              <span className="text-sm font-bold">Feedback</span>
+              <span className="text-sm font-bold">{t("sidebar.feedback")}</span>
             </button>
 
             <button
@@ -456,9 +462,9 @@ export function DashboardSidebar({
                 <Link2 size={18} />
               </div>
               <div className="flex-1 text-left">
-                <div className="text-sm font-bold">Refactorizar con Linktree</div>
+                <div className="text-sm font-bold">{t("sidebar.linktreeRefactorTitle")}</div>
                 <div className="text-[10px] font-mono text-white/25">
-                  Rehace el board por 1 cr&#233;dito IA
+                  {t("sidebar.linktreeRefactorSubtitle")}
                 </div>
               </div>
             </button>
@@ -470,7 +476,7 @@ export function DashboardSidebar({
               <div className="rounded-lg bg-red-500/10 p-2 text-red-400">
                 <Trash2 size={18} />
               </div>
-              <span className="text-sm font-bold">Eliminar cuenta</span>
+              <span className="text-sm font-bold">{t("sidebar.deleteAccount")}</span>
             </button>
           </div>
         </div>
@@ -482,7 +488,7 @@ export function DashboardSidebar({
             className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-red-500/5 hover:bg-red-500/10 text-red-500/70 hover:text-red-500 transition-all text-xs font-black uppercase tracking-widest border border-red-500/10"
           >
             <LogOut size={16} />
-            Salir de la cuenta
+            {t("sidebar.logout")}
           </button>
         </div>
       </aside>

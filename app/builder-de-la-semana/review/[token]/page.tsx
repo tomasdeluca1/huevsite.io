@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
+import LocaleToggle from "@/components/LocaleToggle";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
@@ -67,6 +69,7 @@ type PageState =
   | { type: "error"; message: string };
 
 export default function BuilderReviewPage() {
+  const t = useTranslations("bdls");
   const { token } = useParams<{ token: string }>();
   const [state, setState] = useState<PageState>({ type: "loading" });
 
@@ -122,16 +125,14 @@ export default function BuilderReviewPage() {
     if (!ALLOWED_VIDEO_MIME.includes(file.type)) {
       setVideoUpload({
         type: "error",
-        message:
-          "Este formato no nos sirve. Grabá desde la cámara del celular y probá de nuevo.",
+        message: t("review.video.errorBadFormat"),
       });
       return;
     }
     if (file.size > MAX_VIDEO_BYTES) {
       setVideoUpload({
         type: "error",
-        message:
-          "El video es muy pesado. Probá grabando con menos calidad o recortando un poco.",
+        message: t("review.video.errorTooLarge"),
       });
       return;
     }
@@ -154,7 +155,7 @@ export default function BuilderReviewPage() {
 
       if (!urlRes.ok) {
         const j = await urlRes.json().catch(() => ({}));
-        throw new Error(j.error ?? "No pudimos preparar el upload.");
+        throw new Error(j.error ?? t("review.video.errorPrepareUpload"));
       }
 
       const { path, signedUrl } = await urlRes.json();
@@ -172,9 +173,9 @@ export default function BuilderReviewPage() {
         };
         xhr.onload = () => {
           if (xhr.status >= 200 && xhr.status < 300) resolve();
-          else reject(new Error(`Upload falló: ${xhr.status}`));
+          else reject(new Error(t("review.video.errorUploadFailed", { status: xhr.status })));
         };
-        xhr.onerror = () => reject(new Error("Error de red durante el upload."));
+        xhr.onerror = () => reject(new Error(t("review.video.errorNetwork")));
         xhr.send(file);
       });
 
@@ -194,20 +195,20 @@ export default function BuilderReviewPage() {
 
       if (!completeRes.ok) {
         const j = await completeRes.json().catch(() => ({}));
-        throw new Error(j.error ?? "No se pudo guardar el video.");
+        throw new Error(j.error ?? t("review.video.errorSaveFailed"));
       }
 
       setVideoUpload({ type: "idle" });
       setVideoPlaybackUrl(null);
       await refreshInterview();
     } catch (e) {
-      const message = e instanceof Error ? e.message : "Error desconocido.";
+      const message = e instanceof Error ? e.message : t("review.video.errorUnknown");
       setVideoUpload({ type: "error", message });
     }
   };
 
   const deleteVideo = async () => {
-    if (!confirm("¿Seguro que querés borrar el video?")) return;
+    if (!confirm(t("review.video.deleteConfirm"))) return;
     setDeletingVideo(true);
     try {
       const res = await fetch(`/api/builder-interview/${token}/video`, {
@@ -217,7 +218,7 @@ export default function BuilderReviewPage() {
         const j = await res.json().catch(() => ({}));
         setVideoUpload({
           type: "error",
-          message: j.error ?? "No pudimos borrar el video.",
+          message: j.error ?? t("review.video.errorDeleteFailed"),
         });
         return;
       }
@@ -245,18 +246,18 @@ export default function BuilderReviewPage() {
         if (!res.ok) {
           setState({
             type: "error",
-            message: json.error ?? "Algo salió mal.",
+            message: json.error ?? t("review.genericError"),
           });
           return;
         }
         setState({ type: "ready", data: json });
         if (json.previousFeedback) setFeedback(json.previousFeedback);
       } catch {
-        setState({ type: "error", message: "Error de conexión." });
+        setState({ type: "error", message: t("review.connectionError") });
       }
     }
     load();
-  }, [token]);
+  }, [token, t]);
 
   // Load signed playback URL whenever a video exists and we don't have one yet
   useEffect(() => {
@@ -287,13 +288,13 @@ export default function BuilderReviewPage() {
       if (!res.ok) {
         setResult({
           type: "error",
-          message: json.error ?? "No pudimos guardar tu respuesta.",
+          message: json.error ?? t("review.errorSaveAnswer"),
         });
         return;
       }
       setResult({ type: approved ? "approved" : "feedback_sent" });
     } catch {
-      setResult({ type: "error", message: "Error de conexión." });
+      setResult({ type: "error", message: t("review.connectionError") });
     } finally {
       setSubmitting(false);
     }
@@ -306,25 +307,28 @@ export default function BuilderReviewPage() {
         <Link href="/" className="text-lg font-black tracking-tighter">
           HUEV<span className="text-[#C8FF00]">SITE</span>.IO
         </Link>
-        <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-600">
-          Revisión · Builder de la Semana
-        </span>
+        <div className="flex items-center gap-4">
+          <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-600">
+            {t("review.headerLabel")}
+          </span>
+          <LocaleToggle />
+        </div>
       </header>
 
       <main className="flex-1 px-6 py-16 md:py-20 max-w-3xl mx-auto w-full">
         {state.type === "loading" && (
           <div className="text-center py-32">
             <Loader2 className="w-8 h-8 animate-spin text-[#C8FF00] mx-auto mb-4" />
-            <p className="text-zinc-500 text-sm font-mono">Cargando tu contenido...</p>
+            <p className="text-zinc-500 text-sm font-mono">{t("review.loading")}</p>
           </div>
         )}
 
         {state.type === "not_found" && (
           <div className="text-center py-32">
             <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-4" />
-            <h1 className="text-2xl font-extrabold mb-2">Link inválido</h1>
+            <h1 className="text-2xl font-extrabold mb-2">{t("review.notFoundTitle")}</h1>
             <p className="text-zinc-500 text-sm">
-              No encontramos ninguna entrevista con este link.
+              {t("review.notFoundBody")}
             </p>
           </div>
         )}
@@ -332,12 +336,12 @@ export default function BuilderReviewPage() {
         {state.type === "not_ready" && (
           <div className="text-center py-32">
             <Loader2 className="w-8 h-8 text-[#C8FF00] mx-auto mb-4" />
-            <h1 className="text-2xl font-extrabold mb-2">Todavía no está listo</h1>
+            <h1 className="text-2xl font-extrabold mb-2">{t("review.notReadyTitle")}</h1>
             <p className="text-zinc-500 text-sm max-w-md mx-auto">
-              Estamos generando tu contenido. Volvé a abrir este link en unos minutos.
+              {t("review.notReadyBody")}
               {state.status !== "unknown" && (
                 <span className="block mt-2 font-mono text-xs text-zinc-700">
-                  (status: {state.status})
+                  {t("review.statusLabel", { status: state.status })}
                 </span>
               )}
             </p>
@@ -347,7 +351,7 @@ export default function BuilderReviewPage() {
         {state.type === "error" && (
           <div className="text-center py-32">
             <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-4" />
-            <h1 className="text-2xl font-extrabold mb-2">Algo salió mal</h1>
+            <h1 className="text-2xl font-extrabold mb-2">{t("review.errorTitle")}</h1>
             <p className="text-zinc-500 text-sm">{state.message}</p>
           </div>
         )}
@@ -357,22 +361,22 @@ export default function BuilderReviewPage() {
             {/* Intro */}
             <div className="mb-12 md:mb-16">
               <div className="text-[10px] font-mono text-[#C8FF00] uppercase tracking-widest mb-3">
-                // revisá y aprobá
+                {t("review.introEyebrow")}
               </div>
               <h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-[0.95] mb-4">
-                Hola, {state.data.builderName.split(" ")[0]}.
+                {t("review.greeting", { name: state.data.builderName.split(" ")[0] })}
               </h1>
               <p className="text-zinc-400 text-base md:text-lg max-w-xl leading-relaxed">
-                Esto es lo que generamos con tus respuestas. Leelo con calma y decinos si
-                está bien para publicar o si querés cambiar algo.
+                {t("review.introBody")}
               </p>
               {state.data.approvedAt && (
                 <div className="mt-6 inline-flex items-center gap-2 text-xs font-mono text-green-400 bg-green-500/10 border border-green-500/30 rounded-full px-4 py-2">
                   <CheckCircle2 size={14} />
-                  Aprobado el{" "}
-                  {new Date(state.data.approvedAt).toLocaleDateString("es-AR", {
-                    day: "2-digit",
-                    month: "long",
+                  {t("review.approvedOn", {
+                    date: new Date(state.data.approvedAt).toLocaleDateString("es-AR", {
+                      day: "2-digit",
+                      month: "long",
+                    }),
                   })}
                 </div>
               )}
@@ -382,7 +386,7 @@ export default function BuilderReviewPage() {
             <div className="space-y-16">
               {/* Blog */}
               {state.data.content.blogMarkdown && (
-                <Section icon={<FileText size={16} />} label="Blog post">
+                <Section icon={<FileText size={16} />} label={t("review.sections.blog")}>
                   <div className="prose prose-invert prose-sm md:prose-base max-w-none prose-headings:font-black prose-headings:tracking-tight prose-p:text-zinc-300 prose-p:leading-relaxed prose-a:text-[#C8FF00] prose-strong:text-white prose-blockquote:border-[#C8FF00] prose-blockquote:text-zinc-400 prose-code:text-[#C8FF00] prose-code:bg-white/5 prose-code:px-1 prose-code:py-0.5 prose-code:rounded">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                       {state.data.content.blogMarkdown}
@@ -393,7 +397,7 @@ export default function BuilderReviewPage() {
 
               {/* Twitter */}
               {state.data.content.twitterPost && (
-                <Section icon={<Twitter size={16} />} label="Tweet / Thread para X">
+                <Section icon={<Twitter size={16} />} label={t("review.sections.twitter")}>
                   <div className="p-6 bg-white/[0.02] border border-white/10 rounded-2xl text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap">
                     {state.data.content.twitterPost}
                   </div>
@@ -402,7 +406,7 @@ export default function BuilderReviewPage() {
 
               {/* LinkedIn */}
               {state.data.content.linkedinPost && (
-                <Section icon={<Linkedin size={16} />} label="Post para LinkedIn">
+                <Section icon={<Linkedin size={16} />} label={t("review.sections.linkedin")}>
                   <div className="p-6 bg-white/[0.02] border border-white/10 rounded-2xl text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap">
                     {state.data.content.linkedinPost}
                   </div>
@@ -411,7 +415,7 @@ export default function BuilderReviewPage() {
 
               {/* Instagram caption */}
               {state.data.content.instagramCaption && (
-                <Section icon={<Instagram size={16} />} label="Caption de Instagram">
+                <Section icon={<Instagram size={16} />} label={t("review.sections.instagramCaption")}>
                   <div className="p-6 bg-white/[0.02] border border-white/10 rounded-2xl text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap">
                     {state.data.content.instagramCaption}
                   </div>
@@ -422,13 +426,13 @@ export default function BuilderReviewPage() {
               {state.data.content.instagramCarouselPrompt && (
                 <Section
                   icon={<LayoutGrid size={16} />}
-                  label="Brief carrusel de Instagram"
+                  label={t("review.sections.instagramCarousel")}
                 >
                   <div className="p-6 bg-white/[0.02] border border-white/10 rounded-2xl text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap">
                     {state.data.content.instagramCarouselPrompt}
                   </div>
                   <p className="mt-2 text-[11px] text-zinc-500 font-mono">
-                    Esto es lo que le pasamos a la herramienta que arma el carrusel visual.
+                    {t("review.sections.instagramCarouselHint")}
                   </p>
                 </Section>
               )}
@@ -437,13 +441,13 @@ export default function BuilderReviewPage() {
               {state.data.content.instagramStoryPrompt && (
                 <Section
                   icon={<Sparkles size={16} />}
-                  label="Brief story de Instagram"
+                  label={t("review.sections.instagramStory")}
                 >
                   <div className="p-6 bg-white/[0.02] border border-white/10 rounded-2xl text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap">
                     {state.data.content.instagramStoryPrompt}
                   </div>
                   <p className="mt-2 text-[11px] text-zinc-500 font-mono">
-                    Brief para una story de IG que refleja tu perfil.
+                    {t("review.sections.instagramStoryHint")}
                   </p>
                 </Section>
               )}
@@ -452,21 +456,23 @@ export default function BuilderReviewPage() {
             {/* Story video */}
             <div className="mt-20 pt-12 border-t border-white/10">
               <div className="text-[10px] font-mono text-[#C8FF00] uppercase tracking-widest mb-3">
-                // tu historia en video
+                {t("review.video.eyebrow")}
               </div>
               <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-3">
-                Subí tu video
+                {t("review.video.title")}
               </h2>
               <p className="text-zinc-400 text-sm md:text-base max-w-xl leading-relaxed mb-8">
-                Grabá con{" "}
-                <Link
-                  href="/builder-de-la-semana/guia"
-                  target="_blank"
-                  className="text-[#C8FF00] underline underline-offset-4 hover:opacity-80"
-                >
-                  la guía de 10 preguntas
-                </Link>
-                {" "}y subilo acá. Cámara vertical, un solo video con todas tus respuestas. 1 a 3 minutos está perfecto. Lo usamos para tus stories en las redes de huevsite.
+                {t.rich("review.video.body", {
+                  guide: (chunks) => (
+                    <Link
+                      href="/builder-de-la-semana/guia"
+                      target="_blank"
+                      className="text-[#C8FF00] underline underline-offset-4 hover:opacity-80"
+                    >
+                      {chunks}
+                    </Link>
+                  ),
+                })}
               </p>
 
               {/* Existing video player */}
@@ -491,16 +497,19 @@ export default function BuilderReviewPage() {
                   <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-xs font-mono text-zinc-500">
                     {state.data.video.sizeBytes && (
                       <span>
-                        {Math.round(state.data.video.sizeBytes / 1024 / 1024)} MB
+                        {t("review.video.sizeMb", {
+                          mb: Math.round(state.data.video.sizeBytes / 1024 / 1024),
+                        })}
                       </span>
                     )}
                     {state.data.video.uploadedAt && (
                       <span>
-                        subido{" "}
-                        {new Date(state.data.video.uploadedAt).toLocaleDateString(
-                          "es-AR",
-                          { day: "2-digit", month: "short" }
-                        )}
+                        {t("review.video.uploadedOn", {
+                          date: new Date(state.data.video.uploadedAt).toLocaleDateString(
+                            "es-AR",
+                            { day: "2-digit", month: "short" }
+                          ),
+                        })}
                       </span>
                     )}
                     <button
@@ -513,7 +522,7 @@ export default function BuilderReviewPage() {
                       ) : (
                         <Trash2 size={12} />
                       )}
-                      Borrar
+                      {t("review.video.delete")}
                     </button>
                   </div>
                 </div>
@@ -533,10 +542,10 @@ export default function BuilderReviewPage() {
                     <>
                       <Upload className="w-6 h-6 mx-auto mb-3 text-[#C8FF00]" />
                       <div className="text-sm font-bold text-white mb-1">
-                        {state.data.video ? "Reemplazar video" : "Elegir video"}
+                        {state.data.video ? t("review.video.replace") : t("review.video.choose")}
                       </div>
                       <div className="text-[11px] font-mono text-zinc-500">
-                        Grabado del celular, directo. No hace falta editarlo.
+                        {t("review.video.chooseHint")}
                       </div>
                     </>
                   )}
@@ -544,7 +553,7 @@ export default function BuilderReviewPage() {
                     <>
                       <Video className="w-6 h-6 mx-auto mb-3 text-[#C8FF00] animate-pulse" />
                       <div className="text-sm font-bold text-white mb-3">
-                        Subiendo video...
+                        {t("review.video.uploading")}
                       </div>
                       <div className="w-full max-w-xs mx-auto h-1.5 rounded-full bg-white/10 overflow-hidden">
                         <div
@@ -561,13 +570,13 @@ export default function BuilderReviewPage() {
                     <>
                       <AlertCircle className="w-6 h-6 mx-auto mb-3 text-red-400" />
                       <div className="text-sm font-bold text-red-300 mb-1">
-                        Error al subir
+                        {t("review.video.uploadErrorTitle")}
                       </div>
                       <div className="text-[11px] font-mono text-red-300/70 mb-3">
                         {videoUpload.message}
                       </div>
                       <div className="text-xs text-white/70">
-                        Click para intentar de nuevo
+                        {t("review.video.retry")}
                       </div>
                     </>
                   )}
@@ -591,20 +600,20 @@ export default function BuilderReviewPage() {
             {/* Review actions */}
             <div className="mt-20 pt-12 border-t border-white/10">
               <div className="text-[10px] font-mono text-[#C8FF00] uppercase tracking-widest mb-3">
-                // tu respuesta
+                {t("review.actions.eyebrow")}
               </div>
               <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-6">
-                ¿Está todo bien así?
+                {t("review.actions.title")}
               </h2>
 
               {result?.type === "approved" && (
                 <div className="p-6 rounded-2xl bg-green-500/10 border border-green-500/30 text-green-300 mb-8">
                   <div className="flex items-center gap-2 font-bold mb-1">
                     <CheckCircle2 size={18} />
-                    Aprobado
+                    {t("review.actions.approvedTitle")}
                   </div>
                   <p className="text-sm text-green-300/80">
-                    Listo. Lo publicamos nosotros y te avisamos cuando esté en vivo. Gracias por tu tiempo 🧉
+                    {t("review.actions.approvedBody")}
                   </p>
                 </div>
               )}
@@ -613,10 +622,10 @@ export default function BuilderReviewPage() {
                 <div className="p-6 rounded-2xl bg-[#C8FF00]/10 border border-[#C8FF00]/30 text-[#C8FF00] mb-8">
                   <div className="flex items-center gap-2 font-bold mb-1">
                     <MessageSquare size={18} />
-                    Feedback enviado
+                    {t("review.actions.feedbackSentTitle")}
                   </div>
                   <p className="text-sm opacity-80">
-                    Recibimos tus comentarios. Los vamos a revisar y te volvemos a pasar el contenido actualizado.
+                    {t("review.actions.feedbackSentBody")}
                   </p>
                 </div>
               )}
@@ -625,7 +634,7 @@ export default function BuilderReviewPage() {
                 <div className="p-6 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-300 mb-8">
                   <div className="flex items-center gap-2 font-bold mb-1">
                     <AlertCircle size={18} />
-                    Error
+                    {t("review.actions.errorTitle")}
                   </div>
                   <p className="text-sm text-red-300/80">{result.message}</p>
                 </div>
@@ -634,17 +643,17 @@ export default function BuilderReviewPage() {
               {!result && (
                 <>
                   <label className="block text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-3">
-                    Comentarios (opcional si aprobás, requerido si pedís cambios)
+                    {t("review.actions.feedbackLabel")}
                   </label>
                   <textarea
                     value={feedback}
                     onChange={(e) => setFeedback(e.target.value)}
                     rows={6}
-                    placeholder="Ej: En el tweet falta mencionar bondi.azanello.com. El blog está buenísimo. En LinkedIn cambiaría 'todoterreno' por 'generalista'..."
+                    placeholder={t("review.actions.feedbackPlaceholder")}
                     className="w-full p-4 bg-white/[0.02] border border-white/10 rounded-2xl text-sm text-white leading-relaxed resize-y focus:outline-none focus:border-[#C8FF00]/50 transition-colors"
                   />
                   <p className="mt-2 text-[10px] font-mono text-zinc-600">
-                    {feedback.length} caracteres
+                    {t("review.actions.charCount", { count: feedback.length })}
                   </p>
 
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-8">
@@ -658,7 +667,7 @@ export default function BuilderReviewPage() {
                       ) : (
                         <Check size={16} />
                       )}
-                      Está todo bien, publicá
+                      {t("review.actions.approveButton")}
                     </button>
                     <button
                       onClick={() => submitReview(false)}
@@ -666,12 +675,12 @@ export default function BuilderReviewPage() {
                       className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                     >
                       <MessageSquare size={16} />
-                      Pedir cambios
+                      {t("review.actions.requestChangesButton")}
                     </button>
                   </div>
                   {feedback.trim().length === 0 && (
                     <p className="mt-3 text-[10px] font-mono text-zinc-600 text-center sm:text-left">
-                      Si querés pedir cambios, escribí primero qué cambiar.
+                      {t("review.actions.requestChangesHint")}
                     </p>
                   )}
                 </>

@@ -1,16 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { type OnboardingState, type AccentColor } from "@/lib/onboarding-types";
-
-const COLORS: { value: AccentColor; name: string; vibe: string }[] = [
-  { value: "#C8FF00", name: "Acid Green", vibe: "El clásico huevsite" },
-  { value: "#4D9FFF", name: "Electric Blue", vibe: "Para los devs cripto" },
-  { value: "#A855F7", name: "Crypto Purple", vibe: "web3 vibes" },
-  { value: "#FF7A00", name: "Startup Orange", vibe: "Y Combinator wannabe" },
-  { value: "#FF3B3B", name: "Debug Red", vibe: "Producción cayó" },
-  { value: "#00C853", name: "Matrix Green", vibe: "Soy el que faja código" },
-];
 
 interface StepAccentProps {
   state: OnboardingState;
@@ -19,17 +11,29 @@ interface StepAccentProps {
 }
 
 export function StepAccent({ state, onChange, onNext }: StepAccentProps) {
+  const t = useTranslations("onboarding");
   const accent = state.accentColor;
-  const previewName = state.linktreeData?.displayName || state.githubData?.name || "Tu Nombre";
+  const previewName = state.linktreeData?.displayName || state.githubData?.name || t("accentPreviewName");
+
+  const COLORS: { value: AccentColor; name: string; vibe: string }[] = [
+    { value: "#C8FF00", name: t("accentColor1Name"), vibe: t("accentColor1Vibe") },
+    { value: "#4D9FFF", name: t("accentColor2Name"), vibe: t("accentColor2Vibe") },
+    { value: "#A855F7", name: t("accentColor3Name"), vibe: t("accentColor3Vibe") },
+    { value: "#FF7A00", name: t("accentColor4Name"), vibe: t("accentColor4Vibe") },
+    { value: "#FF3B3B", name: t("accentColor5Name"), vibe: t("accentColor5Vibe") },
+    { value: "#00C853", name: t("accentColor6Name"), vibe: t("accentColor6Vibe") },
+  ];
+
+  const previewTags = [t("accentTag1"), t("accentTag2"), t("accentTag3")];
 
   return (
     <div className="onboard-ui !max-w-xl !p-10">
       <div className="mb-10">
-        <div className="section-label mb-2" style={{ color: accent }}>// paso 03</div>
+        <div className="section-label mb-2" style={{ color: accent }}>{t("step3Label")}</div>
         <h1 className="ou-q !text-4xl">
-          Elegí tu <span style={{ color: accent }}>color de guerra</span>
+          {t("accentTitlePrefix")} <span style={{ color: accent }}>{t("accentTitleHighlight")}</span>
         </h1>
-        <p className="ou-sub !text-base">Define la identidad visual de tu huevsite. Podés cambiarlo mil veces después.</p>
+        <p className="ou-sub !text-base">{t("accentSubtitle")}</p>
       </div>
 
       {/* Live preview card */}
@@ -47,13 +51,13 @@ export function StepAccent({ state, onChange, onNext }: StepAccentProps) {
           <div>
             <div className="text-xl font-bold">{previewName}</div>
             <div className="font-mono text-sm tracking-tight" style={{ color: accent }}>
-              // vibe: {COLORS.find((c) => c.value === accent)?.name}
+              {t("accentVibePrefix", { name: COLORS.find((c) => c.value === accent)?.name ?? "" })}
             </div>
           </div>
         </div>
 
         <div className="flex gap-2 flex-wrap mt-8">
-          {["Currently building", "GitHub activity", "Stacked"].map((label) => (
+          {previewTags.map((label) => (
             <span
               key={label}
               className="text-[10px] font-mono px-3 py-1.5 rounded-full border transition-all duration-500"
@@ -88,7 +92,7 @@ export function StepAccent({ state, onChange, onNext }: StepAccentProps) {
         className="ou-next !py-5 !text-lg !text-black"
         style={{ background: accent, boxShadow: `0 0 40px ${accent}20` }}
       >
-        Con este color, seguimos →
+        {t("accentContinue")}
       </button>
     </div>
   );

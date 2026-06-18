@@ -9,6 +9,7 @@ import { ImageUpload } from "@/components/dashboard/ImageUpload";
 import { FileUpload } from "@/components/dashboard/FileUpload";
 import { SOCIAL_PLATFORMS, SocialPlatformKey, buildSocialUrl, getUrlPreview } from "@/lib/social-platforms";
 import { AIRewriteButton } from "@/components/dashboard/AIRewriteButton";
+import { useTranslations } from "next-intl";
 
 interface Props {
   block: BlockData;
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor = "#C8FF00" }: Props) {
+  const t = useTranslations("dashboard");
   const [formData, setFormData] = useState<any>(block);
   const [mounted, setMounted] = useState(false);
   const [githubResults, setGithubResults] = useState<any[]>([]);
@@ -89,10 +91,10 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
       if (data?.stats) {
         handleChange("stats", data.stats);
       } else {
-        setGithubRefreshError(data?.error || "No pudimos traer GitHub ahora.");
+        setGithubRefreshError(data?.error || t("blockEditor.github.fetchError"));
       }
     } catch {
-      setGithubRefreshError("No pudimos traer GitHub ahora.");
+      setGithubRefreshError(t("blockEditor.github.fetchError"));
     } finally {
       setRefreshingGithub(false);
     }
@@ -147,28 +149,28 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
           <div className="space-y-6">
             <div className="space-y-1">
               <ImageUpload
-                label="Foto de Perfil"
+                label={t("blockEditor.hero.avatarLabel")}
                 value={formData.avatarUrl}
                 onChange={(url) => handleChange("avatarUrl", url)}
                 folder="avatars"
               />
               <p className="text-[10px] text-[var(--text-muted)] font-mono text-center">
-                Proporción recomendada: 1:1 (cuadrada)
+                {t("blockEditor.hero.avatarHint")}
               </p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <div className="section-label !text-[9px] px-1">// nombre</div>
+                <div className="section-label !text-[9px] px-1">{t("blockEditor.hero.nameLabel")}</div>
                 <input
                   value={formData.name || ""}
                   onChange={(e) => handleChange("name", e.target.value)}
                   className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-bold"
-                  placeholder="Tu nombre real"
+                  placeholder={t("blockEditor.hero.namePlaceholder")}
                 />
               </div>
                <div className="space-y-2">
                 <div className="flex items-center justify-between section-label !text-[9px] px-1">
-                  <span>// rol / tagline corto</span>
+                  <span>{t("blockEditor.hero.taglineLabel")}</span>
                   <AIRewriteButton 
                     text={formData.tagline || ""} 
                     onSelect={(val) => handleChange("tagline", val)} 
@@ -179,13 +181,13 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                   value={formData.tagline || ""}
                   onChange={(e) => handleChange("tagline", e.target.value)}
                   className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all"
-                  placeholder="builder"
+                  placeholder={t("blockEditor.hero.taglinePlaceholder")}
                 />
               </div>
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between section-label !text-[9px] px-1">
-                <span>// descripción (bio)</span>
+                <span>{t("blockEditor.hero.bioLabel")}</span>
                 <AIRewriteButton 
                   text={formData.description || ""} 
                   onSelect={(val) => handleChange("description", val)} 
@@ -196,26 +198,26 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                 value={formData.description || ""}
                 onChange={(e) => handleChange("description", e.target.value)}
                 className="w-full p-4 h-24 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all resize-none leading-relaxed"
-                placeholder="Buildeo productos desde BA..."
+                placeholder={t("blockEditor.hero.bioPlaceholder")}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <div className="section-label !text-[9px] px-1">// status</div>
+                <div className="section-label !text-[9px] px-1">{t("blockEditor.hero.statusLabel")}</div>
                 <input
                   value={formData.status || ""}
                   onChange={(e) => handleChange("status", e.target.value)}
                   className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all"
-                  placeholder="disponible para proyectos"
+                  placeholder={t("blockEditor.hero.statusPlaceholder")}
                 />
               </div>
               <div className="space-y-2">
-                <div className="section-label !text-[9px] px-1">// ubicación</div>
+                <div className="section-label !text-[9px] px-1">{t("blockEditor.hero.locationLabel")}</div>
                 <input
                   value={formData.location || ""}
                   onChange={(e) => handleChange("location", e.target.value)}
                   className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all"
-                  placeholder="Buenos Aires 🇦🇷"
+                  placeholder={t("blockEditor.hero.locationPlaceholder")}
                 />
               </div>
             </div>
@@ -227,7 +229,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
           <div className="space-y-6">
             {block.type === "project" && (
               <ImageUpload
-                label="Preview del Proyecto"
+                label={t("blockEditor.project.previewLabel")}
                 value={formData.imageUrl}
                 onChange={(url) => handleChange("imageUrl", url)}
                 folder="projects"
@@ -235,7 +237,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
             )}
             <div className="space-y-2">
               <div className="flex items-center justify-between section-label !text-[9px] px-1">
-                <span>// título</span>
+                <span>{t("blockEditor.project.titleLabel")}</span>
                 <AIRewriteButton 
                   text={formData.project || formData.title || ""} 
                   onSelect={(val) => handleChange(block.type === "building" ? "project" : "title", val)} 
@@ -250,11 +252,11 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between section-label !text-[9px] px-1">
-                <span>// descripción</span>
-                <AIRewriteButton 
-                  text={formData.description || ""} 
-                  onSelect={(val) => handleChange("description", val)} 
-                  accentColor={accentColor} 
+                <span>{t("blockEditor.project.descriptionLabel")}</span>
+                <AIRewriteButton
+                  text={formData.description || ""}
+                  onSelect={(val) => handleChange("description", val)}
+                  accentColor={accentColor}
                 />
               </div>
               <textarea
@@ -265,7 +267,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
             </div>
             {(block.type === "building" || block.type === "project") && (
               <div className="space-y-2">
-                <div className="section-label !text-[9px] px-1">// tech stack (separadas por coma)</div>
+                <div className="section-label !text-[9px] px-1">{t("blockEditor.project.stackLabel")}</div>
                 <input
                   value={Array.isArray(formData.stack) ? formData.stack.join(", ") : formData.stack || ""}
                   onChange={(e) => handleChange("stack", e.target.value)}
@@ -275,7 +277,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
               </div>
             )}
             <div className="space-y-2">
-              <div className="section-label !text-[9px] px-1">// link</div>
+              <div className="section-label !text-[9px] px-1">{t("blockEditor.project.linkLabel")}</div>
               <input
                 value={formData.link || ""}
                 onChange={(e) => handleChange("link", e.target.value)}
@@ -285,7 +287,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
             </div>
             {block.type === "project" && (
               <div className="space-y-2">
-                <div className="section-label !text-[9px] px-1">// métricas</div>
+                <div className="section-label !text-[9px] px-1">{t("blockEditor.project.metricsLabel")}</div>
                 <input
                   value={formData.metrics || ""}
                   onChange={(e) => handleChange("metrics", e.target.value)}
@@ -300,7 +302,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
         return (
           <div className="space-y-6">
             <div className="space-y-2">
-              <div className="section-label !text-[9px] px-1">// etiqueta</div>
+              <div className="section-label !text-[9px] px-1">{t("blockEditor.metric.labelLabel")}</div>
               <input
                 value={formData.label || ""}
                 onChange={(e) => handleChange("label", e.target.value)}
@@ -308,7 +310,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
               />
             </div>
             <div className="space-y-2">
-              <div className="section-label !text-[9px] px-1">// valor</div>
+              <div className="section-label !text-[9px] px-1">{t("blockEditor.metric.valueLabel")}</div>
               <input
                 value={formData.value || ""}
                 onChange={(e) => handleChange("value", e.target.value)}
@@ -321,7 +323,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
         return (
           <div className="space-y-6">
             <div className="space-y-2">
-              <div className="section-label !text-[9px] px-1">// tecnologías (separadas por coma)</div>
+              <div className="section-label !text-[9px] px-1">{t("blockEditor.stack.itemsLabel")}</div>
               <textarea
                 value={Array.isArray(formData.items) ? formData.items.join(", ") : formData.items || ""}
                 onChange={(e) => handleChange("items", e.target.value)}
@@ -330,14 +332,14 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
               />
             </div>
             <div className="text-xs text-[var(--text-muted)] font-mono">
-              Preview: {Array.isArray(formData.items) ? formData.items.join(", ") : formData.items}
+              {t("blockEditor.stack.previewLabel")} {Array.isArray(formData.items) ? formData.items.join(", ") : formData.items}
             </div>
           </div>
         );
       case "social":
         return (
           <div className="space-y-6">
-            <div className="section-label !text-[9px] px-1 translate-y-2 opacity-50">// links sociales — arrastrá para reordenar</div>
+            <div className="section-label !text-[9px] px-1 translate-y-2 opacity-50">{t("blockEditor.social.linksLabel")}</div>
             <Reorder.Group axis="y" values={formData.links || []} onReorder={(newLinks) => handleChange("links", newLinks)} className="space-y-3 pt-4">
               {(formData.links || []).map((linkObj: any, index: number) => {
                 const platform = linkObj.platform || "twitter";
@@ -413,7 +415,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                             handleChange("links", newLinks);
                           }}
                           className="w-full p-3 rounded-xl bg-black/40 border border-white/5 focus:border-[var(--accent)] outline-none transition-all font-mono text-sm"
-                          placeholder={platformConfig?.placeholder ?? "handle"}
+                          placeholder={platformConfig?.placeholder ?? t("blockEditor.social.handlePlaceholder")}
                         />
                       </div>
                     </div>
@@ -431,14 +433,14 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
               onClick={() => handleChange("links", [...(formData.links || []), { platform: "twitter", handle: "", url: "", label: "", _dragId: Math.random().toString(36).substr(2, 9) }])}
               className="w-full p-3 rounded-xl border border-dashed border-[var(--border-bright)] text-[var(--text-muted)] hover:text-white hover:border-[var(--accent)] transition-all text-sm"
             >
-              + Agregar otra red
+              {t("blockEditor.social.addLink")}
             </button>
           </div>
         );
       case "community":
         return (
           <div className="space-y-6">
-            <div className="section-label !text-[9px] px-1 translate-y-2 opacity-50">// comunidades — arrastrá para reordenar</div>
+            <div className="section-label !text-[9px] px-1 translate-y-2 opacity-50">{t("blockEditor.community.communitiesLabel")}</div>
             <Reorder.Group axis="y" values={formData.communities || []} onReorder={(newComms) => handleChange("communities", newComms)} className="space-y-3 pt-4">
               {(formData.communities || []).map((comm: any, index: number) => (
                 <Reorder.Item
@@ -453,7 +455,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                         <GripVertical size={14} />
                       </div>
                       <span className="text-[10px] font-black uppercase tracking-widest text-[var(--accent)]" style={{ color: comm.color || accentColor }}>
-                        {comm.name || `Comunidad ${index + 1}`}
+                        {comm.name || t("blockEditor.community.itemFallback", { n: index + 1 })}
                       </span>
                     </div>
                     <button
@@ -478,7 +480,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                         handleChange("communities", newComms);
                       }}
                       className="w-full p-3 rounded-xl bg-black/40 border border-white/5 focus:border-[var(--accent)] outline-none transition-all font-bold text-sm"
-                      placeholder="Nombre de la comunidad"
+                      placeholder={t("blockEditor.community.namePlaceholder")}
                     />
                     <div className="flex items-center gap-3 bg-black/20 p-1.5 px-3 rounded-xl border border-white/5">
                       <div className="w-6 h-6 rounded-full border border-white/10 overflow-hidden shrink-0 relative">
@@ -493,7 +495,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                           className="absolute -inset-2 w-10 h-10 cursor-pointer"
                         />
                       </div>
-                      <div className="text-[9px] text-[var(--text-muted)] uppercase tracking-widest font-black opacity-60">Color del badge</div>
+                      <div className="text-[9px] text-[var(--text-muted)] uppercase tracking-widest font-black opacity-60">{t("blockEditor.community.badgeColor")}</div>
                     </div>
                   </div>
 
@@ -515,14 +517,14 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
               onClick={() => handleChange("communities", [...(formData.communities || []), { name: "", color: formData.accentColor || "#C8FF00", _dragId: Math.random().toString(36).substr(2, 9) }])}
               className="w-full p-3 rounded-xl border border-dashed border-[var(--border-bright)] text-[var(--text-muted)] hover:text-white hover:border-[var(--accent)] transition-all text-sm"
             >
-              + Agregar otra comunidad
+              {t("blockEditor.community.addCommunity")}
             </button>
           </div>
         );
       case "writing":
         return (
           <div className="space-y-6">
-            <div className="section-label !text-[9px] px-1">// artículos</div>
+            <div className="section-label !text-[9px] px-1">{t("blockEditor.writing.postsLabel")}</div>
             {(formData.posts || [{ title: "", link: "", date: "" }]).map((post: any, index: number) => (
               <div key={index} className="space-y-3 p-4 bg-[var(--surface2)] rounded-xl border border-[var(--border)]">
                 <input
@@ -533,7 +535,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                     handleChange("posts", posts);
                   }}
                   className="w-full p-3 rounded-lg bg-[var(--bg)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-bold"
-                  placeholder="Título del artículo"
+                  placeholder={t("blockEditor.writing.titlePlaceholder")}
                 />
                 <input
                   value={post.link || ""}
@@ -562,7 +564,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
               onClick={() => handleChange("posts", [...(formData.posts || []), { title: "", link: "", date: "" }])}
               className="w-full p-3 rounded-xl border border-dashed border-[var(--border-bright)] text-[var(--text-muted)] hover:text-white hover:border-[var(--accent)] transition-all text-sm"
             >
-              + Agregar otro artículo
+              {t("blockEditor.writing.addPost")}
             </button>
           </div>
         );
@@ -570,11 +572,11 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
         return (
           <div className="space-y-6">
             <div className="space-y-4">
-              <div className="section-label !text-[9px] px-1">// buscar perfil de github</div>
+              <div className="section-label !text-[9px] px-1">{t("blockEditor.github.searchLabel")}</div>
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="Buscá por nombre o usuario..."
+                  placeholder={t("blockEditor.github.searchPlaceholder")}
                   className="w-full p-4 pl-12 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-medium"
                   value={githubSearch}
                   onChange={(e) => setGithubSearch(e.target.value)}
@@ -606,11 +608,11 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                           if (data?.stats) {
                             handleChange("stats", data.stats);
                           } else {
-                            setGithubRefreshError(data?.error || "No pudimos traer GitHub ahora.");
+                            setGithubRefreshError(data?.error || t("blockEditor.github.fetchError"));
                           }
                         } catch (err) {
                           console.error(err);
-                          setGithubRefreshError("No pudimos traer GitHub ahora.");
+                          setGithubRefreshError(t("blockEditor.github.fetchError"));
                         } finally {
                           setRefreshingGithub(false);
                         }
@@ -623,7 +625,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                         <div className="text-[10px] text-[var(--text-dim)] font-mono">github.com/{user.login}</div>
                       </div>
                       <div className="opacity-0 group-hover:opacity-100 text-[var(--accent)] text-[10px] font-bold uppercase tracking-widest transition-opacity">
-                        Seleccionar
+                        {t("blockEditor.github.select")}
                       </div>
                     </button>
                   ))}
@@ -636,8 +638,8 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                 <Github size={24} className="text-white" />
               </div>
               <div>
-                <div className="text-[10px] text-[var(--text-dim)] uppercase tracking-widest font-mono">Perfil seleccionado</div>
-                <div className="font-bold text-lg text-[var(--accent)] font-mono">@{formData.username || "sin-perfil"}</div>
+                <div className="text-[10px] text-[var(--text-dim)] uppercase tracking-widest font-mono">{t("blockEditor.github.selectedProfile")}</div>
+                <div className="font-bold text-lg text-[var(--accent)] font-mono">@{formData.username || t("blockEditor.github.noProfile")}</div>
               </div>
             </div>
 
@@ -657,7 +659,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
               </div>
 
               <div className="flex items-center justify-between px-1">
-                <div className="section-label !text-[9px]">// estadísticas reales</div>
+                <div className="section-label !text-[9px]">{t("blockEditor.github.realStatsLabel")}</div>
                 <button
                   type="button"
                   onClick={handleRefreshGithub}
@@ -665,7 +667,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                   className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-[var(--accent)] hover:opacity-80 transition-opacity disabled:opacity-40"
                 >
                   <RefreshCw size={12} className={refreshingGithub ? "animate-spin" : ""} />
-                  {refreshingGithub ? "Trayendo..." : "Refrescar"}
+                  {refreshingGithub ? t("blockEditor.github.refreshing") : t("blockEditor.github.refresh")}
                 </button>
               </div>
               {githubRefreshError && (
@@ -673,7 +675,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
               )}
               {formData.stats?.syncedAt && (
                 <div className="text-[9px] text-[var(--text-disabled)] font-mono px-1">
-                  Sincronizado: {new Date(formData.stats.syncedAt).toLocaleDateString()}
+                  {t("blockEditor.github.syncedAt", { date: new Date(formData.stats.syncedAt).toLocaleDateString() })}
                 </div>
               )}
               <div className="grid grid-cols-3 gap-3">
@@ -693,10 +695,10 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
 
               {formData.showAdvanced && (
                 <div className="p-5 bg-white/5 border border-white/10 rounded-2xl space-y-4">
-                  <div className="text-xs font-bold text-white mb-2">Métricas avanzadas (auto)</div>
+                  <div className="text-xs font-bold text-white mb-2">{t("blockEditor.github.advancedMetrics")}</div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <div className="text-[8px] text-[var(--text-muted)] uppercase font-mono">Commits (12 meses)</div>
+                      <div className="text-[8px] text-[var(--text-muted)] uppercase font-mono">{t("blockEditor.github.commits12mo")}</div>
                       <div className="font-black text-2xl tracking-tighter text-white">{formData.stats?.commitsThisYear ?? formData.stats?.totalCommits ?? 0}</div>
                     </div>
                     <div className="space-y-1">
@@ -720,8 +722,8 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
             <div className="p-5 bg-[var(--accent-dim)]/20 border border-[var(--accent)]/20 rounded-2xl flex gap-4 items-start">
               <div className="pt-1"><Sparkles size={16} className="text-[var(--accent)]" /></div>
               <p className="text-xs text-[var(--text-dim)] leading-relaxed">
-                Las estadísticas se traen reales desde GitHub (stars, repos, followers, heatmap y commits por mes) y se refrescan solas. Usá <span className="text-white font-medium">Refrescar</span> para forzarlo. <br />
-                <span className="text-white font-medium">Click en Guardar para persistir los cambios en tu huevsite.</span>
+                {t("blockEditor.github.infoPrefix")} <span className="text-white font-medium">{t("blockEditor.github.infoRefreshBold")}</span> {t("blockEditor.github.infoSuffix")} <br />
+                <span className="text-white font-medium">{t("blockEditor.github.infoSave")}</span>
               </p>
             </div>
           </div>
@@ -730,27 +732,27 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
         return (
           <div className="space-y-6">
             <FileUpload
-              label="Archivo de CV"
+              label={t("blockEditor.cv.fileLabel")}
               value={formData.fileUrl}
               onChange={(url) => handleChange("fileUrl", url)}
               folder="cvs"
             />
             <div className="space-y-2">
-              <div className="section-label !text-[9px] px-1">// título del botón</div>
+              <div className="section-label !text-[9px] px-1">{t("blockEditor.cv.buttonTitleLabel")}</div>
               <input
                 value={formData.title || ""}
                 onChange={(e) => handleChange("title", e.target.value)}
                 className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-bold"
-                placeholder="Descargar CV"
+                placeholder={t("blockEditor.cv.buttonTitlePlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <div className="section-label !text-[9px] px-1">// descripción (opcional)</div>
+              <div className="section-label !text-[9px] px-1">{t("blockEditor.cv.descriptionLabel")}</div>
               <textarea
                 value={formData.description || ""}
                 onChange={(e) => handleChange("description", e.target.value)}
                 className="w-full p-4 h-20 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all resize-none leading-relaxed"
-                placeholder="Frontend Engineer resumé"
+                placeholder={t("blockEditor.cv.descriptionPlaceholder")}
               />
             </div>
           </div>
@@ -759,14 +761,14 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
         return (
           <div className="space-y-6">
             <FileUpload
-              label="Archivo Media (Imagen o Video)"
+              label={t("blockEditor.media.fileLabel")}
               value={formData.url}
               onChange={(url) => handleChange("url", url)}
               folder="media"
               accept="image/*,video/*"
             />
             <div className="space-y-2">
-              <div className="section-label !text-[9px] px-1">// url (o link externo de youtube/vimeo)</div>
+              <div className="section-label !text-[9px] px-1">{t("blockEditor.media.urlLabel")}</div>
               <input
                 value={formData.url || ""}
                 onChange={(e) => handleChange("url", e.target.value)}
@@ -776,18 +778,18 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between section-label !text-[9px] px-1">
-                <span>// título (opcional)</span>
+                <span>{t("blockEditor.media.titleLabel")}</span>
                 <AIRewriteButton text={formData.title || ""} onSelect={(v) => handleChange("title", v)} accentColor={accentColor} />
               </div>
               <input
                 value={formData.title || ""}
                 onChange={(e) => handleChange("title", e.target.value)}
                 className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-bold"
-                placeholder="Demo del producto"
+                placeholder={t("blockEditor.media.titlePlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <div className="section-label !text-[9px] px-1">// link de destino (opcional)</div>
+              <div className="section-label !text-[9px] px-1">{t("blockEditor.media.linkLabel")}</div>
               <input
                 value={formData.link || ""}
                 onChange={(e) => handleChange("link", e.target.value)}
@@ -797,14 +799,14 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between section-label !text-[9px] px-1">
-                <span>// descripción (opcional)</span>
+                <span>{t("blockEditor.media.descriptionLabel")}</span>
                 <AIRewriteButton text={formData.description || ""} onSelect={(v) => handleChange("description", v)} accentColor={accentColor} />
               </div>
               <textarea
                 value={formData.description || ""}
                 onChange={(e) => handleChange("description", e.target.value)}
                 className="w-full p-4 h-24 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all resize-none leading-relaxed"
-                placeholder="Mostrando cómo funciona..."
+                placeholder={t("blockEditor.media.descriptionPlaceholder")}
               />
             </div>
           </div>
@@ -813,13 +815,13 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
         return (
           <div className="space-y-6">
             <ImageUpload
-              label="Icono / Logo de Emisor"
+              label={t("blockEditor.certification.iconLabel")}
               value={formData.icon}
               onChange={(url) => handleChange("icon", url)}
               folder="certs"
             />
             <div className="space-y-2">
-              <div className="section-label !text-[9px] px-1">// nombre de certificación</div>
+              <div className="section-label !text-[9px] px-1">{t("blockEditor.certification.nameLabel")}</div>
               <input
                 value={formData.name || ""}
                 onChange={(e) => handleChange("name", e.target.value)}
@@ -829,7 +831,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <div className="section-label !text-[9px] px-1">// emisor</div>
+                <div className="section-label !text-[9px] px-1">{t("blockEditor.certification.issuerLabel")}</div>
                 <input
                   value={formData.issuer || ""}
                   onChange={(e) => handleChange("issuer", e.target.value)}
@@ -838,7 +840,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                 />
               </div>
               <div className="space-y-2">
-                <div className="section-label !text-[9px] px-1">// fecha</div>
+                <div className="section-label !text-[9px] px-1">{t("blockEditor.certification.dateLabel")}</div>
                 <input
                   value={formData.date || ""}
                   onChange={(e) => handleChange("date", e.target.value)}
@@ -848,7 +850,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
               </div>
             </div>
             <div className="space-y-2">
-              <div className="section-label !text-[9px] px-1">// link al certificado</div>
+              <div className="section-label !text-[9px] px-1">{t("blockEditor.certification.linkLabel")}</div>
               <input
                 value={formData.link || ""}
                 onChange={(e) => handleChange("link", e.target.value)}
@@ -862,30 +864,30 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
         return (
           <div className="space-y-6">
             <div className="space-y-2">
-              <div className="section-label !text-[9px] px-1">// título</div>
+              <div className="section-label !text-[9px] px-1">{t("blockEditor.achievement.titleLabel")}</div>
               <input
                 value={formData.title || ""}
                 onChange={(e) => handleChange("title", e.target.value)}
                 className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-bold"
-                placeholder="Ganador Hackathon Vercel"
+                placeholder={t("blockEditor.achievement.titlePlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <div className="section-label !text-[9px] px-1">// descripción</div>
+              <div className="section-label !text-[9px] px-1">{t("blockEditor.achievement.descriptionLabel")}</div>
               <textarea
                 value={formData.description || ""}
                 onChange={(e) => handleChange("description", e.target.value)}
                 className="w-full p-4 h-24 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all resize-none leading-relaxed"
-                placeholder="Primer puesto entre más de 500 equipos..."
+                placeholder={t("blockEditor.achievement.descriptionPlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <div className="section-label !text-[9px] px-1">// fecha (opcional)</div>
+              <div className="section-label !text-[9px] px-1">{t("blockEditor.achievement.dateLabel")}</div>
               <input
                 value={formData.date || ""}
                 onChange={(e) => handleChange("date", e.target.value)}
                 className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all"
-                placeholder="Marzo 2026"
+                placeholder={t("blockEditor.achievement.datePlaceholder")}
               />
             </div>
           </div>
@@ -894,34 +896,34 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
         return (
           <div className="space-y-6">
             <div className="space-y-2">
-              <div className="section-label !text-[9px] px-1">// etiqueta / tag</div>
+              <div className="section-label !text-[9px] px-1">{t("blockEditor.custom.labelLabel")}</div>
               <input
                 value={formData.label || ""}
                 onChange={(e) => handleChange("label", e.target.value)}
                 className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-mono text-xs uppercase"
-                placeholder="TIPO DE CONTENIDO"
+                placeholder={t("blockEditor.custom.labelPlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <div className="section-label !text-[9px] px-1">// título</div>
+              <div className="section-label !text-[9px] px-1">{t("blockEditor.custom.titleLabel")}</div>
               <input
                 value={formData.title || ""}
                 onChange={(e) => handleChange("title", e.target.value)}
                 className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-bold text-xl"
-                placeholder="Música o Diseño 3D"
+                placeholder={t("blockEditor.custom.titlePlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <div className="section-label !text-[9px] px-1">// descripción</div>
+              <div className="section-label !text-[9px] px-1">{t("blockEditor.custom.descriptionLabel")}</div>
               <textarea
                 value={formData.description || ""}
                 onChange={(e) => handleChange("description", e.target.value)}
                 className="w-full p-4 h-24 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all resize-none leading-relaxed"
-                placeholder="Un poco de contexto sobre esto..."
+                placeholder={t("blockEditor.custom.descriptionPlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <div className="section-label !text-[9px] px-1">// link (opcional)</div>
+              <div className="section-label !text-[9px] px-1">{t("blockEditor.custom.linkLabel")}</div>
               <input
                 value={formData.link || ""}
                 onChange={(e) => handleChange("link", e.target.value)}
@@ -934,13 +936,13 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
       case "collab":
         return (
           <div className="space-y-6">
-            <div className="section-label !text-[9px] px-1 translate-y-2 opacity-50">// colaboradores — arrastrá para reordenar (pronto)</div>
+            <div className="section-label !text-[9px] px-1 translate-y-2 opacity-50">{t("blockEditor.collab.collaboratorsLabel")}</div>
             <div className="space-y-3 pt-4">
               {(formData.users || []).map((user: any, index: number) => (
                 <div key={user._dragId || index} className="space-y-3 p-4 bg-black/20 rounded-2xl border border-white/5 relative group/item">
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-[10px] font-black uppercase tracking-widest text-[var(--accent)]" style={{ color: accentColor }}>
-                      Colaborador {index + 1}
+                      {t("blockEditor.collab.itemLabel", { n: index + 1 })}
                     </span>
                     <button
                       type="button"
@@ -963,7 +965,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                         handleChange("users", newUsers);
                       }}
                       className="w-full p-3 rounded-xl bg-black/40 border border-white/5 focus:border-[var(--accent)] outline-none transition-all font-mono text-sm"
-                      placeholder="Username en Huevsite"
+                      placeholder={t("blockEditor.collab.usernamePlaceholder")}
                     />
                     <input
                       value={user.role || ""}
@@ -973,7 +975,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                         handleChange("users", newUsers);
                       }}
                       className="w-full p-3 rounded-xl bg-black/40 border border-white/5 focus:border-[var(--accent)] outline-none transition-all text-sm"
-                      placeholder="Rol (ej. Co-founder)"
+                      placeholder={t("blockEditor.collab.rolePlaceholder")}
                     />
                   </div>
                 </div>
@@ -984,7 +986,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
               onClick={() => handleChange("users", [...(formData.users || []), { username: "", role: "", _dragId: Math.random().toString(36).substr(2, 9) }])}
               className="w-full p-3 rounded-xl border border-dashed border-[var(--border-bright)] text-[var(--text-muted)] hover:text-white hover:border-[var(--accent)] transition-all text-sm"
             >
-              + Agregar colaborador
+              {t("blockEditor.collab.addCollaborator")}
             </button>
           </div>
         );
@@ -992,21 +994,21 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
         return (
           <div className="space-y-6">
             <div className="space-y-2">
-              <div className="section-label !text-[9px] px-1">// título del bloque</div>
+              <div className="section-label !text-[9px] px-1">{t("blockEditor.ecosystem.titleLabel")}</div>
               <input
                 value={formData.title || ""}
                 onChange={(e) => handleChange("title", e.target.value)}
                 className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-bold"
-                placeholder="Mi Ecosistema"
+                placeholder={t("blockEditor.ecosystem.titlePlaceholder")}
               />
             </div>
 
             <div className="p-5 bg-black/20 rounded-2xl border border-white/5 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-bold text-white">Ocultar Barra Superior</div>
+                  <div className="text-sm font-bold text-white">{t("blockEditor.ecosystem.hideHeaderTitle")}</div>
                   <p className="text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-widest mt-0.5">
-                    Remover la barra de sub-sites del header
+                    {t("blockEditor.ecosystem.hideHeaderSubtitle")}
                   </p>
                 </div>
                 <button
@@ -1021,20 +1023,20 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
               <div className="flex gap-3 items-start p-3 bg-white/5 rounded-xl border border-white/5">
                 <Globe size={14} className="text-[var(--text-dim)] mt-0.5 shrink-0" />
                 <p className="text-[10px] text-[var(--text-dim)] leading-relaxed">
-                  Si esta opción está activada, tus sub-sites solo se mostrarán dentro de este bloque en tu board, evitando que se repitan arriba.
+                  {t("blockEditor.ecosystem.hideHeaderHint")}
                  </p>
               </div>
             </div>
 
             <div className="p-4 bg-[var(--accent)]/10 rounded-xl border border-[var(--accent)]/20">
               <p className="text-[11px] text-[var(--text-dim)]">
-                <span className="text-white font-bold">Nota:</span> Este bloque mostrará automáticamente todos los sub-sites que hayas creado. No hace falta agregarlos uno por uno.
+                <span className="text-white font-bold">{t("blockEditor.ecosystem.noteLabel")}</span> {t("blockEditor.ecosystem.noteBody")}
               </p>
             </div>
           </div>
         );
       default:
-        return <div>Editor no implementado para este tipo de bloque</div>;
+        return <div>{t("blockEditor.notImplemented")}</div>;
     }
   };
 
@@ -1049,13 +1051,13 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
       <div className="space-y-6 pt-8 mt-8 border-t border-white/5">
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: accentColor }} />
-          <div className="section-label !text-[10px] tracking-[0.2em] font-black">// CONFIGURACIÓN DE LA GRILLA</div>
+          <div className="section-label !text-[10px] tracking-[0.2em] font-black">{t("blockEditor.size.gridConfig")}</div>
         </div>
 
         <div className={`grid ${isHero ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
           <div className="space-y-3">
             <label className="text-[10px] text-[var(--text-dim)] font-black uppercase tracking-widest px-1 block opacity-70">
-              Ancho del bloque
+              {t("blockEditor.size.widthLabel")}
             </label>
             <div className="relative">
               <select
@@ -1064,12 +1066,12 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                 className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none font-bold text-sm cursor-pointer hover:border-[var(--accent)] transition-all focus:ring-2 focus:ring-[var(--accent)]/20 appearance-none pr-10"
                 style={{ '--accent': accentColor } as any}
               >
-                <option value={1}>1 Columna {isHero ? '(Slim)' : '(Mini)'}</option>
-                <option value={2}>2 Columnas {isHero ? '(Completo)' : '(Estándar)'}</option>
+                <option value={1}>{isHero ? t("blockEditor.size.col1Hero") : t("blockEditor.size.col1")}</option>
+                <option value={2}>{isHero ? t("blockEditor.size.col2Hero") : t("blockEditor.size.col2")}</option>
                 {!isHero && (
                   <>
-                    <option value={3}>3 Columnas (Grande)</option>
-                    <option value={4}>4 Columnas (Full)</option>
+                    <option value={3}>{t("blockEditor.size.col3")}</option>
+                    <option value={4}>{t("blockEditor.size.col4")}</option>
                   </>
                 )}
               </select>
@@ -1084,7 +1086,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
           {!isHero && (
             <div className="space-y-3">
               <label className="text-[10px] text-[var(--text-dim)] font-black uppercase tracking-widest px-1 block opacity-70">
-                Alto del bloque
+                {t("blockEditor.size.heightLabel")}
               </label>
               <div className="relative">
                 <select
@@ -1093,10 +1095,10 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                   className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none font-bold text-sm cursor-pointer hover:border-[var(--accent)] transition-all focus:ring-2 focus:ring-[var(--accent)]/20 appearance-none pr-10"
                   style={{ '--accent': accentColor } as any}
                 >
-                  <option value={1}>1 Fila (Bajo)</option>
-                  <option value={2}>2 Filas (Medio)</option>
-                  <option value={3}>3 Filas (Alto)</option>
-                  <option value={4}>4 Filas (Máximo)</option>
+                  <option value={1}>{t("blockEditor.size.row1")}</option>
+                  <option value={2}>{t("blockEditor.size.row2")}</option>
+                  <option value={3}>{t("blockEditor.size.row3")}</option>
+                  <option value={4}>{t("blockEditor.size.row4")}</option>
                 </select>
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1113,7 +1115,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
             <Sparkles size={14} />
           </div>
           <p className="text-[10px] text-[var(--text-muted)] leading-relaxed font-medium">
-            <span className="text-[var(--text-dim)]">Tip:</span> {isHero ? 'El bloque de Bio tiene una altura fija de 2 filas para asegurar que tu identidad destaque.' : 'Los bloques más anchos o altos captan un <span className="text-white">40% más de atención</span>.'} En mobile, todos los bloques se adaptan automáticamente al ancho disponible.
+            <span className="text-[var(--text-dim)]">{t("blockEditor.size.tipLabel")}</span> {isHero ? t("blockEditor.size.tipHero") : t("blockEditor.size.tipNonHero")} {t("blockEditor.size.tipSuffix")}
           </p>
         </div>
       </div>
@@ -1143,8 +1145,8 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
             <div className="w-12 h-1.5 bg-[var(--border-bright)] rounded-full mx-auto md:hidden mb-2 shrink-0" />
             <div className="flex items-center justify-between p-4 md:p-6 border-b border-[var(--border)] shrink-0">
               <div>
-                <h3 className="text-xl font-bold">Editar Bloque</h3>
-                <p className="text-sm text-[var(--text-dim)] font-mono mt-1 uppercase tracking-widest hidden md:block">type: {block.type}</p>
+                <h3 className="text-xl font-bold">{t("blockEditor.modalTitle")}</h3>
+                <p className="text-sm text-[var(--text-dim)] font-mono mt-1 uppercase tracking-widest hidden md:block">{t("blockEditor.typeLabel")} {block.type}</p>
               </div>
               <button onClick={onClose} className="p-2 hover:bg-[var(--surface2)] rounded-full transition-colors hidden md:block">
                 <X size={20} className="text-[var(--text-muted)]" />
@@ -1161,7 +1163,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                 onClick={onClose}
                 className="px-6 md:px-8 py-4 rounded-2xl font-bold text-sm md:text-base text-[var(--text-muted)] hover:text-white hover:bg-white/5 transition-all"
               >
-                Cancelar
+                {t("blockEditor.cancel")}
               </button>
               <button
                 onClick={handleSave}
@@ -1169,7 +1171,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                 style={{ backgroundColor: accentColor, color: getContrastColor(accentColor) }}
               >
                 <Save size={18} />
-                Guardar cambios
+                {t("blockEditor.save")}
               </button>
             </div>
           </motion.div>

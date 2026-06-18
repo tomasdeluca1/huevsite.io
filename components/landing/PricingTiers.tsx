@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { lemonLifetimeCheckoutUrl, buildLemonCheckoutUrl } from "@/lib/lemon-checkout-url";
 
 interface PricingUser {
@@ -34,6 +35,7 @@ export function PricingTiers({
   /** Query string de UTMs (sin ? inicial), p.ej. "utm_source=email&utm_campaign=somos-200". */
   utm?: string;
 }) {
+  const t = useTranslations("pricing");
   // Deslogueado: volvemos a la misma página CON los UTMs, así tras loguearse el
   // checkout ya los arrastra. Logueado: van directo a la URL de Lemon.
   const nextTarget = appendQuery(loginNext, utm);
@@ -47,13 +49,13 @@ export function PricingTiers({
     <>
       {/* FREE */}
       <div className="flex flex-col bg-white/[0.02] border border-white/5 rounded-[2rem] p-8">
-        <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-[var(--text-muted)] mb-3 block">Free</span>
+        <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-[var(--text-muted)] mb-3 block">{t("freeLabel")}</span>
         <div className="flex items-baseline gap-1 mb-1">
           <span className="text-5xl font-black text-white">$0</span>
         </div>
-        <p className="text-xs text-[var(--text-muted)] mb-8">Para empezar a mostrar lo que buildeás.</p>
+        <p className="text-xs text-[var(--text-muted)] mb-8">{t("freeSubtitle")}</p>
         <ul className="space-y-3 text-left mb-8 flex-1">
-          {['Tu URL huevsite.io/vos', 'Bloques para proyectos, GitHub y stack', 'Builder Score + feed + showcase', 'Importás de Linktree o GitHub'].map(item => (
+          {[t("freeFeature1"), t("freeFeature2"), t("freeFeature3"), t("freeFeature4")].map(item => (
             <li key={item} className="flex items-start gap-3 text-sm text-[var(--text-dim)]">
               <Check size={14} className="text-[var(--text-muted)] shrink-0 mt-0.5" />
               <span>{item}</span>
@@ -64,7 +66,7 @@ export function PricingTiers({
           href={user ? "/dashboard" : "/login"}
           className="btn btn-ghost w-full !py-4 !rounded-2xl text-center justify-center"
         >
-          {user ? "Ir a mi huevsite" : "Armá tu huevsite — gratis"}
+          {user ? t("freeCtaUser") : t("freeCtaGuest")}
         </Link>
       </div>
 
@@ -73,16 +75,16 @@ export function PricingTiers({
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-[var(--accent)]/10 blur-[100px] rounded-full opacity-60 pointer-events-none" />
         <div className="relative z-10 flex flex-col h-full">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-[var(--accent)]">Pro</span>
-            <span className="text-[9px] bg-[var(--accent)] text-black px-2 py-0.5 rounded font-black uppercase tracking-wider">Más elegido</span>
+            <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-[var(--accent)]">{t("proLabel")}</span>
+            <span className="text-[9px] bg-[var(--accent)] text-black px-2 py-0.5 rounded font-black uppercase tracking-wider">{t("proBadge")}</span>
           </div>
           <div className="flex items-baseline gap-1 mb-1">
             <span className="text-5xl font-black text-white">$9</span>
-            <span className="text-sm font-mono text-[var(--text-muted)]">USD/mes</span>
+            <span className="text-sm font-mono text-[var(--text-muted)]">{t("proPriceUnit")}</span>
           </div>
-          <p className="text-xs text-[var(--text-muted)] mb-8">Para builders que quieren destacar y ser descubiertos.</p>
+          <p className="text-xs text-[var(--text-muted)] mb-8">{t("proSubtitle")}</p>
           <ul className="space-y-3 text-left mb-8 flex-1">
-            {['Dominio .com personalizado', 'Insights y métricas en tiempo real', 'Boost de Scoring (más visibilidad)', 'Sub-sitios ilimitados', 'Hasta 22 bloques en tu grid', 'Verified Badge oficial'].map(item => (
+            {[t("proFeature1"), t("proFeature2"), t("proFeature3"), t("proFeature4"), t("proFeature5"), t("proFeature6")].map(item => (
               <li key={item} className="flex items-start gap-3 text-sm text-[var(--text-dim)]">
                 <Check size={14} className="text-[var(--accent)] shrink-0 mt-0.5" />
                 <span>{item}</span>
@@ -93,25 +95,25 @@ export function PricingTiers({
             href={proHref}
             className="btn btn-accent w-full !py-4 !text-base !font-bold !rounded-2xl text-center justify-center"
           >
-            {user ? "Mejorar a Pro →" : "Hacerme Pro →"}
+            {user ? t("proCtaUser") : t("proCtaGuest")}
           </Link>
-          <p className="mt-4 text-[9px] font-mono text-[var(--text-muted)] uppercase tracking-widest opacity-40 text-center">Cancelás cuando quieras</p>
+          <p className="mt-4 text-[9px] font-mono text-[var(--text-muted)] uppercase tracking-widest opacity-40 text-center">{t("proCancelNote")}</p>
         </div>
       </div>
 
       {/* FOUNDER — one-time / lifetime */}
       <div className="flex flex-col bg-white/[0.02] border border-white/5 rounded-[2rem] p-8">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-[var(--text-muted)]">Founder</span>
-          <span className="text-[9px] border border-white/15 text-[var(--text-dim)] px-2 py-0.5 rounded font-black uppercase tracking-wider">Pago único</span>
+          <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-[var(--text-muted)]">{t("founderLabel")}</span>
+          <span className="text-[9px] border border-white/15 text-[var(--text-dim)] px-2 py-0.5 rounded font-black uppercase tracking-wider">{t("founderBadge")}</span>
         </div>
         <div className="flex items-baseline gap-1 mb-1">
           <span className="text-5xl font-black text-white">$79</span>
-          <span className="text-sm font-mono text-[var(--text-muted)]">una vez</span>
+          <span className="text-sm font-mono text-[var(--text-muted)]">{t("founderPriceUnit")}</span>
         </div>
-        <p className="text-xs text-[var(--text-muted)] mb-8">Pro de por vida, pagás una vez. Para los primeros que apuestan al proyecto.</p>
+        <p className="text-xs text-[var(--text-muted)] mb-8">{t("founderSubtitle")}</p>
         <ul className="space-y-3 text-left mb-8 flex-1">
-          {['Todo lo de Pro, para siempre', 'Sin pagos mensuales nunca más', 'Badge Founder exclusivo', 'Apoyás a un proyecto indie de LATAM'].map(item => (
+          {[t("founderFeature1"), t("founderFeature2"), t("founderFeature3"), t("founderFeature4")].map(item => (
             <li key={item} className="flex items-start gap-3 text-sm text-[var(--text-dim)]">
               <Check size={14} className="text-[var(--accent)] shrink-0 mt-0.5" />
               <span>{item}</span>
@@ -123,14 +125,14 @@ export function PricingTiers({
             href={founderHref}
             className="btn btn-ghost w-full !py-4 !rounded-2xl text-center justify-center"
           >
-            Quiero el lifetime →
+            {t("founderCta")}
           </Link>
         ) : (
           <button
             disabled
             className="btn btn-ghost w-full !py-4 !rounded-2xl text-center justify-center opacity-40 cursor-not-allowed"
           >
-            Pronto
+            {t("founderCtaSoon")}
           </button>
         )}
       </div>

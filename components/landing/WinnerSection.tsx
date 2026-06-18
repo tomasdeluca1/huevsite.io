@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState, useCallback } from "react
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, Trophy, Globe } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { ProfileGrid } from "@/components/profile/ProfileGrid";
 
 interface ShowcaseData {
@@ -20,6 +21,7 @@ interface WinnerSectionProps {
 
 
 export function WinnerSection({ initialData, user }: WinnerSectionProps) {
+  const t = useTranslations("landing");
   const [data, setData] = useState<ShowcaseData | null>(null);
   const [loading, setLoading] = useState(!initialData);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -161,15 +163,15 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
 
   const titleText = isWinners
     ? profilesToShow.length === 1
-      ? "builder de la semana"
-      : "builders de la semana"
-    : "descubrí la comunidad";
+      ? t("winnerTitleSingle")
+      : t("winnerTitlePlural")
+    : t("winnerTitleCommunity");
 
   const descText = isWinners
     ? profilesToShow.length === 1
-      ? `Conocé a ${currentProfile.name ?? currentProfile.username}, el builder más nominado de la semana pasada (${data.week}).`
-      : `${profilesToShow.length} builders empataron como los más nominados de la semana pasada (${data.week}).`
-    : "Conocé a los creadores de todo LATAM que están buildeando cosas increíbles hoy mismo.";
+      ? t("winnerDescSingle", { name: currentProfile.name ?? currentProfile.username, week: data.week })
+      : t("winnerDescPlural", { count: profilesToShow.length, week: data.week })
+    : t("winnerDescCommunity");
 
   const slideVariants = {
     enter: { opacity: 0 },
@@ -277,7 +279,7 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
                       ? "bg-[var(--accent)] w-3"
                       : "bg-white/20 hover:bg-white/40 w-1.5"
                       }`}
-                    aria-label={`Ir al ganador ${i + 1}`}
+                    aria-label={t("winnerGoToWinner", { index: i + 1 })}
                   />
                 ))}
               </div>
@@ -315,10 +317,10 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
                           <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
                             <Globe size={14} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors" />
                           </div>
-                          <h3 className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-[var(--text-muted)] group-hover:text-white transition-colors">Ecosistema</h3>
+                          <h3 className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-[var(--text-muted)] group-hover:text-white transition-colors">{t("winnerEcosystem")}</h3>
                         </div>
                         <div className="text-[9px] text-[var(--text-dim)] font-mono uppercase tracking-widest px-3 py-1 bg-white/5 rounded-full border border-white/5">
-                          {currentProfile.sub_sites.length} {currentProfile.sub_sites.length === 1 ? "Proyecto" : "Proyectos"}
+                          {currentProfile.sub_sites.length} {currentProfile.sub_sites.length === 1 ? t("winnerProjectSingle") : t("winnerProjectPlural")}
                         </div>
                       </div>
 
@@ -368,14 +370,14 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
             <button
               onClick={prev}
               className="absolute left-6 top-16 z-20 w-10 h-10 rounded-full bg-black/70 border border-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-black/90 hover:border-white/25 transition-all backdrop-blur-sm shadow-lg"
-              aria-label="Anterior"
+              aria-label={t("winnerPrev")}
             >
               <ArrowLeft size={18} />
             </button>
             <button
               onClick={next}
               className="absolute right-6 top-16 z-20 w-10 h-10 rounded-full bg-black/70 border border-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-black/90 hover:border-white/25 transition-all backdrop-blur-sm shadow-lg"
-              aria-label="Siguiente"
+              aria-label={t("winnerNext")}
             >
               <ArrowRight size={18} />
             </button>
@@ -400,25 +402,25 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
           <div className="relative z-10 text-center lg:text-left flex-1 max-w-2xl">
             <h3 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight flex items-center justify-center lg:justify-start gap-3">
               <Trophy size={28} className="text-[var(--accent)]" />
-              Vos podés ser el próximo.
+              {t("winnerCtaTitle")}
             </h3>
             <p className="text-[var(--text-dim)] text-[15px] md:text-base leading-relaxed">
-              Armá tu perfil, mostrá lo que sabés hacer y pedile a tus contactos que te nominen. Cada domingo a la medianoche los builders más nominados por la comunidad pasan a la portada toda la semana.
+              {t("winnerCtaDesc")}
             </p>
           </div>
 
           <div className="relative z-10 flex flex-col w-full lg:w-auto items-center lg:items-end shrink-0 bg-black/40 p-6 rounded-xl border border-white/5">
             <div className="text-[10px] font-mono text-[var(--accent)] uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse"></span>
-              Cierre de esta edición
+              {t("winnerCountdownLabel")}
             </div>
 
             <div className="flex gap-4 sm:gap-6 font-mono text-3xl sm:text-4xl font-bold mb-6">
               {[
-                { val: timeLeft.d, label: "Días" },
-                { val: timeLeft.h, label: "Hrs" },
-                { val: timeLeft.m, label: "Min" },
-                { val: timeLeft.s, label: "Seg" },
+                { val: timeLeft.d, label: t("winnerCountdownDays") },
+                { val: timeLeft.h, label: t("winnerCountdownHours") },
+                { val: timeLeft.m, label: t("winnerCountdownMinutes") },
+                { val: timeLeft.s, label: t("winnerCountdownSeconds") },
               ].map(({ val, label }, i) => (
                 <div key={label} className="flex flex-col items-center">
                   <span className={i === 3 ? "text-[var(--text-dim)]" : ""}>
@@ -435,7 +437,7 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
               href={user ? "/dashboard" : "/login"}
               className="w-full px-6 py-3 bg-[var(--surface2)] hover:bg-[var(--border-bright)] border border-[var(--border-bright)] rounded-lg text-[14px] font-bold transition-all text-white text-center whitespace-nowrap hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(200,255,0,0.1)]"
             >
-              {user ? "Ir a mi dashboard →" : "Armá tu huevsite →"}
+              {user ? t("winnerCtaButtonUser") : t("winnerCtaButtonGuest")}
             </Link>
           </div>
         </div>

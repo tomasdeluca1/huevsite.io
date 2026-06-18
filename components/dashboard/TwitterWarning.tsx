@@ -3,6 +3,7 @@
 import { Twitter, X } from "lucide-react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { BlockData } from "@/lib/profile-types";
 import { useState, useEffect, useRef } from "react";
 
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function TwitterWarning({ blocks, isSubSite = false, onAddTwitter }: Props) {
+  const t = useTranslations("dashboard");
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -93,13 +95,13 @@ export function TwitterWarning({ blocks, isSubSite = false, onAddTwitter }: Prop
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]" />
-                        <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.25em]">Acción Requerida</span>
+                        <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.25em]">{t("twitterWarning.actionRequired")}</span>
                       </div>
                       <h4 className="text-xl font-black text-white leading-tight tracking-tight">
-                        Conectá tu <span className="text-amber-500">Twitter</span>
+                        {t("twitterWarning.titlePrefix")} <span className="text-amber-500">Twitter</span>
                       </h4>
                       <p className="text-[13px] text-[var(--text-muted)] leading-relaxed font-medium">
-                        Para etiquetarte de forma automática cuando seas elegido <span className="text-white font-bold">Builder de la Semana</span> y destacar tu perfil en nuestra comunidad global.
+                        {t("twitterWarning.descPrefix")} <span className="text-white font-bold">{t("twitterWarning.descBuilder")}</span> {t("twitterWarning.descSuffix")}
                       </p>
                     </div>
 
@@ -114,7 +116,7 @@ export function TwitterWarning({ blocks, isSubSite = false, onAddTwitter }: Prop
                         className="mt-6 w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-[900] text-sm transition-all shadow-[0_4px_20px_rgba(245,158,11,0.3)]"
                       >
                         <Twitter size={16} />
-                        Agregar Bloque de Redes
+                        {t("twitterWarning.addSocialBlock")}
                       </button>
                     )}
 
@@ -131,7 +133,7 @@ export function TwitterWarning({ blocks, isSubSite = false, onAddTwitter }: Prop
                         ))}
                       </div>
                       <p className="text-[11px] font-bold text-[var(--text-dim)] leading-none">
-                        <span className="text-white">+42 builders</span> ya conectaron su cuenta
+                        <span className="text-white">{t("twitterWarning.socialProofCount")}</span> {t("twitterWarning.socialProofSuffix")}
                       </p>
                     </div>
                   </div>

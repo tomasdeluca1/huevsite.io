@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Twitter, Sparkles, Loader2, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { createPortal } from "react-dom";
+import { useTranslations } from "next-intl";
 import { buildLemonCheckoutUrl } from "@/lib/lemon-checkout-url";
 import { supabase } from "@/lib/supabase";
 
@@ -18,6 +19,7 @@ interface Props {
 type Step = "prompt" | "tweeted" | "verifying" | "unlocked";
 
 export function ShareModal({ isOpen, onClose, accentColor, username, onUnlocked }: Props) {
+  const t = useTranslations("dashboard");
   const [step, setStep] = useState<Step>("prompt");
   const [isCapturing, setIsCapturing] = useState(false);
   const [tweetUrlInput, setTweetUrlInput] = useState("");
@@ -28,7 +30,7 @@ export function ShareModal({ isOpen, onClose, accentColor, username, onUnlocked 
   };
 
   const tweetText = encodeURIComponent(
-    `Armé mi huevsite en huevsite.io — el portfolio para builders 🇦🇷\n\n👉 huevsite.io/${username}`
+    t("shareModal.tweetText", { username })
   );
   const tweetUrl = `https://twitter.com/intent/tweet?text=${tweetText}`;
 
@@ -46,7 +48,7 @@ export function ShareModal({ isOpen, onClose, accentColor, username, onUnlocked 
 
   const handleConfirmTweet = async () => {
     if (!tweetUrlInput.includes("twitter.com/") && !tweetUrlInput.includes("x.com/")) {
-      alert("Uh, parece que ese link no es de Twitter/X. Fijate de copiar el link de tu tweet.");
+      alert(t("shareModal.invalidLinkAlert"));
       return;
     }
 
@@ -63,11 +65,11 @@ export function ShareModal({ isOpen, onClose, accentColor, username, onUnlocked 
         onUnlocked(typeof data.extraBlocks === "number" ? data.extraBlocks : 3);
       } else {
         const data = await res.json();
-        alert(data.error || "Error al verificar el tweet.");
+        alert(data.error || t("shareModal.verifyErrorAlert"));
         setStep("tweeted");
       }
     } catch {
-      alert("Error de conexión.");
+      alert(t("shareModal.connectionErrorAlert"));
       setStep("tweeted");
     }
   };
@@ -142,6 +144,7 @@ function PromptView({
   onConfirm: () => void;
   onUpgrade: () => void;
 }) {
+  const t = useTranslations("dashboard");
   return (
     <>
       <div
@@ -151,16 +154,16 @@ function PromptView({
         <Sparkles size={28} style={{ color: accentColor }} />
       </div>
 
-      <div className="section-label mb-2 mx-auto justify-center">// bonus del plan free</div>
+      <div className="section-label mb-2 mx-auto justify-center">{t("shareModal.sectionLabel")}</div>
       <h3 className="text-2xl font-extrabold tracking-tight mb-3">
-        Desbloqueá +3 bloques.
+        {t("shareModal.promptTitle")}
       </h3>
 
       {step === "prompt" && (
         <>
           <p className="text-[var(--text-dim)] text-sm max-w-[280px] mx-auto leading-relaxed mb-8">
-            ¿Querés <strong className="text-white">3 bloques más gratis</strong>?<br />
-            Compartí tu huevsite en Twitter y te los desbloqueamos.
+            {t("shareModal.promptIntroPrefix")} <strong className="text-white">{t("shareModal.promptIntroHighlight")}</strong>{t("shareModal.promptIntroSuffix")}<br />
+            {t("shareModal.promptIntroLine2")}
           </p>
 
           {/* Preview del perfil */}
@@ -170,7 +173,7 @@ function PromptView({
           >
             <p style={{ color: accentColor }}>→ huevsite.io/{username}</p>
             <p className="text-[var(--text-muted)] mt-1 text-[10px]">
-              "Armé mi huevsite — el portfolio para builders 🇦🇷"
+              {t("shareModal.previewQuote")}
             </p>
           </div>
 
@@ -182,16 +185,16 @@ function PromptView({
               style={{ backgroundColor: accentColor, opacity: isCapturing ? 0.7 : 1 }}
             >
               {isCapturing ? (
-                <><Loader2 size={16} className="animate-spin" /> Preparando tweet...</>
+                <><Loader2 size={16} className="animate-spin" /> {t("shareModal.preparingTweet")}</>
               ) : (
-                <><Twitter size={16} /> Twittear y pedir +3 bloques →</>
+                <><Twitter size={16} /> {t("shareModal.tweetAndRequest")}</>
               )}
             </button>
             <button
               onClick={onUpgrade}
               className="w-full py-3 rounded-2xl border border-[var(--border-bright)] text-sm font-medium text-[var(--text-dim)] hover:text-white hover:border-white transition-all flex items-center justify-center gap-2"
             >
-              Ir a Pro — $9/mes
+              {t("shareModal.goToPro")}
             </button>
           </div>
         </>
@@ -200,7 +203,7 @@ function PromptView({
       {(step === "tweeted" || step === "verifying") && (
         <>
           <p className="text-[var(--text-dim)] text-sm max-w-[280px] mx-auto leading-relaxed mb-6">
-            ¿Ya lo tuiteaste? Pegá el link de tu tweet acá abajo y te desbloqueamos los bloques.
+            {t("shareModal.alreadyTweeted")}
           </p>
 
           <input
@@ -218,9 +221,9 @@ function PromptView({
             style={{ backgroundColor: accentColor }}
           >
             {step === "verifying" ? (
-              <><Loader2 size={16} className="animate-spin" /> Verificando...</>
+              <><Loader2 size={16} className="animate-spin" /> {t("shareModal.verifying")}</>
             ) : (
-              <>Verificar tweet y desbloquear ✅</>
+              <>{t("shareModal.verifyAndUnlock")}</>
             )}
           </button>
           <button
@@ -228,7 +231,7 @@ function PromptView({
             className="w-full mt-3 py-3 rounded-2xl border border-[var(--border-bright)] text-sm text-[var(--text-muted)] hover:text-white transition-all"
           >
             <Twitter size={14} className="inline mr-1" />
-            Twittear de nuevo
+            {t("shareModal.tweetAgain")}
           </button>
         </>
       )}
@@ -237,22 +240,23 @@ function PromptView({
 }
 
 function UnlockedView({ accentColor, onClose }: { accentColor: string; onClose: () => void }) {
+  const t = useTranslations("dashboard");
   return (
     <>
       <CheckCircle2 size={48} className="mx-auto mb-6" style={{ color: accentColor }} />
-      <div className="section-label mb-2 mx-auto justify-center">// bloques desbloqueados</div>
+      <div className="section-label mb-2 mx-auto justify-center">{t("shareModal.unlockedSectionLabel")}</div>
       <h3 className="text-2xl font-extrabold tracking-tight mb-3">
-        ¡Gracias por compartir! 🇦🇷
+        {t("shareModal.unlockedTitle")}
       </h3>
       <p className="text-[var(--text-dim)] text-sm max-w-[260px] mx-auto leading-relaxed mb-8">
-        Te agregamos 3 bloques extra. Ahora podés seguir armando tu portfolio.
+        {t("shareModal.unlockedBody")}
       </p>
       <button
         onClick={onClose}
         className="w-full py-4 rounded-2xl font-bold text-sm text-black transition-all"
         style={{ backgroundColor: accentColor }}
       >
-        Seguir buildeando →
+        {t("shareModal.keepBuilding")}
       </button>
     </>
   );

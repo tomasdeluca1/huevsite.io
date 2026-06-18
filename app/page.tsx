@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import Script from "next/script";
+import { getTranslations } from "next-intl/server";
 import { getShowcaseData, getActiveBuildersThisWeek, getNetworkPulse } from "@/lib/showcase-service";
 import LandingPageClient from "@/components/landing/LandingPageClient";
 import { SITE_URL } from "@/lib/site-url";
@@ -11,10 +12,6 @@ import { safeJsonLd } from "@/lib/json-ld";
 
 export const dynamic = "force-dynamic";
 
-const OG_TITLE = "huevsite.io | Construí tu reputación como builder";
-const OG_DESCRIPTION =
-  "Proyectos, métricas reales y endorsements de otros builders. Que te vean shippeando, no diciendo. Acá vive la red de LATAM.";
-
 // The home OG image renders the current Builder de la Semana, which changes
 // weekly. Next stamps the image route with a 1-year immutable Cache-Control and
 // a file-content-hash URL that does NOT change when the winner changes — so the
@@ -23,6 +20,9 @@ const OG_DESCRIPTION =
 // winner ⇒ a new URL ⇒ every cache fetches the fresh image. The immutable cache
 // now works FOR us — each winner's image stays frozen at its own stable URL.
 export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("landing");
+  const OG_TITLE = t("metaTitle");
+  const OG_DESCRIPTION = t("metaDescription");
   const winner = await fetchCurrentWinner().catch(() => null);
   const v = encodeURIComponent(winner?.username || "huevsite");
   return {

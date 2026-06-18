@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 interface Builder {
   username: string;
@@ -14,23 +15,23 @@ interface Builder {
   blocks?: any[];
 }
 
-function deriveCard(p: Builder) {
+function deriveCard(p: Builder, t: (key: string) => string) {
   const name = p.name || p.username;
-  const tagline = (p.tagline || "Builder en huevsite.io").trim();
+  const tagline = (p.tagline || t("spotlightDefaultTagline")).trim();
   const blocks = (p.blocks || []).filter((b) => b && b.visible !== false);
 
   const building = blocks.find((b) => b.type === "building");
   const project = blocks.find((b) => b.type === "project");
   const stackBlock = blocks.find((b) => b.type === "stack");
 
-  let projectLabel = "Building now";
+  let projectLabel = t("spotlightBuildingNow");
   let projectTitle = "";
   let projectStack: string[] = [];
   if (building) {
     projectTitle = building.project || building.title || "";
     projectStack = Array.isArray(building.stack) ? building.stack : [];
   } else if (project) {
-    projectLabel = "Proyecto";
+    projectLabel = t("spotlightProject");
     projectTitle = project.title || "";
     projectStack = Array.isArray(project.stack) ? project.stack : [];
   }
@@ -43,19 +44,20 @@ function deriveCard(p: Builder) {
 }
 
 export function BuilderSpotlightCard({ builders }: { builders: Builder[] }) {
+  const t = useTranslations("landing");
   const list = useMemo(() => (builders || []).filter((b) => b && b.username).slice(0, 6), [builders]);
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     if (list.length <= 1 || paused) return;
-    const t = setInterval(() => setI((p) => (p + 1) % list.length), 4500);
-    return () => clearInterval(t);
+    const timer = setInterval(() => setI((p) => (p + 1) % list.length), 4500);
+    return () => clearInterval(timer);
   }, [list.length, paused]);
 
   if (list.length === 0) return null;
   const safeIndex = i % list.length;
-  const c = deriveCard(list[safeIndex]);
+  const c = deriveCard(list[safeIndex], t);
 
   const track = () => {
     if (typeof window !== "undefined") (window as any).umami?.track("landing_spotlight_click", { username: c.username });
@@ -100,12 +102,12 @@ export function BuilderSpotlightCard({ builders }: { builders: Builder[] }) {
                 )}
               </div>
               <div className="hpp-block hpp-block--accent">
-                <div className="hpp-block-label">{c.score != null ? "Score" : "En vivo"}</div>
+                <div className="hpp-block-label">{c.score != null ? t("spotlightScore") : t("spotlightLive")}</div>
                 <div className="hpp-block-num">{c.score != null ? c.score : "●"}</div>
               </div>
               {c.stackTags.length > 0 && (
                 <div className="hpp-block">
-                  <div className="hpp-block-label">Stack</div>
+                  <div className="hpp-block-label">{t("spotlightStack")}</div>
                   <div className="hpp-stack-tags">
                     {c.stackTags.map((t, idx) => (
                       <span key={idx}>{t}</span>
@@ -129,7 +131,7 @@ export function BuilderSpotlightCard({ builders }: { builders: Builder[] }) {
             <button
               key={idx}
               onClick={() => setI(idx)}
-              aria-label={`Ver builder ${idx + 1}`}
+              aria-label={t("spotlightViewBuilder", { index: idx + 1 })}
               style={{
                 width: idx === safeIndex ? 18 : 6,
                 height: 6,

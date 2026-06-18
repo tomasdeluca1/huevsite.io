@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Trophy, Crown, Loader2, ArrowRight } from "lucide-react";
@@ -21,10 +22,10 @@ interface LbProfile {
 }
 
 const TABS = [
-  { value: "score", label: "Builder Score", unit: "pts", emoji: "🔥" },
-  { value: "followers", label: "Seguidores", unit: "seguidores", emoji: "📈" },
-  { value: "nominations", label: "Más votados", unit: "votos", emoji: "🏆" },
-  { value: "endorsements", label: "Recomendados", unit: "recos", emoji: "💬" },
+  { value: "score", emoji: "🔥" },
+  { value: "followers", emoji: "📈" },
+  { value: "nominations", emoji: "🏆" },
+  { value: "endorsements", emoji: "💬" },
 ] as const;
 
 type SortKey = (typeof TABS)[number]["value"];
@@ -41,6 +42,7 @@ function metricOf(p: LbProfile, sort: SortKey): number {
 const PAGE_SIZE = 50;
 
 export function LeaderboardClient({ currentUserId }: { currentUserId?: string | null }) {
+  const t = useTranslations("leaderboard");
   const [sort, setSort] = useState<SortKey>("score");
   const [profiles, setProfiles] = useState<LbProfile[]>([]);
   const [page, setPage] = useState(0);
@@ -80,7 +82,7 @@ export function LeaderboardClient({ currentUserId }: { currentUserId?: string | 
     load(next, false);
   };
 
-  const unit = TABS.find((t) => t.value === sort)!.unit;
+  const unit = t(`unit_${sort}`);
   const podium = profiles.slice(0, 3);
   const rest = profiles.slice(3);
 
@@ -88,17 +90,17 @@ export function LeaderboardClient({ currentUserId }: { currentUserId?: string | 
     <div className="flex flex-col gap-10">
       {/* Tabs */}
       <div className="flex flex-wrap items-center justify-center gap-2">
-        {TABS.map((t) => (
+        {TABS.map((tab) => (
           <button
-            key={t.value}
-            onClick={() => setSort(t.value)}
+            key={tab.value}
+            onClick={() => setSort(tab.value)}
             className={`px-5 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border ${
-              sort === t.value
+              sort === tab.value
                 ? "bg-[var(--accent)] text-black border-[var(--accent)] shadow-lg shadow-[var(--accent)]/20"
                 : "bg-[var(--surface2)] text-[var(--text-muted)] border-[var(--border)] hover:text-white hover:border-[var(--border-bright)]"
             }`}
           >
-            {t.label} {t.emoji}
+            {t(`tab_${tab.value}`)} {tab.emoji}
           </button>
         ))}
       </div>
@@ -109,7 +111,7 @@ export function LeaderboardClient({ currentUserId }: { currentUserId?: string | 
         </div>
       ) : profiles.length === 0 ? (
         <div className="text-center py-20 text-[var(--text-dim)] font-mono text-sm border-y border-dashed border-[var(--border-bright)]">
-          Todavía no hay builders en el ranking.
+          {t("empty")}
         </div>
       ) : (
         <>
@@ -159,9 +161,9 @@ export function LeaderboardClient({ currentUserId }: { currentUserId?: string | 
                 className="btn btn-outline border-dashed text-sm font-mono hover:text-white disabled:opacity-50"
               >
                 {isFetchingMore ? (
-                  <span className="flex items-center gap-2"><Loader2 size={16} className="animate-spin" /> Cargando...</span>
+                  <span className="flex items-center gap-2"><Loader2 size={16} className="animate-spin" /> {t("loading")}</span>
                 ) : (
-                  "Ver más builders"
+                  t("loadMore")
                 )}
               </button>
             </div>
@@ -177,6 +179,7 @@ function PodiumCard({
 }: {
   profile: LbProfile; rank: number; value: number; unit: string; elevated: boolean; isMe: boolean;
 }) {
+  const t = useTranslations("leaderboard");
   const accent = profile.accent_color || "var(--accent)";
   const medalColor = rank === 1 ? "#FFD600" : rank === 2 ? "#C0C0C0" : "#CD7F32";
 
@@ -230,7 +233,7 @@ function PodiumCard({
           <span className="text-3xl font-[950] tracking-tighter" style={{ color: accent }}>{value}</span>
           <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">{unit}</span>
         </div>
-        {isMe && <span className="mt-2 text-[9px] font-black uppercase tracking-widest text-[var(--accent)]">Vos</span>}
+        {isMe && <span className="mt-2 text-[9px] font-black uppercase tracking-widest text-[var(--accent)]">{t("you")}</span>}
       </Link>
     </motion.div>
   );
@@ -241,6 +244,7 @@ function LeaderboardRow({
 }: {
   profile: LbProfile; rank: number; value: number; unit: string; isMe: boolean;
 }) {
+  const t = useTranslations("leaderboard");
   const accent = profile.accent_color || "var(--accent)";
   return (
     <Link
@@ -276,7 +280,7 @@ function LeaderboardRow({
           {profile.pro_since && !profile.is_winner && (
             <span className="text-[8px] font-black tracking-widest text-amber-400/70 shrink-0">PRO</span>
           )}
-          {isMe && <span className="text-[8px] font-black uppercase tracking-widest text-[var(--accent)] shrink-0">Vos</span>}
+          {isMe && <span className="text-[8px] font-black uppercase tracking-widest text-[var(--accent)] shrink-0">{t("you")}</span>}
         </div>
         <p className="text-[11px] font-mono text-[var(--text-muted)] truncate">@{profile.username}</p>
       </div>

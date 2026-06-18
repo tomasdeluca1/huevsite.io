@@ -22,6 +22,7 @@ import {
   Globe2, AlertCircle, SendHorizontal, ChevronDown, X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 import { MOCK_PROFILE } from "@/lib/mock-profile";
 import { BlockData, BlockType, ProfileData, PRESET_COLORS, getContrastColor, isDarkColor, MAX_FREE_BLOCKS } from "@/lib/profile-types";
@@ -65,6 +66,7 @@ const DASHBOARD_TABS = ["board", "insights", "subsites", "domain", "transfer"] a
 const PRO_ONLY_TABS = ["insights", "subsites", "domain", "transfer"] as const;
 
 export default function DashboardPage() {
+  const t = useTranslations("dashboard");
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -140,11 +142,11 @@ export default function DashboardPage() {
         host: "@",
         targetType: "A Record",
         targetValue: "216.150.1.1",
-        recommendation: "Escribí un dominio válido para ver la guía exacta.",
+        recommendation: t("page.domainGuideEmptyRecommendation"),
         steps: [
-          "Guardalo en huevsite.",
-          "Creá el DNS en tu proveedor.",
-          "Corré el check cuando propague.",
+          t("page.domainGuideEmptyStep1"),
+          t("page.domainGuideEmptyStep2"),
+          t("page.domainGuideEmptyStep3"),
         ],
       };
     }
@@ -159,18 +161,18 @@ export default function DashboardPage() {
       targetType: isSubdomain ? "CNAME" : "A Record",
       targetValue: isSubdomain ? "cname.vercel-dns.com" : "216.150.1.1",
       recommendation: isSubdomain
-        ? "Usá un CNAME para ese host."
-        : "Usá un A record para el dominio raíz.",
+        ? t("page.domainGuideSubdomainRecommendation")
+        : t("page.domainGuideRootRecommendation"),
       steps: isSubdomain
         ? [
-            "Guardá el dominio.",
-            `Creá un CNAME ${host} -> cname.vercel-dns.com.`,
-            "Corré el check.",
+            t("page.domainGuideSaveDomain"),
+            t("page.domainGuideCreateCname", { host }),
+            t("page.domainGuideRunCheck"),
           ]
         : [
-            "Guardá el dominio.",
-            "Creá un A record @ -> 216.150.1.1.",
-            "Corré el check.",
+            t("page.domainGuideSaveDomain"),
+            t("page.domainGuideCreateARecord"),
+            t("page.domainGuideRunCheck"),
           ],
     };
   };
@@ -216,7 +218,7 @@ export default function DashboardPage() {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error || "No se pudo eliminar la cuenta");
+        throw new Error(data.error || t("page.errorDeleteAccount"));
       }
 
       localStorage.removeItem("huevsite_autosave");
@@ -232,7 +234,7 @@ export default function DashboardPage() {
       window.location.href = "/?accountDeleted=1";
     } catch (error: any) {
       console.error("Error deleting account:", error);
-      alert(error.message || "No se pudo eliminar la cuenta");
+      alert(error.message || t("page.errorDeleteAccount"));
       setIsDeletingAccount(false);
     }
   };
@@ -252,7 +254,7 @@ export default function DashboardPage() {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error || "No se pudo refactorizar el board");
+        throw new Error(data.error || t("page.errorRefactorBoard"));
       }
 
       await fetchProfile();
@@ -267,7 +269,7 @@ export default function DashboardPage() {
       );
       setIsLinktreeRefactorOpen(false);
     } catch (error: any) {
-      alert(error.message || "No se pudo refactorizar el board");
+      alert(error.message || t("page.errorRefactorBoard"));
     } finally {
       setIsRefactoringFromLinktree(false);
     }
@@ -382,14 +384,14 @@ export default function DashboardPage() {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error || "No se pudo activar la prueba gratis");
+        throw new Error(data.error || t("page.errorActivateTrial"));
       }
 
       await fetchProfile();
       setIsUpgradeModalOpen(false);
       setIsProTourOpen(true);
     } catch (error: any) {
-      alert(error.message || "No se pudo activar la prueba gratis");
+      alert(error.message || t("page.errorActivateTrial"));
     } finally {
       setIsClaimingTrial(false);
     }
@@ -541,7 +543,7 @@ export default function DashboardPage() {
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
         setProfile((p) => p ? { ...p, publishedBoard: prevPublished } : p);
-        alert(d.error || 'No se pudo publicar el board.');
+        alert(d.error || t("page.errorPublishBoard"));
       }
     } catch {
       setProfile((p) => p ? { ...p, publishedBoard: prevPublished } : p);
@@ -556,12 +558,12 @@ export default function DashboardPage() {
         const response = await fetch(`/api/blocks/${id}`, { method: 'DELETE' });
         if (!response.ok) {
           const errorData = await response.json();
-          alert(`Error al eliminar bloque: ${errorData.error || 'Error desconocido'}`);
+          alert(t("page.errorDeleteBlock", { error: errorData.error || t("page.errorUnknown") }));
           return;
         }
       } catch (error) {
         console.error('Error deleting block:', error);
-        alert('Error de red al eliminar bloque');
+        alert(t("page.errorNetworkDeleteBlock"));
         return;
       }
     }
@@ -576,10 +578,10 @@ export default function DashboardPage() {
   };
 
   const BLOCK_TYPE_LABELS: Record<string, string> = {
-    hero: "Bio / Hero", building: "Building", github: "GitHub Stats", project: "Proyecto",
-    stack: "Tech Stack", metric: "Métrica", social: "Redes Sociales", community: "Comunidad",
-    writing: "Escritura", cv: "CV / Resume", media: "Media", certification: "Certificación",
-    achievement: "Logro", custom: "Custom", collab: "Collab", ecosystem: "Ecosistema",
+    hero: t("page.blockTypeHero"), building: t("page.blockTypeBuilding"), github: t("page.blockTypeGithub"), project: t("page.blockTypeProject"),
+    stack: t("page.blockTypeStack"), metric: t("page.blockTypeMetric"), social: t("page.blockTypeSocial"), community: t("page.blockTypeCommunity"),
+    writing: t("page.blockTypeWriting"), cv: t("page.blockTypeCv"), media: t("page.blockTypeMedia"), certification: t("page.blockTypeCertification"),
+    achievement: t("page.blockTypeAchievement"), custom: t("page.blockTypeCustom"), collab: t("page.blockTypeCollab"), ecosystem: t("page.blockTypeEcosystem"),
   };
 
   const hideBlock = async (id: string) => {
@@ -854,7 +856,7 @@ export default function DashboardPage() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         setProfile((prev) => prev ? { ...prev, blocks: prev.blocks.filter(b => b.id !== newId) } : prev);
-        alert(errorData.error || 'No se pudo crear el bloque. Probá de nuevo.');
+        alert(errorData.error || t("page.errorCreateBlock"));
         return;
       }
 
@@ -933,7 +935,7 @@ export default function DashboardPage() {
       case "ecosystem": return <EcosystemBlock {...props} subSites={profile?.subSites || []} username={profile?.username} />;
       default: return (
         <div className="huevsite-block h-full flex items-center justify-center p-8 border-dashed border-[var(--border-bright)] text-white/20">
-          Bloque fantasma
+          {t("page.ghostBlock")}
         </div>
       );
     }
@@ -953,7 +955,7 @@ export default function DashboardPage() {
       } catch (e) {
         console.error('Error saving color:', e);
         setProfile(prev => prev && previousColor ? { ...prev, accentColor: previousColor } : prev);
-        alert('No se pudo guardar el color. Esperá unos segundos y probá de nuevo.');
+        alert(t("page.errorSaveColor"));
       }
     }
   };
@@ -971,7 +973,7 @@ export default function DashboardPage() {
     } catch (e) {
       console.error('Error saving border radius:', e);
       setProfile(prev => prev ? { ...prev, borderRadius: previousRadius } : prev);
-      alert('No se pudo guardar el redondeo. Esperá unos segundos y probá de nuevo.');
+      alert(t("page.errorSaveBorderRadius"));
     }
   };
 
@@ -1035,7 +1037,7 @@ export default function DashboardPage() {
       const data = await res.json();
       setVerificationResult(data);
     } catch (error) {
-      setVerificationResult({ isValid: false, message: "No pudimos verificar el dominio en este momento." });
+      setVerificationResult({ isValid: false, message: t("page.errorVerifyDomain") });
     } finally {
       setVerifying(false);
     }
@@ -1054,7 +1056,7 @@ export default function DashboardPage() {
       setDomain(normalizedDomain);
       setVerificationResult(null);
     } catch (e: any) {
-      alert('Error guardando dominio.');
+      alert(t("page.errorSaveDomain"));
     }
   };
 
@@ -1113,7 +1115,7 @@ export default function DashboardPage() {
     } catch (e) { console.error(e); }
   };
   const handleDeleteSubSite = async (id: string) => {
-    if (!confirm('¿Borrar board?')) return;
+    if (!confirm(t("page.confirmDeleteBoard"))) return;
     try {
       const resp = await fetch(`/api/sub-sites/${id}`, { method: 'DELETE' });
       if (resp.ok) setProfile(prev => prev ? { ...prev, subSites: prev.subSites.filter(s => s.id !== id) } : null);
@@ -1220,7 +1222,7 @@ export default function DashboardPage() {
 
 
   const handleTransferProject = async (email: string) => {
-    alert("Función inhabilitada temporalmente.");
+    alert(t("page.transferDisabled"));
     return;
     /*
     if (!profile) return;
@@ -1309,7 +1311,7 @@ export default function DashboardPage() {
           <div className="w-16 h-16 rounded-full bg-[var(--surface2)] flex items-center justify-center mb-6 border border-[var(--border-bright)] animate-pulse mx-auto">
             <Sparkles size={32} className="text-[var(--accent)] animate-spin" />
           </div>
-          <p className="text-[var(--text-dim)] font-mono text-sm">Cargando...</p>
+          <p className="text-[var(--text-dim)] font-mono text-sm">{t("page.loading")}</p>
         </div>
       </div>
     );
@@ -1381,10 +1383,10 @@ export default function DashboardPage() {
             <div className="relative z-20 mt-6 md:mt-8 mb-6 border border-[var(--accent)]/20 bg-[linear-gradient(135deg,rgba(200,255,0,0.12),rgba(255,255,255,0.02))] p-5 md:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.18)]" style={{ borderRadius: "var(--dashboard-radius)" }}>
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent)]">14 días gratis</div>
-                  <h3 className="mt-2 text-xl font-black text-white">Claim free trial de Huevsite Pro</h3>
+                  <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent)]">{t("page.trialEligibleBadge")}</div>
+                  <h3 className="mt-2 text-xl font-black text-white">{t("page.trialEligibleTitle")}</h3>
                   <p className="mt-2 max-w-2xl text-sm text-white/65">
-                    Desbloqueá todo Pro por 14 días. Empezá por Insights, después aprovechá más bloques y análisis avanzados.
+                    {t("page.trialEligibleDescription")}
                   </p>
                 </div>
                 <button
@@ -1394,7 +1396,7 @@ export default function DashboardPage() {
                   style={{ backgroundColor: profile.accentColor, color: getContrastColor(profile.accentColor) }}
                 >
                   {isClaimingTrial ? <Sparkles size={16} className="animate-spin" /> : <BadgeCheck size={16} />}
-                  Claim free trial
+                  {t("page.claimFreeTrial")}
                 </button>
               </div>
             </div>
@@ -1410,10 +1412,10 @@ export default function DashboardPage() {
               </button>
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent)]">Trial activo</div>
-                  <h3 className="mt-2 text-lg font-black text-white">Tu prueba Pro está corriendo</h3>
+                  <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent)]">{t("page.trialActiveBadge")}</div>
+                  <h3 className="mt-2 text-lg font-black text-white">{t("page.trialActiveTitle")}</h3>
                   <p className="mt-1 text-sm text-white/60">
-                    Te quedan {profile.freeTrial.daysRemaining} día{profile.freeTrial.daysRemaining === 1 ? "" : "s"}. Lo más importante: abrí tus Insights y entendé mejor tu perfil.
+                    {t("page.trialActiveDescription", { days: profile.freeTrial.daysRemaining })}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -1421,14 +1423,14 @@ export default function DashboardPage() {
                     onClick={() => setActiveTab("insights")}
                     className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white/80 transition-all hover:bg-white/10"
                   >
-                    Ver Insights
+                    {t("page.viewInsights")}
                   </button>
                   <button
                     onClick={() => setIsUpgradeModalOpen(true)}
                     className="rounded-2xl px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-black"
                     style={{ backgroundColor: profile.accentColor, color: getContrastColor(profile.accentColor) }}
                   >
-                    Seguir en Pro
+                    {t("page.continueInPro")}
                   </button>
                 </div>
               </div>
@@ -1439,10 +1441,10 @@ export default function DashboardPage() {
             <div className="relative z-20 mb-6 border border-white/10 bg-white/[0.03] p-5 md:p-6" style={{ borderRadius: "var(--dashboard-radius)" }}>
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent)]">Última vista</div>
-                  <h3 className="mt-2 text-lg font-black text-white">Tu prueba terminó</h3>
+                  <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent)]">{t("page.lastViewBadge")}</div>
+                  <h3 className="mt-2 text-lg font-black text-white">{t("page.lastViewTitle")}</h3>
                   <p className="mt-1 text-sm text-white/60">
-                    Volviste al plan free, pero todavía podés abrir una última vez tus Insights en modo lectura antes de bloquearlos detrás de Pro.
+                    {t("page.lastViewDescription")}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -1450,14 +1452,14 @@ export default function DashboardPage() {
                     onClick={() => setActiveTab("insights")}
                     className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white/80 transition-all hover:bg-white/10"
                   >
-                    Ver última vez
+                    {t("page.viewLastTime")}
                   </button>
                   <button
                     onClick={() => setIsUpgradeModalOpen(true)}
                     className="rounded-2xl px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-black"
                     style={{ backgroundColor: profile.accentColor, color: getContrastColor(profile.accentColor) }}
                   >
-                    Seguir con Pro
+                    {t("page.continueWithPro")}
                   </button>
                 </div>
               </div>
@@ -1476,18 +1478,18 @@ export default function DashboardPage() {
             }} />
             <div className="mb-3 hidden md:block"><div className="section-label">// dashboard / {activeTab}</div></div>
             <h2 className="text-3xl md:text-4xl xl:text-5xl font-[950] tracking-tighter leading-[0.94] text-balance">
-              {activeTab === 'board' ? <>Armá tu <span style={{ color: profile.accentColor }}>{selectedSubSiteId ? (profile.subSites.find(s => s.id === selectedSubSiteId)?.title || "Board") : "huevsite"}</span>.</> :
-               activeTab === 'insights' ? <>Tus <span style={{ color: profile.accentColor }}>Insights</span>.</> :
-               activeTab === 'domain' ? <>Tu <span style={{ color: profile.accentColor }}>Dominio</span>.</> :
-               activeTab === 'subsites' ? <>Tus <span style={{ color: profile.accentColor }}>Sub-sites</span>.</> :
-               <>Transferí tu <span style={{ color: profile.accentColor }}>Proyecto</span>.</>}
+              {activeTab === 'board' ? <>{t("page.headingBoardPrefix")} <span style={{ color: profile.accentColor }}>{selectedSubSiteId ? (profile.subSites.find(s => s.id === selectedSubSiteId)?.title || t("page.boardFallback")) : "huevsite"}</span>.</> :
+               activeTab === 'insights' ? <>{t("page.headingInsightsPrefix")} <span style={{ color: profile.accentColor }}>{t("page.headingInsightsWord")}</span>.</> :
+               activeTab === 'domain' ? <>{t("page.headingDomainPrefix")} <span style={{ color: profile.accentColor }}>{t("page.headingDomainWord")}</span>.</> :
+               activeTab === 'subsites' ? <>{t("page.headingSubsitesPrefix")} <span style={{ color: profile.accentColor }}>{t("page.headingSubsitesWord")}</span>.</> :
+               <>{t("page.headingTransferPrefix")} <span style={{ color: profile.accentColor }}>{t("page.headingTransferWord")}</span>.</>}
             </h2>
           </div>
           {activeTab === 'board' && (
             <div className="grid grid-cols-2 gap-3 w-full lg:w-auto lg:flex lg:items-center">
-              <Link href={selectedSubSiteId ? `/${profile.username}/${profile.subSites.find(s => s.id === selectedSubSiteId)?.slug}` : `/${profile.username}`} target="_blank" className="btn-premium flex items-center justify-center gap-2 py-3 px-5 lg:px-6 rounded-2xl bg-white/[0.03] border border-white/10 text-white font-bold text-sm transition-all hover:bg-white/5 hover:border-white/20 min-w-0"><Eye size={18} className="text-white/40 shrink-0" /><span>Ver</span></Link>
+              <Link href={selectedSubSiteId ? `/${profile.username}/${profile.subSites.find(s => s.id === selectedSubSiteId)?.slug}` : `/${profile.username}`} target="_blank" className="btn-premium flex items-center justify-center gap-2 py-3 px-5 lg:px-6 rounded-2xl bg-white/[0.03] border border-white/10 text-white font-bold text-sm transition-all hover:bg-white/5 hover:border-white/20 min-w-0"><Eye size={18} className="text-white/40 shrink-0" /><span>{t("page.view")}</span></Link>
               <button onClick={handleSave} disabled={isSaving} className="btn-premium flex items-center justify-center gap-2 py-3 px-6 lg:px-10 rounded-2xl text-black font-[900] text-sm transition-all shadow-xl min-w-0" style={{ backgroundColor: profile.accentColor, color: getContrastColor(profile.accentColor) }}>
-                {isSaving ? <Sparkles size={18} className="animate-spin" /> : <Save size={18} />}<span>{isSaving ? 'Guardando' : 'Guardar'}</span>
+                {isSaving ? <Sparkles size={18} className="animate-spin" /> : <Save size={18} />}<span>{isSaving ? t("page.saving") : t("page.save")}</span>
               </button>
             </div>
           )}
@@ -1512,7 +1514,7 @@ export default function DashboardPage() {
                     className="w-full flex items-center gap-3 px-5 py-4 group hover:bg-white/[0.02] transition-colors"
                   >
                     {/* Label + count */}
-                    <span className="text-[10px] font-black text-white/25 uppercase tracking-[0.22em] shrink-0">Badges</span>
+                    <span className="text-[10px] font-black text-white/25 uppercase tracking-[0.22em] shrink-0">{t("page.badges")}</span>
                     <span className="text-[9px] font-black text-white/15 font-mono shrink-0">{earnedCount}/{totalCount}</span>
 
                     {/* Mini badges — always visible, earned first */}
@@ -1564,7 +1566,7 @@ export default function DashboardPage() {
                           {profile.referralCode && (
                             <div className="mt-5 pt-4 border-t border-white/[0.05] flex items-center justify-between gap-4">
                               <div className="min-w-0">
-                                <div className="text-[9px] font-black text-white/25 uppercase tracking-[0.22em] mb-0.5">Tu link de referido</div>
+                                <div className="text-[9px] font-black text-white/25 uppercase tracking-[0.22em] mb-0.5">{t("page.yourReferralLink")}</div>
                                 <div className="text-[11px] text-white/40 font-mono truncate">
                                   huevsite.io/login?ref=<span className="text-white/60">{profile.referralCode}</span>
                                 </div>
@@ -1579,7 +1581,7 @@ export default function DashboardPage() {
                                 className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.06] transition-all text-[10px] font-black uppercase tracking-[0.12em] text-white/50 hover:text-white/80"
                               >
                                 {referralCopied ? <Check size={12} className="text-[var(--accent)]" /> : <Copy size={12} />}
-                                {referralCopied ? "Copiado" : "Copiar"}
+                                {referralCopied ? t("page.copied") : t("page.copy")}
                               </button>
                             </div>
                           )}
@@ -1598,29 +1600,29 @@ export default function DashboardPage() {
             style={{ borderRadius: "calc(var(--dashboard-radius) + 0.5rem)" }}
           >
             <MessageSquare size={16} />
-            Feedback
+            {t("page.feedback")}
           </button>
 
           {/* DESKTOP TABS */}
           {isPro && (
           <div className="hidden md:flex relative mb-16 z-20 items-center justify-center">
             <div className="flex items-center gap-1 bg-white/[0.03] p-1.5 border border-white/5 backdrop-blur-md shadow-2xl overflow-x-auto scrollbar-none max-w-full w-fit" style={{ borderRadius: "calc(var(--dashboard-radius) + 0.75rem)" }}>
-              {availableTabs.map((t) => (
-                <button 
-                  key={t} 
-                  onClick={() => setActiveTab(t)} 
-                  className={`px-4 lg:px-8 py-3 text-[10px] font-black uppercase tracking-[0.18em] transition-all relative shrink-0 ${activeTab === t ? 'text-black' : 'text-white/20 hover:text-white/60 hover:bg-white/[0.03]'}`}
+              {availableTabs.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-4 lg:px-8 py-3 text-[10px] font-black uppercase tracking-[0.18em] transition-all relative shrink-0 ${activeTab === tab ? 'text-black' : 'text-white/20 hover:text-white/60 hover:bg-white/[0.03]'}`}
                   style={{ borderRadius: "calc(var(--dashboard-radius) + 0.25rem)" }}
                 >
-                  {activeTab === t && (
-                    <motion.div 
-                      layoutId="activeTabSel" 
-                      className="absolute inset-0 bg-[var(--accent)] shadow-[0_0_20px_rgba(var(--accent-rgb),0.3)]" 
+                  {activeTab === tab && (
+                    <motion.div
+                      layoutId="activeTabSel"
+                      className="absolute inset-0 bg-[var(--accent)] shadow-[0_0_20px_rgba(var(--accent-rgb),0.3)]"
                       style={{ borderRadius: "calc(var(--dashboard-radius) + 0.25rem)" }}
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }} 
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                     />
                   )}
-                  <span className="relative z-10">{t === 'board' ? 'Editor' : t === 'insights' ? 'Insights' : t === 'subsites' ? 'Sub-sites' : t === 'domain' ? 'Dominio' : 'Transferir'}</span>
+                  <span className="relative z-10">{tab === 'board' ? t("page.tabEditor") : tab === 'insights' ? t("page.tabInsights") : tab === 'subsites' ? t("page.tabSubsites") : tab === 'domain' ? t("page.tabDomain") : t("page.tabTransfer")}</span>
                 </button>
               ))}
             </div>
@@ -1643,9 +1645,9 @@ export default function DashboardPage() {
                        activeTab === 'domain' ? <Globe size={18} /> : <ArrowUpRight size={18} />}
                    </div>
                    <div className="text-left">
-                      <span className="text-[10px] block font-black text-white/20 uppercase tracking-[0.2em] mb-0.5">Vista Activa</span>
+                      <span className="text-[10px] block font-black text-white/20 uppercase tracking-[0.2em] mb-0.5">{t("page.activeView")}</span>
                       <span className="text-sm font-black uppercase tracking-widest">
-                        {activeTab === 'board' ? 'Editor' : activeTab === 'insights' ? 'Insights' : activeTab === 'subsites' ? 'Sub-sites' : activeTab === 'domain' ? 'Dominio' : 'Transferir'}
+                        {activeTab === 'board' ? t("page.tabEditor") : activeTab === 'insights' ? t("page.tabInsights") : activeTab === 'subsites' ? t("page.tabSubsites") : activeTab === 'domain' ? t("page.tabDomain") : t("page.tabTransfer")}
                       </span>
                    </div>
                 </div>
@@ -1669,22 +1671,22 @@ export default function DashboardPage() {
                          className="relative bg-[#121214] border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden backdrop-blur-xl p-3"
                          style={{ borderRadius: "calc(var(--dashboard-radius) + 0.75rem)" }}
                       >
-                         {availableTabs.map((t) => (
+                         {availableTabs.map((tab) => (
                             <button
-                               key={t}
-                               onClick={() => { setActiveTab(t); setIsTabMenuOpen(false); }}
-                               className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${activeTab === t ? 'bg-[var(--accent)]/10 border border-[var(--accent)]/20' : 'hover:bg-white/5 border border-transparent'}`}
+                               key={tab}
+                               onClick={() => { setActiveTab(tab); setIsTabMenuOpen(false); }}
+                               className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${activeTab === tab ? 'bg-[var(--accent)]/10 border border-[var(--accent)]/20' : 'hover:bg-white/5 border border-transparent'}`}
                             >
-                               <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${activeTab === t ? 'bg-[var(--accent)] text-black' : 'bg-white/5 text-white/30'}`}>
-                                  {t === 'board' ? <LayoutIcon size={16} /> : 
-                                   t === 'insights' ? <Activity size={16} /> :
-                                   t === 'subsites' ? <Compass size={16} /> :
-                                   t === 'domain' ? <Globe size={16} /> : <ArrowUpRight size={16} />}
+                               <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${activeTab === tab ? 'bg-[var(--accent)] text-black' : 'bg-white/5 text-white/30'}`}>
+                                  {tab === 'board' ? <LayoutIcon size={16} /> :
+                                   tab === 'insights' ? <Activity size={16} /> :
+                                   tab === 'subsites' ? <Compass size={16} /> :
+                                   tab === 'domain' ? <Globe size={16} /> : <ArrowUpRight size={16} />}
                                </div>
-                               <span className={`text-xs font-black uppercase tracking-[0.1em] ${activeTab === t ? 'text-white' : 'text-white/40'}`}>
-                                  {t === 'board' ? 'Editor' : t === 'insights' ? 'Insights' : t === 'subsites' ? 'Sub-sites' : t === 'domain' ? 'Dominio' : 'Transferir'}
+                               <span className={`text-xs font-black uppercase tracking-[0.1em] ${activeTab === tab ? 'text-white' : 'text-white/40'}`}>
+                                  {tab === 'board' ? t("page.tabEditor") : tab === 'insights' ? t("page.tabInsights") : tab === 'subsites' ? t("page.tabSubsites") : tab === 'domain' ? t("page.tabDomain") : t("page.tabTransfer")}
                                </span>
-                               {activeTab === t && <Check size={14} className="ml-auto text-[var(--accent)]" />}
+                               {activeTab === tab && <Check size={14} className="ml-auto text-[var(--accent)]" />}
                             </button>
                          ))}
                       </motion.div>
@@ -1699,12 +1701,12 @@ export default function DashboardPage() {
               <motion.div key="board" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }}>
                 {/* Board presets switcher (Pro): hasta 3 boards, uno publicado. */}
                 <div className="mb-5 flex flex-wrap items-center gap-2">
-                  <span className="text-[9px] font-black uppercase tracking-[0.18em] text-white/30 mr-1">// boards</span>
+                  <span className="text-[9px] font-black uppercase tracking-[0.18em] text-white/30 mr-1">// {t("page.boards")}</span>
                   {[0, 1, 2].map((i) => {
                     const isSelected = selectedBoardIndex === i;
                     const isPublished = (profile.publishedBoard ?? 0) === i;
                     const locked = !isPro && i !== (profile.publishedBoard ?? 0);
-                    const name = profile.boardNames?.[String(i)] || `Board ${i + 1}`;
+                    const name = profile.boardNames?.[String(i)] || t("page.boardDefaultName", { n: i + 1 });
                     return (
                       <button
                         key={i}
@@ -1715,7 +1717,7 @@ export default function DashboardPage() {
                           color: isSelected ? "#000" : (locked ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.7)"),
                           borderColor: isSelected ? "transparent" : "rgba(255,255,255,0.08)",
                         }}
-                        title={locked ? "Boards múltiples son Pro" : name}
+                        title={locked ? t("page.multipleBoardsArePro") : name}
                       >
                         {locked && <Lock size={11} />}
                         <span>{name}</span>
@@ -1723,7 +1725,7 @@ export default function DashboardPage() {
                           <span
                             className="inline-flex h-1.5 w-1.5 rounded-full"
                             style={{ backgroundColor: isSelected ? "#000" : profile.accentColor }}
-                            title="Publicado"
+                            title={t("page.published")}
                           />
                         )}
                       </button>
@@ -1735,22 +1737,22 @@ export default function DashboardPage() {
                       disabled={isPublishingBoard}
                       className="px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-wider border border-[var(--accent)]/40 text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-all disabled:opacity-50"
                     >
-                      {isPublishingBoard ? "Publicando…" : "Publicar este board"}
+                      {isPublishingBoard ? t("page.publishing") : t("page.publishThisBoard")}
                     </button>
                   )}
                   {isPro && (profile.publishedBoard ?? 0) === selectedBoardIndex && (
                     <span className="px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-[var(--accent)]/60">
-                      ● en vivo
+                      ● {t("page.live")}
                     </span>
                   )}
                 </div>
                 <div className="mb-6 md:mb-8 flex items-center justify-between gap-4 px-1">
                   <p className="text-[11px] text-white/30 font-medium">
-                    Arrastrá, redimensioná y hacé click en cada bloque para editarlo.
+                    {t("page.boardHint")}
                   </p>
                   <div className="hidden md:flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/25 shrink-0">
                     <span className="inline-flex h-2 w-2 rounded-full" style={{ backgroundColor: profile.accentColor }} />
-                    {visibleBlocks.length} bloques{hiddenBlocks.length > 0 && isPro ? ` · ${hiddenBlocks.length} ocultos` : ""}
+                    {t("page.blockCount", { count: visibleBlocks.length })}{hiddenBlocks.length > 0 && isPro ? ` · ${t("page.hiddenCount", { count: hiddenBlocks.length })}` : ""}
                   </div>
                 </div>
 
@@ -1760,7 +1762,7 @@ export default function DashboardPage() {
                       {visibleBlocks.length === 0 ? (
                         <div className="col-span-full flex flex-col items-center justify-center py-40 text-center text-white/20 font-bold uppercase tracking-widest text-sm">
                           <Plus className="mb-4 opacity-30" size={40} />
-                          Agregá tu primer bloque
+                          {t("page.addFirstBlock")}
                         </div>
                       ) : (
                         visibleBlocks.map((block) => (
@@ -1787,7 +1789,7 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-2.5 mb-4">
                       <EyeOff size={14} className="text-white/30" />
                       <span className="text-[11px] font-black uppercase tracking-[0.15em] text-white/30">
-                        Bloques ocultos
+                        {t("page.hiddenBlocks")}
                       </span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -1810,7 +1812,7 @@ export default function DashboardPage() {
                             className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold border border-white/10 hover:border-[var(--accent)]/50 hover:text-[var(--accent)] text-white/40 transition-all"
                           >
                             <Eye size={13} />
-                            Mostrar
+                            {t("page.show")}
                           </button>
                         </div>
                       ))}
@@ -1865,15 +1867,15 @@ export default function DashboardPage() {
             {activeTab === 'subsites' && (
               <motion.div key="subsites" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-4xl mx-auto space-y-8 md:space-y-12 px-4">
                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                   <h3 className="text-2xl font-black text-white text-center sm:text-left">Tus Proyectos</h3>
+                   <h3 className="text-2xl font-black text-white text-center sm:text-left">{t("page.yourProjects")}</h3>
                    <button onClick={() => setIsCreateSubSiteOpen(true)} className="flex items-center justify-center gap-2 bg-[var(--accent)]/10 text-[var(--accent)] px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[var(--accent)] hover:text-black transition-all">
-                     <Plus size={16} /> Crear Sub-site
+                     <Plus size={16} /> {t("page.createSubSite")}
                    </button>
                  </div>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {profile.subSites.length === 0 ? (
                       <div className="col-span-full py-20 text-center bg-white/[0.01] border border-dashed border-white/5" style={{ borderRadius: "calc(var(--dashboard-radius) + 0.75rem)" }}>
-                        <p className="text-white/20 font-black uppercase text-[10px] tracking-[0.2em]">No tenés sub-sites creados aún.</p>
+                        <p className="text-white/20 font-black uppercase text-[10px] tracking-[0.2em]">{t("page.noSubSites")}</p>
                       </div>
                     ) : (
                       profile.subSites.map(site => (
@@ -1907,23 +1909,23 @@ export default function DashboardPage() {
                 <div className="absolute inset-0 bg-black/40 backdrop-blur-[4px] z-10 rounded-[2.5rem] md:rounded-[3.5rem] flex items-center justify-center border border-white/10">
                    <div className="bg-[#09090b] p-8 md:p-12 rounded-[2.5rem] border border-white/5 shadow-2xl scale-100 md:scale-110">
                       <Lock size={40} className="mx-auto mb-6 text-[var(--accent)] opacity-40" />
-                      <h4 className="text-xl md:text-2xl font-black text-white mb-2 uppercase tracking-tighter">Feature Inhabilitada</h4>
-                      <p className="text-white/40 text-[10px] font-bold font-mono uppercase tracking-widest">Próximamente disponible para PRO</p>
+                      <h4 className="text-xl md:text-2xl font-black text-white mb-2 uppercase tracking-tighter">{t("page.featureDisabled")}</h4>
+                      <p className="text-white/40 text-[10px] font-bold font-mono uppercase tracking-widest">{t("page.comingSoonForPro")}</p>
                    </div>
                 </div>
                 <div className="space-y-4 filter blur-md pointer-events-none">
-                  <h3 className="text-3xl font-[950] tracking-tighter text-white">Transferir Proyecto.</h3>
-                  <p className="text-white/40 text-sm">Entregá la propiedad total de este board a otro usuario.</p>
+                  <h3 className="text-3xl font-[950] tracking-tighter text-white">{t("page.transferProjectTitle")}</h3>
+                  <p className="text-white/40 text-sm">{t("page.transferProjectDescription")}</p>
                 </div>
                 <div className="space-y-6 filter blur-md pointer-events-none">
                   <div className="relative">
                     <SendHorizontal className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20" />
-                    <input disabled value={transferEmail} placeholder="email@receptor.com" className="w-full bg-white/[0.03] border border-white/10 rounded-[2.5rem] pl-16 pr-8 py-6 text-xl font-bold" />
+                    <input disabled value={transferEmail} placeholder={t("page.transferEmailPlaceholder")} className="w-full bg-white/[0.03] border border-white/10 rounded-[2.5rem] pl-16 pr-8 py-6 text-xl font-bold" />
                   </div>
-                  <button disabled className="w-full py-6 rounded-[2rem] bg-white/10 text-white/20 font-black uppercase tracking-widest">Confirmar Transferencia</button>
+                  <button disabled className="w-full py-6 rounded-[2rem] bg-white/10 text-white/20 font-black uppercase tracking-widest">{t("page.confirmTransfer")}</button>
                 </div>
                 <div className="p-6 rounded-3xl bg-amber-500/5 border border-amber-500/10 text-amber-500/60 text-[10px] font-bold italic flex items-center gap-3 filter blur-md pointer-events-none">
-                  <AlertCircle size={16} /> Esta acción es definitiva e irreversible.
+                  <AlertCircle size={16} /> {t("page.transferIrreversible")}
                 </div>
               </motion.div>
             )}
@@ -1966,8 +1968,8 @@ export default function DashboardPage() {
         initialRoles={(profile.roles as Role[] | null) || []}
         onComplete={handleOnboardingComplete}
       />
-      <AnimatePresence>{isDeletingId && <div className="fixed inset-0 z-[500] flex items-center justify-center p-4"><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setIsDeletingId(null)} /><motion.div initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }} className="relative w-full max-w-sm bg-[var(--surface)] border border-red-500/30 rounded-[2rem] shadow-2xl p-8 z-[510] text-center"><div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-6 text-red-500"><Trash2 size={32} /></div><h3 className="text-2xl font-black mb-3 text-white">¿Borrar bloque?</h3><p className="text-[var(--text-dim)] mb-8 text-sm leading-relaxed">Esta acción no se puede deshacer.</p><div className="flex gap-3"><button onClick={() => setIsDeletingId(null)} className="flex-1 py-3.5 rounded-2xl bg-[var(--surface2)] font-bold text-sm text-white">Cancelar</button><button onClick={() => { removeBlock(isDeletingId); setIsDeletingId(null); }} className="flex-1 py-3.5 rounded-2xl bg-red-500 font-bold text-sm text-white transition-all">Eliminar</button></div></motion.div></div>}</AnimatePresence>
-      <AnimatePresence>{isProfileModalOpen && <div className="fixed inset-0 z-[500] flex items-center justify-center p-4"><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsProfileModalOpen(false)} className="absolute inset-0 bg-black/80 backdrop-blur-md" /><motion.div initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }} className="relative w-full max-w-md bg-[var(--surface)] border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden z-[510] p-8 pt-10"><div className="text-center mb-8"><div className="section-label mb-2 mx-auto w-fit">// identidad {selectedSubSiteId ? '(sub-site)' : ''}</div><h3 className="text-2xl font-black tracking-tighter">Editar {selectedSubSiteId ? 'Sub-site' : 'Perfil'}</h3></div><div className="space-y-6"><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1">URL del {selectedSubSiteId ? 'Sub-site' : 'Perfil'}</label><div className="flex items-center gap-2 p-4 rounded-2xl bg-black/40 border border-white/10 focus-within:border-[var(--accent)] transition-all font-mono"><span className="text-xs text-white/20">huevsite.io/{selectedSubSiteId ? `${profile.username}/` : ''}</span><input value={tempProfileData.username} onChange={(e) => setTempProfileData(p => ({ ...p, username: e.target.value.toLowerCase() }))} className="bg-transparent border-none outline-none text-sm font-black text-[var(--accent)] flex-1 p-0" /></div></div><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">Foto (URL)</label><input value={tempProfileData.avatarUrl} onChange={(e) => setTempProfileData(p => ({ ...p, avatarUrl: e.target.value }))} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-white/60 focus:border-[var(--accent)] transition-all font-mono" /></div><div className="space-y-4 pt-2"><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">Nombre</label><input value={tempProfileData.display_name} onChange={(e) => setTempProfileData(p => ({ ...p, display_name: e.target.value }))} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm font-black text-white focus:border-[var(--accent)] transition-all" /></div><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">{selectedSubSiteId ? 'Descripción' : 'Tagline'}</label><input value={tempProfileData.tagline} onChange={(e) => setTempProfileData(p => ({ ...p, tagline: e.target.value }))} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-white/60 focus:border-[var(--accent)] transition-all" /></div>{!selectedSubSiteId && <div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">E-mail</label><input type="email" value={tempProfileData.email} onChange={(e) => setTempProfileData(p => ({ ...p, email: e.target.value }))} placeholder="tu@email.com" className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-white/60 focus:border-[var(--accent)] transition-all font-mono" /><p className="text-[10px] text-white/25 px-1">Acá te llegará el newsletter y las comunicaciones de huevsite.</p></div>}</div></div><div className="flex gap-4 mt-10"><button onClick={() => setIsProfileModalOpen(false)} className="flex-1 py-4 text-sm font-bold text-white/30 hover:text-white transition-colors">Cancelar</button><button onClick={async () => { 
+      <AnimatePresence>{isDeletingId && <div className="fixed inset-0 z-[500] flex items-center justify-center p-4"><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setIsDeletingId(null)} /><motion.div initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }} className="relative w-full max-w-sm bg-[var(--surface)] border border-red-500/30 rounded-[2rem] shadow-2xl p-8 z-[510] text-center"><div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-6 text-red-500"><Trash2 size={32} /></div><h3 className="text-2xl font-black mb-3 text-white">{t("page.deleteBlockConfirmTitle")}</h3><p className="text-[var(--text-dim)] mb-8 text-sm leading-relaxed">{t("page.actionCannotBeUndone")}</p><div className="flex gap-3"><button onClick={() => setIsDeletingId(null)} className="flex-1 py-3.5 rounded-2xl bg-[var(--surface2)] font-bold text-sm text-white">{t("page.cancel")}</button><button onClick={() => { removeBlock(isDeletingId); setIsDeletingId(null); }} className="flex-1 py-3.5 rounded-2xl bg-red-500 font-bold text-sm text-white transition-all">{t("page.delete")}</button></div></motion.div></div>}</AnimatePresence>
+      <AnimatePresence>{isProfileModalOpen && <div className="fixed inset-0 z-[500] flex items-center justify-center p-4"><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsProfileModalOpen(false)} className="absolute inset-0 bg-black/80 backdrop-blur-md" /><motion.div initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }} className="relative w-full max-w-md bg-[var(--surface)] border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden z-[510] p-8 pt-10"><div className="text-center mb-8"><div className="section-label mb-2 mx-auto w-fit">// {t("page.identity")} {selectedSubSiteId ? t("page.subSiteParenthetical") : ''}</div><h3 className="text-2xl font-black tracking-tighter">{selectedSubSiteId ? t("page.editSubSite") : t("page.editProfile")}</h3></div><div className="space-y-6"><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1">{selectedSubSiteId ? t("page.subSiteUrl") : t("page.profileUrl")}</label><div className="flex items-center gap-2 p-4 rounded-2xl bg-black/40 border border-white/10 focus-within:border-[var(--accent)] transition-all font-mono"><span className="text-xs text-white/20">huevsite.io/{selectedSubSiteId ? `${profile.username}/` : ''}</span><input value={tempProfileData.username} onChange={(e) => setTempProfileData(p => ({ ...p, username: e.target.value.toLowerCase() }))} className="bg-transparent border-none outline-none text-sm font-black text-[var(--accent)] flex-1 p-0" /></div></div><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">{t("page.photoUrl")}</label><input value={tempProfileData.avatarUrl} onChange={(e) => setTempProfileData(p => ({ ...p, avatarUrl: e.target.value }))} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-white/60 focus:border-[var(--accent)] transition-all font-mono" /></div><div className="space-y-4 pt-2"><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">{t("page.name")}</label><input value={tempProfileData.display_name} onChange={(e) => setTempProfileData(p => ({ ...p, display_name: e.target.value }))} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm font-black text-white focus:border-[var(--accent)] transition-all" /></div><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">{selectedSubSiteId ? t("page.description") : t("page.tagline")}</label><input value={tempProfileData.tagline} onChange={(e) => setTempProfileData(p => ({ ...p, tagline: e.target.value }))} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-white/60 focus:border-[var(--accent)] transition-all" /></div>{!selectedSubSiteId && <div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">{t("page.emailLabel")}</label><input type="email" value={tempProfileData.email} onChange={(e) => setTempProfileData(p => ({ ...p, email: e.target.value }))} placeholder={t("page.emailPlaceholder")} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-white/60 focus:border-[var(--accent)] transition-all font-mono" /><p className="text-[10px] text-white/25 px-1">{t("page.emailHelper")}</p></div>}</div></div><div className="flex gap-4 mt-10"><button onClick={() => setIsProfileModalOpen(false)} className="flex-1 py-4 text-sm font-bold text-white/30 hover:text-white transition-colors">{t("page.cancel")}</button><button onClick={async () => {
         if (selectedSubSiteId) {
           setProfile(prev => prev ? {
             ...prev,
@@ -2008,18 +2010,18 @@ export default function DashboardPage() {
             const resp = await fetch('/api/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: tempProfileData.username, name: tempProfileData.display_name, tagline: tempProfileData.tagline, image: tempProfileData.avatarUrl, ...(tempProfileData.email ? { email: tempProfileData.email } : {}) }) });
             if (!resp.ok) {
               const data = await resp.json().catch(() => ({}));
-              alert(data.error || 'No se pudo guardar el perfil. Revisá los datos y probá de nuevo.');
+              alert(data.error || t("page.errorSaveProfile"));
               await fetchProfile();
               return;
             }
           } catch {
-            alert('Error de red al guardar el perfil.');
+            alert(t("page.errorNetworkSaveProfile"));
             await fetchProfile();
             return;
           }
         }
-        setIsProfileModalOpen(false); 
-      }} className="flex-[2] py-4 rounded-2xl bg-[var(--accent)] text-black font-black text-sm shadow-xl" style={{ backgroundColor: profile.accentColor, color: getContrastColor(profile.accentColor) }}>Guardar</button></div></motion.div></div>}</AnimatePresence>
+        setIsProfileModalOpen(false);
+      }} className="flex-[2] py-4 rounded-2xl bg-[var(--accent)] text-black font-black text-sm shadow-xl" style={{ backgroundColor: profile.accentColor, color: getContrastColor(profile.accentColor) }}>{t("page.save")}</button></div></motion.div></div>}</AnimatePresence>
       <ScoreInfoModal isOpen={isScoreInfoOpen} onClose={() => setIsScoreInfoOpen(false)} accentColor={profile.accentColor} profileId={profile.id} />
       <CreateSubSiteModal
         isOpen={isCreateSubSiteOpen}
@@ -2069,7 +2071,7 @@ export default function DashboardPage() {
         username={profile.username}
         displayName={profile.displayName}
         accentColor={profile.accentColor}
-        message={`Armé mi huevsite — mi portfolio de builder 🚀`}
+        message={t("page.shareMessage")}
         celebrate={shareCelebrate}
       />
 

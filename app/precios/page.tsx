@@ -1,13 +1,18 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { PricingTiers } from "@/components/landing/PricingTiers";
+import LocaleToggle from "@/components/LocaleToggle";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Precios · huevsite.io",
-  description: "Free, Pro y Founder. Elegí cómo querés que te encuentren.",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("pricing");
+  return {
+    title: t("pageMetaTitle"),
+    description: t("pageMetaDescription"),
+  };
+}
 
 // Reconstruye SOLO los utm_* entrantes como query string saneado (evita arrastrar
 // params arbitrarios al checkout / login).
@@ -32,6 +37,9 @@ export default async function PreciosPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const t = await getTranslations("landing");
+  const tNav = await getTranslations("nav");
+  const tPricing = await getTranslations("pricing");
 
   const pricingUser = user ? { id: user.id, email: user.email } : null;
   const utm = buildUtmQuery(searchParams);
@@ -43,21 +51,23 @@ export default async function PreciosPage({
           <Link href="/" className="logo">
             huev<span style={{ color: "var(--accent)" }}>site</span>.io
           </Link>
-          <Link href={user ? "/dashboard" : "/login"} className="btn btn-ghost">
-            {user ? "Mi huevsite" : "Iniciar sesión"}
-          </Link>
+          <div className="flex items-center gap-3">
+            <LocaleToggle />
+            <Link href={user ? "/dashboard" : "/login"} className="btn btn-ghost">
+              {user ? tNav("myHuevsite") : tNav("login")}
+            </Link>
+          </div>
         </div>
 
         <div className="text-center max-w-2xl mx-auto mb-16">
           <div className="section-label" style={{ color: "var(--accent)", justifyContent: "center" }}>
-            // huevsite pro
+            {t("proSectionLabel")}
           </div>
           <h1 className="section-title">
-            Que te <span style={{ color: "var(--accent)" }}>encuentren.</span>
+            {t("proTitlePrefix")} <span style={{ color: "var(--accent)" }}>{t("proTitleAccent")}</span>
           </h1>
           <p className="section-sub">
-            Recruiters, clientes y otros builders te descubren cuando destacás. Los perfiles Pro
-            aparecen primero en el feed, el showcase y el leaderboard.
+            {t("proSub")}
           </p>
         </div>
 
@@ -66,7 +76,7 @@ export default async function PreciosPage({
         </div>
 
         <p className="text-center text-[11px] font-mono text-[var(--text-muted)] uppercase tracking-widest mt-12 opacity-50">
-          Pagos seguros vía Lemon Squeezy · Cancelás cuando quieras
+          {tPricing("securePaymentNote")}
         </p>
       </div>
     </main>

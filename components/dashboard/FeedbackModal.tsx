@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { MessageSquare, Send, X, Loader2, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { FileUpload } from "./FileUpload";
 
 export function FeedbackModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const t = useTranslations("dashboard");
   const [content, setContent] = useState("");
   const [category, setCategory] = useState("general");
   const [screenshotUrl, setScreenshotUrl] = useState("");
@@ -37,10 +39,10 @@ export function FeedbackModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
         }, 2000);
       } else {
         const data = await res.json();
-        setError(data.error || "Error al enviar feedback");
+        setError(data.error || t("feedback.sendError"));
       }
     } catch (err) {
-      setError("Error de conexión");
+      setError(t("feedback.connectionError"));
     } finally {
       setLoading(false);
     }
@@ -74,8 +76,8 @@ export function FeedbackModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
                   <CheckCircle2 size={32} />
                 </div>
               </div>
-              <h3 className="text-xl font-bold">¡Feedback enviado!</h3>
-              <p className="text-[var(--text-dim)]">Gracias por ayudarnos a mejorar huevsite. 🇦🇷</p>
+              <h3 className="text-xl font-bold">{t("feedback.sentTitle")}</h3>
+              <p className="text-[var(--text-dim)]">{t("feedback.sentSubtitle")}</p>
             </div>
           ) : (
             <>
@@ -85,8 +87,8 @@ export function FeedbackModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
                     <MessageSquare size={22} />
                   </div>
                   <div>
-                    <h3 className="font-black text-xl tracking-tighter">Feedback</h3>
-                    <div className="text-[9px] font-mono text-white/30 uppercase tracking-[0.2em] mt-1">// línea directa con el equipo</div>
+                    <h3 className="font-black text-xl tracking-tighter">{t("feedback.title")}</h3>
+                    <div className="text-[9px] font-mono text-white/30 uppercase tracking-[0.2em] mt-1">// {t("feedback.subtitle")}</div>
                   </div>
                 </div>
                 <button 
@@ -99,7 +101,7 @@ export function FeedbackModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
 
               <form onSubmit={handleSubmit} className="p-6 space-y-6">
                 <div className="space-y-2">
-                  <label className="text-[11px] font-mono text-[var(--text-muted)] uppercase tracking-widest px-1">Categoría</label>
+                  <label className="text-[11px] font-mono text-[var(--text-muted)] uppercase tracking-widest px-1">{t("feedback.categoryLabel")}</label>
                   <div className="grid grid-cols-3 gap-2">
                     {['general', 'bug', 'idea'].map((cat) => (
                       <button
@@ -107,30 +109,30 @@ export function FeedbackModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
                         type="button"
                         onClick={() => setCategory(cat)}
                         className={`py-2 px-3 rounded-xl border text-xs font-medium transition-all ${
-                          category === cat 
-                            ? 'bg-[var(--accent)] text-black border-[var(--accent)] font-bold' 
+                          category === cat
+                            ? 'bg-[var(--accent)] text-black border-[var(--accent)] font-bold'
                             : 'bg-[var(--surface2)] text-[var(--text-dim)] border-[var(--border-bright)] hover:border-white/20'
                         }`}
                       >
-                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                        {t(`feedback.category_${cat}`)}
                       </button>
                     ))}
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[11px] font-mono text-[var(--text-muted)] uppercase tracking-widest px-1">Tu Mensaje</label>
+                  <label className="text-[11px] font-mono text-[var(--text-muted)] uppercase tracking-widest px-1">{t("feedback.messageLabel")}</label>
                   <textarea
                     required
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
-                    placeholder="Contanos qué podemos mejorar, qué feature te gustaría ver o reportá un bicho..."
+                    placeholder={t("feedback.messagePlaceholder")}
                     className="w-full h-40 bg-[var(--surface2)] border border-[var(--border-bright)] rounded-2xl p-4 text-sm text-white placeholder:text-white/20 focus:border-[var(--accent)] outline-none resize-none transition-colors shadow-inner"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[11px] font-mono text-[var(--text-muted)] uppercase tracking-widest px-1">Screenshot opcional</label>
+                  <label className="text-[11px] font-mono text-[var(--text-muted)] uppercase tracking-widest px-1">{t("feedback.screenshotLabel")}</label>
                   <FileUpload
                     value={screenshotUrl}
                     onChange={setScreenshotUrl}
@@ -149,7 +151,7 @@ export function FeedbackModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
                     <Loader2 size={18} className="animate-spin" />
                   ) : (
                     <>
-                      <span>Enviar feedback</span>
+                      <span>{t("feedback.submit")}</span>
                       <Send size={16} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                     </>
                   )}

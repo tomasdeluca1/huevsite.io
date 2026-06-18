@@ -22,8 +22,11 @@ import {
   ExternalLink
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { Tooltip } from "@/components/ui/Tooltip";
 import Link from "next/link";
+
+type TFn = (key: string, values?: Record<string, any>) => string;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -133,51 +136,51 @@ function getBrowserEmoji(browser: string): string {
   return map[browser] || '🌐';
 }
 
-function getOSTooltip(os: string): string {
-  const tips: Record<string, string> = {
-    'Mac OS': 'Audiencia con entorno de trabajo típico de builders, founders y perfiles creativos.',
-    'Windows': 'Suele señalar tráfico amplio, reclutadores y usuarios en contexto más corporativo.',
-    'iOS': 'Sesiones móviles cuidadas; útil para validar que tu perfil se vea bien en iPhone.',
-    'Android': 'Buen indicador de alcance mobile amplio fuera del nicho más Apple-centric.',
-    'Linux': 'Tráfico muy técnico; suele venir de devs, OSS y perfiles más infra.',
+function getOSTooltip(os: string, t: TFn): string {
+  const keys: Record<string, string> = {
+    'Mac OS': 'insights.osTooltipMacOs',
+    'Windows': 'insights.osTooltipWindows',
+    'iOS': 'insights.osTooltipIos',
+    'Android': 'insights.osTooltipAndroid',
+    'Linux': 'insights.osTooltipLinux',
   };
-  return tips[os] || 'Te ayuda a entender en qué ecosistema operativo se está consumiendo tu perfil.';
+  return keys[os] ? t(keys[os]) : t('insights.osTooltipDefault');
 }
 
-function getBrowserTooltip(browser: string): string {
-  const tips: Record<string, string> = {
-    'Chrome': 'Suele dominar el tráfico general; sirve como baseline para comparar el resto.',
-    'Safari': 'Importante para revisar cómo se percibe tu perfil en dispositivos Apple.',
-    'Firefox': 'Frecuente en audiencias técnicas y usuarios más cuidadosos con privacidad.',
-    'Edge': 'Puede señalar tráfico desde empresas, recruiters o entornos corporativos.',
-    'Samsung Internet': 'Señal clara de consumo mobile Android.',
-    'Instagram': 'Sesiones embebidas desde la app; conviene priorizar CTAs rápidos y visuales.',
-    'Facebook': 'Tráfico social desde navegador interno de la app.',
-    'LinkedIn': 'Suele correlacionar con visitas de networking o reclutamiento.',
+function getBrowserTooltip(browser: string, t: TFn): string {
+  const keys: Record<string, string> = {
+    'Chrome': 'insights.browserTooltipChrome',
+    'Safari': 'insights.browserTooltipSafari',
+    'Firefox': 'insights.browserTooltipFirefox',
+    'Edge': 'insights.browserTooltipEdge',
+    'Samsung Internet': 'insights.browserTooltipSamsung',
+    'Instagram': 'insights.browserTooltipInstagram',
+    'Facebook': 'insights.browserTooltipFacebook',
+    'LinkedIn': 'insights.browserTooltipLinkedin',
   };
-  return tips[browser] || 'Identifica dónde conviene QA visual y qué contexto de navegación predomina.';
+  return keys[browser] ? t(keys[browser]) : t('insights.browserTooltipDefault');
 }
 
-function getReferrerTooltip(source: string): string {
-  const tips: Record<string, string> = {
-    'X': 'Tráfico de discovery rápido. Si crece, tus posts o replies están empujando visitas.',
-    'Google': 'Intención alta: la gente te está encontrando activamente por búsqueda.',
-    'LinkedIn': 'Señal de networking profesional y visitas con contexto laboral.',
-    'GitHub': 'Buen proxy de interés técnico o tráfico desde proyectos y repos.',
-    'Instagram': 'Tráfico más visual y mobile-first; importa que el perfil cargue claro y rápido.',
-    'YouTube': 'Puede venir de demos, talks o contenido evergreen con mejor vida útil.',
-    'Direct/None': 'Incluye tráfico directo, enlaces copiados, DMs o sesiones donde no llega referencia confiable.',
+function getReferrerTooltip(source: string, t: TFn): string {
+  const keys: Record<string, string> = {
+    'X': 'insights.referrerTooltipX',
+    'Google': 'insights.referrerTooltipGoogle',
+    'LinkedIn': 'insights.referrerTooltipLinkedin',
+    'GitHub': 'insights.referrerTooltipGithub',
+    'Instagram': 'insights.referrerTooltipInstagram',
+    'YouTube': 'insights.referrerTooltipYoutube',
+    'Direct/None': 'insights.referrerTooltipDirect',
   };
-  return tips[source] || `Este canal te muestra cuánto aporta ${source} dentro de tu mezcla de adquisición.`;
+  return keys[source] ? t(keys[source]) : t('insights.referrerTooltipDefault', { source });
 }
 
-function getDeviceTooltip(device: string): string {
-  const tips: Record<string, string> = {
-    'Mobile': 'Si domina, conviene priorizar jerarquía visual compacta y bloques above the fold.',
-    'Desktop': 'Más espacio para explorar; suele correlacionar con visitas de trabajo o research.',
-    'Tablet': 'Volumen menor, pero útil para detectar layouts intermedios que pueden romperse.',
+function getDeviceTooltip(device: string, t: TFn): string {
+  const keys: Record<string, string> = {
+    'Mobile': 'insights.deviceTooltipMobile',
+    'Desktop': 'insights.deviceTooltipDesktop',
+    'Tablet': 'insights.deviceTooltipTablet',
   };
-  return tips[device] || 'Te ayuda a entender en qué contexto físico están navegando tu huevsite.';
+  return keys[device] ? t(keys[device]) : t('insights.deviceTooltipDefault');
 }
 
 const DATE_FILTERS = [
@@ -214,6 +217,7 @@ function EmptyState({
 // ─── MiniSparkline Chart ───────────────────────────────────────────────────────
 
 function SparklineChart({ data, accentColor, granularity }: { data: DailyPoint[]; accentColor: string; granularity: "hour" | "day" }) {
+  const t = useTranslations("dashboard");
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const maxVal = Math.max(...data.map(d => d.count), 1);
   const [tooltip, setTooltip] = useState<{ x: number; y: number; date: string; count: number } | null>(null);
@@ -379,7 +383,7 @@ function SparklineChart({ data, accentColor, granularity }: { data: DailyPoint[]
             <div className="flex items-center gap-2">
               <div className="w-2.5 h-2.5 rounded-full shadow-[0_0_8px_var(--accent-glow)]" style={{ backgroundColor: accentColor, '--accent-glow': accentColor } as any} />
               <span className="text-white text-lg font-black tracking-tight">{tooltip.count}</span>
-              <span className="text-white/30 text-[10px] font-bold">VISTAS</span>
+              <span className="text-white/30 text-[10px] font-bold">{t("insights.viewsUpper")}</span>
             </div>
           </motion.div>
         )}
@@ -550,8 +554,9 @@ function StatCard({
   icon: typeof Users;
   tooltip?: string;
 }) {
+  const t = useTranslations("dashboard");
   return (
-    <motion.div 
+    <motion.div
         whileHover={{ y: -4, backgroundColor: 'rgba(255,255,255,0.03)' }}
         className="group relative flex min-h-[154px] flex-col justify-between overflow-hidden rounded-[2rem] border border-white/[0.05] bg-white/[0.015] p-4 transition-all hover:border-white/20 sm:min-h-[170px] sm:p-[18px] lg:min-h-[182px] lg:p-5"
     >
@@ -566,7 +571,7 @@ function StatCard({
             <Tooltip content={tooltip} position="bottom">
               <button
                 type="button"
-                aria-label={`Más información sobre ${label}`}
+                aria-label={t("insights.moreInfoAbout", { label })}
                 className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] text-white/[0.28] transition-colors hover:border-white/[0.15] hover:text-white/60"
               >
                 <AlertCircle size={14} />
@@ -597,6 +602,7 @@ function StatCard({
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialViewConsumed }: Props) {
+  const t = useTranslations("dashboard");
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<InsightsData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -618,7 +624,7 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
       const params = new URLSearchParams();
       params.set("range", String(range));
       const res = await fetch(`/api/analytics/insights?${params.toString()}`);
-      if (!res.ok) throw new Error("Error al cargar las métricas");
+      if (!res.ok) throw new Error(t("insights.errorLoading"));
       const insights = await res.json();
       setData(insights);
       if (insights.lastTrialInsightsView) {
@@ -715,7 +721,7 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
             </div>
             <div className="absolute -inset-4 bg-[var(--accent)]/10 blur-2xl rounded-full animate-pulse" />
         </div>
-        <p className="text-white/20 text-[10px] font-black tracking-[0.3em] uppercase">Analizando métricas...</p>
+        <p className="text-white/20 text-[10px] font-black tracking-[0.3em] uppercase">{t("insights.loading")}</p>
       </div>
     );
   }
@@ -731,7 +737,7 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
           onClick={() => fetchInsights({ range: rangeDays })}
           className="btn-accent !py-2.5 !px-6 !rounded-xl !text-xs gap-2"
         >
-          <RefreshCw size={14} /> Reintentar
+          <RefreshCw size={14} /> {t("insights.retry")}
         </button>
       </div>
     );
@@ -741,7 +747,7 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
   const topBlocks = Array.from(filteredBlockStats.entries())
     .map(([id, clicks]) => {
       const block = blocks.find(b => b.id === id);
-      return { id, clicks, title: block?.data?.title || block?.type || 'Bloque', type: block?.type };
+      return { id, clicks, title: block?.data?.title || block?.type || t("insights.blockFallback"), type: block?.type };
     })
     .sort((a, b) => b.clicks - a.clicks)
     .slice(0, 8);
@@ -762,12 +768,12 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
   const totalVisitorPages = Math.max(1, Math.ceil(visibleVisitors.length / VISITORS_PER_PAGE));
   const paginatedVisitors = visibleVisitors.slice((visitorPage - 1) * VISITORS_PER_PAGE, visitorPage * VISITORS_PER_PAGE);
   const summaryChips = [
-    { label: "Promedio diario", value: averageDailyVisitors },
-    { label: "Días activos", value: activeDays },
-    { label: "Pico", value: peakDay?.count || 0 },
+    { label: t("insights.summaryDailyAverage"), value: averageDailyVisitors },
+    { label: t("insights.summaryActiveDays"), value: activeDays },
+    { label: t("insights.summaryPeak"), value: peakDay?.count || 0 },
   ];
   const activeTechnologyLabel = selectedTechnology ? `${selectedTechnology.kind.toUpperCase()}: ${selectedTechnology.value}` : null;
-  const activeVisitorFilterLabel = visitorIdentityFilter === "anonymous" ? "Anónimos" : visitorIdentityFilter === "identified" ? "Con perfil" : null;
+  const activeVisitorFilterLabel = visitorIdentityFilter === "anonymous" ? t("insights.filterAnonymous") : visitorIdentityFilter === "identified" ? t("insights.filterIdentified") : null;
 
   const handleTechnologyToggle = (kind: "browser" | "os" | "device", value: string) => {
     setSelectedTechnology((current) => {
@@ -787,22 +793,22 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
       {/* ── Header ── */}
       <div className="flex flex-col gap-4 pb-2 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:justify-start">
-            <Tooltip content="Personas que están navegando tu perfil exacto en este momento." position="bottom">
+            <Tooltip content={t("insights.liveNowTooltip")} position="bottom">
                 <div className="group flex cursor-help items-center gap-3 rounded-2xl border border-emerald-500/10 bg-emerald-500/5 px-4 py-3 transition-all animate-pulse hover:animate-none">
                     <div className="relative h-2.5 w-2.5 rounded-full bg-emerald-500">
                         <div className="absolute inset-0 bg-emerald-500 rounded-full animate-ping opacity-60" />
                     </div>
                     <div className="flex flex-col">
                         <span className="text-white font-black text-xl leading-none">{data?.onlineNow || 0}</span>
-                        <span className="text-[9px] font-black text-emerald-500/70 uppercase tracking-widest mt-0.5">Live now</span>
+                        <span className="text-[9px] font-black text-emerald-500/70 uppercase tracking-widest mt-0.5">{t("insights.liveNow")}</span>
                     </div>
                 </div>
             </Tooltip>
-            
+
             <div className="hidden h-10 w-px bg-white/5 lg:block" />
-            
+
             <div className="flex flex-col rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3 sm:min-w-[160px]">
-                <span className="text-white/60 text-xs font-bold font-mono tracking-tight">Periodo</span>
+                <span className="text-white/60 text-xs font-bold font-mono tracking-tight">{t("insights.period")}</span>
                 <span className="text-white/30 text-[10px] uppercase tracking-widest font-black">
                   {data?.startDate === data?.endDate ? data?.startDate : `${data?.startDate} → ${data?.endDate}`}
                 </span>
@@ -830,7 +836,7 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
           className="group flex h-12 w-full items-center justify-center gap-2.5 rounded-2xl border border-white/10 bg-white/5 px-5 text-[11px] font-black uppercase tracking-[0.2em] text-white/60 transition-all hover:border-white/20 hover:bg-white/10 sm:w-auto"
           >
             <RefreshCw size={14} className="group-hover:rotate-180 transition-transform duration-700" />
-            Actualizar datos
+            {t("insights.refreshData")}
           </button>
         </div>
       </div>
@@ -838,38 +844,38 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
       {/* ── KPI Grid ── */}
       <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-3">
         <StatCard
-          label="Visitantes únicos"
+          label={t("insights.kpiUniqueVisitors")}
           value={formatNum(data?.uniqueVisitors || 0)}
           icon={Users}
           accent={accentColor}
           trend="neutral"
-          tooltip="Personas distintas que visitaron tu perfil basándose en su ID de navegador."
+          tooltip={t("insights.kpiUniqueVisitorsTooltip")}
         />
         <StatCard
-          label="Vistas totales"
+          label={t("insights.kpiTotalViews")}
           value={formatNum(data?.totalPageViews || 0)}
           icon={BarChart3}
           accent={accentColor}
           sub="HUEVSITE"
           trend="neutral"
-          tooltip="Cantidad total de veces que se cargó tu perfil en los últimos 30 días."
+          tooltip={t("insights.kpiTotalViewsTooltip")}
         />
         <StatCard
-          label="Tasa de Rebote"
+          label={t("insights.kpiBounceRate")}
           value={`${data?.bounceRate || 0}%`}
           icon={TrendingUp}
           accent={accentColor}
           trend={data?.bounceRate && data.bounceRate < 60 ? 'up' : 'down'}
-          tooltip="Porcentaje de visitantes que salieron de tu perfil sin interactuar con ningún bloque."
+          tooltip={t("insights.kpiBounceRateTooltip")}
         />
         <StatCard
-          label="Interacción (CTR)"
+          label={t("insights.kpiCtr")}
           value={`${data?.ctr || 0}%`}
           icon={MousePointer2}
           accent={accentColor}
           sub="CLICKS"
           trend="neutral"
-          tooltip="Click-Through Rate: El porcentaje de visitantes que hicieron clic en al menos uno de tus bloques."
+          tooltip={t("insights.kpiCtrTooltip")}
         />
       </div>
 
@@ -877,9 +883,9 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12 xl:gap-4">
         
         {/* Main Chart */}
-        <SectionCard 
-            title="Tráfico de audiencia" 
-            description="Seguí la evolución del tráfico diario y detectá cuándo tu perfil gana más atención."
+        <SectionCard
+            title={t("insights.trafficTitle")}
+            description={t("insights.trafficDescription")}
           badge={DATE_FILTERS.find((filter) => filter.value === rangeDays)?.label || `${rangeDays}d`}
             className="min-h-[320px] md:col-span-2 xl:col-span-12"
         >
@@ -887,13 +893,13 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
                 <div className="min-w-0">
                    <h3 className="mb-2 flex flex-wrap items-end gap-x-3 gap-y-2 text-4xl tracking-tighter text-white font-[950] font-display sm:text-5xl">
                         {formatNum(data?.uniqueVisitors || 0)}
-                        <span className="text-xs font-black uppercase tracking-[.25em] text-white/20 font-display sm:text-sm">Builders totales</span>
+                        <span className="text-xs font-black uppercase tracking-[.25em] text-white/20 font-display sm:text-sm">{t("insights.totalBuilders")}</span>
                    </h3>
-                   <p className="max-w-2xl text-xs font-medium text-white/30 sm:text-sm">Visualización de tráfico único diario acumulado en el tiempo.</p>
+                   <p className="max-w-2xl text-xs font-medium text-white/30 sm:text-sm">{t("insights.trafficChartSubtitle")}</p>
                 </div>
                 <div className="flex flex-col rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3 lg:items-end">
-                    <div className="mb-1 text-[10px] font-black uppercase tracking-[.2em] text-white/20 font-display">Pico de tráfico</div>
-                    <div className="text-xl font-black tracking-tight text-white/70 font-display sm:text-2xl">{peakDay?.count || 0} <span className="ml-1 text-[10px] uppercase text-white/20">vistas</span></div>
+                    <div className="mb-1 text-[10px] font-black uppercase tracking-[.2em] text-white/20 font-display">{t("insights.peakTraffic")}</div>
+                    <div className="text-xl font-black tracking-tight text-white/70 font-display sm:text-2xl">{peakDay?.count || 0} <span className="ml-1 text-[10px] uppercase text-white/20">{t("insights.viewsUnit")}</span></div>
                     <div className="mt-1 text-[10px] text-white/20 font-mono">{peakDay?.date ? new Date(peakDay.date).toLocaleDateString('es-AR', { day: 'numeric', month: 'long' }) : ''}</div>
                 </div>
             </div>
@@ -914,9 +920,9 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
 
         {/* Origin / Sources */}
         <SectionCard
-          title="Orígenes de tráfico"
-          description="De dónde llega tu audiencia y qué canal te está trayendo mejores visitas."
-          badge={activeTechnologyLabel || `${filteredReferrers.length} fuentes`}
+          title={t("insights.sourcesTitle")}
+          description={t("insights.sourcesDescription")}
+          badge={activeTechnologyLabel || t("insights.sourcesBadge", { n: filteredReferrers.length })}
           tabs={['Referrer']}
           activeTab={referrerTab}
           setActiveTab={setReferrerTab}
@@ -926,8 +932,8 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
             {filteredReferrers.length === 0 ? (
                 <EmptyState
                   icon={Globe2}
-                  title="Esperando visitas"
-                  description={selectedTechnology ? "No hay orígenes de tráfico para esta tecnología en el período elegido." : "Todavía no hay referencias detectadas. Cuando lleguen visitas vas a ver qué canales mejor convierten."}
+                  title={t("insights.sourcesEmptyTitle")}
+                  description={selectedTechnology ? t("insights.sourcesEmptyFiltered") : t("insights.sourcesEmptyDescription")}
                 />
             ) : (
                 filteredReferrers.map((item, i) => (
@@ -938,7 +944,7 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
                     max={maxRef}
                     accent={accentColor}
                     icon={getReferrerIcon(item.source)}
-                    tooltip={getReferrerTooltip(item.source)}
+                    tooltip={getReferrerTooltip(item.source, t)}
                 />
                 ))
             )}
@@ -947,8 +953,8 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
 
         {/* Browser / Tech */}
         <SectionCard
-          title="Tecnología"
-          description="Con qué dispositivos, sistemas y navegadores están viendo tu perfil."
+          title={t("insights.technologyTitle")}
+          description={t("insights.technologyDescription")}
           badge={activeTechnologyLabel || locationTab}
           tabs={['Browser', 'OS', 'Device']}
           activeTab={locationTab}
@@ -957,7 +963,7 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
         >
           <div className="mb-4 flex flex-wrap gap-2">
             <div className="rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/35">
-              Tocá una fila para filtrar
+              {t("insights.tapRowToFilter")}
             </div>
             {selectedTechnology && (
               <button
@@ -965,7 +971,7 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
                 onClick={() => setSelectedTechnology(null)}
                 className="rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/55 transition-all hover:border-white/20 hover:text-white"
               >
-                Limpiar filtro
+                {t("insights.clearFilter")}
               </button>
             )}
           </div>
@@ -975,8 +981,8 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
                 {(data?.browsers || []).length === 0 ? (
                     <EmptyState
                       icon={Monitor}
-                      title="Sin datos de browser"
-                      description="Todavía no hay suficiente actividad para segmentar navegadores."
+                      title={t("insights.browserEmptyTitle")}
+                      description={t("insights.browserEmptyDescription")}
                     />
                 ) : (
                     (data?.browsers || []).slice(0, 8).map((item, i) => (
@@ -987,7 +993,7 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
                         max={maxBrowser}
                         accent={accentColor}
                         icon={getBrowserEmoji(item.browser)}
-                        tooltip={getBrowserTooltip(item.browser)}
+                        tooltip={getBrowserTooltip(item.browser, t)}
                         active={selectedTechnology?.kind === "browser" && selectedTechnology.value === item.browser}
                         onClick={() => handleTechnologyToggle("browser", item.browser)}
                     />
@@ -1000,8 +1006,8 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
                 {(data?.operatingSystems || []).length === 0 ? (
                     <EmptyState
                       icon={Layout}
-                      title="Sin datos de sistema"
-                      description="A medida que entren más visitas, acá vas a ver el reparto por sistema operativo."
+                      title={t("insights.osEmptyTitle")}
+                      description={t("insights.osEmptyDescription")}
                     />
                 ) : (
                     (data?.operatingSystems || []).slice(0, 8).map((item, i) => (
@@ -1012,7 +1018,7 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
                         max={maxOS}
                         accent={accentColor}
                         icon={item.os === 'Mac OS' ? '🍎' : item.os === 'Windows' ? '🪟' : item.os === 'Android' ? '🤖' : item.os === 'iOS' ? '📱' : '💻' }
-                        tooltip={getOSTooltip(item.os)}
+                        tooltip={getOSTooltip(item.os, t)}
                         active={selectedTechnology?.kind === "os" && selectedTechnology.value === item.os}
                         onClick={() => handleTechnologyToggle("os", item.os)}
                     />
@@ -1025,8 +1031,8 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
                 {(data?.devices || []).length === 0 ? (
                     <EmptyState
                       icon={Monitor}
-                      title="Sin mix de dispositivos"
-                      description="Todavía no hay suficiente señal para separar mobile, tablet y desktop."
+                      title={t("insights.deviceEmptyTitle")}
+                      description={t("insights.deviceEmptyDescription")}
                     />
                 ) : (
                     (data?.devices || []).map((item, i) => (
@@ -1037,7 +1043,7 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
                         max={maxDevice}
                         accent={accentColor}
                         icon={item.device === 'Mobile' ? '📱' : item.device === 'Tablet' ? '💻' : '🖥️'}
-                        tooltip={getDeviceTooltip(item.device)}
+                        tooltip={getDeviceTooltip(item.device, t)}
                         active={selectedTechnology?.kind === "device" && selectedTechnology.value === item.device}
                         onClick={() => handleTechnologyToggle("device", item.device)}
                     />
@@ -1050,17 +1056,17 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
 
         {/* Content Leaderboard */}
         <SectionCard
-          title="Ranking de bloques"
-          description="Los elementos que más clics están generando dentro de tu board."
-          badge={activeTechnologyLabel || `${topBlocks.length} bloques`}
+          title={t("insights.blocksRankingTitle")}
+          description={t("insights.blocksRankingDescription")}
+          badge={activeTechnologyLabel || t("insights.blocksRankingBadge", { n: topBlocks.length })}
           className="md:col-span-2 xl:col-span-4"
         >
              <div className="space-y-1">
                 {topBlocks.length === 0 ? (
                     <EmptyState
                       icon={MousePointer2}
-                      title="Sin clics por ahora"
-                      description={selectedTechnology ? "No hay clicks en bloques para esta tecnología en el período elegido." : "Cuando tu audiencia empiece a interactuar, acá vas a ver qué bloques funcionan mejor."}
+                      title={t("insights.blocksEmptyTitle")}
+                      description={selectedTechnology ? t("insights.blocksEmptyFiltered") : t("insights.blocksEmptyDescription")}
                     />
                 ) : (
                     topBlocks.map((block, i) => (
@@ -1072,7 +1078,7 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
                             accent={accentColor}
                             sublabel={block.type}
                             icon={String(i + 1)}
-                            tooltip={`Concentra ${Math.round((block.clicks / Math.max(filteredTotalClicks || 1, 1)) * 100)}% de los clicks detectados en esta vista. Úsalo para decidir qué destacar arriba.`}
+                            tooltip={t("insights.blockShareTooltip", { pct: Math.round((block.clicks / Math.max(filteredTotalClicks || 1, 1)) * 100) })}
                         />
                     ))
                 )}
@@ -1081,16 +1087,16 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
 
         {/* Recent Activity / Visitors */}
         <SectionCard
-          title="Visitas recientes"
-          description="Explorá quién pasó por tu huevsite, qué hizo y desde qué contexto llegó."
-          badge={activeVisitorFilterLabel || activeTechnologyLabel || `${visibleVisitors.length} sesiones`}
+          title={t("insights.recentVisitsTitle")}
+          description={t("insights.recentVisitsDescription")}
+          badge={activeVisitorFilterLabel || activeTechnologyLabel || t("insights.recentVisitsBadge", { n: visibleVisitors.length })}
           className="md:col-span-2 xl:col-span-12"
         >
              <div className="mb-4 flex flex-wrap gap-2">
                 {[
-                  { label: "Todos", value: "all" },
-                  { label: "Con perfil", value: "identified" },
-                  { label: "Anónimos", value: "anonymous" },
+                  { label: t("insights.visitorFilterAll"), value: "all" },
+                  { label: t("insights.visitorFilterIdentified"), value: "identified" },
+                  { label: t("insights.visitorFilterAnonymous"), value: "anonymous" },
                 ].map((filter) => (
                   <button
                     key={filter.value}
@@ -1113,8 +1119,8 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
                 {visibleVisitors.length === 0 ? (
                   <EmptyState
                     icon={Users}
-                    title="Sin visitas registradas"
-                    description={visitorIdentityFilter === "anonymous" ? "No hay visitas anónimas en este período con los filtros actuales." : selectedTechnology ? "No hay sesiones recientes para esta tecnología en el período elegido." : "En cuanto lleguen visitas vas a poder ver el detalle de cada sesión reciente desde acá."}
+                    title={t("insights.visitorsEmptyTitle")}
+                    description={visitorIdentityFilter === "anonymous" ? t("insights.visitorsEmptyAnonymous") : selectedTechnology ? t("insights.visitorsEmptyFiltered") : t("insights.visitorsEmptyDescription")}
                   />
                 ) : (
                   paginatedVisitors.map((visitor) => (
@@ -1135,7 +1141,7 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
                             {visitor.visitor_username ? `@${visitor.visitor_username}` : (visitor.visitor_name || 'Anonymous Visitor')}
                           </div>
                           <div className="mt-1 text-[10px] uppercase tracking-[0.18em] text-white/20 font-mono">
-                            {visitor.id.slice(0, 8)}... · {timeAgo(visitor.created_at)} · {visitor.page_views} vistas
+                            {visitor.id.slice(0, 8)}... · {timeAgo(visitor.created_at)} · {t("insights.viewsCount", { n: visitor.page_views })}
                           </div>
                           <div className="mt-3 flex flex-wrap gap-2">
                             <span className="rounded-lg border border-white/5 bg-white/5 px-2.5 py-1 text-[10px] font-black uppercase tracking-tight text-white/50">
@@ -1164,10 +1170,10 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="border-b border-white/[0.05]">
-                            <th className="px-4 pb-4 pt-4 text-[10px] font-black uppercase tracking-widest text-white/20">Usuario / ID</th>
-                            <th className="px-4 pb-4 pt-4 text-[10px] font-black uppercase tracking-widest text-white/20">Fuente</th>
-                            <th className="px-4 pb-4 pt-4 text-[10px] font-black uppercase tracking-widest text-white/20">Referencia tech</th>
-                            <th className="px-4 pb-4 pt-4 text-right text-[10px] font-black uppercase tracking-widest text-white/20">Tiempo</th>
+                            <th className="px-4 pb-4 pt-4 text-[10px] font-black uppercase tracking-widest text-white/20">{t("insights.tableUserId")}</th>
+                            <th className="px-4 pb-4 pt-4 text-[10px] font-black uppercase tracking-widest text-white/20">{t("insights.tableSource")}</th>
+                            <th className="px-4 pb-4 pt-4 text-[10px] font-black uppercase tracking-widest text-white/20">{t("insights.tableTechReference")}</th>
+                            <th className="px-4 pb-4 pt-4 text-right text-[10px] font-black uppercase tracking-widest text-white/20">{t("insights.tableTime")}</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/[0.02]">
@@ -1175,7 +1181,7 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
                             <tr>
                                 <td colSpan={4} className="py-16 text-center">
                                      <Users className="mx-auto mb-4 h-10 w-10 text-white/5" />
-                                     <p className="text-xs font-bold uppercase tracking-widest text-white/20">Aún no hay visitas registradas</p>
+                                     <p className="text-xs font-bold uppercase tracking-widest text-white/20">{t("insights.tableEmpty")}</p>
                                 </td>
                             </tr>
                         ) : (
@@ -1213,7 +1219,7 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
                                             <div className="w-1 h-1 rounded-full bg-white/10" />
                                             {visitor.browser && <span className="text-[10px] text-white/40">{getBrowserEmoji(visitor.browser)} {visitor.browser}</span>}
                                             <div className="w-1 h-1 rounded-full bg-white/10" />
-                                            <span className="text-[10px] text-white/40">{visitor.page_views} pv / {visitor.block_clicks} clicks</span>
+                                            <span className="text-[10px] text-white/40">{t("insights.pvClicks", { pv: visitor.page_views, clicks: visitor.block_clicks })}</span>
                                         </div>
                                     </td>
                                     <td className="px-4 py-4 text-right">
@@ -1230,7 +1236,7 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
              {visibleVisitors.length > 0 && (
               <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-[10px] font-black uppercase tracking-[0.2em] text-white/25">
-                  Mostrando {(visitorPage - 1) * VISITORS_PER_PAGE + 1}-{Math.min(visitorPage * VISITORS_PER_PAGE, visibleVisitors.length)} de {visibleVisitors.length}
+                  {t("insights.paginationShowing", { from: (visitorPage - 1) * VISITORS_PER_PAGE + 1, to: Math.min(visitorPage * VISITORS_PER_PAGE, visibleVisitors.length), total: visibleVisitors.length })}
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -1239,7 +1245,7 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
                     disabled={visitorPage === 1}
                     className="inline-flex h-10 items-center justify-center rounded-xl border border-white/10 px-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/55 transition-all hover:border-white/20 hover:text-white disabled:opacity-30"
                   >
-                    Anterior
+                    {t("insights.previous")}
                   </button>
                   <button
                     type="button"
@@ -1247,14 +1253,14 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
                     disabled={visitorPage === totalVisitorPages}
                     className="inline-flex h-10 items-center justify-center rounded-xl border border-white/10 px-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/55 transition-all hover:border-white/20 hover:text-white disabled:opacity-30"
                   >
-                    Siguiente
+                    {t("insights.next")}
                   </button>
                 </div>
               </div>
              )}
              <div className="mt-4 flex justify-center">
                  <button className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-white/20 transition-colors hover:text-white/60">
-                    Explorá cada visita <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
+                    {t("insights.exploreEachVisit")} <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
                  </button>
              </div>
         </SectionCard>
@@ -1279,7 +1285,7 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
               <div className="flex h-full w-full flex-col overflow-hidden rounded-[2rem] border border-white/[0.08] bg-[#050507] shadow-[0_50px_180px_rgba(0,0,0,0.78)]">
               <div className="flex items-center justify-between border-b border-white/[0.06] bg-[#050507] px-5 py-4 sm:px-6">
                 <div className="text-[10px] font-black uppercase tracking-[0.24em] text-white/30">
-                  Visitante {selectedVisitorIndex + 1} de {visibleVisitors.length || 0}
+                  {t("insights.visitorOfTotal", { index: selectedVisitorIndex + 1, total: visibleVisitors.length || 0 })}
                 </div>
                 <button
                   type="button"
@@ -1301,10 +1307,10 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
                         {selectedVisitor.visitor_username ? `@${selectedVisitor.visitor_username}` : (selectedVisitor.visitor_name || 'Anonymous Visitor')}
                       </div>
                       <div className="mt-1 text-sm text-white/55">
-                        {selectedVisitor.visitor_name && selectedVisitor.visitor_username ? selectedVisitor.visitor_name : "Visitante de tu huevsite"}
+                        {selectedVisitor.visitor_name && selectedVisitor.visitor_username ? selectedVisitor.visitor_name : t("insights.visitorOfYourHuevsite")}
                       </div>
                       <div className="mt-2 text-[11px] uppercase tracking-[0.22em] text-white/25 font-mono">
-                        {selectedVisitor.city || selectedVisitor.country ? [selectedVisitor.city, selectedVisitor.country].filter(Boolean).join(", ") : "Ubicación no disponible"} · {timeAgo(selectedVisitor.created_at)}
+                        {selectedVisitor.city || selectedVisitor.country ? [selectedVisitor.city, selectedVisitor.country].filter(Boolean).join(", ") : t("insights.locationUnavailable")} · {timeAgo(selectedVisitor.created_at)}
                       </div>
                     </div>
                   </div>
@@ -1314,7 +1320,7 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
                         href={`/${selectedVisitor.visitor_username}?from=insights&return_to=/dashboard?tab=insights`}
                         className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 text-[11px] font-black uppercase tracking-[0.2em] text-white/70 transition-all hover:border-white/20 hover:text-white"
                       >
-                        Ver perfil <ExternalLink size={14} />
+                        {t("insights.viewProfile")} <ExternalLink size={14} />
                       </Link>
                     )}
                     <button
@@ -1325,55 +1331,55 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
                       }}
                       className="inline-flex h-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] px-4 text-[11px] font-black uppercase tracking-[0.2em] text-white/65 transition-all hover:border-white/20 hover:text-white"
                     >
-                      Volver a visitas
+                      {t("insights.backToVisits")}
                     </button>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
                   <div className="rounded-[1.6rem] border border-white/[0.06] bg-white/[0.03] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-                    <div className="text-[10px] font-black uppercase tracking-[0.22em] text-white/25">Sesiones</div>
+                    <div className="text-[10px] font-black uppercase tracking-[0.22em] text-white/25">{t("insights.statSessions")}</div>
                     <div className="mt-2 text-2xl font-black tracking-tight text-white">{selectedVisitor.visits}</div>
                   </div>
                   <div className="rounded-[1.6rem] border border-white/[0.06] bg-white/[0.03] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-                    <div className="text-[10px] font-black uppercase tracking-[0.22em] text-white/25">Page views</div>
+                    <div className="text-[10px] font-black uppercase tracking-[0.22em] text-white/25">{t("insights.statPageViews")}</div>
                     <div className="mt-2 text-2xl font-black tracking-tight text-white">{selectedVisitor.page_views}</div>
                   </div>
                   <div className="rounded-[1.6rem] border border-white/[0.06] bg-white/[0.03] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-                    <div className="text-[10px] font-black uppercase tracking-[0.22em] text-white/25">Clicks</div>
+                    <div className="text-[10px] font-black uppercase tracking-[0.22em] text-white/25">{t("insights.statClicks")}</div>
                     <div className="mt-2 text-2xl font-black tracking-tight text-white">{selectedVisitor.block_clicks}</div>
                   </div>
                   <div className="rounded-[1.6rem] border border-white/[0.06] bg-white/[0.03] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-                    <div className="text-[10px] font-black uppercase tracking-[0.22em] text-white/25">Fuente</div>
+                    <div className="text-[10px] font-black uppercase tracking-[0.22em] text-white/25">{t("insights.statSource")}</div>
                     <div className="mt-2 text-sm font-black tracking-tight text-white">{selectedVisitor.referrer || "Direct/Social"}</div>
                   </div>
                 </div>
 
                 <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
                   <div className="rounded-[1.75rem] border border-white/[0.06] bg-white/[0.03] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-                    <div className="mb-3 text-[10px] font-black uppercase tracking-[0.22em] text-white/25">Contexto técnico</div>
+                    <div className="mb-3 text-[10px] font-black uppercase tracking-[0.22em] text-white/25">{t("insights.technicalContext")}</div>
                     <div className="space-y-2 text-sm text-white/60">
-                      <div>{selectedVisitor.device || "Dispositivo desconocido"} · {selectedVisitor.os || "SO desconocido"}</div>
-                      <div>{selectedVisitor.browser || "Browser desconocido"}</div>
+                      <div>{selectedVisitor.device || t("insights.unknownDevice")} · {selectedVisitor.os || t("insights.unknownOs")}</div>
+                      <div>{selectedVisitor.browser || t("insights.unknownBrowser")}</div>
                     </div>
                   </div>
                   <div className="rounded-[1.75rem] border border-white/[0.06] bg-white/[0.03] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-                    <div className="mb-3 text-[10px] font-black uppercase tracking-[0.22em] text-white/25">Interacción con tu huevsite</div>
+                    <div className="mb-3 text-[10px] font-black uppercase tracking-[0.22em] text-white/25">{t("insights.interactionTitle")}</div>
                     {selectedVisitor.clicked_blocks.length > 0 ? (
                       <div className="space-y-2">
                         {selectedVisitor.clicked_blocks.slice(0, 6).map((clicked) => {
                           const block = blocks.find((item) => item.id === clicked.block_id);
-                          const blockLabel = (block as any)?.title || (block as any)?.label || (block as any)?.name || block?.type || "Bloque";
+                          const blockLabel = (block as any)?.title || (block as any)?.label || (block as any)?.name || block?.type || t("insights.blockFallback");
                           return (
                             <div key={clicked.block_id} className="flex items-center justify-between rounded-xl border border-white/[0.04] bg-white/[0.03] px-3 py-2">
                               <span className="truncate text-sm font-bold text-white/75">{blockLabel}</span>
-                              <span className="shrink-0 text-[10px] font-black uppercase tracking-[0.18em] text-white/35">{clicked.clicks} clicks</span>
+                              <span className="shrink-0 text-[10px] font-black uppercase tracking-[0.18em] text-white/35">{t("insights.clicksCount", { n: clicked.clicks })}</span>
                             </div>
                           );
                         })}
                       </div>
                     ) : (
-                      <p className="text-sm leading-relaxed text-white/35">No registró clicks en bloques durante este período. Puede haber sido una visita de exploración rápida.</p>
+                      <p className="text-sm leading-relaxed text-white/35">{t("insights.noClicksInPeriod")}</p>
                     )}
                   </div>
                 </div>
@@ -1389,10 +1395,10 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
                   disabled={selectedVisitorIndex <= 0}
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 text-[11px] font-black uppercase tracking-[0.2em] text-white/65 transition-all hover:border-white/20 hover:text-white disabled:opacity-30"
                 >
-                  <ChevronLeft size={14} /> Anterior
+                  <ChevronLeft size={14} /> {t("insights.previous")}
                 </button>
                 <div className="text-[10px] font-black uppercase tracking-[0.2em] text-white/25">
-                  Navegá sin cerrar el detalle
+                  {t("insights.navigateWithoutClosing")}
                 </div>
                 <button
                   type="button"
@@ -1403,7 +1409,7 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
                   disabled={selectedVisitorIndex === -1 || selectedVisitorIndex >= visibleVisitors.length - 1}
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 text-[11px] font-black uppercase tracking-[0.2em] text-white/65 transition-all hover:border-white/20 hover:text-white disabled:opacity-30"
                 >
-                  Siguiente <ChevronRight size={14} />
+                  {t("insights.next")} <ChevronRight size={14} />
                 </button>
               </div>
               </div>
@@ -1424,17 +1430,16 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
                 <TrendingUp className="w-8 h-8 text-[var(--accent)]" />
              </div>
              <div className="min-w-0">
-                <h4 className="text-xl font-black text-white mb-2">Maximiza tu visibilidad</h4>
+                <h4 className="text-xl font-black text-white mb-2">{t("insights.ctaTitle")}</h4>
                 <p className="max-w-xl text-sm leading-relaxed text-[var(--text-dim)]">
-                    Los bloques en la parte superior del perfil tienen un 40% más de interacción. 
-                    Intenta mover tus proyectos más destacados a las primeras filas para capturar la atención de los reclutadores en los primeros 3 segundos.
+                    {t("insights.ctaDescription")}
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <div className="rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/35">
-                    Top rows convierten mejor
+                    {t("insights.ctaPillTopRows")}
                   </div>
                   <div className="rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/35">
-                    Revisá bloques con menos clicks
+                    {t("insights.ctaPillReviewBlocks")}
                   </div>
                 </div>
              </div>
@@ -1449,7 +1454,7 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
                    }}
                    className="btn-accent !w-full !rounded-2xl !px-8 !py-4 !text-sm font-[950] shadow-[0_0_30px_rgba(var(--accent-rgb),0.2)] md:!w-auto"
                  >
-                    Optimizar mi board
+                    {t("insights.optimizeBoard")}
                  </button>
              </div>
         </div>

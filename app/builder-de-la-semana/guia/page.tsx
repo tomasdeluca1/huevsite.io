@@ -1,58 +1,67 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { SITE_URL } from "@/lib/site-url";
+import LocaleToggle from "@/components/LocaleToggle";
 
-export const metadata: Metadata = {
-  title: "Guía: grabá tu historia | Builder de la Semana — huevsite.io",
-  description:
-    "10 preguntas para grabar tu historia como builder. Una por story. 15 segundos cada una.",
-  alternates: {
-    canonical: `${SITE_URL}/builder-de-la-semana/guia`,
-  },
-  openGraph: {
-    title: "Grabá tu historia como builder — huevsite.io",
-    description: "10 preguntas. 15 segundos cada una. Una por story.",
-    url: `${SITE_URL}/builder-de-la-semana/guia`,
-    type: "article",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Grabá tu historia como builder",
-    description: "10 preguntas. 15 segundos cada una.",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("bdls");
+  return {
+    title: t("guia.metaTitle"),
+    description: t("guia.metaDescription"),
+    alternates: {
+      canonical: `${SITE_URL}/builder-de-la-semana/guia`,
+    },
+    openGraph: {
+      title: t("guia.ogTitle"),
+      description: t("guia.ogDescription"),
+      url: `${SITE_URL}/builder-de-la-semana/guia`,
+      type: "article",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t("guia.twitterTitle"),
+      description: t("guia.twitterDescription"),
+    },
+  };
+}
 
-const QUESTIONS = [
-  "¿Quién sos? Sin títulos.",
-  "¿Qué hacías antes de construir?",
-  "Tu primer proyecto. No el mejor. El primero.",
-  "Mostrá lo que hacés ahora.",
-  "¿Para quién lo hacés? Nombre real.",
-  "¿Qué problema te obsesionó?",
-  "Tu herramienta favorita esta semana.",
-  "El último mensaje que te hizo sonreír.",
-  "¿Qué se viene?",
-  "Un consejo para el que no se anima.",
-];
+export default async function BuilderGuiaPage() {
+  const t = await getTranslations("bdls");
 
-export default function BuilderGuiaPage() {
+  const QUESTIONS = [
+    t("guia.questions.0"),
+    t("guia.questions.1"),
+    t("guia.questions.2"),
+    t("guia.questions.3"),
+    t("guia.questions.4"),
+    t("guia.questions.5"),
+    t("guia.questions.6"),
+    t("guia.questions.7"),
+    t("guia.questions.8"),
+    t("guia.questions.9"),
+  ];
+
   return (
     <div className="min-h-screen bg-[#050505] text-white font-display flex flex-col">
       <header className="flex items-center justify-between px-6 py-5">
         <Link href="/" className="text-sm font-black tracking-tighter">
           HUEV<span className="text-[#C8FF00]">SITE</span>.IO
         </Link>
-        <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-700">
-          guía
-        </span>
+        <div className="flex items-center gap-4">
+          <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-700">
+            {t("guia.headerLabel")}
+          </span>
+          <LocaleToggle />
+        </div>
       </header>
 
       <main className="flex-1 px-6 py-20 md:py-28 max-w-2xl mx-auto w-full">
         <h1 className="text-3xl md:text-5xl font-black tracking-tighter leading-[0.95] mb-4">
-          10 preguntas.
+          {t("guia.title")}
         </h1>
         <p className="text-zinc-500 text-sm md:text-base mb-20">
-          Una por story. 15 segundos cada una. Sin guion.
+          {t("guia.subtitle")}
         </p>
 
         <ol className="space-y-8">
@@ -69,7 +78,7 @@ export default function BuilderGuiaPage() {
         </ol>
 
         <p className="mt-24 text-xs font-mono text-zinc-700 leading-relaxed">
-          Editá todo en un video. Subilo en tu link de revisión.
+          {t("guia.footer")}
         </p>
       </main>
     </div>

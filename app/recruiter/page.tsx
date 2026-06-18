@@ -1,7 +1,9 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { Briefcase } from 'lucide-react';
+import LocaleToggle from '@/components/LocaleToggle';
 import { RecruiterTalentBoard, type RecruiterTalent } from '@/components/recruiter/RecruiterTalentBoard';
 
 // Señales de "open to work" en el status libre del hero block
@@ -65,6 +67,7 @@ async function getTalent(): Promise<RecruiterTalent[]> {
 
 export default async function RecruiterDashboard() {
     const talentList = await getTalent();
+    const t = await getTranslations('recruiter');
 
     return (
         <div className="min-h-screen bg-[var(--bg)] font-display text-white selection:bg-[#C8FF00]/30 selection:text-[#C8FF00]">
@@ -75,11 +78,12 @@ export default async function RecruiterDashboard() {
                         <Link href="/" className="logo text-xl">huev<span className="text-white">site</span>.io</Link>
                         <div className="h-6 w-px bg-[var(--border)]" />
                         <div className="flex items-center gap-2 text-sm font-semibold text-[#C8FF00]">
-                            <Briefcase size={16} /> RECRUITER MODE
+                            <Briefcase size={16} /> {t('mode')}
                         </div>
                     </div>
                     <div className="flex items-center gap-4 text-sm font-mono text-[var(--text-muted)]">
-                        PRO Access
+                        <LocaleToggle />
+                        {t('proAccess')}
                     </div>
                 </div>
             </nav>
@@ -89,10 +93,10 @@ export default async function RecruiterDashboard() {
                 <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-12">
                     <div>
                         <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-4">
-                            Encontrá el mejor <br /><span className="text-gradient">talento de latam.</span>
+                            {t('titleLine1')} <br /><span className="text-gradient">{t('titleLine2')}</span>
                         </h1>
                         <p className="text-[var(--text-dim)] max-w-lg leading-relaxed pt-2">
-                            Listado clasificado dinámicamente según el <strong className="text-white">Builder Score</strong>, rankeando a quiénes más colaboran, aprenden y buildean.
+                            {t.rich('subtitle', { strong: (chunks) => <strong className="text-white">{chunks}</strong> })}
                         </p>
                     </div>
                 </div>

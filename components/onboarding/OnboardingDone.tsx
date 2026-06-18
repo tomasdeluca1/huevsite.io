@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { type OnboardingState } from "@/lib/onboarding-types";
 import Link from "next/link";
 import { Share2, Twitter, LineChart } from "lucide-react";
@@ -12,6 +13,7 @@ interface OnboardingDoneProps {
 }
 
 export function OnboardingDone({ state, onContinue }: OnboardingDoneProps) {
+  const t = useTranslations("onboarding");
   const [copied, setCopied] = useState(false);
   const accent = state.accentColor;
   const displayName = state.linktreeData?.displayName || state.githubData?.name || state.username || "builder";
@@ -24,7 +26,7 @@ export function OnboardingDone({ state, onContinue }: OnboardingDoneProps) {
   };
 
   const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-    `Armé mi huevsite — mi portfolio de builder 🚀 https://huevsite.io/${state.username}`
+    `${t("doneTweetText")} https://huevsite.io/${state.username}`
   )}`;
 
   return (
@@ -54,12 +56,12 @@ export function OnboardingDone({ state, onContinue }: OnboardingDoneProps) {
         </motion.div>
 
         <div className="mb-10">
-          <div className="section-label mb-2" style={{ color: accent }}>// publicado ✓</div>
+          <div className="section-label mb-2" style={{ color: accent }}>{t("donePublishedLabel")}</div>
           <h1 className="ou-q !text-4xl tracking-tight">
-            ¡Salió andando, <span style={{ color: accent }}>{firstName}</span>!
+            {t("doneTitlePrefix")} <span style={{ color: accent }}>{firstName}</span>{t("doneTitleSuffix")}
           </h1>
           <p className="ou-sub !text-base mt-2">
-            Tu huevsite ya está live en la internet. Compartí tu laburo, que se note el esfuerzo.
+            {t("doneSubtitle")}
           </p>
         </div>
 
@@ -70,8 +72,8 @@ export function OnboardingDone({ state, onContinue }: OnboardingDoneProps) {
           onClick={copyLink}
         >
           <div className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-widest mb-2 flex justify-between">
-            <span>tu url pública</span>
-            {copied && <span style={{ color: accent }}>¡copiado!</span>}
+            <span>{t("donePublicUrl")}</span>
+            {copied && <span style={{ color: accent }}>{t("doneCopied")}</span>}
           </div>
           <div className="text-xl font-mono tracking-tight">
             <span className="text-[var(--text-dim)]">huevsite.io/</span>
@@ -86,7 +88,7 @@ export function OnboardingDone({ state, onContinue }: OnboardingDoneProps) {
             className="ou-next !py-5 !text-lg !text-black !flex !items-center !justify-center gap-2"
             style={{ background: accent, boxShadow: `0 0 40px ${accent}20` }}
           >
-            Ver mi perfil <LineChart size={20} />
+            {t("doneViewProfile")} <LineChart size={20} />
           </Link>
 
           <div className="grid grid-cols-2 gap-3">
@@ -96,13 +98,13 @@ export function OnboardingDone({ state, onContinue }: OnboardingDoneProps) {
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border-bright)] text-sm font-bold hover:bg-[var(--surface)] transition-all"
             >
-              <Twitter size={18} /> Twitear
+              <Twitter size={18} /> {t("doneTweet")}
             </a>
             <button
               onClick={copyLink}
               className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border-bright)] text-sm font-bold hover:bg-[var(--surface)] transition-all"
             >
-              <Share2 size={18} /> Compartir
+              <Share2 size={18} /> {t("doneShare")}
             </button>
           </div>
 
@@ -111,13 +113,13 @@ export function OnboardingDone({ state, onContinue }: OnboardingDoneProps) {
               onClick={onContinue}
               className="w-full text-center text-xs font-mono uppercase tracking-widest text-[var(--text-dim)] hover:text-white transition-colors py-2"
             >
-              ir a mi dashboard →
+              {t("doneGoToDashboard")}
             </button>
           )}
         </div>
 
         <div className="mt-12 text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-[0.3em] opacity-40">
-          huevsite.me cerró • nosotros no
+          {t("doneFooter")}
         </div>
       </motion.div>
     </div>

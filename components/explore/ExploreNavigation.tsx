@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight, Compass, ArrowLeft, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function ExploreNavigation({ currentUsername, isCustomDomain = false }: { currentUsername: string; isCustomDomain?: boolean }) {
+    const t = useTranslations("explore");
     const router = useRouter();
     const [list, setList] = useState<string[]>([]);
     const [index, setIndex] = useState(-1);
@@ -77,7 +79,7 @@ export function ExploreNavigation({ currentUsername, isCustomDomain = false }: {
                     {prev && (
                         <div className="absolute bottom-full left-0 mb-4 opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0 pointer-events-none">
                             <div className="bg-black/80 backdrop-blur-md border border-white/10 px-4 py-2 rounded-xl whitespace-nowrap">
-                                <span className="text-[10px] text-[var(--accent)] font-black uppercase tracking-widest block mb-0.5">Anterior</span>
+                                <span className="text-[10px] text-[var(--accent)] font-black uppercase tracking-widest block mb-0.5">{t("navPrev")}</span>
                                 <span className="text-sm font-bold text-white">@{prev}</span>
                             </div>
                         </div>
@@ -106,7 +108,7 @@ export function ExploreNavigation({ currentUsername, isCustomDomain = false }: {
                 >
                     <Compass size={18} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:rotate-12 transition-all mb-1" />
                     <div className="flex flex-col items-center">
-                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">Explorar</span>
+                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">{t("navExploreLabel")}</span>
                         <span className="text-[10px] font-mono text-[var(--text-dim)] bg-white/5 px-2 py-0.5 rounded-full mt-1 border border-white/5">
                             {index + 1} <span className="opacity-40">/</span> {list.length}
                         </span>
@@ -130,7 +132,7 @@ export function ExploreNavigation({ currentUsername, isCustomDomain = false }: {
                     {next && (
                         <div className="absolute bottom-full right-0 mb-4 opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0 pointer-events-none">
                             <div className="bg-black/80 backdrop-blur-md border border-white/10 px-4 py-2 rounded-xl whitespace-nowrap text-right">
-                                <span className="text-[10px] text-[var(--accent)] font-black uppercase tracking-widest block mb-0.5">Siguiente</span>
+                                <span className="text-[10px] text-[var(--accent)] font-black uppercase tracking-widest block mb-0.5">{t("navNext")}</span>
                                 <span className="text-sm font-bold text-white">@{next}</span>
                             </div>
                         </div>

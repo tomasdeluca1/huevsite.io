@@ -1,16 +1,22 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { getUserTestimonial } from "@/lib/testimonial-service";
 import TestimonioForm from "@/components/TestimonioForm";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Dejá tu testimonio · huevsite.io",
-  description: "Contanos cómo te sirve huevsite. Lo mostramos en la home.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("testimonio");
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+  };
+}
 
 export default async function TestimonioPage() {
+  const t = await getTranslations("testimonio");
   const supabase = await createClient();
   const {
     data: { user },
@@ -25,12 +31,12 @@ export default async function TestimonioPage() {
           huev<span style={{ color: "var(--accent)" }}>site</span>.io
         </Link>
 
-        <div className="section-label mb-2">// tu testimonio</div>
+        <div className="section-label mb-2">{t("sectionLabel")}</div>
         <h1 className="text-3xl font-extrabold tracking-tight mb-2">
-          Contanos cómo te sirve huevsite.
+          {t("title")}
         </h1>
         <p className="text-sm text-[var(--text-muted)] mb-8">
-          Si nos gusta, lo mostramos en la home con tu nombre, foto y link a tu perfil.
+          {t("subtitle")}
         </p>
 
         {user ? (
@@ -38,13 +44,13 @@ export default async function TestimonioPage() {
         ) : (
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 text-center">
             <p className="text-sm text-[var(--text-dim)] mb-4">
-              Iniciá sesión para dejar tu testimonio — lo atamos a tu perfil de builder.
+              {t("loginPrompt")}
             </p>
             <Link
               href="/login?next=/testimonio"
               className="btn btn-accent inline-flex !px-6 !py-3"
             >
-              Iniciar sesión
+              {t("loginCta")}
             </Link>
           </div>
         )}

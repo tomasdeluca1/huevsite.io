@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { PRESET_COLORS, getContrastColor } from "@/lib/profile-types";
 import { Pipette, Sparkles } from "lucide-react";
 
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function ColorPicker({ value, onChange, subscriptionTier = "free" }: Props) {
+  const t = useTranslations("dashboard");
   const displayed = value;
 
   const handlePreset = (color: string) => {
@@ -21,7 +23,7 @@ export function ColorPicker({ value, onChange, subscriptionTier = "free" }: Prop
 
   return (
     <div className="space-y-4">
-      <div className="section-label !text-[9px] px-1">// vibras de perfil</div>
+      <div className="section-label !text-[9px] px-1">// {t("colorPicker.label")}</div>
 
       {/* Horizontal Scrollable Presets */}
       <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 px-1 snap-x">
@@ -53,7 +55,7 @@ export function ColorPicker({ value, onChange, subscriptionTier = "free" }: Prop
           <div
             className={`w-full h-full rounded-lg border border-white/5 flex items-center justify-center transition-all bg-[var(--surface2)] group/picker active:scale-95 ${subscriptionTier === 'pro' ? 'cursor-pointer hover:bg-[var(--surface)] hover:border-[var(--border-bright)]' : 'cursor-help opacity-60'
               }`}
-            title={subscriptionTier === 'pro' ? "Color personalizado" : "Custom Color (PRO)"}
+            title={subscriptionTier === 'pro' ? t("colorPicker.customColor") : t("colorPicker.customColorPro")}
           >
             {subscriptionTier === 'pro' ? (
               <Pipette size={14} className="text-[var(--text-muted)] group-hover/picker:text-white transition-colors" />
@@ -71,7 +73,7 @@ export function ColorPicker({ value, onChange, subscriptionTier = "free" }: Prop
             {subscriptionTier !== 'pro' && (
               <div
                 className="absolute inset-0"
-                onClick={() => alert("¡Pasate a PRO para usar cualquier color hex! 🇦🇷")}
+                onClick={() => alert(t("colorPicker.upgradeAlert"))}
               />
             )}
           </div>
@@ -79,7 +81,7 @@ export function ColorPicker({ value, onChange, subscriptionTier = "free" }: Prop
       </div>
 
       <p className="text-[9px] text-[var(--text-muted)] font-mono px-1 opacity-60">
-        Elegí una vibra para tu perfil.
+        {t("colorPicker.hint")}
       </p>
     </div>
   );

@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
+import LocaleToggle from "@/components/LocaleToggle";
 import {
   ArrowRight,
   Check,
@@ -17,61 +19,6 @@ import {
   Zap,
   Star,
 } from "lucide-react";
-
-const BENEFITS = [
-  {
-    icon: Link2,
-    title: "Importación instantánea",
-    desc: "Pegás tu URL de Linktree y traemos bio, avatar y todos tus links automáticamente. Sin copiar uno por uno.",
-  },
-  {
-    icon: BarChart3,
-    title: "Más contexto, más identidad",
-    desc: "Proyectos, GitHub, stack tecnológico, métricas. No solo botones sueltos — un perfil que dice quién sos de verdad.",
-  },
-  {
-    icon: Users,
-    title: "Una comunidad de builders",
-    desc: "Score público, feed de lanzamientos, visibilidad real. Entrás a una red donde se valora lo que hacés, no solo lo que tenés.",
-  },
-];
-
-const STEPS = [
-  {
-    n: "01",
-    title: "Pegás tu URL",
-    desc: "Cualquier link de Linktree o Bio.site. Lo procesamos en segundos.",
-  },
-  {
-    n: "02",
-    title: "Importamos todo",
-    desc: "Bio, avatar y links ya en tu perfil. Partís con una base sólida, no de cero.",
-  },
-  {
-    n: "03",
-    title: "Publicás tu huevsite",
-    desc: "Afinás lo que querés y en 3 minutos tenés tu URL lista para compartir.",
-  },
-];
-
-const FAQS = [
-  {
-    q: "¿Tengo que rehacer todo desde cero?",
-    a: "Para nada. Importamos lo que ya tenés en Linktree y partís de ahí. Es una base, no un lienzo en blanco.",
-  },
-  {
-    q: "¿Se pierde mi Linktree?",
-    a: "No. Tu Linktree sigue existiendo. Podés tener los dos hasta que te convenzas de quedarte solo con huevsite.",
-  },
-  {
-    q: "¿Es gratis?",
-    a: "Sí. Gratis para empezar con hasta 5 bloques. Pasate a PRO cuando necesites más espacio o tu propio dominio.",
-  },
-  {
-    q: "¿Qué diferencia hay con una lista de links?",
-    a: "Mucha. Un perfil de huevsite tiene proyectos, GitHub stats, stack, métricas y un score en la comunidad. Es un portfolio, no un hub.",
-  },
-];
 
 function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
@@ -91,9 +38,65 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 }
 
 export default function LinktreeLanding() {
+  const t = useTranslations("linktree");
   const [user, setUser] = useState<User | null>(null);
   const [url, setUrl] = useState("");
   const [urlError, setUrlError] = useState("");
+
+  const BENEFITS = [
+    {
+      icon: Link2,
+      title: t("benefit1Title"),
+      desc: t("benefit1Desc"),
+    },
+    {
+      icon: BarChart3,
+      title: t("benefit2Title"),
+      desc: t("benefit2Desc"),
+    },
+    {
+      icon: Users,
+      title: t("benefit3Title"),
+      desc: t("benefit3Desc"),
+    },
+  ];
+
+  const STEPS = [
+    {
+      n: "01",
+      title: t("step1Title"),
+      desc: t("step1Desc"),
+    },
+    {
+      n: "02",
+      title: t("step2Title"),
+      desc: t("step2Desc"),
+    },
+    {
+      n: "03",
+      title: t("step3Title"),
+      desc: t("step3Desc"),
+    },
+  ];
+
+  const FAQS = [
+    {
+      q: t("faq1Q"),
+      a: t("faq1A"),
+    },
+    {
+      q: t("faq2Q"),
+      a: t("faq2A"),
+    },
+    {
+      q: t("faq3Q"),
+      a: t("faq3A"),
+    },
+    {
+      q: t("faq4Q"),
+      a: t("faq4A"),
+    },
+  ];
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -117,7 +120,7 @@ export default function LinktreeLanding() {
   const handleImport = () => {
     const trimmed = url.trim();
     if (!trimmed) {
-      setUrlError("Ingresá tu URL de Linktree o tu username.");
+      setUrlError(t("urlError"));
       return;
     }
     const normalized = normalizeLinktreeUrl(trimmed);
@@ -141,14 +144,15 @@ export default function LinktreeLanding() {
           huev<span style={{ color: "var(--accent)" }}>site</span>.io
         </Link>
         <div className="flex items-center gap-3">
+          <LocaleToggle />
           <Link href="/explore" className="btn btn-ghost !py-2 !px-4 hidden sm:flex">
-            Ver ejemplos
+            {t("navExamples")}
           </Link>
           <Link
             href={user ? "/dashboard" : "/login"}
             className="btn btn-accent !py-2 !px-5"
           >
-            {user ? "Mi huevsite" : "Entrar →"}
+            {user ? t("navMyHuevsite") : t("navLogin")}
           </Link>
         </div>
       </nav>
@@ -163,17 +167,16 @@ export default function LinktreeLanding() {
         >
           <div className="lt-hero-badge">
             <span className="lt-hero-badge-dot" />
-            Para usuarios de Linktree
+            {t("heroBadge")}
           </div>
 
           <h1 className="lt-hero-title">
-            Tu Linktree<br />
-            <span style={{ color: "var(--accent)" }}>se quedó chico.</span>
+            {t("heroTitleLine1")}<br />
+            <span style={{ color: "var(--accent)" }}>{t("heroTitleLine2")}</span>
           </h1>
 
           <p className="lt-hero-sub">
-            Pegás tu URL, importamos bio, avatar y links automáticamente.
-            En 3 minutos tenés un perfil que muestra quién sos de verdad.
+            {t("heroSubtitle")}
           </p>
 
           {/* Input de importación */}
@@ -181,7 +184,7 @@ export default function LinktreeLanding() {
             <div className="lt-import-prefix">linktr.ee/</div>
             <input
               className="lt-import-input"
-              placeholder="tuusuario"
+              placeholder={t("importPlaceholder")}
               value={url}
               onChange={(e) => {
                 setUrl(e.target.value);
@@ -192,7 +195,7 @@ export default function LinktreeLanding() {
               spellCheck={false}
             />
             <button className="lt-import-btn" onClick={handleImport}>
-              Importar
+              {t("importButton")}
               <ArrowRight size={16} />
             </button>
           </div>
@@ -200,7 +203,7 @@ export default function LinktreeLanding() {
           {urlError && <p className="lt-import-error">{urlError}</p>}
 
           <p className="lt-import-hint">
-            También podés pegar la URL completa: <code>https://linktr.ee/tuusuario</code>
+            {t("importHintPrefix")} <code>https://linktr.ee/tuusuario</code>
           </p>
 
           {/* Social proof */}
@@ -211,7 +214,7 @@ export default function LinktreeLanding() {
               ))}
             </div>
             <span className="lt-social-proof-text">
-              Cientos de builders ya migraron desde Linktree
+              {t("socialProof")}
             </span>
           </div>
         </motion.div>
@@ -220,10 +223,10 @@ export default function LinktreeLanding() {
       {/* ── BEFORE / AFTER ────────────────────────────── */}
       <section className="lt-compare-section">
         <div className="lt-compare-inner">
-          <p className="lt-compare-label">// la diferencia</p>
+          <p className="lt-compare-label">{t("compareLabel")}</p>
           <h2 className="lt-compare-title">
-            De una lista de links<br />
-            a un <span style={{ color: "var(--accent)" }}>perfil de builder.</span>
+            {t("compareTitleLine1")}<br />
+            {t("compareTitleLine2Prefix")} <span style={{ color: "var(--accent)" }}>{t("compareTitleLine2Highlight")}</span>
           </h2>
 
           <div className="lt-compare-cards">
@@ -231,20 +234,20 @@ export default function LinktreeLanding() {
             <div className="lt-compare-card lt-compare-card--before">
               <div className="lt-compare-card-header">
                 <span className="lt-compare-pill lt-compare-pill--muted">Linktree</span>
-                <span className="lt-compare-pill-sub">hub estático</span>
+                <span className="lt-compare-pill-sub">{t("compareBeforePill")}</span>
               </div>
               <div className="lt-linktree-mock">
                 <div className="lt-linktree-avatar">T</div>
                 <div className="lt-linktree-name">@tuusuario</div>
                 <div className="lt-linktree-bio">Designer · dev · builder</div>
-                {["Portfolio", "GitHub", "Twitter / X", "Newsletter", "Contacto"].map((l) => (
+                {["Portfolio", "GitHub", "Twitter / X", "Newsletter", t("compareLinkContact")].map((l) => (
                   <div key={l} className="lt-linktree-link">
                     <ExternalLink size={13} className="opacity-40" />
                     {l}
                   </div>
                 ))}
               </div>
-              <p className="lt-compare-caption">Links sueltos. Sin contexto. Sin comunidad.</p>
+              <p className="lt-compare-caption">{t("compareBeforeCaption")}</p>
             </div>
 
             {/* ARROW */}
@@ -259,14 +262,14 @@ export default function LinktreeLanding() {
             <div className="lt-compare-card lt-compare-card--after">
               <div className="lt-compare-card-header">
                 <span className="lt-compare-pill lt-compare-pill--accent">huevsite</span>
-                <span className="lt-compare-pill-sub">perfil vivo</span>
+                <span className="lt-compare-pill-sub">{t("compareAfterPill")}</span>
               </div>
               <div className="lt-bento-mock">
                 {/* Hero block */}
                 <div className="lt-bento-block lt-bento-block--hero">
                   <div className="lt-bento-avatar">T</div>
                   <div>
-                    <div className="lt-bento-name">Tu Nombre</div>
+                    <div className="lt-bento-name">{t("compareBentoName")}</div>
                     <div className="lt-bento-role">Developer · Indie Hacker</div>
                     <div className="lt-bento-score">Score 847</div>
                   </div>
@@ -274,7 +277,7 @@ export default function LinktreeLanding() {
                 {/* Building block */}
                 <div className="lt-bento-block lt-bento-block--building">
                   <div className="lt-bento-block-label">Building now</div>
-                  <div className="lt-bento-block-title">SaaS en progreso</div>
+                  <div className="lt-bento-block-title">{t("compareBentoBuildingTitle")}</div>
                   <div className="lt-bento-block-tech">Next.js · Supabase</div>
                 </div>
                 {/* GitHub */}
@@ -299,7 +302,7 @@ export default function LinktreeLanding() {
                 </div>
               </div>
               <p className="lt-compare-caption" style={{ color: "#efffc4" }}>
-                Proyectos, código, identidad y comunidad.
+                {t("compareAfterCaption")}
               </p>
             </div>
           </div>
@@ -309,9 +312,9 @@ export default function LinktreeLanding() {
       {/* ── BENEFITS ──────────────────────────────────── */}
       <section className="lt-benefits-section">
         <div className="lt-section-inner">
-          <p className="section-label">// por qué cambiarse</p>
+          <p className="section-label">{t("benefitsLabel")}</p>
           <h2 className="section-title">
-            Lo que Linktree<br />no puede darte.
+            {t("benefitsTitleLine1")}<br />{t("benefitsTitleLine2")}
           </h2>
           <div className="lt-benefits-grid">
             {BENEFITS.map(({ icon: Icon, title, desc }) => (
@@ -330,10 +333,10 @@ export default function LinktreeLanding() {
       {/* ── STEPS ─────────────────────────────────────── */}
       <section className="lt-steps-section">
         <div className="lt-section-inner">
-          <p className="section-label">// cómo funciona</p>
+          <p className="section-label">{t("stepsLabel")}</p>
           <h2 className="section-title">
-            Tres pasos.<br />
-            <span style={{ color: "var(--accent)" }}>En serio.</span>
+            {t("stepsTitleLine1")}<br />
+            <span style={{ color: "var(--accent)" }}>{t("stepsTitleLine2")}</span>
           </h2>
           <div className="lt-steps-grid">
             {STEPS.map(({ n, title, desc }) => (
@@ -350,8 +353,8 @@ export default function LinktreeLanding() {
       {/* ── FAQ ───────────────────────────────────────── */}
       <section className="lt-faq-section">
         <div className="lt-section-inner lt-section-inner--narrow">
-          <p className="section-label">// preguntas frecuentes</p>
-          <h2 className="section-title">Sin vueltas.</h2>
+          <p className="section-label">{t("faqLabel")}</p>
+          <h2 className="section-title">{t("faqTitle")}</h2>
           <div className="lt-faq-list">
             {FAQS.map((f) => (
               <FaqItem key={f.q} q={f.q} a={f.a} />
@@ -368,17 +371,17 @@ export default function LinktreeLanding() {
             <Zap size={28} />
           </div>
           <h2 className="lt-cta-title">
-            Traé tu Linktree.<br />
-            <span style={{ color: "var(--accent)" }}>Quedáte por el perfil.</span>
+            {t("ctaTitleLine1")}<br />
+            <span style={{ color: "var(--accent)" }}>{t("ctaTitleLine2")}</span>
           </h2>
           <p className="lt-cta-sub">
-            Gratis para empezar. Sin tarjeta de crédito. Listo en 3 minutos.
+            {t("ctaSubtitle")}
           </p>
           <div className="lt-cta-import-box">
             <div className="lt-import-prefix">linktr.ee/</div>
             <input
               className="lt-import-input"
-              placeholder="tuusuario"
+              placeholder={t("importPlaceholder")}
               value={url}
               onChange={(e) => {
                 setUrl(e.target.value);
@@ -389,15 +392,15 @@ export default function LinktreeLanding() {
               spellCheck={false}
             />
             <button className="lt-import-btn" onClick={handleImport}>
-              Empezar gratis
+              {t("ctaImportButton")}
               <ArrowRight size={16} />
             </button>
           </div>
           <div className="lt-cta-trust">
-            {["Importación automática", "Gratis para siempre", "Sin tarjeta"].map((t, i) => (
+            {[t("ctaTrust1"), t("ctaTrust2"), t("ctaTrust3")].map((label, i) => (
               <span key={i} className="lt-cta-trust-item">
                 <Check size={12} />
-                {t}
+                {label}
               </span>
             ))}
           </div>
@@ -410,9 +413,9 @@ export default function LinktreeLanding() {
           huev<span style={{ color: "var(--accent)" }}>site</span>.io
         </Link>
         <div className="lt-footer-links">
-          <Link href="/explore">Explorar builders</Link>
-          <Link href="/blog">Blog</Link>
-          <Link href="/login">Entrar</Link>
+          <Link href="/explore">{t("footerExplore")}</Link>
+          <Link href="/blog">{t("footerBlog")}</Link>
+          <Link href="/login">{t("footerLogin")}</Link>
         </div>
       </footer>
     </div>

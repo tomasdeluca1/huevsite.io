@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertTriangle, Loader2, Trash2, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const CONFIRMATION_TEXT = "Quiero eliminar mi cuenta";
 
@@ -21,6 +22,7 @@ export function DeleteAccountModal({
   onConfirm,
   isDeleting,
 }: DeleteAccountModalProps) {
+  const t = useTranslations("dashboard");
   const [confirmation, setConfirmation] = useState("");
 
   useEffect(() => {
@@ -61,13 +63,13 @@ export function DeleteAccountModal({
                 </div>
                 <div>
                   <p className="mb-2 text-[10px] font-black uppercase tracking-[0.25em] text-red-400/70">
-                    Zona de Peligro
+                    {t("deleteAccount.dangerZone")}
                   </p>
                   <h3 className="text-2xl font-black tracking-tight text-white">
-                    Eliminar cuenta
+                    {t("deleteAccount.title")}
                   </h3>
                   <p className="mt-2 text-sm leading-relaxed text-white/45">
-                    Esto borra tu acceso, tu perfil, sub-sites, bloques, actividad y assets subidos.
+                    {t("deleteAccount.description")}
                   </p>
                 </div>
               </div>
@@ -86,7 +88,7 @@ export function DeleteAccountModal({
                 <div className="flex items-start gap-3">
                   <AlertTriangle size={18} className="mt-0.5 shrink-0 text-amber-400" />
                   <p className="text-sm leading-relaxed text-amber-100/75">
-                    Esta acción es irreversible. Para confirmar, escribí exactamente:
+                    {t("deleteAccount.irreversible")}
                     <span className="mt-2 block rounded-xl bg-black/30 px-3 py-2 font-mono text-xs text-white">
                       {CONFIRMATION_TEXT}
                     </span>
@@ -96,7 +98,7 @@ export function DeleteAccountModal({
 
               <div className="space-y-2">
                 <label className="block px-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/35">
-                  Confirmación manual
+                  {t("deleteAccount.manualConfirmation")}
                 </label>
                 <input
                   value={confirmation}
@@ -108,7 +110,7 @@ export function DeleteAccountModal({
                   className="w-full rounded-[1.5rem] border border-white/10 bg-black/40 px-5 py-4 text-sm font-medium text-white outline-none transition-all placeholder:text-white/20 focus:border-red-400/60"
                 />
                 <p className={`px-1 text-xs ${isMatch ? "text-emerald-400" : "text-white/30"}`}>
-                  {isMatch ? "Frase correcta. Ya podés eliminar la cuenta." : "La frase tiene que coincidir exactamente."}
+                  {isMatch ? t("deleteAccount.phraseCorrect") : t("deleteAccount.phraseMismatch")}
                 </p>
               </div>
 
@@ -118,7 +120,7 @@ export function DeleteAccountModal({
                   disabled={isDeleting}
                   className="flex-1 rounded-2xl bg-white/5 py-4 text-sm font-bold text-white/70 transition-all hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  Cancelar
+                  {t("deleteAccount.cancel")}
                 </button>
                 <button
                   onClick={() => onConfirm(confirmation)}
@@ -126,7 +128,7 @@ export function DeleteAccountModal({
                   className="flex flex-[1.2] items-center justify-center gap-2 rounded-2xl bg-red-500 py-4 text-sm font-black text-white transition-all hover:bg-red-400 disabled:cursor-not-allowed disabled:bg-red-500/30 disabled:text-white/40"
                 >
                   {isDeleting ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
-                  {isDeleting ? "Eliminando..." : "Eliminar para siempre"}
+                  {isDeleting ? t("deleteAccount.deleting") : t("deleteAccount.deleteForever")}
                 </button>
               </div>
             </div>

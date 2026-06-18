@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, X, ArrowRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 /**
  * Toast en el dashboard que invita a dejar un testimonio para sumar +50 al
@@ -11,6 +12,7 @@ import { MessageSquare, X, ArrowRight } from "lucide-react";
  * todavía no dejó uno (o fue rechazado). Autocontenido: se fetchea su estado.
  */
 export function TestimonialNudgeToast({ username }: { username?: string }) {
+  const t = useTranslations("dashboard");
   const [visible, setVisible] = useState(false);
 
   const storageKey = `huevsite_testimonial_nudge_${username || "anon"}`;
@@ -64,7 +66,7 @@ export function TestimonialNudgeToast({ username }: { username?: string }) {
             <button
               onClick={dismiss}
               className="absolute top-2.5 right-2.5 p-1 rounded-lg text-[var(--text-muted)] hover:text-white hover:bg-white/5 transition-colors"
-              aria-label="Cerrar"
+              aria-label={t("testimonialNudge.close")}
             >
               <X size={15} />
             </button>
@@ -75,17 +77,19 @@ export function TestimonialNudgeToast({ username }: { username?: string }) {
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-bold tracking-tight text-white leading-snug">
-                  Sumá <span className="text-[var(--accent)]">+50</span> a tu Builder Score
+                  {t.rich("testimonialNudge.title", {
+                    accent: (chunks) => <span className="text-[var(--accent)]">{chunks}</span>,
+                  })}
                 </p>
                 <p className="text-xs text-[var(--text-dim)] leading-snug mt-1">
-                  Dejá un testimonio de cómo te sirve huevsite. Si entra, sale en la home.
+                  {t("testimonialNudge.subtitle")}
                 </p>
                 <Link
                   href="/testimonio"
                   onClick={dismiss}
                   className="inline-flex items-center gap-1.5 mt-3 text-xs font-bold text-black bg-[var(--accent)] hover:brightness-110 transition-all px-3.5 py-2 rounded-xl group"
                 >
-                  Dejar mi testimonio
+                  {t("testimonialNudge.cta")}
                   <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
                 </Link>
               </div>

@@ -1,39 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { type Role, type OnboardingState } from "@/lib/onboarding-types";
-
-const ROLES: {
-  id: Role;
-  emoji: string;
-  label: string;
-  desc: string;
-}[] = [
-  {
-    id: "developer",
-    emoji: "⌨️",
-    label: "Developer",
-    desc: "Código, repos, commits",
-  },
-  {
-    id: "designer",
-    emoji: "🎨",
-    label: "Designer",
-    desc: "Figma, UI, sistemas",
-  },
-  {
-    id: "founder",
-    emoji: "🚀",
-    label: "Founder",
-    desc: "Startups, MRR, tracción",
-  },
-  {
-    id: "indie_hacker",
-    emoji: "🛠",
-    label: "Indie Hacker",
-    desc: "Side projects, solodev",
-  },
-];
 
 interface StepRoleProps {
   state: OnboardingState;
@@ -42,6 +11,40 @@ interface StepRoleProps {
 }
 
 export function StepRole({ state, onChange, onNext }: StepRoleProps) {
+  const t = useTranslations("onboarding");
+
+  const ROLES: {
+    id: Role;
+    emoji: string;
+    label: string;
+    desc: string;
+  }[] = [
+    {
+      id: "developer",
+      emoji: "⌨️",
+      label: t("roleDeveloperLabel"),
+      desc: t("roleDeveloperDesc"),
+    },
+    {
+      id: "designer",
+      emoji: "🎨",
+      label: t("roleDesignerLabel"),
+      desc: t("roleDesignerDesc"),
+    },
+    {
+      id: "founder",
+      emoji: "🚀",
+      label: t("roleFounderLabel"),
+      desc: t("roleFounderDesc"),
+    },
+    {
+      id: "indie_hacker",
+      emoji: "🛠",
+      label: t("roleIndieHackerLabel"),
+      desc: t("roleIndieHackerDesc"),
+    },
+  ];
+
   const toggle = (role: Role) => {
     if (state.roles.includes(role)) {
       onChange(state.roles.filter((r) => r !== role));
@@ -55,9 +58,9 @@ export function StepRole({ state, onChange, onNext }: StepRoleProps) {
   return (
     <div className="onboard-ui !max-w-xl !p-10">
       <div className="mb-10">
-        <div className="section-label mb-2">// paso 01</div>
-        <h1 className="ou-q !text-4xl">¿Qué sos, básicamente?</h1>
-        <p className="ou-sub !text-base">Podés elegir más de uno, che. Sin drama.</p>
+        <div className="section-label mb-2">{t("step1Label")}</div>
+        <h1 className="ou-q !text-4xl">{t("step1Title")}</h1>
+        <p className="ou-sub !text-base">{t("step1Subtitle")}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-10">
@@ -83,8 +86,13 @@ export function StepRole({ state, onChange, onNext }: StepRoleProps) {
         className="ou-next !py-5 !text-lg"
       >
         {canContinue
-          ? `Continuar como ${state.roles.length > 1 ? "builder" : ROLES.find(r => r.id === state.roles[0])?.label} →`
-          : "Elegí al menos uno"}
+          ? t("step1Continue", {
+              role:
+                state.roles.length > 1
+                  ? t("roleBuilder")
+                  : ROLES.find((r) => r.id === state.roles[0])?.label ?? "",
+            })
+          : t("step1ChooseAtLeastOne")}
       </button>
     </div>
   );

@@ -3,6 +3,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Trash2, Sparkles, EyeOff, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { BlockData } from "@/lib/profile-types";
 import { ReactNode } from "react";
 
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export function SortableBlock({ id, block, children, onRemove, onEdit, onResize, onHide }: Props) {
+  const t = useTranslations("dashboard");
   const {
     attributes,
     listeners,
@@ -47,7 +49,7 @@ export function SortableBlock({ id, block, children, onRemove, onEdit, onResize,
         <button
           onClick={() => onEdit(block)}
           className="p-2 rounded-lg bg-[var(--surface2)] border border-[var(--border-bright)] hover:border-[var(--accent)] transition-all text-[var(--accent)] backdrop-blur-md shadow-lg"
-          title="Editar contenido"
+          title={t("sortableBlock.edit")}
         >
           <Sparkles size={16} />
         </button>
@@ -55,7 +57,7 @@ export function SortableBlock({ id, block, children, onRemove, onEdit, onResize,
           <button
             onClick={() => onHide(id)}
             className="p-2 rounded-lg bg-[var(--surface2)] border border-[var(--border-bright)] hover:border-amber-500/50 transition-all text-white/50 hover:text-amber-400 backdrop-blur-md shadow-lg"
-            title="Ocultar bloque"
+            title={t("sortableBlock.hide")}
           >
             <EyeOff size={16} />
           </button>
@@ -63,7 +65,7 @@ export function SortableBlock({ id, block, children, onRemove, onEdit, onResize,
         <button
           onClick={() => onRemove(id)}
           className="p-2 rounded-lg bg-red-500/10 border border-red-500/30 hover:bg-red-500 hover:text-white transition-all text-red-500 backdrop-blur-md shadow-lg"
-          title="Eliminar bloque"
+          title={t("sortableBlock.remove")}
         >
           <Trash2 size={16} />
         </button>
@@ -76,26 +78,26 @@ export function SortableBlock({ id, block, children, onRemove, onEdit, onResize,
             <button
               onClick={() => onResize(id, Math.max(1, block.col_span - 1), block.row_span)}
               className="p-1.5 hover:bg-[var(--accent)] hover:text-black transition-colors"
-              title="Reducir ancho"
+              title={t("sortableBlock.decreaseWidth")}
             ><ChevronLeft size={12} /></button>
-            <span className="text-[10px] font-mono px-2 font-bold text-[var(--accent)] select-none whitespace-nowrap">↔ {block.col_span} Ancho</span>
+            <span className="text-[10px] font-mono px-2 font-bold text-[var(--accent)] select-none whitespace-nowrap">↔ {t("sortableBlock.width", { n: block.col_span })}</span>
             <button
               onClick={() => onResize(id, Math.min(4, block.col_span + 1), block.row_span)}
               className="p-1.5 hover:bg-[var(--accent)] hover:text-black transition-colors"
-              title="Aumentar ancho"
+              title={t("sortableBlock.increaseWidth")}
             ><ChevronRight size={12} /></button>
           </div>
-          <div className="flex items-center bg-[var(--surface)]/80 backdrop-blur-md border border-[var(--border-bright)] rounded-lg overflow-hidden shadow-lg" title="Ajustar altura del bloque">
+          <div className="flex items-center bg-[var(--surface)]/80 backdrop-blur-md border border-[var(--border-bright)] rounded-lg overflow-hidden shadow-lg" title={t("sortableBlock.adjustHeight")}>
             <button
               onClick={() => onResize(id, block.col_span, Math.max(1, block.row_span - 1))}
               className="p-1.5 hover:bg-[var(--accent)] hover:text-black transition-colors"
-              title="Reducir alto"
+              title={t("sortableBlock.decreaseHeight")}
             ><ChevronUp size={12} /></button>
-            <span className="text-[10px] font-mono px-2 font-bold text-[var(--accent)] select-none whitespace-nowrap">↕ {block.row_span} Alto</span>
+            <span className="text-[10px] font-mono px-2 font-bold text-[var(--accent)] select-none whitespace-nowrap">↕ {t("sortableBlock.height", { n: block.row_span })}</span>
             <button
               onClick={() => onResize(id, block.col_span, Math.min(3, block.row_span + 1))}
               className="p-1.5 hover:bg-[var(--accent)] hover:text-black transition-colors"
-              title="Aumentar alto"
+              title={t("sortableBlock.increaseHeight")}
             ><ChevronDown size={12} /></button>
           </div>
         </div>

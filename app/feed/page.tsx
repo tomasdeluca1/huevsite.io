@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useState, Suspense, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import LocaleToggle from "@/components/LocaleToggle";
 import { BadgeCheck, Loader2, Activity as ActivityIcon, ArrowUpRight, Users, UserPlus } from "lucide-react";
+
+type FeedT = ReturnType<typeof useTranslations>;
 
 interface ActivityUser {
   id: string;
@@ -25,23 +29,23 @@ interface Activity {
   user: ActivityUser;
 }
 
-const ACTIVITY_LABELS: Record<string, (data: Record<string, string>, username: string) => string> = {
-  new_project: (data, u) => `${u} lanzó un proyecto: ${data.projectName ?? ""}`,
-  new_block: (data, u) => `${u} agregó un nuevo bloque: ${data.blockType ?? ""}`,
-  milestone: (data, u) => `${u} llegó a ${data.value ?? ""} ${data.metric ?? ""}`,
-  new_follow: (data, u) => `${u} empezó a seguir a ${data.targetUsername ?? "alguien"}`,
-  new_nomination: (data, u) => `${u} nominó a ${data.targetUsername ?? "alguien"} como creador de la semana 🏆`,
-  new_endorsement: (data, u) => `${u} dejó un comentario a ${data.targetUsername ?? "alguien"}`,
-  pro_upgrade: (data, u) => `${u} se pasó a PRO 🚀`,
-  new_builder: (data, u) => `${data.username ?? u} se acaba de unir a huevsite.io 🎉`,
-  showcase_winner: (data, u) => `${u} ganó como builder de la semana 🏆🥚`,
-  block_update: (data, u) => `${u} hizo cambios en su bloque de ${data.blockType ?? "contenido"} 🛠️`,
+const ACTIVITY_LABELS: Record<string, (t: FeedT, data: Record<string, string>, username: string) => string> = {
+  new_project: (t, data, u) => t("activityNewProject", { u, projectName: data.projectName ?? "" }),
+  new_block: (t, data, u) => t("activityNewBlock", { u, blockType: data.blockType ?? "" }),
+  milestone: (t, data, u) => t("activityMilestone", { u, value: data.value ?? "", metric: data.metric ?? "" }),
+  new_follow: (t, data, u) => t("activityNewFollow", { u, target: data.targetUsername ?? t("someone") }),
+  new_nomination: (t, data, u) => t("activityNewNomination", { u, target: data.targetUsername ?? t("someone") }),
+  new_endorsement: (t, data, u) => t("activityNewEndorsement", { u, target: data.targetUsername ?? t("someone") }),
+  pro_upgrade: (t, data, u) => t("activityProUpgrade", { u }),
+  new_builder: (t, data, u) => t("activityNewBuilder", { u: data.username ?? u }),
+  showcase_winner: (t, data, u) => t("activityShowcaseWinner", { u }),
+  block_update: (t, data, u) => t("activityBlockUpdate", { u, blockType: data.blockType ?? t("contentFallback") }),
 };
 
-function timeAgo(date: string): string {
+function timeAgo(date: string, nowLabel: string): string {
   const diff = Date.now() - new Date(date).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "ahora";
+  if (mins < 1) return nowLabel;
   if (mins < 60) return `${mins}m`;
   const hs = Math.floor(mins / 60);
   if (hs < 24) return `${hs}hs`;
@@ -49,6 +53,7 @@ function timeAgo(date: string): string {
 }
 
 function ActivityGroup({ group, index }: { group: Activity[]; index: number }) {
+  const t = useTranslations("feed");
   const [isExpanded, setIsExpanded] = useState(false);
   const main = group[0];
   const user = main.user;
@@ -56,7 +61,7 @@ function ActivityGroup({ group, index }: { group: Activity[]; index: number }) {
   const profileHref = `/${user.username}?from=feed&return_to=/feed`;
 
   const getLabel = (activity: Activity) => {
-    const label = ACTIVITY_LABELS[activity.type]?.(activity.data, user.name ?? user.username) ?? `${user.username} hizo algo nuevo`;
+    const label = ACTIVITY_LABELS[activity.type]?.(t, activity.data, user.name ?? user.username) ?? t("activityFallback", { u: user.username });
     return label.replace(user.name ?? user.username, "").trim();
   };
 
@@ -115,12 +120,12 @@ function ActivityGroup({ group, index }: { group: Activity[]; index: number }) {
                 )}
                 {isMultiple && !isExpanded && (
                   <span className="px-1.5 py-0.5 rounded-md bg-[var(--accent)]/10 text-[var(--accent)] text-[8px] font-black uppercase tracking-tighter border border-[var(--accent)]/20 whitespace-nowrap">
-                    +{group.length - 1} updates
+                    {t("moreUpdates", { count: group.length - 1 })}
                   </span>
                 )}
               </div>
               <span className="text-[10px] text-[var(--text-muted)] font-mono shrink-0">
-                {timeAgo(main.created_at)}
+                {timeAgo(main.created_at, t("now"))}
               </span>
             </div>
             
@@ -144,7 +149,7 @@ function ActivityGroup({ group, index }: { group: Activity[]; index: number }) {
                           {getLabel(activity)}
                         </p>
                         <span className="text-[9px] text-[var(--text-muted)] font-mono opacity-40">
-                          {timeAgo(activity.created_at)}
+                          {timeAgo(activity.created_at, t("now"))}
                         </span>
                       </div>
                     ))}
@@ -160,6 +165,7 @@ function ActivityGroup({ group, index }: { group: Activity[]; index: number }) {
 }
 
 function FeedContent() {
+  const t = useTranslations("feed");
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -271,32 +277,33 @@ function FeedContent() {
         <div className="flex items-center justify-between mb-8">
           <Link href={fromDashboard ? "/dashboard" : "/"} className="logo">huev<span>site</span>.io</Link>
           <div className="flex items-center gap-3">
-             <Link href="/explore" className="hidden sm:block text-[10px] font-mono uppercase tracking-widest text-[var(--text-muted)] hover:text-white transition-colors">← Explorar</Link>
-             <Link href={currentUserId ? "/dashboard" : "/login"} className="btn btn-accent !text-[10px] !py-2 !px-4 !rounded-xl">{currentUserId ? "Mi huevsite" : "Crear mi huevsite"}</Link>
+             <LocaleToggle />
+             <Link href="/explore" className="hidden sm:block text-[10px] font-mono uppercase tracking-widest text-[var(--text-muted)] hover:text-white transition-colors">{t("navExplore")}</Link>
+             <Link href={currentUserId ? "/dashboard" : "/login"} className="btn btn-accent !text-[10px] !py-2 !px-4 !rounded-xl">{currentUserId ? t("myHuevsite") : t("createMyHuevsite")}</Link>
           </div>
         </div>
-        <div className="section-label mb-2">// comunidad</div>
-        <h1 className="text-4xl font-extrabold tracking-tighter">Qué está pasando?</h1>
+        <div className="section-label mb-2">{t("sectionLabel")}</div>
+        <h1 className="text-4xl font-extrabold tracking-tighter">{t("title")}</h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-[var(--text-dim)]">
-          Seguí la actividad real de la comunidad y descubrí proyectos publicados directamente desde los bloques de los builders.
+          {t("subtitle")}
         </p>
         
         <div className="flex gap-2 mt-8 bg-black/20 p-1 rounded-2xl border border-[var(--border)] overflow-hidden">
-          {["launches", "activity"].map((t) => (
+          {(["launches", "activity"] as const).map((tabId) => (
             <button
-              key={t}
-              onClick={() => setTab(t as any)}
-              className={`flex-1 py-3 px-2 text-center rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${tab === t ? 'bg-[var(--surface2)] text-white' : 'text-[var(--text-muted)] hover:text-white'}`}
+              key={tabId}
+              onClick={() => setTab(tabId)}
+              className={`flex-1 py-3 px-2 text-center rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${tab === tabId ? 'bg-[var(--surface2)] text-white' : 'text-[var(--text-muted)] hover:text-white'}`}
             >
-              {t === "launches" ? "Lanzamientos" : "Actividad"}
+              {tabId === "launches" ? t("tabLaunches") : t("tabActivity")}
             </button>
           ))}
         </div>
 
         <div className="mt-4 flex gap-2">
           {[
-            { id: "all", label: "Todos", icon: Users },
-            { id: "following", label: "Seguidos", icon: UserPlus },
+            { id: "all", label: t("filterAll"), icon: Users },
+            { id: "following", label: t("filterFollowing"), icon: UserPlus },
           ].map((option) => {
             const Icon = option.icon;
             const active = audienceFilter === option.id;
@@ -333,12 +340,12 @@ function FeedContent() {
           <div className="w-16 h-16 bg-[var(--surface2)] rounded-2xl flex items-center justify-center mx-auto mb-6 text-[var(--accent)] shadow-xl shadow-[var(--accent)]/5">
             <UserPlus size={28} />
           </div>
-          <h3 className="text-xl font-bold mb-2 text-white">Entrá para ver a quién seguís</h3>
+          <h3 className="text-xl font-bold mb-2 text-white">{t("followingLoginTitle")}</h3>
           <p className="text-sm text-[var(--text-dim)] font-mono leading-relaxed mb-8 max-w-sm mx-auto">
-            El filtro de seguidos arma un feed más relevante con la actividad y los proyectos de tu propia red.
+            {t("followingLoginBody")}
           </p>
           <Link href="/login" className="btn btn-accent inline-flex !rounded-2xl shadow-lg shadow-[var(--accent)]/20">
-            Iniciar sesión
+            {t("login")}
           </Link>
         </motion.div>
       ) : tab === "launches" ? (
@@ -352,15 +359,15 @@ function FeedContent() {
               <ActivityIcon size={32} />
             </div>
             <h3 className="text-xl font-bold mb-2 text-white">
-              {audienceFilter === "following" ? "Tus seguidos todavía no publicaron proyectos" : "Todavía no encontramos proyectos publicados"}
+              {audienceFilter === "following" ? t("launchesEmptyFollowingTitle") : t("launchesEmptyTitle")}
             </h3>
             <p className="text-sm text-[var(--text-dim)] font-mono leading-relaxed mb-8 max-w-xs mx-auto">
               {audienceFilter === "following"
-                ? "Seguí más builders o volvé a Todos para descubrir proyectos públicos del resto de la comunidad."
-                : "Cuando un builder agrega un bloque de proyecto, debería aparecer acá automáticamente."}
+                ? t("launchesEmptyFollowingBody")
+                : t("launchesEmptyBody")}
             </p>
             <Link href="/dashboard" className="btn btn-accent inline-flex !rounded-2xl shadow-lg shadow-[var(--accent)]/20">
-              Agregar un proyecto
+              {t("addProject")}
             </Link>
           </motion.div>
         ) : (
@@ -377,7 +384,7 @@ function FeedContent() {
                       />
                     ) : (
                       <div className="w-full aspect-[1.2/1] rounded-2xl border border-white/10 bg-black/40 flex items-center justify-center text-[var(--text-muted)] text-[10px] font-mono uppercase tracking-widest">
-                        Sin preview
+                        {t("noPreview")}
                       </div>
                     )}
                   </div>
@@ -388,7 +395,7 @@ function FeedContent() {
                         @{launch.user.username}
                       </Link>
                       <span>•</span>
-                      <span>{timeAgo(launch.created_at)}</span>
+                      <span>{timeAgo(launch.created_at, t("now"))}</span>
                       {launch.subSite?.slug && (
                         <>
                           <span>•</span>
@@ -437,14 +444,14 @@ function FeedContent() {
                           rel="noopener noreferrer"
                           className="btn btn-accent !rounded-2xl !px-5 !py-3 !text-[11px] uppercase tracking-widest"
                         >
-                          Ver proyecto <ArrowUpRight size={14} className="ml-2" />
+                          {t("viewProject")} <ArrowUpRight size={14} className="ml-2" />
                         </Link>
                       )}
                       <Link
                         href={`/${launch.user.username}?from=feed&return_to=/feed`}
                         className="btn btn-ghost !rounded-2xl !px-5 !py-3 !text-[11px] uppercase tracking-widest"
                       >
-                        Ver perfil
+                        {t("viewProfile")}
                       </Link>
                     </div>
                   </div>
@@ -465,12 +472,12 @@ function FeedContent() {
                 <ActivityIcon size={28} />
               </div>
               <h3 className="text-xl font-bold mb-2 text-white">
-                {audienceFilter === "following" ? "Todavía no hay actividad de tus seguidos" : "Todavía no hay actividad para mostrar"}
+                {audienceFilter === "following" ? t("activityEmptyFollowingTitle") : t("activityEmptyTitle")}
               </h3>
               <p className="text-sm text-[var(--text-dim)] font-mono leading-relaxed max-w-sm mx-auto">
                 {audienceFilter === "following"
-                  ? "Seguí builders para armar un feed más personal con sus movimientos recientes."
-                  : "Cuando la comunidad publique cambios, proyectos o hitos, vas a empezar a verlos acá."}
+                  ? t("activityEmptyFollowingBody")
+                  : t("activityEmptyBody")}
               </p>
             </motion.div>
           ) : (
@@ -490,7 +497,7 @@ function FeedContent() {
           <div id="feed-end-marker" className="h-20 flex items-center justify-center">
             {page >= totalPages && activities.length > 0 && (
               <span className="text-[10px] font-mono text-[var(--text-dim)] uppercase tracking-widest opacity-40">
-                — fin de la actividad —
+                {t("endOfActivity")}
               </span>
             )}
           </div>
@@ -501,8 +508,9 @@ function FeedContent() {
 }
 
 export default function FeedPage() {
+  const t = useTranslations("feed");
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-mono text-[var(--text-dim)]">Cargando comunidad...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-mono text-[var(--text-dim)]">{t("loadingCommunity")}</div>}>
       <FeedContent />
     </Suspense>
   );

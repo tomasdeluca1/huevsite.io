@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { Globe, Link2, Loader2 } from "lucide-react";
 import { type LinktreeImportData } from "@/lib/linktree-import";
 import { type OnboardingState } from "@/lib/onboarding-types";
@@ -13,6 +14,7 @@ interface StepLinktreeProps {
 }
 
 export function StepLinktree({ state, onImport, onNext }: StepLinktreeProps) {
+  const t = useTranslations("onboarding");
   const [mode, setMode] = useState<"ask" | "input">(() =>
     state.linktreeData ? "input" : "ask"
   );
@@ -22,7 +24,7 @@ export function StepLinktree({ state, onImport, onNext }: StepLinktreeProps) {
 
   const handleImport = async () => {
     if (!linktreeUrl.trim()) {
-      setError("Pega una URL de Linktree o Bio Site para importar.");
+      setError(t("linktreePasteUrlError"));
       return;
     }
 
@@ -38,7 +40,7 @@ export function StepLinktree({ state, onImport, onNext }: StepLinktreeProps) {
 
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || "No pudimos importar tu Linktree o Bio Site.");
+        throw new Error(data.error || t("linktreeImportError"));
       }
 
       onImport(data);
@@ -48,7 +50,7 @@ export function StepLinktree({ state, onImport, onNext }: StepLinktreeProps) {
       setError(
         importError instanceof Error
           ? importError.message
-          : "No pudimos importar tu Linktree o Bio Site."
+          : t("linktreeImportError")
       );
     } finally {
       setLoading(false);
@@ -59,10 +61,10 @@ export function StepLinktree({ state, onImport, onNext }: StepLinktreeProps) {
     return (
       <div className="onboard-ui !max-w-xl !p-10">
         <div className="mb-10">
-          <div className="section-label mb-2">// paso 02</div>
-          <h1 className="ou-q !text-4xl">Links importados</h1>
+          <div className="section-label mb-2">{t("step2Label")}</div>
+          <h1 className="ou-q !text-4xl">{t("linktreeImportedTitle")}</h1>
           <p className="ou-sub !text-base">
-            Ya trajimos tus links visibles. Ahora elegí el color que va a identificar a tu huevsite.
+            {t("linktreeImportedSubtitle")}
           </p>
         </div>
 
@@ -72,7 +74,7 @@ export function StepLinktree({ state, onImport, onNext }: StepLinktreeProps) {
               {state.linktreeData.avatarUrl ? (
                 <img
                   src={state.linktreeData.avatarUrl}
-                  alt={state.linktreeData.displayName || "Perfil importado"}
+                  alt={state.linktreeData.displayName || t("linktreeImportedProfile")}
                   className="h-full w-full object-cover"
                 />
               ) : (
@@ -80,9 +82,9 @@ export function StepLinktree({ state, onImport, onNext }: StepLinktreeProps) {
               )}
             </div>
             <div>
-              <div className="text-lg font-bold">{state.linktreeData.displayName || "Perfil importado"}</div>
+              <div className="text-lg font-bold">{state.linktreeData.displayName || t("linktreeImportedProfile")}</div>
               <div className="text-sm font-mono text-[var(--text-muted)]">
-                {state.linktreeData.links.length} links procesados
+                {t("linktreeLinksProcessed", { count: state.linktreeData.links.length })}
               </div>
             </div>
           </div>
@@ -90,13 +92,13 @@ export function StepLinktree({ state, onImport, onNext }: StepLinktreeProps) {
 
         <div className="flex flex-col gap-3">
           <button onClick={onNext} className="ou-next !py-5 !text-lg">
-            Elegir mi color →
+            {t("linktreeChooseColor")}
           </button>
           <button
             onClick={() => setMode("input")}
             className="w-full rounded-2xl border border-[var(--border-bright)] bg-transparent px-4 py-4 text-sm font-bold text-white transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
           >
-            Reimportar links
+            {t("linktreeReimport")}
           </button>
         </div>
       </div>
@@ -106,10 +108,10 @@ export function StepLinktree({ state, onImport, onNext }: StepLinktreeProps) {
   return (
     <div className="onboard-ui !max-w-xl !p-10">
       <div className="mb-10">
-        <div className="section-label mb-2">// paso 02</div>
-        <h1 className="ou-q !text-4xl">¿Tenés Linktree o Bio Site?</h1>
+        <div className="section-label mb-2">{t("step2Label")}</div>
+        <h1 className="ou-q !text-4xl">{t("linktreeAskTitle")}</h1>
         <p className="ou-sub !text-base">
-          Si ya tenés uno, lo usamos para arrancar el board con links y branding reales.
+          {t("linktreeAskSubtitle")}
         </p>
       </div>
 
@@ -123,10 +125,10 @@ export function StepLinktree({ state, onImport, onNext }: StepLinktreeProps) {
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--border-bright)] bg-black/30">
                 <Link2 size={18} className="text-[var(--accent)]" />
               </div>
-              <div className="text-lg font-bold text-white">Sí, tengo</div>
+              <div className="text-lg font-bold text-white">{t("linktreeYesHave")}</div>
             </div>
             <p className="text-sm text-[var(--text-muted)]">
-              Pegamos la URL y extraemos lo visible para convertirlo en bloques útiles.
+              {t("linktreeYesHaveDesc")}
             </p>
           </button>
 
@@ -134,9 +136,9 @@ export function StepLinktree({ state, onImport, onNext }: StepLinktreeProps) {
             onClick={onNext}
             className="w-full rounded-[2rem] border border-[var(--border)] bg-black/20 px-6 py-5 text-left transition-all hover:border-white/20"
           >
-            <div className="text-lg font-bold text-white">No tengo</div>
+            <div className="text-lg font-bold text-white">{t("linktreeNoHave")}</div>
             <p className="mt-2 text-sm text-[var(--text-muted)]">
-              Seguimos directo: elegís tu color, tu username y publicás.
+              {t("linktreeNoHaveDesc")}
             </p>
           </button>
         </div>
@@ -148,9 +150,9 @@ export function StepLinktree({ state, onImport, onNext }: StepLinktreeProps) {
                 <Link2 size={18} className="text-[var(--accent)]" />
               </div>
               <div>
-                <div className="font-bold text-white">Importar desde Linktree o Bio Site</div>
+                <div className="font-bold text-white">{t("linktreeInputTitle")}</div>
                 <div className="text-xs text-[var(--text-muted)]">
-                  Leemos avatar, bio, títulos y thumbnails visibles.
+                  {t("linktreeInputDesc")}
                 </div>
               </div>
             </div>
@@ -159,7 +161,7 @@ export function StepLinktree({ state, onImport, onNext }: StepLinktreeProps) {
               type="url"
               value={linktreeUrl}
               onChange={(event) => setLinktreeUrl(event.target.value)}
-              placeholder="https://linktr.ee/tuusuario o https://bio.site/tuusuario"
+              placeholder={t("linktreeInputPlaceholder")}
               className="w-full rounded-2xl border border-[var(--border)] bg-black/20 px-4 py-4 text-sm text-white outline-none transition-colors placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]"
             />
 
@@ -174,19 +176,19 @@ export function StepLinktree({ state, onImport, onNext }: StepLinktreeProps) {
                 onClick={() => setMode("ask")}
                 className="flex-1 rounded-2xl border border-[var(--border)] bg-black/20 px-4 py-4 text-sm font-bold text-white/70 transition-colors hover:border-white/20 hover:text-white"
               >
-                Volver
+                {t("linktreeBack")}
               </button>
               <button
                 onClick={handleImport}
                 disabled={loading}
                 className="ou-next !m-0 !flex-[1.4] !py-4 !text-base disabled:opacity-50"
               >
-                {loading ? <Loader2 size={18} className="mx-auto animate-spin" /> : "Importar y seguir →"}
+                {loading ? <Loader2 size={18} className="mx-auto animate-spin" /> : t("linktreeImportAndContinue")}
               </button>
             </div>
 
             <button onClick={onNext} className="ou-skip block w-full">
-              seguir sin importar links →
+              {t("linktreeSkipImport")}
             </button>
           </div>
         </motion.div>

@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Sparkles, CheckCircle2, Loader2, BadgeCheck } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { createPortal } from "react-dom";
 import { buildLemonCheckoutUrl } from "@/lib/lemon-checkout-url";
 import { supabase } from "@/lib/supabase";
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export function UpgradeModal({ isOpen, onClose, accentColor, freeTrial, onClaimTrial, isClaimingTrial = false }: Props) {
+  const t = useTranslations("dashboard");
   const showTrialCTA = !!freeTrial?.eligible && !!onClaimTrial;
 
   // Redirect to checkout carrying the logged-in user's id + email so the LS
@@ -57,24 +59,24 @@ export function UpgradeModal({ isOpen, onClose, accentColor, freeTrial, onClaimT
             >
               <Sparkles size={32} />
             </div>
-            <div className="section-label mb-2 mx-auto justify-center">// modo pro</div>
+            <div className="section-label mb-2 mx-auto justify-center">// {t("upgradeModal.eyebrow")}</div>
             <h3 className="text-3xl font-extrabold tracking-tight mb-4">
-              {showTrialCTA ? "Probá todo Pro gratis" : "Desbloqueá todo tu potencial"}
+              {showTrialCTA ? t("upgradeModal.titleTrial") : t("upgradeModal.title")}
             </h3>
             <p className="text-[var(--text-dim)] text-sm mx-auto max-w-[280px] leading-relaxed">
               {showTrialCTA
-                ? "Activá tu prueba gratis de 14 días y empezá por Insights. También desbloqueás más bloques y análisis avanzados."
-                : "Llegaste al límite de bloques del plan gratuito. Pasándote a Pro vas a poder armar tu portfolio sin restricciones."}
+                ? t("upgradeModal.subtitleTrial")
+                : t("upgradeModal.subtitle")}
             </p>
           </div>
 
           <div className="p-8 pb-6">
             <div className="space-y-4 mb-8">
               {[
-                "Insights avanzados para entender mejor tu perfil",
-                "Más bloques para armar tu board",
-                "Más análisis de dominios y subsites",
-                "Acceso a funciones PRO y novedades"
+                t("upgradeModal.benefit1"),
+                t("upgradeModal.benefit2"),
+                t("upgradeModal.benefit3"),
+                t("upgradeModal.benefit4")
               ].map((benefit, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <CheckCircle2 size={18} style={{ color: accentColor }} className="shrink-0" />
@@ -91,7 +93,7 @@ export function UpgradeModal({ isOpen, onClose, accentColor, freeTrial, onClaimT
                 style={{ backgroundColor: accentColor, color: "black" }}
               >
                 {isClaimingTrial ? <Loader2 size={18} className="animate-spin" /> : <BadgeCheck size={18} />}
-                Claim free trial
+                {t("upgradeModal.claimTrial")}
               </button>
             ) : (
               <button
@@ -99,11 +101,11 @@ export function UpgradeModal({ isOpen, onClose, accentColor, freeTrial, onClaimT
                 className="btn btn-accent w-full py-4 text-base font-bold shadow-[0_0_20px_rgba(200,255,0,0.15)] flex justify-center items-center"
                 style={{ backgroundColor: accentColor, color: "black" }}
               >
-                Pasarme a Pro
+                {t("upgradeModal.upgradeCta")}
               </button>
             )}
             <p className="text-center text-[10px] text-[var(--text-muted)] mt-4 font-mono uppercase tracking-widest">
-              {showTrialCTA ? "14 días gratis · una vez por usuario" : "$9 USD/mes · Cancelás cuando quieras"}
+              {showTrialCTA ? t("upgradeModal.footerTrial") : t("upgradeModal.footer")}
             </p>
           </div>
         </motion.div>

@@ -11,6 +11,7 @@ import {
   PLATFORM_AUTHOR_USERNAME,
 } from "@/lib/blog-data";
 import { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -29,16 +30,17 @@ export async function generateMetadata({
   params: Promise<{ slug: string }> 
 }): Promise<Metadata> {
   const { slug } = await params;
+  const t = await getTranslations('blogUi');
   const post = await getPostBySlugAsync(slug);
   if (!post) {
-    return { title: 'Post no encontrado' };
+    return { title: t('postNotFound') };
   }
 
   const pageUrl = `${SITE_URL}/blog/${slug}`;
   const imageUrl = `${SITE_URL}/blog/${slug}/opengraph-image`;
 
   return {
-    title: `${post.title} | Blog huevsite.io`,
+    title: `${post.title} | ${t('metaSuffix')}`,
     description: post.excerpt,
     alternates: {
       canonical: pageUrl,
@@ -74,6 +76,7 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }> 
 }) {
   const { slug } = await params;
+  const t = await getTranslations('blogUi');
   const post = await getPostBySlugAsync(slug);
 
   if (!post) {
@@ -120,7 +123,7 @@ export default async function BlogPostPage({
       <div className="min-h-screen bg-[var(--bg)] font-display py-12 px-4 max-w-3xl mx-auto">
         <header className="mb-12">
           <div className="flex items-center justify-between mb-8">
-            <Link href="/blog" className="text-[10px] font-mono uppercase tracking-widest text-[var(--accent)] hover:text-white transition-colors">← Volver al Blog</Link>
+            <Link href="/blog" className="text-[10px] font-mono uppercase tracking-widest text-[var(--accent)] hover:text-white transition-colors">{t('backToBlog')}</Link>
             <Link href="/" className="logo text-lg scale-75 opacity-50 hover:opacity-100 transition-opacity">huev<span>site</span>.io</Link>
           </div>
 
@@ -157,7 +160,7 @@ export default async function BlogPostPage({
                     {new Date(post.date).toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' })}
                   </time>
                   <span>•</span>
-                  <span>{post.readingTime} min read</span>
+                  <span>{t('readingTime', { minutes: post.readingTime })}</span>
                 </div>
               </div>
             </div>
@@ -190,7 +193,7 @@ export default async function BlogPostPage({
           <div className="flex-1">
             {prevPost ? (
               <Link href={`/blog/${prevPost.slug}`} className="group flex flex-col gap-2 max-w-[240px]">
-                <span className="text-[10px] uppercase font-mono tracking-widest text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors">← Anterior</span>
+                <span className="text-[10px] uppercase font-mono tracking-widest text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors">{t('prev')}</span>
                 <span className="text-sm font-bold text-white group-hover:text-[var(--accent)] transition-colors line-clamp-1">{prevPost.title}</span>
               </Link>
             ) : <div />}
@@ -199,7 +202,7 @@ export default async function BlogPostPage({
           <div className="flex-1 flex justify-end text-right">
             {nextPost ? (
               <Link href={`/blog/${nextPost.slug}`} className="group flex flex-col gap-2 max-w-[240px]">
-                <span className="text-[10px] uppercase font-mono tracking-widest text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors">Siguiente →</span>
+                <span className="text-[10px] uppercase font-mono tracking-widest text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors">{t('next')}</span>
                 <span className="text-sm font-bold text-white group-hover:text-[var(--accent)] transition-colors line-clamp-1">{nextPost.title}</span>
               </Link>
             ) : <div />}
@@ -211,12 +214,12 @@ export default async function BlogPostPage({
         <footer className="mt-24 pt-12 border-t border-[var(--border)] text-center pb-24">
           <div className="bg-gradient-to-br from-[var(--surface2)] to-black/40 border border-[var(--border-bright)] p-10 rounded-[2.5rem] relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--accent)]/10 blur-[80px] rounded-full group-hover:bg-[var(--accent)]/20 transition-colors pointer-events-none" />
-            <h3 className="text-2xl font-extrabold text-white mb-3">¿Listo para buildear tu portfolio?</h3>
+            <h3 className="text-2xl font-extrabold text-white mb-3">{t('ctaTitle')}</h3>
             <p className="text-[var(--text-dim)] mb-8 max-w-md mx-auto text-sm leading-relaxed">
-              Sumate a la comunidad de creadores y armá tu huevsite gratis. O pasate a PRO y dejá que nuestra IA lo arme por vos.
+              {t('ctaBody')}
             </p>
             <Link href="/dashboard" className="btn btn-accent inline-flex !rounded-2xl !px-8 !py-4 shadow-[0_0_20px_rgba(200,255,0,0.15)] font-black text-black gap-2 items-center hover:scale-105 transition-transform">
-              Crear mi huevsite 🚀
+              {t('ctaButton')}
             </Link>
           </div>
         </footer>

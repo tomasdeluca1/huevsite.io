@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { type OnboardingState } from "@/lib/onboarding-types";
 import { Loader2, Check, AlertCircle } from "lucide-react";
 
@@ -14,6 +15,7 @@ interface StepUsernameProps {
 }
 
 export function StepUsername({ state, onChange, onFinish, creating = false, error = null }: StepUsernameProps) {
+  const t = useTranslations("onboarding");
   const [checking, setChecking] = useState(false);
   const [available, setAvailable] = useState<boolean | null>(state.usernameAvailable ?? null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -72,9 +74,9 @@ export function StepUsername({ state, onChange, onFinish, creating = false, erro
   return (
     <div className="onboard-ui !max-w-xl !p-10">
       <div className="mb-10">
-        <div className="section-label mb-2" style={{ color: accent }}>// paso 04 — el final</div>
-        <h1 className="ou-q !text-4xl">Elegí tu username</h1>
-        <p className="ou-sub !text-base">Tu huevsite vivirá en esta URL por los siglos de los siglos.</p>
+        <div className="section-label mb-2" style={{ color: accent }}>{t("step4Label")}</div>
+        <h1 className="ou-q !text-4xl">{t("usernameTitle")}</h1>
+        <p className="ou-sub !text-base">{t("usernameSubtitle")}</p>
       </div>
 
       <div className="space-y-4 mb-10">
@@ -90,7 +92,7 @@ export function StepUsername({ state, onChange, onFinish, creating = false, erro
               type="text"
               value={state.username}
               onChange={(e) => handleChange(e.target.value)}
-              placeholder="tu-nombre"
+              placeholder={t("usernamePlaceholder")}
               className="min-w-0 flex-1 bg-transparent border-none font-mono text-xl text-white outline-none p-0 placeholder:text-[var(--text-muted)]/50"
               autoFocus
             />
@@ -109,7 +111,7 @@ export function StepUsername({ state, onChange, onFinish, creating = false, erro
               animate={{ opacity: 1, y: 0 }}
               className="text-xs text-red-500 font-mono px-2"
             >
-              Uhh, ese ya está manoteado. Probá con otro.
+              {t("usernameTaken")}
             </motion.p>
           )}
           {available === true && (
@@ -119,7 +121,7 @@ export function StepUsername({ state, onChange, onFinish, creating = false, erro
               className="text-xs font-mono px-2"
               style={{ color: accent }}
             >
-              ✓ Es un golazo, está libre.
+              {t("usernameAvailable")}
             </motion.p>
           )}
         </AnimatePresence>
@@ -142,11 +144,11 @@ export function StepUsername({ state, onChange, onFinish, creating = false, erro
         }}
       >
         {creating && <Loader2 className="animate-spin" size={20} />}
-        {creating ? "Creando tu perfil..." : canFinish ? "¡Publicar mi huevsite! →" : "Elegí un nombre disponible"}
+        {creating ? t("usernameCreating") : canFinish ? t("usernamePublish") : t("usernameChooseAvailable")}
       </button>
 
       <div className="mt-8 text-center text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-[0.2em] opacity-40">
-        gratis para siempre • sin spam • real recognized real
+        {t("usernameFooter")}
       </div>
     </div>
   );

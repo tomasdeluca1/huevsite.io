@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, Loader2, Sparkles, ChevronRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 // ~30s de polling antes de mostrar el estado "delayed" (el webhook a veces tarda
 // o falla — sin esto la pantalla queda en spinner infinito).
@@ -13,6 +14,7 @@ const MAX_POLL_ATTEMPTS = 15;
 const POLL_INTERVAL_MS = 2000;
 
 export default function SuccessContent() {
+    const t = useTranslations("checkout");
     const [status, setStatus] = useState<"processing" | "success" | "delayed">("processing");
     const [user, setUser] = useState<any>(null);
     const router = useRouter();
@@ -99,9 +101,9 @@ export default function SuccessContent() {
                             <Loader2 className="w-16 h-16 text-yellow-500 animate-spin relative" />
                         </div>
                         <div className="space-y-2">
-                            <h1 className="text-3xl font-bold tracking-tight">Procesando tu suscripción</h1>
+                            <h1 className="text-3xl font-bold tracking-tight">{t("processingTitle")}</h1>
                             <p className="text-zinc-400">
-                                Estamos confirmando tu pago con Lemon Squeezy. Esto solo tomará unos segundos...
+                                {t("processingBody")}
                             </p>
                         </div>
                     </motion.div>
@@ -118,15 +120,14 @@ export default function SuccessContent() {
                             <Loader2 className="w-12 h-12 text-zinc-500 animate-spin relative" />
                         </div>
                         <div className="space-y-3">
-                            <h1 className="text-3xl font-bold tracking-tight">Está tardando más de lo normal</h1>
+                            <h1 className="text-3xl font-bold tracking-tight">{t("delayedTitle")}</h1>
                             <p className="text-zinc-400">
-                                Tu pago se procesó, pero la confirmación de Lemon Squeezy a veces demora unos minutos.
-                                Tu cuenta se va a activar sola apenas llegue — no hace falta que pagues de nuevo.
+                                {t("delayedBody")}
                             </p>
                             <p className="text-zinc-500 text-sm">
-                                Si en 10 minutos no ves Pro en tu dashboard, escribinos a{" "}
+                                {t("delayedSupportBefore")}{" "}
                                 <a href="mailto:hi@huevsite.studio" className="text-white underline underline-offset-4">hi@huevsite.studio</a>{" "}
-                                y lo activamos a mano.
+                                {t("delayedSupportAfter")}
                             </p>
                         </div>
                         <motion.button
@@ -135,7 +136,7 @@ export default function SuccessContent() {
                             onClick={() => router.push("/dashboard")}
                             className="group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-full bg-white px-8 font-medium text-black transition-all hover:bg-zinc-200"
                         >
-                            <span>Ir a mi Dashboard</span>
+                            <span>{t("goToDashboard")}</span>
                             <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                         </motion.button>
                     </motion.div>
@@ -166,10 +167,10 @@ export default function SuccessContent() {
 
                         <div className="space-y-4">
                             <h1 className="text-4xl font-extrabold tracking-tighter sm:text-5xl bg-gradient-to-b from-white to-zinc-500 bg-clip-text text-transparent">
-                                ¡Bienvenido al Club PRO!
+                                {t("successTitle")}
                             </h1>
                             <p className="text-zinc-400 text-lg">
-                                Tu cuenta ha sido actualizada con éxito. Ya tenés acceso completo a todas las funciones premium de huevsite.
+                                {t("successBody")}
                             </p>
                         </div>
 
@@ -179,7 +180,7 @@ export default function SuccessContent() {
                             onClick={() => router.push("/dashboard")}
                             className="group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-full bg-white px-8 font-medium text-black transition-all hover:bg-zinc-200"
                         >
-                            <span>Ir a mi Dashboard</span>
+                            <span>{t("goToDashboard")}</span>
                             <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                         </motion.button>
                     </motion.div>

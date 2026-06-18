@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { ArrowRight, Search, Loader2, Sparkles, X, Trophy, ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
@@ -32,6 +33,7 @@ interface ExploreProfile {
 }
 
 export function ExploreClient({ initialTotal }: { initialTotal: number }) {
+  const t = useTranslations("explore");
   const [profiles, setProfiles] = useState<ExploreProfile[]>([]);
   const [page, setPage] = useState(0);
 
@@ -78,12 +80,12 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
   const sortRef = useRef<HTMLDivElement>(null);
 
   const SORT_OPTIONS = [
-    { value: "score", label: "Builder Score 🔥" },
-    { value: "created_at", label: "Nuevos builders ⚡" },
-    { value: "updated_at", label: "Más recientes 🔄" },
-    { value: "followers", label: "Más populares 📈" },
-    { value: "nominations", label: "Más votados 🏆" },
-    { value: "endorsements", label: "Más recomendados 💬" },
+    { value: "score", label: t("sortScore") },
+    { value: "created_at", label: t("sortNew") },
+    { value: "updated_at", label: t("sortRecent") },
+    { value: "followers", label: t("sortPopular") },
+    { value: "nominations", label: t("sortVoted") },
+    { value: "endorsements", label: t("sortRecommended") },
   ];
 
   useEffect(() => {
@@ -180,7 +182,7 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
             <Search size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-[var(--text-muted)] group-focus-within:text-[var(--accent)] transition-colors" />
             <input
               type="text"
-              placeholder="Buscar builders, proyectos o palabras clave..."
+              placeholder={t("searchPlaceholder")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-16 pr-12 py-5 rounded-[32px] bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)]/50 focus:ring-4 focus:ring-[var(--accent)]/5 outline-none text-[16px] transition-all text-white placeholder-[var(--text-dim)] shadow-xl shadow-black/20"
@@ -200,12 +202,12 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
             className="flex items-center gap-2 h-[60px] px-6 rounded-[32px] bg-[var(--surface2)] border border-[var(--border)] text-[var(--text-dim)] hover:border-[var(--accent)]/50 hover:text-white transition-all group shrink-0 relative"
           >
             <Sparkles size={18} className="text-[var(--accent)] group-hover:scale-110 transition-transform" />
-            <span className="hidden md:block text-[11px] font-black uppercase tracking-widest">Score System</span>
+            <span className="hidden md:block text-[11px] font-black uppercase tracking-widest">{t("scoreSystem")}</span>
 
             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0 pointer-events-none hidden md:block">
               <div className="bg-black/90 backdrop-blur-md border border-white/10 px-4 py-2 rounded-xl whitespace-nowrap shadow-2xl">
-                <span className="text-[10px] text-[var(--accent)] font-black uppercase tracking-widest block mb-0.5 text-center">Cómo sumás puntos?</span>
-                <span className="text-[9px] text-[var(--text-muted)] font-mono">Ver desglose del ranking</span>
+                <span className="text-[10px] text-[var(--accent)] font-black uppercase tracking-widest block mb-0.5 text-center">{t("scoreTooltipTitle")}</span>
+                <span className="text-[9px] text-[var(--text-muted)] font-mono">{t("scoreTooltipSub")}</span>
               </div>
             </div>
           </button>
@@ -214,7 +216,7 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
         {/* Sort Control */}
         <div className="flex items-center gap-4 w-full lg:w-auto shrink-0 bg-[var(--surface2)]/40 p-1.5 pl-6 rounded-[32px] border border-[var(--border)] backdrop-blur-sm">
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black font-mono text-[var(--text-muted)] uppercase tracking-[0.2em] hidden sm:block opacity-50">Ordenar por:</span>
+            <span className="text-[10px] font-black font-mono text-[var(--text-muted)] uppercase tracking-[0.2em] hidden sm:block opacity-50">{t("sortBy")}</span>
             <div className="relative" ref={sortRef}>
               <button
                 onClick={() => setIsSortOpen((o) => !o)}
@@ -254,7 +256,7 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
         </div>
       ) : profiles.length === 0 ? (
         <div className="text-center py-20 text-[var(--text-dim)] font-mono text-sm border-y border-dashed border-[var(--border-bright)]">
-          No encontramos perfiles que coincidan con tu búsqueda.
+          {t("emptySearch")}
         </div>
       ) : (
         <div className="flex flex-col gap-12">
@@ -277,9 +279,9 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
                 className="btn btn-outline border-dashed text-sm font-mono hover:text-white disabled:opacity-50"
               >
                 {isFetchingMore ? (
-                  <span className="flex items-center gap-2"><Loader2 size={16} className="animate-spin" /> Cargando...</span>
+                  <span className="flex items-center gap-2"><Loader2 size={16} className="animate-spin" /> {t("loading")}</span>
                 ) : (
-                  "Cargar más huevsites"
+                  t("loadMore")
                 )}
               </button>
             </div>
@@ -291,6 +293,7 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
 }
 
 function ProfileCard({ profile, index, isMobile }: { profile: ExploreProfile; index: number; isMobile: boolean }) {
+  const t = useTranslations("explore");
   const [isHovered, setIsHovered] = useState(false);
   const showWinnerBadge = !!profile.is_winner;
   const accentColor = profile.accent_color || 'var(--accent)';
@@ -324,7 +327,7 @@ function ProfileCard({ profile, index, isMobile }: { profile: ExploreProfile; in
           <div className="flex items-center gap-1.5 px-4 overflow-hidden">
             <Sparkles size={11} className="text-black fill-black shrink-0" />
             <span className="text-black font-black text-[9px] uppercase tracking-[0.15em] whitespace-nowrap">
-              {(isHovered || isMobile) ? "Builder de la semana" : "Destacado"}
+              {(isHovered || isMobile) ? t("winnerBadge") : t("featuredBadge")}
             </span>
           </div>
         </motion.div>
@@ -422,7 +425,7 @@ function ProfileCard({ profile, index, isMobile }: { profile: ExploreProfile; in
                     )}
                   </div>
                   <p className="text-[13px] text-[var(--text-dim)] font-mono line-clamp-2 leading-tight">
-                    {profile.tagline || "Creator"}
+                    {profile.tagline || t("creatorFallback")}
                   </p>
                 </div>
               </div>
@@ -430,10 +433,10 @@ function ProfileCard({ profile, index, isMobile }: { profile: ExploreProfile; in
 
             {/* Stats - More refined grid */}
             <div className="grid grid-cols-4 gap-2 mb-8 bg-black/20 backdrop-blur-sm border border-white/5 rounded-2xl p-4">
-              <StatItem label="Seguidores" value={profile.followers_count || 0} />
-              <StatItem label="Votos" value={profile.nominations_count || 0} />
-              <StatItem label="Coment." value={profile.endorsements_count || 0} />
-              <StatItem label="Score" value={profile.builder_score || 0} isAccent />
+              <StatItem label={t("statFollowers")} value={profile.followers_count || 0} />
+              <StatItem label={t("statVotes")} value={profile.nominations_count || 0} />
+              <StatItem label={t("statComments")} value={profile.endorsements_count || 0} />
+              <StatItem label={t("statScore")} value={profile.builder_score || 0} isAccent />
             </div>
 
             {/* Footer */}

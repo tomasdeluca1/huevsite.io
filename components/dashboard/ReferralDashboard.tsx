@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Share2, Copy, Check, Users, Gift, ArrowRight } from "lucide-react";
 import { ProfileData } from "@/lib/profile-types";
 import { clsx } from "clsx";
@@ -10,6 +11,7 @@ interface ReferralDashboardProps {
 }
 
 export function ReferralDashboard({ profile }: ReferralDashboardProps) {
+  const t = useTranslations("dashboard");
   const [copied, setCopied] = useState(false);
   const referralLink = `https://huevsite.io/login?ref=${profile.referralCode}`;
   const referralCount = profile.proReferralsCount || 0;
@@ -32,10 +34,10 @@ export function ReferralDashboard({ profile }: ReferralDashboardProps) {
           <div className="space-y-1">
             <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
               <Gift className="w-6 h-6 text-[#C8FF00]" />
-              Programa de Referidos
+              {t("referral.title")}
             </h2>
             <p className="text-zinc-400 text-sm">
-              Traé 3 usuarios PRO y llevate <span className="text-[#C8FF00] font-medium">3 meses de PRO gratis</span>.
+              {t("referral.subtitlePrefix")} <span className="text-[#C8FF00] font-medium">{t("referral.subtitleHighlight")}</span>.
             </p>
           </div>
           <div className="hidden sm:flex items-center gap-2 bg-zinc-800/50 px-3 py-1.5 rounded-full border border-zinc-700/50">
@@ -47,8 +49,8 @@ export function ReferralDashboard({ profile }: ReferralDashboardProps) {
         {/* Progress Bar */}
         <div className="space-y-3">
           <div className="flex justify-between text-xs font-medium uppercase tracking-wider text-zinc-500">
-            <span>Progreso</span>
-            <span>{referralCount} de {target} referidos PRO</span>
+            <span>{t("referral.progress")}</span>
+            <span>{t("referral.progressCount", { count: referralCount, target })}</span>
           </div>
           <div className="h-3 bg-zinc-800 rounded-full overflow-hidden border border-zinc-700/30">
             <div 
@@ -61,7 +63,7 @@ export function ReferralDashboard({ profile }: ReferralDashboardProps) {
           {referralCount >= target && (
              <div className="flex items-center gap-2 text-[#C8FF00] text-sm font-medium animate-bounce mt-2">
                 <Check className="w-4 h-4" />
-                ¡Meta alcanzada! Disfrutá de tus 3 meses de PRO.
+                {t("referral.goalReached")}
              </div>
           )}
         </div>
@@ -69,7 +71,7 @@ export function ReferralDashboard({ profile }: ReferralDashboardProps) {
         {/* Referral Link Section */}
         <div className="space-y-3 pt-2">
           <label className="text-xs font-medium uppercase tracking-wider text-zinc-500 ml-1">
-            Tu link mágico de referido
+            {t("referral.magicLinkLabel")}
           </label>
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 bg-black/40 border border-zinc-800 rounded-2xl px-4 py-3 text-zinc-300 font-mono text-sm truncate relative group/link">
@@ -88,12 +90,12 @@ export function ReferralDashboard({ profile }: ReferralDashboardProps) {
               {copied ? (
                 <>
                   <Check className="w-4 h-4" />
-                  Copiado
+                  {t("referral.copied")}
                 </>
               ) : (
                 <>
                   <Copy className="w-4 h-4" />
-                  Copiar Link
+                  {t("referral.copyLink")}
                 </>
               )}
             </button>
@@ -107,9 +109,9 @@ export function ReferralDashboard({ profile }: ReferralDashboardProps) {
               <Share2 className="w-5 h-5 text-[#C8FF00]" />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-white mb-1">Compartí</h4>
+              <h4 className="text-sm font-bold text-white mb-1">{t("referral.cardShareTitle")}</h4>
               <p className="text-xs text-zinc-500 leading-relaxed">
-                Mandale el link a tus amigos builders.
+                {t("referral.cardShareDesc")}
               </p>
             </div>
           </div>
@@ -118,9 +120,9 @@ export function ReferralDashboard({ profile }: ReferralDashboardProps) {
               <ArrowRight className="w-5 h-5 text-[#C8FF00]" />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-white mb-1">Ganás</h4>
+              <h4 className="text-sm font-bold text-white mb-1">{t("referral.cardEarnTitle")}</h4>
               <p className="text-xs text-zinc-500 leading-relaxed">
-                Cuando 3 se hagan PRO, desbloqueás tu recompensa.
+                {t("referral.cardEarnDesc")}
               </p>
             </div>
           </div>

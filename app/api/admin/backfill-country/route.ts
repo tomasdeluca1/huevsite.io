@@ -5,9 +5,10 @@ import { guessCountryFromLocation } from "@/lib/countries";
 export const dynamic = "force-dynamic";
 
 // POST /api/admin/backfill-country?secret=ADMIN_SECRET&dryRun=true&limit=1000
-// Best-effort: derive `profiles.country` (ISO-2) from the free-text `location`
-// for profiles that don't have a country set yet. Idempotent; safe to re-run.
-// Requires the 20260618000000_profile_country migration to be applied first.
+// Best-effort: derive `profiles.country` (ISO-2) for profiles without one, from
+// their free-text location. Location lives mostly in the main hero block
+// (`data.location`), with `profiles.location` as a secondary source. Idempotent;
+// safe to re-run. Requires the 20260618000000_profile_country migration.
 export async function POST(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const secret = searchParams.get("secret");
@@ -20,12 +21,11 @@ export async function POST(request: NextRequest) {
 
   const supabase = createServiceRoleClient();
 
-  // Pull candidates: have a location, no country yet. If the column doesn't
-  // exist (migration not applied), surface a clear error instead of crashing.
-  const { data: rows, error } = await supabase
+  // Profiles without a country yet. If the column doesn't exist (migration not
+  // applied), surface a clear error instead of crashing.
+  const { data: profiles, error } = await supabase
     .from("profiles")
     .select("id, username, location, country")
-    .not("location", "is", null)
     .is("country", null)
     .limit(limit);
 
@@ -36,15 +36,32 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const ids = (profiles || []).map((p) => p.id);
+
+  // Pull main hero blocks (sub_site_id null) to read data.location.
+  const heroLoc: Record<string, string> = {};
+  if (ids.length) {
+    const { data: heroes } = await supabase
+      .from("blocks")
+      .select("user_id, data")
+      .eq("type", "hero")
+      .is("sub_site_id", null)
+      .in("user_id", ids);
+    for (const h of heroes || []) {
+      const loc = (h as any)?.data?.location;
+      if (loc && typeof loc === "string" && loc.trim()) heroLoc[(h as any).user_id] = loc.trim();
+    }
+  }
+
   const matched: Array<{ username: string; location: string; country: string }> = [];
   const unmatched: Array<{ username: string; location: string }> = [];
 
-  for (const row of rows || []) {
-    const loc = (row.location || "").trim();
+  for (const p of profiles || []) {
+    const loc = ((p.location || "").trim() || heroLoc[p.id] || "").trim();
     if (!loc) continue;
     const code = guessCountryFromLocation(loc);
-    if (code) matched.push({ username: row.username, location: loc, country: code });
-    else unmatched.push({ username: row.username, location: loc });
+    if (code) matched.push({ username: p.username, location: loc, country: code });
+    else unmatched.push({ username: p.username, location: loc });
   }
 
   let updated = 0;
@@ -60,7 +77,8 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     dryRun,
-    candidates: rows?.length || 0,
+    profilesWithoutCountry: profiles?.length || 0,
+    withLocation: matched.length + unmatched.length,
     matchedCount: matched.length,
     unmatchedCount: unmatched.length,
     updated,

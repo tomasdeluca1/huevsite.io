@@ -103,7 +103,9 @@ export function countryName(code: string, locale: string): string {
 // `location`. Lowercased, accent-stripped keys.
 const CITY_COUNTRY: Record<string, string> = {
   'buenos aires': 'AR', caba: 'AR', cordoba: 'AR', rosario: 'AR', mendoza: 'AR', 'la plata': 'AR',
-  'sao paulo': 'BR', 'rio de janeiro': 'BR', florianopolis: 'BR',
+  'mar del plata': 'AR', tucuman: 'AR', salta: 'AR', neuquen: 'AR', bariloche: 'AR', 'san luis': 'AR',
+  'santa fe': 'AR', parana: 'AR', corrientes: 'AR', misiones: 'AR',
+  'sao paulo': 'BR', 'rio de janeiro': 'BR', florianopolis: 'BR', curitiba: 'BR', 'belo horizonte': 'BR',
   'mexico city': 'MX', cdmx: 'MX', guadalajara: 'MX', monterrey: 'MX',
   santiago: 'CL', bogota: 'CO', medellin: 'CO', lima: 'PE', montevideo: 'UY', quito: 'EC',
   caracas: 'VE', asuncion: 'PY', 'la paz': 'BO',

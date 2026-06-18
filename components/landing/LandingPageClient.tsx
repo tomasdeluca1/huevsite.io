@@ -3,7 +3,7 @@
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import LocaleToggle from "@/components/LocaleToggle";
 import { WinnerSection } from "@/components/landing/WinnerSection";
 import { BuilderSpotlightCard } from "@/components/landing/BuilderSpotlightCard";
@@ -41,6 +41,11 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
   const t = useTranslations("landing");
   const tNav = useTranslations("nav");
   const tFooter = useTranslations("footer");
+  const locale = useLocale();
+  // Format numbers with the ACTIVE locale explicitly. Bare `.toLocaleString()`
+  // uses the runtime default locale, which differs between the Node server
+  // ("1.635") and the browser ("1635"), causing a hydration mismatch.
+  const fmtNum = (n: number) => n.toLocaleString(locale === "en" ? "en-US" : "es-AR");
   const founderVideo = founderVideoUrl ? toEmbedUrl(founderVideoUrl) : null;
   const [heatmap, setHeatmap] = useState<string[]>([]);
   const [selectedRoles, setSelectedRoles] = useState<string[]>(['Developer', 'Founder']);
@@ -358,7 +363,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400" />
                   </span>
-                  <span>{t("heroActiveBuilders", { count: (Math.round(activeThisWeek / 10) * 10).toLocaleString() })}</span>
+                  <span>{t("heroActiveBuilders", { count: fmtNum(Math.round(activeThisWeek / 10) * 10) })}</span>
                 </>
               ) : (
                 <>
@@ -475,7 +480,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                 })()}
               </div>
               {/* Round to NEAREST 10 — flooring understated our own proof (188 → "+180"). */}
-              <span className="social-proof-text">{t.rich("socialProof", { count: (Math.round((showcaseData.total_builders || 50) / 10) * 10).toLocaleString(), strong: (chunks) => <strong>{chunks}</strong> })}</span>
+              <span className="social-proof-text">{t.rich("socialProof", { count: fmtNum(Math.round((showcaseData.total_builders || 50) / 10) * 10), strong: (chunks) => <strong>{chunks}</strong> })}</span>
             </div>
           </div>
 
@@ -580,7 +585,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                     <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-[11px] font-bold">{(b.name || b.username).charAt(0).toUpperCase()}</div>
                   )}
                   <span className="min-w-0 flex-1 truncate text-sm font-bold text-white">{b.name || b.username}</span>
-                  <span className="text-xs font-mono text-[var(--accent)]">{b.builder_score.toLocaleString()} pts</span>
+                  <span className="text-xs font-mono text-[var(--accent)]">{fmtNum(b.builder_score)} pts</span>
                 </div>
               ))}
             </div>
@@ -608,7 +613,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                 <HeartHandshake size={13} /> {t("pulseEndorseLabel")}
               </div>
               <div>
-                <div className="text-4xl font-black tracking-tight text-white">+{networkPulse!.endorsementsTotal.toLocaleString()}</div>
+                <div className="text-4xl font-black tracking-tight text-white">+{fmtNum(networkPulse!.endorsementsTotal)}</div>
                 <div className="mt-1 text-sm text-[var(--text-dim)]">{t("pulseEndorseDesc")}</div>
               </div>
               <div className="mt-4 text-xs font-mono text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors">{t("pulseEndorseCta")}</div>

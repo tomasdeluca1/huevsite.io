@@ -1610,7 +1610,8 @@
     "doneShare": "Compartir",
     "doneGoToDashboard": "ir a mi dashboard →",
     "doneFooter": "huevsite.me cerró • nosotros no",
-    "doneTweetText": "Armé mi huevsite — mi portfolio de builder 🚀"
+    "doneTweetText": "Armé mi huevsite — mi portfolio de builder 🚀",
+    "usernameReserved": "Ese username está reservado por el sistema. Probá otro."
   },
   "checkout": {
     "metaTitle": "¡Ya sos PRO! | huevsite.io",

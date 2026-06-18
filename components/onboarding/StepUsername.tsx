@@ -18,6 +18,7 @@ export function StepUsername({ state, onChange, onFinish, creating = false, erro
   const t = useTranslations("onboarding");
   const [checking, setChecking] = useState(false);
   const [available, setAvailable] = useState<boolean | null>(state.usernameAvailable ?? null);
+  const [reserved, setReserved] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const accent = state.accentColor;
 
@@ -39,6 +40,7 @@ export function StepUsername({ state, onChange, onFinish, creating = false, erro
   const handleChange = async (val: string) => {
     const clean = val.toLowerCase().replace(/[^a-z0-9_]/g, "");
     onChange(clean, null);
+    setReserved(false);
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
@@ -54,7 +56,8 @@ export function StepUsername({ state, onChange, onFinish, creating = false, erro
         const response = await fetch(`/api/username/check?u=${clean}`);
         const data = await response.json();
 
-        if (data.error) {
+        setReserved(!!data.reserved);
+        if (data.error && !data.reserved) {
           setAvailable(false);
         } else {
           setAvailable(data.available);
@@ -111,7 +114,7 @@ export function StepUsername({ state, onChange, onFinish, creating = false, erro
               animate={{ opacity: 1, y: 0 }}
               className="text-xs text-red-500 font-mono px-2"
             >
-              {t("usernameTaken")}
+              {reserved ? t("usernameReserved") : t("usernameTaken")}
             </motion.p>
           )}
           {available === true && (

@@ -1610,7 +1610,8 @@
     "doneShare": "Share",
     "doneGoToDashboard": "go to my dashboard →",
     "doneFooter": "huevsite.me shut down • we didn't",
-    "doneTweetText": "I built my huevsite — my builder portfolio 🚀"
+    "doneTweetText": "I built my huevsite — my builder portfolio 🚀",
+    "usernameReserved": "That username is reserved by the system. Try another one."
   },
   "checkout": {
     "metaTitle": "You're PRO now! | huevsite.io",

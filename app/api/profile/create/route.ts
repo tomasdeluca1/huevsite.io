@@ -6,6 +6,7 @@ import { checkAndPostCommunityMilestone } from '@/lib/twitter'
 import { type LinktreeImportData } from '@/lib/linktree-import'
 import { scoreService } from '@/lib/score-service'
 import { isValidAccentColor } from '@/lib/profile-types'
+import { isReservedUsername } from '@/lib/reserved-usernames'
 
 export const dynamic = 'force-dynamic'
 
@@ -79,6 +80,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Username inválido' },
         { status: 400 }
+      )
+    }
+
+    // Rechazar usernames reservados (rutas del sistema/marca). Guard autoritativo
+    // server-side, además del chequeo en /api/username/check.
+    if (isReservedUsername(body.username)) {
+      return NextResponse.json(
+        { error: 'Ese username está reservado por el sistema. Probá otro.', reserved: true },
+        { status: 409 }
       )
     }
 

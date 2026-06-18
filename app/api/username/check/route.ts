@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { isReservedUsername } from '@/lib/reserved-usernames'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,6 +25,20 @@ export async function GET(request: NextRequest) {
         {
           available: false,
           error: 'Username inválido. Solo minúsculas, números y guiones bajos (3-20 caracteres)',
+        },
+        { status: 200 }
+      )
+    }
+
+    // Bloquear usernames reservados (rutas del sistema, marca, etc.) antes de
+    // tocar la DB. Un perfil vive en huevsite.io/[username]; estos nombres
+    // colisionarían con rutas existentes.
+    if (isReservedUsername(username)) {
+      return NextResponse.json(
+        {
+          available: false,
+          reserved: true,
+          error: 'Ese username está reservado por el sistema. Probá otro.',
         },
         { status: 200 }
       )

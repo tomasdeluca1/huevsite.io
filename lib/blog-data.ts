@@ -1,4 +1,5 @@
 import { calculateReadingTime } from "./utils";
+import { BLOG_TRANSLATIONS } from "./blog-translations";
 
 export interface BlogPost {
   slug: string;
@@ -1354,8 +1355,25 @@ export const BLOG_POSTS: BlogPost[] = RAW_BLOG_POSTS.map(post => ({
   readingTime: calculateReadingTime(post.content)
 }));
 
-export function getPostBySlug(slug: string): BlogPost | undefined {
-  return BLOG_POSTS.find((p) => p.slug.toLowerCase() === slug.toLowerCase());
+// Swaps a hardcoded post's title/excerpt/content to English when locale === 'en'
+// and a translation exists for its slug. DB-backed posts (no translation entry)
+// pass through unchanged, so they always render in their original Spanish.
+export function localizePost(post: BlogPost, locale: string = "es"): BlogPost {
+  if (locale !== "en") return post;
+  const tr = BLOG_TRANSLATIONS[post.slug];
+  if (!tr) return post;
+  return {
+    ...post,
+    title: tr.title,
+    excerpt: tr.excerpt,
+    content: tr.content,
+    readingTime: calculateReadingTime(tr.content),
+  };
+}
+
+export function getPostBySlug(slug: string, locale: string = "es"): BlogPost | undefined {
+  const post = BLOG_POSTS.find((p) => p.slug.toLowerCase() === slug.toLowerCase());
+  return post ? localizePost(post, locale) : undefined;
 }
 
 // ─── Supabase blog posts (Builder de la Semana + future dynamic posts) ────────
@@ -1410,11 +1428,11 @@ export async function getDBBlogPosts(): Promise<BlogPost[]> {
   }));
 }
 
-export async function getAllBlogPosts(): Promise<BlogPost[]> {
+export async function getAllBlogPosts(locale: string = "es"): Promise<BlogPost[]> {
   const dbPosts = await getDBBlogPosts();
-  return [...BLOG_POSTS, ...dbPosts].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
+  return [...BLOG_POSTS, ...dbPosts]
+    .map((p) => localizePost(p, locale))
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
 export const BLOG_POSTS_PER_PAGE = 9;
@@ -1493,6 +1511,7 @@ export async function getPaginatedBlogPosts(opts: {
   page?: number;
   pageSize?: number;
   category?: string;
+  locale?: string;
 }): Promise<{
   posts: BlogPost[];
   total: number;
@@ -1505,7 +1524,7 @@ export async function getPaginatedBlogPosts(opts: {
   const pageSize = opts.pageSize ?? BLOG_POSTS_PER_PAGE;
   const page = Math.max(1, opts.page ?? 1);
 
-  const all = await getAllBlogPosts();
+  const all = await getAllBlogPosts(opts.locale);
   const filtered = opts.category
     ? all.filter((p) => getPostCategory(p) === opts.category)
     : all;
@@ -1526,8 +1545,8 @@ export async function getPaginatedBlogPosts(opts: {
   return { posts, total, totalPages, page: safePage, pageSize, categoryCounts, totalAll: all.length };
 }
 
-export async function getPostBySlugAsync(slug: string): Promise<BlogPost | undefined> {
-  const hardcoded = getPostBySlug(slug);
+export async function getPostBySlugAsync(slug: string, locale: string = "es"): Promise<BlogPost | undefined> {
+  const hardcoded = getPostBySlug(slug, locale);
   if (hardcoded) return hardcoded;
 
   // Same reason as getDBBlogPosts: bypass Next.js fetch memoization so newly

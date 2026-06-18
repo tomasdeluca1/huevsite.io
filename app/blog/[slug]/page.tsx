@@ -12,6 +12,7 @@ import {
 } from "@/lib/blog-data";
 import { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { getLocale } from "@/lib/locale";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -31,7 +32,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const t = await getTranslations('blogUi');
-  const post = await getPostBySlugAsync(slug);
+  const locale = await getLocale();
+  const post = await getPostBySlugAsync(slug, locale);
   if (!post) {
     return { title: t('postNotFound') };
   }
@@ -77,14 +79,15 @@ export default async function BlogPostPage({
 }) {
   const { slug } = await params;
   const t = await getTranslations('blogUi');
-  const post = await getPostBySlugAsync(slug);
+  const locale = await getLocale();
+  const post = await getPostBySlugAsync(slug, locale);
 
   if (!post) {
     notFound();
   }
 
   // Use all posts (hardcoded + DB) for navigation
-  const allPosts = await getAllBlogPosts();
+  const allPosts = await getAllBlogPosts(locale);
   const currentIndex = allPosts.findIndex(p => p.slug === post.slug);
   const prevPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null; // Older
   const nextPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null; // Newer
@@ -157,7 +160,7 @@ export default async function BlogPostPage({
                     </>
                   )}
                   <time dateTime={post.date}>
-                    {new Date(post.date).toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    {new Date(post.date).toLocaleDateString(locale === 'en' ? 'en-US' : 'es-AR', { year: 'numeric', month: 'long', day: 'numeric' })}
                   </time>
                   <span>•</span>
                   <span>{t('readingTime', { minutes: post.readingTime })}</span>

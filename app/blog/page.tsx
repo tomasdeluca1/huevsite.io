@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
+import { getLocale } from "@/lib/locale";
 import LocaleToggle from "@/components/LocaleToggle";
 import {
   getPaginatedBlogPosts,
@@ -60,6 +61,7 @@ export default async function BlogIndexPage({
   searchParams: { tag?: string; page?: string };
 }) {
   const t = await getTranslations("blogUi");
+  const locale = await getLocale();
 
   // `?tag=` now carries a curated category slug (kept as `tag` for URL stability).
   const activeCategory = searchParams.tag;
@@ -69,6 +71,7 @@ export default async function BlogIndexPage({
     page: requestedPage,
     pageSize: BLOG_POSTS_PER_PAGE,
     category: activeCategory,
+    locale,
   });
 
   const activeCategoryLabel = activeCategory && BLOG_CATEGORIES.some((c) => c.slug === activeCategory)
@@ -145,7 +148,7 @@ export default async function BlogIndexPage({
                         </span>
                       )}
                       <time dateTime={post.date}>
-                        {new Date(post.date).toLocaleDateString("es-AR", { year: "numeric", month: "long", day: "numeric" })}
+                        {new Date(post.date).toLocaleDateString(locale === "en" ? "en-US" : "es-AR", { year: "numeric", month: "long", day: "numeric" })}
                       </time>
                       <span>•</span>
                       <span>{t("readingTime", { minutes: post.readingTime })}</span>

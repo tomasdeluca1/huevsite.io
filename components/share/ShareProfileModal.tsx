@@ -6,6 +6,7 @@ import {
   Send, Linkedin, Twitter, Download,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createPortal } from "react-dom";
 
 interface Props {
@@ -40,6 +41,7 @@ export function ShareProfileModal({
   message,
   celebrate = false,
 }: Props) {
+  const t = useTranslations('shared');
   const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showQr, setShowQr] = useState(false);
@@ -54,8 +56,8 @@ export function ShareProfileModal({
   }, [url, username]);
 
   const shareText = useMemo(
-    () => message || `Mirá el huevsite de ${displayName || "@" + username} 🚀`,
-    [message, displayName, username]
+    () => message || t('share.shareMessage', { name: displayName || "@" + username }),
+    [message, displayName, username, t]
   );
 
   // Fire confetti on open when celebrating.
@@ -115,7 +117,7 @@ export function ShareProfileModal({
   const handleNativeShare = async () => {
     if (typeof navigator === "undefined" || !navigator.share) return;
     try {
-      await navigator.share({ title: `${displayName || username} en huevsite.io`, text: shareText, url: shareUrl });
+      await navigator.share({ title: t('share.profileOnHuevsite', { name: displayName || username }), text: shareText, url: shareUrl });
     } catch {
       /* user cancelled */
     }
@@ -165,7 +167,7 @@ export function ShareProfileModal({
       key: "email",
       label: "Email",
       icon: <Mail size={18} />,
-      href: `mailto:?subject=${encodeURIComponent(`${displayName || username} en huevsite.io`)}&body=${encodedTextWithUrl}`,
+      href: `mailto:?subject=${encodeURIComponent(t('share.profileOnHuevsite', { name: displayName || username }))}&body=${encodedTextWithUrl}`,
       className: "hover:border-white/40 hover:text-white",
     },
   ];
@@ -200,7 +202,7 @@ export function ShareProfileModal({
             <button
               onClick={onClose}
               className="absolute top-5 right-5 p-2 rounded-full hover:bg-[var(--surface2)] transition-all text-[var(--text-muted)] hover:text-white"
-              aria-label="Cerrar"
+              aria-label={t('share.close')}
             >
               <X size={20} />
             </button>
@@ -212,14 +214,14 @@ export function ShareProfileModal({
               <Share2 size={26} style={{ color: accentColor }} />
             </div>
 
-            <div className="section-label mb-2">// compartí tu huevsite</div>
+            <div className="section-label mb-2">{t('share.sectionLabel')}</div>
             <h3 className="text-2xl font-extrabold tracking-tight mb-1.5">
-              {celebrate ? "¡Tu huevsite está vivo! 🎉" : "Compartí tu perfil"}
+              {celebrate ? t('share.titleCelebrate') : t('share.title')}
             </h3>
             <p className="text-[var(--text-dim)] text-sm leading-relaxed mb-6">
               {celebrate
-                ? "Mostrale al mundo lo que estás buildeando. Cada vez que compartís, más gente descubre tu board."
-                : "Difundí tu link, sumá visitas y subí en el ranking de builders."}
+                ? t('share.subtitleCelebrate')
+                : t('share.subtitle')}
             </p>
 
             {/* URL + copy */}
@@ -237,7 +239,7 @@ export function ShareProfileModal({
                 style={{ backgroundColor: accentColor }}
               >
                 {copied ? <Check size={16} /> : <Copy size={16} />}
-                <span className="hidden sm:inline">{copied ? "Copiado" : "Copiar"}</span>
+                <span className="hidden sm:inline">{copied ? t('share.copied') : t('share.copy')}</span>
               </button>
             </div>
 
@@ -247,7 +249,7 @@ export function ShareProfileModal({
                 onClick={handleNativeShare}
                 className="w-full flex items-center justify-center gap-2 py-3.5 mb-4 rounded-2xl border border-[var(--border-bright)] text-sm font-bold text-white hover:bg-white/5 transition-all"
               >
-                <Share2 size={16} /> Compartir…
+                <Share2 size={16} /> {t('share.shareNative')}
               </button>
             )}
 
@@ -273,7 +275,7 @@ export function ShareProfileModal({
               onClick={() => setShowQr((v) => !v)}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-xs font-black uppercase tracking-widest text-[var(--text-muted)] hover:text-white border border-dashed border-[var(--border-bright)] transition-all"
             >
-              <QrCode size={15} /> {showQr ? "Ocultar QR" : "Mostrar código QR"}
+              <QrCode size={15} /> {showQr ? t('share.hideQr') : t('share.showQr')}
             </button>
 
             <AnimatePresence>
@@ -289,7 +291,7 @@ export function ShareProfileModal({
                       {/* QR as progressive enhancement; modal works even if it fails to load */}
                       <img
                         src={qrSrc}
-                        alt={`Código QR de ${prettyUrl}`}
+                        alt={t('share.qrAlt', { url: prettyUrl })}
                         width={200}
                         height={200}
                         className="w-[200px] h-[200px] rounded-xl"
@@ -303,10 +305,10 @@ export function ShareProfileModal({
                       rel="noopener noreferrer"
                       className="mt-4 flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-[var(--text-muted)] hover:text-white transition-colors"
                     >
-                      <Download size={13} /> Descargar QR
+                      <Download size={13} /> {t('share.downloadQr')}
                     </a>
                     <p className="mt-2 text-[10px] text-[var(--text-dim)] text-center max-w-[240px] leading-relaxed">
-                      Perfecto para charlas, eventos o tu tarjeta. Lo escanean y caen directo a tu board.
+                      {t('share.qrHint')}
                     </p>
                   </div>
                 </motion.div>

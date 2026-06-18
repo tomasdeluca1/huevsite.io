@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Loader2, Plus, MoreHorizontal, EyeOff, Eye, Trash2, Edit2 } from "lucide-react";
 import { createPortal } from "react-dom";
@@ -37,6 +38,7 @@ interface Props {
 }
 
 export function EndorsementsSection({ profileId, profileAccentColor, currentUserId, isFollowing, hasNominated }: Props) {
+  const t = useTranslations('shared');
   const [endorsements, setEndorsements] = useState<Endorsement[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -65,7 +67,7 @@ export function EndorsementsSection({ profileId, profileAccentColor, currentUser
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("¿Seguro que querés eliminar este comentario?")) return;
+    if (!confirm(t('endorsements.deleteConfirm'))) return;
     try {
       const res = await fetch(`/api/social/endorsements?id=${id}`, { method: "DELETE" });
       if (res.ok) {
@@ -103,9 +105,9 @@ export function EndorsementsSection({ profileId, profileAccentColor, currentUser
     <section className="mt-20">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-8">
         <div>
-          <div className="section-label mb-2">// comentarios</div>
+          <div className="section-label mb-2">{t('endorsements.sectionLabel')}</div>
           <h2 className="text-3xl font-extrabold tracking-tight">
-            Lo que dicen los que laburaron.
+            {t('endorsements.heading')}
           </h2>
         </div>
 
@@ -116,7 +118,7 @@ export function EndorsementsSection({ profileId, profileAccentColor, currentUser
             style={{ backgroundColor: profileAccentColor, color: "black", borderColor: "transparent" }}
           >
             <Plus size={16} strokeWidth={3} />
-            Laburé con este builder
+            {t('endorsements.workedWithCta')}
           </button>
         )}
       </div>
@@ -130,7 +132,7 @@ export function EndorsementsSection({ profileId, profileAccentColor, currentUser
       ) : endorsements.length === 0 ? (
         <div className="text-center py-20 border border-dashed border-[var(--border-bright)] rounded-3xl">
           <p className="text-[var(--text-dim)] font-mono text-sm">
-            Todavía nadie comentó. Sé el primero.
+            {t('endorsements.emptyState')}
           </p>
           {canEndorse && (
             <button
@@ -138,7 +140,7 @@ export function EndorsementsSection({ profileId, profileAccentColor, currentUser
               className="mt-4 px-5 py-2 rounded-xl font-bold text-sm text-black transition-all"
               style={{ backgroundColor: profileAccentColor }}
             >
-              Comentar ahora →
+              {t('endorsements.commentNowCta')}
             </button>
           )}
         </div>
@@ -194,7 +196,7 @@ export function EndorsementsSection({ profileId, profileAccentColor, currentUser
                         </a>
                         {!e.visible && (
                           <span className="text-[9px] font-mono text-red-400 uppercase tracking-tighter bg-red-400/10 px-1.5 rounded flex items-center gap-1">
-                            <EyeOff size={10} /> Oculto
+                            <EyeOff size={10} /> {t('endorsements.hidden')}
                           </span>
                         )}
                       </div>
@@ -230,7 +232,7 @@ export function EndorsementsSection({ profileId, profileAccentColor, currentUser
                                 onClick={() => { setEditingEndorsement(e); setModalOpen(true); setActiveMenuId(null); }}
                                 className="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-white/5 transition-colors"
                               >
-                                <Edit2 size={12} /> Editar
+                                <Edit2 size={12} /> {t('endorsements.edit')}
                               </button>
                             )}
                             {currentUserId === profileId && (
@@ -238,14 +240,14 @@ export function EndorsementsSection({ profileId, profileAccentColor, currentUser
                                 onClick={() => { toggleVisibility(e.id, e.visible); setActiveMenuId(null); }}
                                 className="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-white/5 transition-colors"
                               >
-                                {e.visible ? <><EyeOff size={12} /> Ocultar</> : <><Eye size={12} /> Mostrar</>}
+                                {e.visible ? <><EyeOff size={12} /> {t('endorsements.hide')}</> : <><Eye size={12} /> {t('endorsements.show')}</>}
                               </button>
                             )}
                             <button
                               onClick={() => { handleDelete(e.id); setActiveMenuId(null); }}
                               className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-400/10 transition-colors"
                             >
-                              <Trash2 size={12} /> Eliminar
+                              <Trash2 size={12} /> {t('endorsements.delete')}
                             </button>
                           </motion.div>
                         )}
@@ -291,6 +293,7 @@ function EndorseModal({
   onClose: () => void;
   onSubmit: (e: Endorsement) => void;
 }) {
+  const t = useTranslations('shared');
   const [selectedSkill, setSelectedSkill] = useState(editingEndorsement?.skill || "");
   const [customSkill, setCustomSkill] = useState("");
   const [comment, setComment] = useState(editingEndorsement?.comment || "");
@@ -329,7 +332,7 @@ function EndorseModal({
       if (res.ok) {
         onSubmit(data.endorsement);
       } else {
-        alert(data.error || "Error al comentar.");
+        alert(data.error || t('endorsements.commentError'));
       }
     } finally {
       setLoading(false);
@@ -356,9 +359,9 @@ function EndorseModal({
         >
           <div className="p-6 border-b border-[var(--border)] flex justify-between items-start bg-black/40">
             <div>
-              <div className="section-label mb-1">// {editingEndorsement ? 'editar' : 'comentar'} builder</div>
+              <div className="section-label mb-1">{editingEndorsement ? t('endorsements.modalLabelEdit') : t('endorsements.modalLabelComment')}</div>
               <h3 className="text-2xl font-extrabold tracking-tight">
-                {editingEndorsement ? 'Ajustá tu comentario' : '¿En qué destacó?'}
+                {editingEndorsement ? t('endorsements.modalTitleEdit') : t('endorsements.modalTitleNew')}
               </h3>
             </div>
             <button onClick={onClose} className="p-2 rounded-full hover:bg-[var(--surface2)] transition-all">
@@ -369,7 +372,7 @@ function EndorseModal({
           <div className="p-6 space-y-6">
             {/* Skill chips */}
             <div className="space-y-3">
-              <div className="section-label !text-[9px]">// elegí una skill</div>
+              <div className="section-label !text-[9px]">{t('endorsements.pickSkillLabel')}</div>
               <div className="flex flex-wrap gap-2">
                 {PRESET_SKILLS.map(s => (
                   <button
@@ -390,18 +393,18 @@ function EndorseModal({
                 value={customSkill}
                 onChange={(e) => { setCustomSkill(e.target.value); setSelectedSkill(""); }}
                 className="w-full p-3 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all text-sm"
-                placeholder="O escribí una skill personalizada..."
+                placeholder={t('endorsements.customSkillPlaceholder')}
               />
             </div>
 
             {/* Comentario */}
             <div className="space-y-2">
-              <div className="section-label !text-[9px]">// comentario (opcional · máx 140 chars)</div>
+              <div className="section-label !text-[9px]">{t('endorsements.commentLabel')}</div>
               <textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value.slice(0, 140))}
                 className="w-full p-3 h-20 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none resize-none text-sm leading-relaxed"
-                placeholder="Laburamos juntos en X proyecto y..."
+                placeholder={t('endorsements.commentPlaceholder')}
               />
               <p className="text-right text-xs text-[var(--text-muted)] font-mono">{comment.length}/140</p>
             </div>
@@ -409,7 +412,7 @@ function EndorseModal({
 
           <div className="p-6 border-t border-[var(--border)] bg-black/20 flex gap-3">
             <button onClick={onClose} className="btn btn-ghost flex-1 py-3">
-              Cancelar
+              {t('endorsements.cancel')}
             </button>
             <button
               onClick={handleSubmit}
@@ -417,7 +420,7 @@ function EndorseModal({
               className="flex-1 py-3 rounded-2xl font-bold text-sm text-black flex items-center justify-center gap-2 transition-all"
               style={{ backgroundColor: skill.trim() ? accentColor : "var(--surface2)", opacity: loading ? 0.7 : 1 }}
             >
-              {loading ? <Loader2 size={16} className="animate-spin" /> : (editingEndorsement ? "Guardar cambios" : "Comentar →")}
+              {loading ? <Loader2 size={16} className="animate-spin" /> : (editingEndorsement ? t('endorsements.saveChanges') : t('endorsements.submitComment'))}
             </button>
           </div>
         </motion.div>

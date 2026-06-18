@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Check, Loader2, Music } from "lucide-react";
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export function JingleVoteModal({ isOpen, onClose, accentColor = "var(--accent)", initialVote = null, onVoted }: Props) {
+  const t = useTranslations('shared');
   const [mounted, setMounted] = useState(false);
   const [myVote, setMyVote] = useState<JingleChoice | null>(initialVote);
   const [submitting, setSubmitting] = useState<JingleChoice | null>(null);
@@ -54,7 +56,7 @@ export function JingleVoteModal({ isOpen, onClose, accentColor = "var(--accent)"
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data?.error || "No se pudo guardar tu voto.");
+        setError(data?.error || t('jingle.voteError'));
         return;
       }
       setMyVote(choice);
@@ -73,7 +75,7 @@ export function JingleVoteModal({ isOpen, onClose, accentColor = "var(--accent)"
       if (closeTimer.current) clearTimeout(closeTimer.current);
       closeTimer.current = setTimeout(() => onClose(), 2600);
     } catch {
-      setError("Error de conexión. Probá de nuevo.");
+      setError(t('jingle.connectionError'));
     } finally {
       setSubmitting(null);
     }
@@ -105,7 +107,7 @@ export function JingleVoteModal({ isOpen, onClose, accentColor = "var(--accent)"
             <button
               onClick={onClose}
               className="absolute top-5 right-5 p-2 rounded-full hover:bg-[var(--surface2)] transition-all text-[var(--text-muted)] hover:text-white"
-              aria-label="Cerrar"
+              aria-label={t('jingle.close')}
             >
               <X size={20} />
             </button>
@@ -117,14 +119,14 @@ export function JingleVoteModal({ isOpen, onClose, accentColor = "var(--accent)"
               <Music size={24} style={{ color: accentColor }} />
             </div>
 
-            <div className="section-label mb-2">// elegí el jingle de huevsite</div>
+            <div className="section-label mb-2">{t('jingle.sectionLabel')}</div>
             <h3 className="text-2xl font-extrabold tracking-tight mb-1.5">
-              {myVote ? "¡Gracias por votar! 🎉" : "¿Cuál tiene que ser nuestro jingle?"}
+              {myVote ? t('jingle.titleVoted') : t('jingle.title')}
             </h3>
             <p className="text-[var(--text-dim)] text-sm leading-relaxed mb-6">
               {myVote
-                ? "¡Tu voto quedó registrado! Gracias por ser parte de huevsite. 🙌 Cerrando…"
-                : "Escuchá las dos y votá la que más te represente. Tu voto define el sonido de huevsite."}
+                ? t('jingle.subtitleVoted')
+                : t('jingle.subtitle')}
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -144,7 +146,7 @@ export function JingleVoteModal({ isOpen, onClose, accentColor = "var(--accent)"
                       </span>
                       {selected && (
                         <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest" style={{ color: accentColor }}>
-                          <Check size={12} /> Tu voto
+                          <Check size={12} /> {t('jingle.yourVote')}
                         </span>
                       )}
                     </div>
@@ -173,11 +175,11 @@ export function JingleVoteModal({ isOpen, onClose, accentColor = "var(--accent)"
                       }
                     >
                       {isSubmitting ? (
-                        <span className="flex items-center justify-center gap-2"><Loader2 size={15} className="animate-spin" /> Votando…</span>
+                        <span className="flex items-center justify-center gap-2"><Loader2 size={15} className="animate-spin" /> {t('jingle.voting')}</span>
                       ) : selected ? (
-                        "Votada ✓"
+                        t('jingle.voted')
                       ) : (
-                        "Votar esta"
+                        t('jingle.voteThis')
                       )}
                     </button>
                   </div>
@@ -191,7 +193,7 @@ export function JingleVoteModal({ isOpen, onClose, accentColor = "var(--accent)"
               onClick={onClose}
               className="w-full mt-5 py-2.5 text-xs font-black uppercase tracking-widest text-[var(--text-muted)] hover:text-white transition-colors"
             >
-              {myVote ? "Cerrar" : "Votar después"}
+              {myVote ? t('jingle.closeBtn') : t('jingle.voteLater')}
             </button>
           </div>
         </motion.div>

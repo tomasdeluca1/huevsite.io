@@ -1,26 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import type { OwnTestimonial } from "@/lib/testimonial-service";
 
 const MAX = 280;
 
-const STATUS_LABEL: Record<string, { text: string; cls: string }> = {
-  pending: {
-    text: "⏳ Pendiente de aprobación",
-    cls: "bg-amber-500/10 text-amber-300 border-amber-500/20",
-  },
-  approved: {
-    text: "✅ Aprobado",
-    cls: "bg-green-500/10 text-green-400 border-green-500/20",
-  },
-  rejected: {
-    text: "✕ No aprobado — editalo y reenvialo",
-    cls: "bg-red-500/10 text-red-400 border-red-500/20",
-  },
+const STATUS_CLS: Record<string, string> = {
+  pending: "bg-amber-500/10 text-amber-300 border-amber-500/20",
+  approved: "bg-green-500/10 text-green-400 border-green-500/20",
+  rejected: "bg-red-500/10 text-red-400 border-red-500/20",
 };
 
 export default function TestimonioForm({ initial }: { initial: OwnTestimonial }) {
+  const t = useTranslations("testimonio");
   const [quote, setQuote] = useState(initial?.quote ?? "");
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<string | null>(initial?.status ?? null);
@@ -44,26 +37,26 @@ export default function TestimonioForm({ initial }: { initial: OwnTestimonial })
       if (res.ok) {
         setStatus("pending");
         setFeatured(false);
-        setMsg({ type: "ok", text: "¡Gracias! Lo revisamos y, si entra, lo verás en la home." });
+        setMsg({ type: "ok", text: t("form.successMsg") });
       } else {
-        setMsg({ type: "err", text: json.error || "No se pudo guardar." });
+        setMsg({ type: "err", text: json.error || t("form.saveError") });
       }
     } catch {
-      setMsg({ type: "err", text: "Error de conexión." });
+      setMsg({ type: "err", text: t("form.connectionError") });
     } finally {
       setSaving(false);
     }
   };
 
-  const badge = status ? STATUS_LABEL[status] : null;
+  const badgeCls = status ? STATUS_CLS[status] : null;
 
   return (
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
-      {badge && (
+      {badgeCls && (
         <div
-          className={`inline-flex items-center text-[11px] font-mono px-3 py-1 rounded-full border mb-4 ${badge.cls}`}
+          className={`inline-flex items-center text-[11px] font-mono px-3 py-1 rounded-full border mb-4 ${badgeCls}`}
         >
-          {featured ? "⭐ Destacado en la home" : badge.text}
+          {featured ? t("form.statusFeatured") : t(`form.status.${status}`)}
         </div>
       )}
 
@@ -72,7 +65,7 @@ export default function TestimonioForm({ initial }: { initial: OwnTestimonial })
         onChange={(e) => setQuote(e.target.value)}
         rows={5}
         maxLength={MAX + 40}
-        placeholder="huevsite me dejó tener un portfolio que no da vergüenza en 10 minutos…"
+        placeholder={t("form.placeholder")}
         className="w-full p-4 bg-black/30 border border-white/10 rounded-xl text-sm text-white leading-relaxed resize-y focus:outline-none focus:border-[var(--accent)]/50 transition-colors"
       />
       <div className="flex items-center justify-between mt-2">
@@ -81,7 +74,7 @@ export default function TestimonioForm({ initial }: { initial: OwnTestimonial })
         </span>
         {initial && !dirty && (
           <span className="text-[11px] font-mono text-[var(--text-muted)]">
-            Editá el texto para reenviar
+            {t("form.editToResend")}
           </span>
         )}
       </div>
@@ -103,11 +96,11 @@ export default function TestimonioForm({ initial }: { initial: OwnTestimonial })
         disabled={!canSubmit}
         className="btn btn-accent w-full !py-3 mt-4 disabled:opacity-40 disabled:cursor-not-allowed"
       >
-        {saving ? "Guardando…" : initial ? "Actualizar mi testimonio" : "Enviar testimonio"}
+        {saving ? t("form.saving") : initial ? t("form.update") : t("form.submit")}
       </button>
 
       <p className="mt-3 text-[11px] text-[var(--text-muted)] text-center">
-        Editar tu testimonio lo vuelve a poner en revisión.
+        {t("form.reviewNote")}
       </p>
     </div>
   );

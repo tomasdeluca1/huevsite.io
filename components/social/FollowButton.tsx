@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { UserPlus, UserMinus, Loader2 } from "lucide-react";
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export function FollowButton({ profileId, initialIsFollowing, accentColor, onToggle }: Props) {
+  const t = useTranslations('shared');
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
   const [loading, setLoading] = useState(false);
 
@@ -33,7 +35,7 @@ export function FollowButton({ profileId, initialIsFollowing, accentColor, onTog
         window.location.href = `/login?next=${encodeURIComponent(currentPath)}`;
       } else {
         const data = await res.json();
-        alert(data.error || "Error al seguir.");
+        alert(data.error || t('follow.followError'));
       }
     } finally {
       setLoading(false);
@@ -54,9 +56,9 @@ export function FollowButton({ profileId, initialIsFollowing, accentColor, onTog
       {loading ? (
         <Loader2 size={15} className="animate-spin" />
       ) : isFollowing ? (
-        <><UserMinus size={15} /> Siguiendo</>
+        <><UserMinus size={15} /> {t('follow.following')}</>
       ) : (
-        <><UserPlus size={15} /> Seguir</>
+        <><UserPlus size={15} /> {t('follow.follow')}</>
       )}
     </button>
   );

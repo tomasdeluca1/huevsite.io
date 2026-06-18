@@ -4,6 +4,7 @@ import { X, Loader2, Search } from "lucide-react";
 import Link from "next/link";
 import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface FollowUser {
@@ -23,6 +24,7 @@ interface Props {
 }
 
 export function FollowListModal({ isOpen, onClose, userId, type, accentColor }: Props) {
+  const t = useTranslations('shared');
   const [users, setUsers] = useState<FollowUser[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -91,7 +93,7 @@ export function FollowListModal({ isOpen, onClose, userId, type, accentColor }: 
           <div className="p-6 border-b border-[var(--border)] bg-black/40 shrink-0">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold tracking-tight capitalize">
-                {type === "followers" ? "Seguidores" : "Siguiendo"}
+                {type === "followers" ? t('followList.followers') : t('followList.following')}
               </h3>
               <button
                 onClick={onClose}
@@ -104,7 +106,7 @@ export function FollowListModal({ isOpen, onClose, userId, type, accentColor }: 
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
               <input
                 type="text"
-                placeholder="Buscar builder..."
+                placeholder={t('followList.searchPlaceholder')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full bg-[var(--bg)] border border-[var(--border)] rounded-2xl py-3 pl-10 pr-4 text-xs outline-none focus:border-[var(--accent)] transition-all shadow-inner shadow-black/20"
@@ -116,13 +118,13 @@ export function FollowListModal({ isOpen, onClose, userId, type, accentColor }: 
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-12 gap-4 text-[var(--text-muted)]">
                 <Loader2 size={24} className="animate-spin" />
-                <span className="text-sm font-mono uppercase tracking-widest">Cargando...</span>
+                <span className="text-sm font-mono uppercase tracking-widest">{t('followList.loading')}</span>
               </div>
             ) : users.length === 0 ? (
               <div className="text-center py-12 text-[var(--text-dim)] font-mono text-sm px-4 whitespace-pre-line">
                 {type === "followers"
-                  ? "Todavía no lo sigue nadie. \n¡Sé el primero!"
-                  : "Todavía no sigue a nadie."}
+                  ? t('followList.emptyFollowers')
+                  : t('followList.emptyFollowing')}
               </div>
             ) : (
               <div className="space-y-1">
@@ -160,7 +162,7 @@ export function FollowListModal({ isOpen, onClose, userId, type, accentColor }: 
                     onClick={handleLoadMore}
                     className="w-full py-4 text-[10px] font-mono uppercase tracking-widest text-[var(--text-dim)] hover:text-white transition-all"
                   >
-                    {isLoading ? "Cargando..." : "Ver más"}
+                    {isLoading ? t('followList.loading') : t('followList.loadMore')}
                   </button>
                 )}
               </div>

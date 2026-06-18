@@ -3,6 +3,7 @@
 import { X, Zap, Target, Users, TrendingUp, Sparkles, Star, MessageSquare, ArrowRight } from "lucide-react";
 import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export function ScoreInfoModal({ isOpen, onClose, accentColor = "#C8FF00", profileId }: Props) {
+    const t = useTranslations('shared');
     const [mounted, setMounted] = useState(false);
     const [breakdown, setBreakdown] = useState<any>(null);
     const [loading, setLoading] = useState(false);
@@ -37,82 +39,91 @@ export function ScoreInfoModal({ isOpen, onClose, accentColor = "#C8FF00", profi
 
     const sections = [
         {
-            title: "Perfil Base (Max 100)",
+            title: t('scoreInfo.baseTitle'),
             icon: <Target className="text-blue-400" size={18} />,
-            points: breakdown ? `+${breakdown.breakdown.base.score} pts` : "Hasta 100 pts",
+            points: breakdown ? `+${breakdown.breakdown.base.score} pts` : t('scoreInfo.upTo100'),
             items: [
-                `Foto de perfil: ${breakdown ? (breakdown.breakdown.base.details.has_image ? '+33' : '0') + ' / 33' : '+33 pts'}`,
-                `Nombre completo: ${breakdown ? (breakdown.breakdown.base.details.has_name ? '+33' : '0') + ' / 33' : '+33 pts'}`,
-                `Tagline (+10 chars): ${breakdown ? (breakdown.breakdown.base.details.tagline_length > 10 ? '+34' : (breakdown.breakdown.base.details.tagline_length > 0 ? '+10' : '0')) + ' / 34' : '+34 pts'}`
+                `${t('scoreInfo.profilePhoto')}: ${breakdown ? (breakdown.breakdown.base.details.has_image ? '+33' : '0') + ' / 33' : '+33 pts'}`,
+                `${t('scoreInfo.fullName')}: ${breakdown ? (breakdown.breakdown.base.details.has_name ? '+33' : '0') + ' / 33' : '+33 pts'}`,
+                `${t('scoreInfo.tagline')}: ${breakdown ? (breakdown.breakdown.base.details.tagline_length > 10 ? '+34' : (breakdown.breakdown.base.details.tagline_length > 0 ? '+10' : '0')) + ' / 34' : '+34 pts'}`
             ]
         },
         {
-            title: "Contenido Builder",
+            title: t('scoreInfo.contentTitle'),
             icon: <Zap className="text-yellow-400" size={18} />,
-            points: breakdown ? `+${breakdown.breakdown.content.score} pts` : "Puntos por carga",
+            points: breakdown ? `+${breakdown.breakdown.content.score} pts` : t('scoreInfo.pointsForContent'),
             items: [
-                `GitHub conectado: ${breakdown ? (breakdown.breakdown.content.details.has_github ? '+150' : '0') + ' pts' : '+150 pts'}`,
-                `Proyectos: ${breakdown ? breakdown.breakdown.content.details.project_count + ' cargados (' + (
-                    Math.min(breakdown.breakdown.content.details.project_count, 3) * 75 +
-                    Math.max(0, Math.min(breakdown.breakdown.content.details.project_count - 3, 3)) * 30 +
-                    Math.max(0, breakdown.breakdown.content.details.project_count - 6) * 5
-                ) + ' pts)' : 'Hasta 75 pts c/u'}`,
-                `Building (Status): ${breakdown ? breakdown.breakdown.content.details.building_count + ' cargados (' + (
-                    Math.min(breakdown.breakdown.content.details.building_count, 3) * 30 +
-                    Math.max(0, breakdown.breakdown.content.details.building_count - 3) * 10
-                ) + ' pts)' : 'Hasta 30 pts c/u'}`,
-                `Escritura (Blog): ${breakdown ? breakdown.breakdown.content.details.writing_count + ' cargados (' + (
-                    Math.min(breakdown.breakdown.content.details.writing_count, 3) * 20 +
-                    Math.max(0, breakdown.breakdown.content.details.writing_count - 5) * 5
-                ) + ' pts)' : 'Hasta 20 pts c/u'}`
+                `${t('scoreInfo.githubConnected')}: ${breakdown ? (breakdown.breakdown.content.details.has_github ? '+150' : '0') + ' pts' : '+150 pts'}`,
+                `${t('scoreInfo.projects')}: ${breakdown ? t('scoreInfo.loadedWithPts', {
+                    count: breakdown.breakdown.content.details.project_count,
+                    pts: (
+                        Math.min(breakdown.breakdown.content.details.project_count, 3) * 75 +
+                        Math.max(0, Math.min(breakdown.breakdown.content.details.project_count - 3, 3)) * 30 +
+                        Math.max(0, breakdown.breakdown.content.details.project_count - 6) * 5
+                    )
+                }) : t('scoreInfo.upToEach', { pts: 75 })}`,
+                `${t('scoreInfo.building')}: ${breakdown ? t('scoreInfo.loadedWithPts', {
+                    count: breakdown.breakdown.content.details.building_count,
+                    pts: (
+                        Math.min(breakdown.breakdown.content.details.building_count, 3) * 30 +
+                        Math.max(0, breakdown.breakdown.content.details.building_count - 3) * 10
+                    )
+                }) : t('scoreInfo.upToEach', { pts: 30 })}`,
+                `${t('scoreInfo.writing')}: ${breakdown ? t('scoreInfo.loadedWithPts', {
+                    count: breakdown.breakdown.content.details.writing_count,
+                    pts: (
+                        Math.min(breakdown.breakdown.content.details.writing_count, 3) * 20 +
+                        Math.max(0, breakdown.breakdown.content.details.writing_count - 5) * 5
+                    )
+                }) : t('scoreInfo.upToEach', { pts: 20 })}`
             ]
         },
         {
-            title: "Comunidad y Social",
+            title: t('scoreInfo.communityTitle'),
             icon: <Users className="text-purple-400" size={18} />,
-            points: breakdown ? `+${breakdown.breakdown.social_received.score + breakdown.breakdown.social_given.score} pts` : "Interacciones",
+            points: breakdown ? `+${breakdown.breakdown.social_received.score + breakdown.breakdown.social_given.score} pts` : t('scoreInfo.interactions'),
             items: [
-                `Endorsement recibido: ${breakdown ? breakdown.breakdown.social_received.details.endorsements + ' (+25 c/u)' : '+25 pts c/u'}`,
-                `Nominación recibida: ${breakdown ? breakdown.breakdown.social_received.details.nominations + ' (+15 c/u)' : '+15 pts c/u'}`,
-                `Seguidores: ${breakdown ? breakdown.breakdown.social_received.details.followers + ' (+10 c/u)' : '+10 pts c/u'}`,
-                `Reciprocidad: ${breakdown ? breakdown.breakdown.social_given.score + ' pts' : '+5 pts p/ feedback dado'}`
+                `${t('scoreInfo.endorsementReceived')}: ${breakdown ? breakdown.breakdown.social_received.details.endorsements + ' (+25 c/u)' : '+25 pts c/u'}`,
+                `${t('scoreInfo.nominationReceived')}: ${breakdown ? breakdown.breakdown.social_received.details.nominations + ' (+15 c/u)' : '+15 pts c/u'}`,
+                `${t('scoreInfo.followers')}: ${breakdown ? breakdown.breakdown.social_received.details.followers + ' (+10 c/u)' : '+10 pts c/u'}`,
+                `${t('scoreInfo.reciprocity')}: ${breakdown ? breakdown.breakdown.social_given.score + ' pts' : t('scoreInfo.reciprocityFallback')}`
             ]
         },
         {
-            title: "Testimonio",
+            title: t('scoreInfo.testimonialTitle'),
             icon: <MessageSquare className="text-pink-400" size={18} />,
             points: breakdown?.breakdown?.testimonial ? `+${breakdown.breakdown.testimonial.score} pts` : "+50 pts",
             items: [
-                `Dejar tu testimonio: ${breakdown?.breakdown?.testimonial ? (breakdown.breakdown.testimonial.details.has_testimonial ? '+50' : '0') + ' / 50' : '+50 pts'} (una vez)`,
-                "Contás cómo te sirve huevsite y, si entra, sale en la home"
+                `${t('scoreInfo.leaveTestimonial')}: ${breakdown?.breakdown?.testimonial ? (breakdown.breakdown.testimonial.details.has_testimonial ? '+50' : '0') + ' / 50' : '+50 pts'} ${t('scoreInfo.onceSuffix')}`,
+                t('scoreInfo.testimonialDesc')
             ]
         },
         {
-            title: "Gaming y PRO Features",
+            title: t('scoreInfo.gamingTitle'),
             icon: <Star className="text-amber-400" size={18} />,
             points: breakdown?.breakdown?.pro_gaming ? `+${breakdown.breakdown.pro_gaming.score} pts` : "+80 pts c/u",
             items: [
-                `Sub-sites publicados: ${breakdown?.breakdown?.pro_gaming ? breakdown.breakdown.pro_gaming.details.sub_sites_count : '0'} (+80 el 1ro, +40 extras)`,
-                `Dominio Custom: ${breakdown?.breakdown?.pro_gaming?.details.has_custom_domain ? '+150 pts' : 'Sin vincular (0 pts)'}`,
+                `${t('scoreInfo.subSitesPublished')}: ${breakdown?.breakdown?.pro_gaming ? breakdown.breakdown.pro_gaming.details.sub_sites_count : '0'} ${t('scoreInfo.subSitesPts')}`,
+                `${t('scoreInfo.customDomain')}: ${breakdown?.breakdown?.pro_gaming?.details.has_custom_domain ? '+150 pts' : t('scoreInfo.notLinked')}`,
             ]
         },
         {
-            title: "Visibilidad y Reach",
+            title: t('scoreInfo.visibilityTitle'),
             icon: <TrendingUp className="text-emerald-400" size={18} />,
-            points: breakdown?.breakdown?.visibility ? `+${breakdown.breakdown.visibility.score} pts` : "Por visitas",
+            points: breakdown?.breakdown?.visibility ? `+${breakdown.breakdown.visibility.score} pts` : t('scoreInfo.byVisits'),
             items: [
-                `Visitas únicas (30d): ${breakdown?.breakdown?.visibility ? breakdown.breakdown.visibility.details.unique_visitors_30d : '0'} (+10 cada 10 visitas)`,
-                `Diversidad de contenido: ${breakdown?.breakdown?.content?.details?.content_diversity_bonus ? '+100 pts' : '0 / 100'} (Project + Building + Writing)`
+                `${t('scoreInfo.uniqueVisits')}: ${breakdown?.breakdown?.visibility ? breakdown.breakdown.visibility.details.unique_visitors_30d : '0'} ${t('scoreInfo.uniqueVisitsPts')}`,
+                `${t('scoreInfo.contentDiversity')}: ${breakdown?.breakdown?.content?.details?.content_diversity_bonus ? '+100 pts' : '0 / 100'} ${t('scoreInfo.contentDiversitySuffix')}`
             ]
         },
         {
-            title: "Premios y Freshness",
+            title: t('scoreInfo.bonusTitle'),
             icon: <Sparkles className="text-[var(--accent)]" size={18} />,
-            points: breakdown ? `+${breakdown.breakdown.bonus.score} pts` : "Bonus",
+            points: breakdown ? `+${breakdown.breakdown.bonus.score} pts` : t('scoreInfo.bonus'),
             items: [
-                `Freshness (Últimos 30d): ${breakdown ? (breakdown.breakdown.bonus.details.is_fresh ? '+50' : '0') + ' pts' : '+50 pts'}`,
-                `Suscripción PRO activa: ${breakdown ? (breakdown.breakdown.bonus.details.is_pro ? '+100' : '0') + ' pts' : '+100 pts'}`,
-                "Ganador semanal: Badge especial (+1000 pts)"
+                `${t('scoreInfo.freshness')}: ${breakdown ? (breakdown.breakdown.bonus.details.is_fresh ? '+50' : '0') + ' pts' : '+50 pts'}`,
+                `${t('scoreInfo.proActive')}: ${breakdown ? (breakdown.breakdown.bonus.details.is_pro ? '+100' : '0') + ' pts' : '+100 pts'}`,
+                t('scoreInfo.weeklyWinner')
             ]
         }
     ];
@@ -157,7 +168,7 @@ export function ScoreInfoModal({ isOpen, onClose, accentColor = "#C8FF00", profi
                                         )}
                                     </h2>
                                     <p className="text-[var(--text-dim)] font-mono text-[9px] md:text-[10px] uppercase tracking-widest mt-1">
-                                       // Gamificación y reputación de comunidad
+                                       {t('scoreInfo.subtitle')}
                                     </p>
                                 </div>
                                 <button
@@ -174,13 +185,15 @@ export function ScoreInfoModal({ isOpen, onClose, accentColor = "#C8FF00", profi
                             {loading ? (
                                 <div className="flex flex-col items-center justify-center py-12 space-y-4">
                                     <div className="w-10 h-10 border-4 border-[var(--accent)]/20 border-t-[var(--accent)] rounded-full animate-spin" />
-                                    <p className="text-xs font-mono text-[var(--accent)] animate-pulse uppercase tracking-widest">// Calculando breakdown...</p>
+                                    <p className="text-xs font-mono text-[var(--accent)] animate-pulse uppercase tracking-widest">{t('scoreInfo.calculating')}</p>
                                 </div>
                             ) : (
                                 <>
                                     <div className="bg-[var(--accent)]/5 border border-[var(--accent)]/10 rounded-2xl p-4">
                                         <p className="text-xs md:text-sm leading-relaxed text-[var(--text-muted)]">
-                                            El <strong className="text-white">Builder Score</strong> es un sistema que mide tu impacto en la escena tech de LATAM. No solo premia qué tan completo está tu portfolio, sino tu actividad y cómo ayudás a que otros builders crezcan.
+                                            {t.rich('scoreInfo.description', {
+                                                strong: (c) => <strong className="text-white">{c}</strong>,
+                                            })}
                                         </p>
                                     </div>
 
@@ -221,13 +234,13 @@ export function ScoreInfoModal({ isOpen, onClose, accentColor = "#C8FF00", profi
                                             <div className="min-w-0 flex-1">
                                                 <h4 className="text-[10px] md:text-xs font-bold text-white mb-0.5">
                                                     {breakdown?.breakdown?.testimonial?.details?.has_testimonial
-                                                        ? "Ya sumaste +50 por tu testimonio ✓"
-                                                        : "Dejá tu testimonio y sumá +50"}
+                                                        ? t('scoreInfo.ctaTitleDone')
+                                                        : t('scoreInfo.ctaTitle')}
                                                 </h4>
                                                 <p className="text-[9px] md:text-[10px] text-[var(--text-dim)] leading-tight">
                                                     {breakdown?.breakdown?.testimonial?.details?.has_testimonial
-                                                        ? "Editalo o revisá su estado en /testimonio."
-                                                        : "Contá cómo te sirve huevsite — 30 segundos, +50 al score."}
+                                                        ? t('scoreInfo.ctaDescDone')
+                                                        : t('scoreInfo.ctaDesc')}
                                                 </p>
                                             </div>
                                             <ArrowRight size={16} className="text-[var(--accent)] shrink-0 group-hover:translate-x-1 transition-transform" />
@@ -240,9 +253,9 @@ export function ScoreInfoModal({ isOpen, onClose, accentColor = "#C8FF00", profi
                                                 <Star size={16} className="text-amber-500" />
                                             </div>
                                             <div className="min-w-0">
-                                                <h4 className="text-[10px] md:text-xs font-bold text-white mb-0.5">Hall of Fame</h4>
+                                                <h4 className="text-[10px] md:text-xs font-bold text-white mb-0.5">{t('scoreInfo.hallOfFame')}</h4>
                                                 <p className="text-[9px] md:text-[10px] text-[var(--text-dim)] leading-tight">
-                                                    Los perfiles con mayor score aparecen primero en Explorar y el Feed Global.
+                                                    {t('scoreInfo.hallOfFameDesc')}
                                                 </p>
                                             </div>
                                         </div>
@@ -256,7 +269,7 @@ export function ScoreInfoModal({ isOpen, onClose, accentColor = "#C8FF00", profi
                                 onClick={onClose}
                                 className="btn btn-accent !w-full !rounded-2xl !py-4 font-black uppercase text-[10px] md:text-xs tracking-widest shadow-lg shadow-[var(--accent)]/10 transition-transform active:scale-95"
                             >
-                                Entendido, a buildear
+                                {t('scoreInfo.gotIt')}
                             </button>
                         </div>
                     </motion.div>

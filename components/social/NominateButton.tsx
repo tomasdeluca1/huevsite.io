@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createPortal } from "react-dom";
 import { Star, Loader2, Info } from "lucide-react";
 import Link from "next/link";
@@ -20,6 +21,7 @@ export function NominateButton({
   accentColor: string;
   onStatusChange?: (nominated: boolean) => void;
 }) {
+  const t = useTranslations('shared');
   const [status, setStatus] = useState<"idle" | "loading" | "nominated" | "error">("idle");
   const [msg, setMsg] = useState("");
   const [remaining, setRemaining] = useState<number | null>(null);
@@ -70,11 +72,11 @@ export function NominateButton({
         } else {
           setStatus("error");
           const data = await res.json();
-          setMsg(data.error ?? "Error al desnominar.");
+          setMsg(data.error ?? t('nominate.unnominateError'));
         }
       } catch {
         setStatus("error");
-        setMsg("Error de conexión.");
+        setMsg(t('nominate.connectionError'));
       }
     } else {
       // Nominate
@@ -111,12 +113,12 @@ export function NominateButton({
         }
 
         setStatus("error");
-        setMsg(data.error ?? "Error al nominar.");
+        setMsg(data.error ?? t('nominate.nominateError'));
         setTimeout(() => setStatus("idle"), 2000);
       }
     } catch {
       setStatus("error");
-      setMsg("Error de conexión.");
+      setMsg(t('nominate.connectionError'));
     }
   };
 
@@ -144,13 +146,13 @@ export function NominateButton({
               color={status === "nominated" ? "var(--accent)" : (anotherNominated ? "var(--text-dim)" : "black")} 
             />
           )}
-          <span>{status === "error" ? msg : (status === "nominated" ? "Nominado" : "Nominar")}</span>
+          <span>{status === "error" ? msg : (status === "nominated" ? t('nominate.nominated') : t('nominate.nominate'))}</span>
         </button>
 
         {anotherNominated && status !== "nominated" && (
           <div className="flex items-center gap-1.5 text-[9px] font-mono text-[var(--text-muted)] mt-1 animate-in fade-in slide-in-from-top-1">
             <Info size={10} />
-            <span>Ya nominaste a </span>
+            <span>{t('nominate.alreadyNominatedShort')} </span>
             <Link 
               href={`/${anotherNominated.username}`}
               className="text-[var(--accent)] hover:underline"
@@ -162,7 +164,7 @@ export function NominateButton({
 
         {remaining !== null && !anotherNominated && status !== "nominated" && status !== "loading" && (
           <span className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider">
-            {remaining} disponible esta semana
+            {t('nominate.availableThisWeek', { count: remaining })}
           </span>
         )}
       </div>
@@ -191,20 +193,22 @@ export function NominateButton({
                 style={{ backgroundColor: accentColor }}
               />
 
-              <h3 className="text-2xl font-black mb-4 tracking-tighter">¿Cambiar nominación?</h3>
-              
+              <h3 className="text-2xl font-black mb-4 tracking-tighter">{t('nominate.changeNominationTitle')}</h3>
+
               <div className="space-y-4 mb-8">
                 <p className="text-base text-[var(--text-dim)] leading-relaxed">
-                  Ya nominaste a <strong className="text-white">@{anotherNominated.username}</strong> esta semana.
+                  {t.rich('nominate.alreadyNominatedThisWeek', {
+                    user: () => <strong className="text-white">@{anotherNominated.username}</strong>,
+                  })}
                 </p>
                 <p className="text-base text-[var(--text-dim)] leading-relaxed">
-                  ¿Querés cambiar tu voto para nominar a este builder en su lugar?
+                  {t('nominate.changeVoteQuestion')}
                 </p>
-                
+
                 <div className="p-4 rounded-2xl bg-[var(--surface2)] border border-[var(--border)] flex gap-3">
                   <Info size={18} className="text-[var(--accent)] shrink-0 mt-0.5" />
                   <p className="text-xs text-[var(--text-muted)] leading-normal">
-                    Tu voto final es el que cuenta al cierre de la semana (domingo a la medianoche). Podés cambiarlo todas las veces que quieras.
+                    {t('nominate.finalVoteNote')}
                   </p>
                 </div>
               </div>
@@ -214,14 +218,14 @@ export function NominateButton({
                   onClick={() => setShowModal(false)}
                   className="flex-1 px-6 py-3.5 rounded-2xl border border-[var(--border)] font-bold text-sm hover:bg-[var(--surface2)] transition-all order-2 sm:order-1"
                 >
-                  Mantener anterior
+                  {t('nominate.keepPrevious')}
                 </button>
                 <button
                   onClick={() => executeNominate(true)}
                   className="flex-1 px-6 py-3.5 rounded-2xl text-black font-bold text-sm transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-black/20 order-1 sm:order-2"
                   style={{ backgroundColor: accentColor }}
                 >
-                  Sí, cambiar voto
+                  {t('nominate.yesChangeVote')}
                 </button>
               </div>
             </motion.div>

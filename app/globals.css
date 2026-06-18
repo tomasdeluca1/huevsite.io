@@ -67,6 +67,19 @@ body {
   font-family: var(--font-display);
   min-height: 100vh;
   overflow-x: hidden;
+  transition: opacity 0.22s ease, filter 0.22s ease;
+}
+
+/* Language switch: while the server re-renders the page in the new locale, the
+   LocaleToggle adds .lang-switching to <html>. We softly dim + blur the page so
+   the text swap reads as a smooth refresh instead of a hard jump. */
+html.lang-switching body {
+  opacity: 0.55;
+  filter: blur(1.5px);
+}
+@media (prefers-reduced-motion: reduce) {
+  body { transition: none; }
+  html.lang-switching body { opacity: 1; filter: none; }
 }
 
 @layer base {

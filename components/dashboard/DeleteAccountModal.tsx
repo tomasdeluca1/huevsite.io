@@ -5,8 +5,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { AlertTriangle, Loader2, Trash2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-const CONFIRMATION_TEXT = "Quiero eliminar mi cuenta";
-
 interface DeleteAccountModalProps {
   isOpen: boolean;
   accentColor: string;
@@ -23,6 +21,7 @@ export function DeleteAccountModal({
   isDeleting,
 }: DeleteAccountModalProps) {
   const t = useTranslations("dashboard");
+  const confirmationText = t("deleteAccount.confirmPhrase");
   const [confirmation, setConfirmation] = useState("");
 
   useEffect(() => {
@@ -31,7 +30,7 @@ export function DeleteAccountModal({
     }
   }, [isOpen]);
 
-  const isMatch = confirmation === CONFIRMATION_TEXT;
+  const isMatch = confirmation === confirmationText;
 
   return (
     <AnimatePresence>
@@ -90,7 +89,7 @@ export function DeleteAccountModal({
                   <p className="text-sm leading-relaxed text-amber-100/75">
                     {t("deleteAccount.irreversible")}
                     <span className="mt-2 block rounded-xl bg-black/30 px-3 py-2 font-mono text-xs text-white">
-                      {CONFIRMATION_TEXT}
+                      {confirmationText}
                     </span>
                   </p>
                 </div>
@@ -103,7 +102,7 @@ export function DeleteAccountModal({
                 <input
                   value={confirmation}
                   onChange={(event) => setConfirmation(event.target.value)}
-                  placeholder={CONFIRMATION_TEXT}
+                  placeholder={confirmationText}
                   autoComplete="off"
                   spellCheck={false}
                   disabled={isDeleting}

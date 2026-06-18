@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useTranslations, useLocale } from "next-intl";
 import { GitHubBlockData } from "@/lib/profile-types";
 import { useEffect, useState } from "react";
 import { useBlockPreview } from "@/lib/block-preview-context";
@@ -12,14 +13,16 @@ interface Props {
 }
 
 const MONTHS_ES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+const MONTHS_EN = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
 const HEATMAP_VISIBLE = 91; // last 13 weeks (13 cols x 7 rows)
 
-function formatMonth(key: string): string {
+function formatMonth(key: string, locale: string): string {
   // key = "YYYY-MM"
   const [year, month] = key.split("-");
   const idx = parseInt(month, 10) - 1;
   if (Number.isNaN(idx) || idx < 0 || idx > 11) return key;
-  return `${MONTHS_ES[idx]} ${year}`;
+  const months = locale === "en" ? MONTHS_EN : MONTHS_ES;
+  return `${months[idx]} ${year}`;
 }
 
 /** Heatmap cell style for an intensity value 0-4, tinted with the user accent. */
@@ -31,6 +34,8 @@ function cellStyle(value: number, accentColor: string): React.CSSProperties {
 
 export function GitHubBlock({ data, accentColor }: Props) {
   const isPreview = useBlockPreview();
+  const t = useTranslations('blocks');
+  const locale = useLocale();
 
   const stats = data.stats || { stars: 0, repos: 0, followers: 0 };
   const username = data.username || "usuario";
@@ -76,7 +81,7 @@ export function GitHubBlock({ data, accentColor }: Props) {
         </div>
         {currentMonth && (
           <div className="mt-3 text-[9px] uppercase tracking-widest text-[var(--text-muted)]">
-            <span className="font-black text-sm tracking-tight text-white">{currentMonth.count}</span> commits · {formatMonth(currentMonth.month)}
+            <span className="font-black text-sm tracking-tight text-white">{currentMonth.count}</span> commits · {formatMonth(currentMonth.month, locale)}
           </div>
         )}
         {stats.topLanguages && stats.topLanguages.length > 0 && (
@@ -101,7 +106,7 @@ export function GitHubBlock({ data, accentColor }: Props) {
         target="_blank"
         rel="noopener noreferrer"
         className="absolute top-4 right-4 p-2 rounded-lg bg-black/40 text-[var(--text-muted)] hover:text-white hover:bg-black/60 transition-all opacity-0 group-hover:opacity-100 backdrop-blur-md z-10"
-        title="Ver en GitHub"
+        title={t('github.viewOnGithub')}
       >
         <ExternalLink size={14} />
       </a>
@@ -130,20 +135,20 @@ export function GitHubBlock({ data, accentColor }: Props) {
               type="button"
               onClick={() => setMonthIdx((i) => Math.max(0, i - 1))}
               disabled={safeIdx <= 0}
-              aria-label="Mes anterior"
+              aria-label={t('github.prevMonth')}
               className="p-1 rounded-md text-[var(--text-muted)] hover:text-white hover:bg-white/10 transition-all disabled:opacity-25 disabled:cursor-default"
             >
               <ChevronLeft size={16} />
             </button>
             <div className="flex flex-col items-center leading-none">
               <span className="text-xl font-black tracking-tight" style={{ color: accentColor }}>{currentMonth.count}</span>
-              <span className="text-[8px] uppercase tracking-widest text-[var(--text-muted)] mt-1">commits · {formatMonth(currentMonth.month)}</span>
+              <span className="text-[8px] uppercase tracking-widest text-[var(--text-muted)] mt-1">commits · {formatMonth(currentMonth.month, locale)}</span>
             </div>
             <button
               type="button"
               onClick={() => setMonthIdx((i) => Math.min(months.length - 1, i + 1))}
               disabled={safeIdx >= months.length - 1}
-              aria-label="Mes siguiente"
+              aria-label={t('github.nextMonth')}
               className="p-1 rounded-md text-[var(--text-muted)] hover:text-white hover:bg-white/10 transition-all disabled:opacity-25 disabled:cursor-default"
             >
               <ChevronRight size={16} />

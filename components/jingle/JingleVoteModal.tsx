@@ -130,9 +130,10 @@ export function JingleVoteModal({ isOpen, onClose, accentColor = "var(--accent)"
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {JINGLE_OPTIONS.map((opt) => {
+              {JINGLE_OPTIONS.map((opt, optIdx) => {
                 const selected = myVote === opt.key;
                 const isSubmitting = submitting === opt.key;
+                const optLabel = optIdx === 0 ? t('jingle.optionA') : t('jingle.optionB');
                 return (
                   <div
                     key={opt.key}
@@ -142,7 +143,7 @@ export function JingleVoteModal({ isOpen, onClose, accentColor = "var(--accent)"
                   >
                     <div className="flex items-center justify-between mb-2 px-1">
                       <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">
-                        {opt.label}
+                        {optLabel}
                       </span>
                       {selected && (
                         <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest" style={{ color: accentColor }}>

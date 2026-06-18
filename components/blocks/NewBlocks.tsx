@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 import {
   MediaBlockData,
   CertificationBlockData,
@@ -17,6 +18,7 @@ import Link from "next/link";
 import { useBlockPreview } from "@/lib/block-preview-context";
 
 export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accentColor: string }) {
+  const t = useTranslations('blocks');
   const isPreview = useBlockPreview();
   const [isZoomed, setIsZoomed] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -165,7 +167,7 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
                       rel="noopener noreferrer"
                       className="absolute top-6 right-6 p-4 rounded-2xl bg-black/60 backdrop-blur-md border border-white/20 text-white hover:bg-white hover:text-black transition-all flex items-center gap-2 font-bold text-sm shadow-xl"
                     >
-                      Visitar enlace <ExternalLink size={16} />
+                      {t('custom.visitLink')} <ExternalLink size={16} />
                     </a>
                   )}
                 </div>
@@ -178,7 +180,7 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
                       className="w-full sm:w-auto px-10 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold text-sm transition-all"
                       onClick={() => setIsZoomed(false)}
                     >
-                      Esc para cerrar
+                      {t('media.escToClose')}
                     </button>
                     {hasExternalLink && (
                       <a
@@ -188,7 +190,7 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
                         className="w-full sm:w-auto px-10 py-4 rounded-2xl font-bold text-sm transition-all shadow-lg active:scale-95"
                         style={{ backgroundColor: accentColor, color: isDarkColor(accentColor) ? 'white' : 'black' }}
                       >
-                        Abrir original
+                        {t('media.openOriginal')}
                       </a>
                     )}
                   </div>
@@ -282,6 +284,7 @@ export function AchievementBlock({ data, accentColor }: { data: AchievementBlock
 }
 
 export function CustomBlock({ data, accentColor }: { data: CustomBlockData; accentColor: string }) {
+  const t = useTranslations('blocks');
   return (
     <motion.div className="huevsite-block block-custom h-full flex flex-col group relative overflow-hidden bg-gradient-to-b from-[var(--surface)] to-black/40">
       <div className="block-label mb-3 uppercase tracking-widest text-[10px] font-bold relative z-10" style={{ color: accentColor }}>
@@ -306,7 +309,7 @@ export function CustomBlock({ data, accentColor }: { data: CustomBlockData; acce
             className="inline-flex items-center gap-2 text-sm font-semibold transition-opacity hover:opacity-80"
             style={{ color: accentColor }}
           >
-            Ver más <ExternalLink size={14} />
+            {t('custom.seeMore')} <ExternalLink size={14} />
           </a>
         </div>
       )}
@@ -356,8 +359,9 @@ export function EcosystemBlock({
   username?: string;
   isCustomDomain?: boolean;
 }) {
+  const t = useTranslations('blocks');
   return (
-    <motion.div 
+    <motion.div
       className="huevsite-block block-ecosystem h-full flex flex-col group relative overflow-hidden bg-gradient-to-br from-[var(--surface)] to-black/20"
       whileHover={{ scale: 1.01 }}
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
@@ -375,7 +379,7 @@ export function EcosystemBlock({
           </div>
           <div>
             <h3 className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-[var(--text-muted)] group-hover:text-white transition-colors">
-              {data.title || "Ecosistema"}
+              {data.title || t('ecosystem.fallbackTitle')}
             </h3>
             <div className="h-0.5 w-4 bg-[var(--accent)]/40 mt-1 group-hover:w-full transition-all duration-700" style={{ '--accent': accentColor } as any} />
           </div>
@@ -383,7 +387,7 @@ export function EcosystemBlock({
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" style={{ '--accent': accentColor } as any} />
           <div className="text-[9px] text-[var(--text-dim)] font-mono uppercase tracking-widest px-3 py-1 bg-white/5 rounded-full border border-white/10 group-hover:border-[var(--accent)]/20 transition-colors">
-            {subSites.length} {subSites.length === 1 ? "Proyecto" : "Proyectos"}
+            {t('ecosystem.projectCount', { count: subSites.length })}
           </div>
         </div>
       </div>
@@ -430,7 +434,7 @@ export function EcosystemBlock({
         {subSites.length === 0 && (
           <div className="col-span-2 flex flex-col items-center justify-center py-10 opacity-40 group-hover:opacity-60 transition-opacity">
             <Globe size={24} className="mb-2" />
-            <div className="text-[10px] font-mono uppercase tracking-widest">No hay proyectos vinculados</div>
+            <div className="text-[10px] font-mono uppercase tracking-widest">{t('ecosystem.noLinked')}</div>
           </div>
         )}
       </div>

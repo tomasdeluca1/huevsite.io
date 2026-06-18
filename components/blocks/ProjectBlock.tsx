@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { ProjectBlockData } from "@/lib/profile-types";
 import { ExternalLink } from "lucide-react";
 
@@ -10,8 +11,9 @@ interface Props {
 }
 
 export function ProjectBlock({ data, accentColor }: Props) {
-  const title = data.title || "Proyecto";
-  const description = data.description || "Descripción del proyecto";
+  const t = useTranslations('blocks');
+  const title = data.title || t('project.fallbackTitle');
+  const description = data.description || t('project.fallbackDescription');
   const link = data.link || "#";
   const metrics = data.metrics || "";
   const imageUrl = data.imageUrl;
@@ -99,7 +101,7 @@ export function ProjectBlock({ data, accentColor }: Props) {
               className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest hover:translate-x-1 transition-transform"
               style={{ color: accentColor }}
             >
-              Ver Demo <ExternalLink size={12} />
+              {t('project.viewDemo')} <ExternalLink size={12} />
             </a>
           )}
         </div>

@@ -2,6 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { MetricBlockData, SocialBlockData, CVBlockData, getContrastColor } from "@/lib/profile-types";
 import { SOCIAL_PLATFORMS, SocialPlatformKey } from "@/lib/social-platforms";
 import { Download, Instagram, Youtube, Github, Linkedin, Twitter, MessageSquare, Send, Globe, Mail } from "lucide-react";
@@ -14,6 +15,7 @@ interface MetricProps {
 
 export function MetricBlock({ data, accentColor }: MetricProps) {
   const isPreview = useBlockPreview();
+  const t = useTranslations('blocks');
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -30,7 +32,7 @@ export function MetricBlock({ data, accentColor }: MetricProps) {
       </div>
       <div className="flex items-center gap-2 mt-2">
         <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-        <span className="text-[9px] uppercase font-bold tracking-widest text-[var(--text-muted)] opacity-60">En tiempo real</span>
+        <span className="text-[9px] uppercase font-bold tracking-widest text-[var(--text-muted)] opacity-60">{t('metric.live')}</span>
       </div>
     </motion.div>
   );
@@ -43,6 +45,7 @@ interface SocialProps {
 
 export function SocialBlock({ data, accentColor }: SocialProps) {
   const isPreview = useBlockPreview();
+  const t = useTranslations('blocks');
   const links = data.links || [];
 
   const getIcon = (platform: string, color: string, favicon?: string) => {
@@ -86,7 +89,7 @@ export function SocialBlock({ data, accentColor }: SocialProps) {
       className="huevsite-block block-social h-full flex flex-col justify-between group"
       style={{ "--accent": accentColor } as React.CSSProperties}
     >
-      <div className="block-label opacity-40 uppercase tracking-[0.2em] text-[10px] text-left mb-3">Conectemos</div>
+      <div className="block-label opacity-40 uppercase tracking-[0.2em] text-[10px] text-left mb-3">{t('social.connect')}</div>
       <div className="flex flex-col gap-1.5 mt-auto">
         {links.filter(l => l.url).slice(0, isPreview ? 3 : undefined).map((l, i) => {
           const pData = getPlatformData(l.platform);
@@ -122,7 +125,7 @@ export function SocialBlock({ data, accentColor }: SocialProps) {
         })}
         {links.filter(l => l.url).length === 0 && (
           <p className="text-xs text-[var(--text-dim)] font-mono py-8 text-center opacity-40">
-            // sin coordenadas
+            {t('social.noCoords')}
           </p>
         )}
       </div>
@@ -136,6 +139,7 @@ interface CVProps {
 }
 
 export function CVBlock({ data, accentColor }: CVProps) {
+  const t = useTranslations('blocks');
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -150,7 +154,7 @@ export function CVBlock({ data, accentColor }: CVProps) {
         <Download size={28} />
       </div>
       <h3 className="font-bold text-lg text-white mb-1 group-hover:text-[var(--accent)] transition-colors" style={{ "--accent": accentColor } as any}>
-        {data.title || "Descargar CV"}
+        {data.title || t('cv.download')}
       </h3>
       {data.description && (
         <p className="text-xs text-[var(--text-dim)] font-mono leading-relaxed max-w-[200px] mb-4">
@@ -163,10 +167,10 @@ export function CVBlock({ data, accentColor }: CVProps) {
           target="_blank"
           rel="noopener noreferrer"
           className="absolute inset-0"
-          aria-label={data.title || "Descargar CV"}
+          aria-label={data.title || t('cv.download')}
         />
       ) : (
-        <div className="text-xs text-red-400 font-mono">Sin archivo</div>
+        <div className="text-xs text-red-400 font-mono">{t('cv.noFile')}</div>
       )}
     </motion.div>
   );

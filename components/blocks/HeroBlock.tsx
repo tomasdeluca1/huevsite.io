@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { BadgeCheck, Trophy } from "lucide-react";
 import { HeroBlockData, ProfileBadge, getContrastColor } from "@/lib/profile-types";
 import { useBlockPreview } from "@/lib/block-preview-context";
@@ -16,9 +17,10 @@ interface Props {
 
 export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = false, badges = [] }: Props) {
   const isPreview = useBlockPreview();
+  const t = useTranslations('blocks');
   const roles = data.roles || [];
-  const name = data.name || "Usuario";
-  const tagline = data.tagline || "Builder en huevsite.io";
+  const name = data.name || t('hero.fallbackName');
+  const tagline = data.tagline || t('hero.fallbackTagline');
   const status = data.status || "";
   const location = data.location || "";
   const avatarUrl = data.avatarUrl || "";
@@ -118,7 +120,7 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
                   animate={{ rotate: [0, 10, -10, 0] }}
                   transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
                   className="shrink-0"
-                  title="Builder de la Semana"
+                  title={t('hero.builderOfWeek')}
                 >
                   <Trophy size={18} className="text-[var(--accent)] drop-shadow-[0_0_8px_rgba(200,255,0,0.5)] md:w-6 md:h-6" />
                 </motion.div>
@@ -128,7 +130,7 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
                   initial={{ scale: 0, rotate: -20 }}
                   animate={{ scale: 1, rotate: 0 }}
                   className="shrink-0"
-                  title="Builder PRO"
+                  title={t('hero.builderPro')}
                 >
                   <BadgeCheck size={20} className="md:w-6 md:h-6" style={{ color: accentColor }} />
                 </motion.span>

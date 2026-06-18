@@ -296,7 +296,8 @@
       "phraseMismatch": "La frase tiene que coincidir exactamente.",
       "cancel": "Cancelar",
       "deleting": "Eliminando...",
-      "deleteForever": "Eliminar para siempre"
+      "deleteForever": "Eliminar para siempre",
+      "confirmPhrase": "Quiero eliminar mi cuenta"
     },
     "feedback": {
       "sendError": "Error al enviar feedback",
@@ -1912,7 +1913,64 @@
       "voted": "Votada ✓",
       "voteThis": "Votar esta",
       "closeBtn": "Cerrar",
-      "voteLater": "Votar después"
+      "voteLater": "Votar después",
+      "optionA": "Opción A",
+      "optionB": "Opción B"
+    }
+  },
+  "blocks": {
+    "github": {
+      "viewOnGithub": "Ver en GitHub",
+      "prevMonth": "Mes anterior",
+      "nextMonth": "Mes siguiente"
+    },
+    "hero": {
+      "builderOfWeek": "Builder de la Semana",
+      "builderPro": "Builder PRO",
+      "fallbackName": "Usuario",
+      "fallbackTagline": "Builder en huevsite.io"
+    },
+    "metric": {
+      "live": "En tiempo real"
+    },
+    "social": {
+      "connect": "Conectemos",
+      "noCoords": "// sin coordenadas"
+    },
+    "cv": {
+      "download": "Descargar CV",
+      "noFile": "Sin archivo"
+    },
+    "community": {
+      "title": "Comunidades"
+    },
+    "writing": {
+      "readInternal": "Leer interna",
+      "external": "Externo",
+      "publishedOn": "Publicado en Huevsite.io",
+      "viewSource": "Ver fuente →"
+    },
+    "custom": {
+      "visitLink": "Visitar enlace",
+      "seeMore": "Ver más"
+    },
+    "project": {
+      "viewDemo": "Ver Demo",
+      "fallbackTitle": "Proyecto",
+      "fallbackDescription": "Descripción del proyecto"
+    },
+    "building": {
+      "untitledProject": "Proyecto sin nombre",
+      "pendingDescription": "Descripción pendiente"
+    },
+    "media": {
+      "escToClose": "Esc para cerrar",
+      "openOriginal": "Abrir original"
+    },
+    "ecosystem": {
+      "fallbackTitle": "Ecosistema",
+      "projectCount": "{count, plural, one {# Proyecto} other {# Proyectos}}",
+      "noLinked": "No hay proyectos vinculados"
     }
   }
 }

@@ -296,7 +296,8 @@
       "phraseMismatch": "The phrase has to match exactly.",
       "cancel": "Cancel",
       "deleting": "Deleting...",
-      "deleteForever": "Delete forever"
+      "deleteForever": "Delete forever",
+      "confirmPhrase": "I want to delete my account"
     },
     "feedback": {
       "sendError": "Error sending feedback",
@@ -1912,7 +1913,64 @@
       "voted": "Voted ✓",
       "voteThis": "Vote for this",
       "closeBtn": "Close",
-      "voteLater": "Vote later"
+      "voteLater": "Vote later",
+      "optionA": "Option A",
+      "optionB": "Option B"
+    }
+  },
+  "blocks": {
+    "github": {
+      "viewOnGithub": "View on GitHub",
+      "prevMonth": "Previous month",
+      "nextMonth": "Next month"
+    },
+    "hero": {
+      "builderOfWeek": "Builder of the Week",
+      "builderPro": "PRO Builder",
+      "fallbackName": "User",
+      "fallbackTagline": "Builder on huevsite.io"
+    },
+    "metric": {
+      "live": "Live"
+    },
+    "social": {
+      "connect": "Let's connect",
+      "noCoords": "// no coordinates"
+    },
+    "cv": {
+      "download": "Download CV",
+      "noFile": "No file"
+    },
+    "community": {
+      "title": "Communities"
+    },
+    "writing": {
+      "readInternal": "Read post",
+      "external": "External",
+      "publishedOn": "Published on Huevsite.io",
+      "viewSource": "View source →"
+    },
+    "custom": {
+      "visitLink": "Visit link",
+      "seeMore": "See more"
+    },
+    "project": {
+      "viewDemo": "View Demo",
+      "fallbackTitle": "Project",
+      "fallbackDescription": "Project description"
+    },
+    "building": {
+      "untitledProject": "Untitled project",
+      "pendingDescription": "Description pending"
+    },
+    "media": {
+      "escToClose": "Esc to close",
+      "openOriginal": "Open original"
+    },
+    "ecosystem": {
+      "fallbackTitle": "Ecosystem",
+      "projectCount": "{count, plural, one {# Project} other {# Projects}}",
+      "noLinked": "No linked projects"
     }
   }
 }

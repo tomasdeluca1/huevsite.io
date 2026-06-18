@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { StackBlockData, CommunityBlockData, WritingBlockData } from "@/lib/profile-types";
 import { useBlockPreview } from "@/lib/block-preview-context";
 
@@ -38,6 +39,7 @@ export function StackBlock({ data, accentColor }: { data: StackBlockData; accent
 }
 
 export function CommunityBlock({ data, accentColor }: { data: CommunityBlockData; accentColor: string }) {
+  const t = useTranslations('blocks');
   const communities = data.communities || [];
 
   const formatUrl = (url?: string) => {
@@ -51,7 +53,7 @@ export function CommunityBlock({ data, accentColor }: { data: CommunityBlockData
       animate={{ opacity: 1, y: 0 }}
       className="huevsite-block block-community h-full group flex flex-col justify-between"
     >
-      <div className="block-label opacity-40 uppercase tracking-[0.2em] text-[10px] mb-6">Comunidades</div>
+      <div className="block-label opacity-40 uppercase tracking-[0.2em] text-[10px] mb-6">{t('community.title')}</div>
       <div className="flex flex-wrap gap-3 mt-auto">
         {communities.length > 0 ? (
           communities.map((comm, i) => {
@@ -86,6 +88,7 @@ export function CommunityBlock({ data, accentColor }: { data: CommunityBlockData
 }
 
 export function WritingBlock({ data, accentColor }: { data: WritingBlockData; accentColor: string }) {
+  const t = useTranslations('blocks');
   const isPreview = useBlockPreview();
   const [readingPost, setReadingPost] = useState<any | null>(null);
   const posts = data.posts || [];
@@ -130,7 +133,7 @@ export function WritingBlock({ data, accentColor }: { data: WritingBlockData; ac
                       <span className="text-[10px] font-mono text-[var(--text-muted)] opacity-60 uppercase">{post.date || "Just now"}</span>
                       <span className="w-1 h-1 rounded-full bg-white/20" />
                       <span className="text-[9px] font-bold text-[var(--accent)] uppercase tracking-wider opacity-60 group-hover/post:opacity-100 transition-opacity" style={{ color: accentColor }}>
-                        {hasInternalContent ? 'Leer interna' : 'Externo'}
+                        {hasInternalContent ? t('writing.readInternal') : t('writing.external')}
                       </span>
                     </div>
                   </div>
@@ -170,11 +173,11 @@ export function WritingBlock({ data, accentColor }: { data: WritingBlockData; ac
               <div className="pt-12 border-t border-white/5 flex justify-between items-center">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-white/10 border border-white/5 flex items-center justify-center font-bold text-[var(--accent)]" style={{ color: accentColor }}>H</div>
-                  <div className="text-xs font-bold text-white opacity-40 uppercase tracking-widest">Publicado en Huevsite.io</div>
+                  <div className="text-xs font-bold text-white opacity-40 uppercase tracking-widest">{t('writing.publishedOn')}</div>
                 </div>
                 {readingPost.link && readingPost.link !== "#" && (
                   <a href={getValidUrl(readingPost.link)} target="_blank" className="text-xs font-bold uppercase tracking-widest hover:text-white transition-colors" style={{ color: accentColor }}>
-                    Ver fuente →
+                    {t('writing.viewSource')}
                   </a>
                 )}
               </div>

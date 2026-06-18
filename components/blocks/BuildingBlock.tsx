@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { BuildingBlockData } from "@/lib/profile-types";
 import { useBlockPreview } from "@/lib/block-preview-context";
 
@@ -10,9 +11,10 @@ interface Props {
 }
 
 export function BuildingBlock({ data, accentColor }: Props) {
+  const t = useTranslations('blocks');
   const isPreview = useBlockPreview();
-  const project = data.project || "Proyecto sin nombre";
-  const description = data.description || "Descripción pendiente";
+  const project = data.project || t('building.untitledProject');
+  const description = data.description || t('building.pendingDescription');
   const stack = data.stack || [];
 
   return (

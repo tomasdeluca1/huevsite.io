@@ -9,7 +9,7 @@ import { createPortal } from "react-dom";
 const PRESET_SKILLS = [
   "React", "TypeScript", "Next.js", "Node.js", "Python",
   "Go", "Rust", "PostgreSQL", "AWS", "Design Systems",
-  "Product", "Diseño", "UX", "Marketing", "Fundraising",
+  "Product", "Design", "UX", "Marketing", "Fundraising",
 ];
 
 interface EndorsementUser {

@@ -1773,7 +1773,8 @@
   },
   "meta": {
     "rootTitle": "huevsite.io | Build your reputation as a builder",
-    "rootDescription": "Projects, real metrics and endorsements from other builders. Let them see you shipping, not just talking. The builder network lives here."
+    "rootDescription": "Projects, real metrics and endorsements from other builders. Let them see you shipping, not just talking. The builder network lives here.",
+    "loadingCaption": "building your huevsite…"
   },
   "shared": {
     "endorsements": {

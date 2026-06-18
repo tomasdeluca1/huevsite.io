@@ -1773,7 +1773,8 @@
   },
   "meta": {
     "rootTitle": "huevsite.io | Construí tu reputación como builder",
-    "rootDescription": "Proyectos, métricas reales y endorsements de otros builders. Que te vean shippeando, no diciendo. Acá vive la red de LATAM."
+    "rootDescription": "Proyectos, métricas reales y endorsements de otros builders. Que te vean shippeando, no diciendo. Acá vive la red de LATAM.",
+    "loadingCaption": "armando tu huevsite…"
   },
   "shared": {
     "endorsements": {

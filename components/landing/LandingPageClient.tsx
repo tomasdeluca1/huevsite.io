@@ -282,6 +282,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
       <nav>
         <Link href="/" className="logo">huev<span style={{ color: 'var(--accent)' }}>site</span>.io</Link>
         <div className="nav-right hidden md:flex">
+          {/* Content links */}
           <Link href="/feed" className="btn btn-ghost">
             <span>{tNav("launches")}</span>
           </Link>
@@ -294,8 +295,11 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
           <a href="#precios" className="btn btn-ghost">
             <span>{tNav("pricing")}</span>
           </a>
-          <LocaleToggle className="ml-1" />
-          <Link href={user ? "/dashboard" : "/login"} className="btn btn-accent !px-6 ml-1">
+
+          {/* Utility cluster: language + primary CTA, split from content links */}
+          <div className="w-px h-5 bg-white/10 mx-1" aria-hidden />
+          <LocaleToggle />
+          <Link href={user ? "/dashboard" : "/login"} className="btn btn-accent !px-6">
             {user ? (
               <>
                 <Layout size={16} className="mr-2" />

@@ -82,6 +82,19 @@ html.lang-switching body {
   html.lang-switching body { opacity: 1; filter: none; }
 }
 
+/* ── Branded route loader (app/loading.tsx): a browser window assembling a
+   huevsite bento grid block by block. ───────────────────────────────────── */
+@keyframes loaderCaret { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes loaderTile {
+  0% { opacity: 0.15; transform: translateY(5px) scale(0.96); }
+  45%, 100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.loader-caret { animation: loaderCaret 1.1s steps(1) infinite; }
+.loader-tile { animation: loaderTile 1.7s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .loader-caret, .loader-tile { animation: none; opacity: 1; }
+}
+
 @layer base {
   * {
     border-color: var(--border);

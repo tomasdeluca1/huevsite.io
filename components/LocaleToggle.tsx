@@ -2,6 +2,7 @@
 
 import { useLocale } from 'next-intl';
 import { useEffect, useTransition } from 'react';
+import { Globe } from 'lucide-react';
 import { setLocale } from '@/lib/locale-actions';
 import type { Locale } from '@/lib/locale';
 
@@ -10,20 +11,17 @@ import type { Locale } from '@/lib/locale';
 const SWITCHABLE: Locale[] = ['es', 'en'];
 
 /**
- * ES | EN language switch. Clicking writes the NEXT_LOCALE cookie via the
- * setLocale server action, which revalidates the root layout so the whole app
- * re-renders in the chosen language. The URL never changes.
- *
- * Animation: a sliding accent pill follows the active locale, and while the
- * server re-renders (the `pending` window) we add `.lang-switching` to <html>
- * so globals.css softly dims/blurs the page — the text swap feels like a smooth
- * refresh rather than a hard content jump.
+ * Compact ES · EN language switch (globe + two letters, active in accent).
+ * Clicking writes the NEXT_LOCALE cookie via the setLocale server action, which
+ * revalidates the root layout so the whole app re-renders in the chosen
+ * language. While the server re-renders (the `pending` window) we add
+ * `.lang-switching` to <html> so globals.css softly fades the page — the swap
+ * feels like a smooth refresh. The URL never changes.
  */
 export default function LocaleToggle({ className = '' }: { className?: string }) {
   const active = useLocale() as Locale;
   const [pending, startTransition] = useTransition();
 
-  // Drive the global page fade from the transition's pending state.
   useEffect(() => {
     const root = document.documentElement;
     root.classList.toggle('lang-switching', pending);
@@ -41,30 +39,29 @@ export default function LocaleToggle({ className = '' }: { className?: string })
     <div
       role="group"
       aria-label="Language"
-      className={`relative inline-grid grid-cols-2 items-center rounded-full border border-white/10 bg-white/5 p-0.5 text-[11px] font-mono leading-none ${
-        pending ? 'opacity-70' : ''
-      } ${className}`}
+      className={`inline-flex items-center gap-1.5 select-none ${pending ? 'opacity-60' : ''} ${className}`}
     >
-      {/* Sliding pill behind the active option */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-y-0.5 left-0.5 w-[calc(50%-2px)] rounded-full bg-[var(--accent)] shadow-[0_0_12px_var(--accent-dim)] transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
-        style={{ transform: active === 'en' ? 'translateX(100%)' : 'translateX(0)' }}
-      />
-      {SWITCHABLE.map((l) => (
-        <button
-          key={l}
-          type="button"
-          onClick={() => choose(l)}
-          disabled={pending}
-          aria-pressed={active === l}
-          className={`relative z-10 rounded-full px-2.5 py-1 text-center uppercase tracking-wide transition-colors duration-200 ${
-            active === l ? 'font-bold text-black' : 'text-current/60 hover:text-current'
-          }`}
-        >
-          {l}
-        </button>
-      ))}
+      <Globe size={13} className="text-[var(--text-muted)] shrink-0" aria-hidden />
+      <div className="inline-flex items-center gap-1 text-[11px] font-mono font-semibold leading-none">
+        {SWITCHABLE.map((l, i) => (
+          <span key={l} className="inline-flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => choose(l)}
+              disabled={pending}
+              aria-pressed={active === l}
+              className={`uppercase tracking-wide transition-colors duration-200 ${
+                active === l
+                  ? 'text-[var(--accent)]'
+                  : 'text-[var(--text-muted)] hover:text-white'
+              }`}
+            >
+              {l}
+            </button>
+            {i === 0 && <span className="text-white/20" aria-hidden>/</span>}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }

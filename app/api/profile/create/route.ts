@@ -7,6 +7,7 @@ import { type LinktreeImportData } from '@/lib/linktree-import'
 import { scoreService } from '@/lib/score-service'
 import { isValidAccentColor } from '@/lib/profile-types'
 import { isReservedUsername } from '@/lib/reserved-usernames'
+import { isValidCountry } from '@/lib/countries'
 
 export const dynamic = 'force-dynamic'
 
@@ -51,6 +52,7 @@ interface CreateProfileRequest {
   referredBy?: string // Referral code
   githubData?: any
   linktreeData?: LinktreeImportData | null
+  country?: string // ISO-3166-1 alpha-2
 }
 
 export async function POST(request: NextRequest) {
@@ -169,6 +171,20 @@ export async function POST(request: NextRequest) {
         { error: 'Error al crear perfil' },
         { status: 500 }
       )
+    }
+
+    // Best-effort country write (separate from the insert so an unmigrated
+    // `country` column never blocks signup). Ignored if invalid or absent.
+    if (body.country && isValidCountry(body.country)) {
+      const { error: countryErr } = await adminSupabase
+        .from('profiles')
+        .update({ country: body.country.toUpperCase() })
+        .eq('id', user.id)
+      if (countryErr) {
+        console.warn('country set skipped on create (column may not exist yet):', countryErr.message)
+      } else if (profile) {
+        ;(profile as any).country = body.country.toUpperCase()
+      }
     }
 
     const generatedBlocks = buildOnboardingBlocks({

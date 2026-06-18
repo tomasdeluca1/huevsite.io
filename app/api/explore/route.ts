@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { sanitizeOrFilterValue } from "@/lib/postgrest-filter";
+import { CONTINENTS, countriesInContinent, isValidCountry } from "@/lib/countries";
 
 export const dynamic = "force-dynamic";
 
@@ -74,6 +75,20 @@ export async function GET(request: NextRequest) {
       if (fuzzyQ) {
         query = query.or(`username.ilike.%${fuzzyQ}%,name.ilike.%${fuzzyQ}%,tagline.ilike.%${fuzzyQ}%`);
       }
+    }
+
+    // Country / continent filter. A specific country wins over a continent.
+    const countryParam = (searchParams.get("country") || "").toUpperCase();
+    const continentParam = searchParams.get("continent") || "";
+    let filterCountryCodes: string[] = [];
+    if (isValidCountry(countryParam)) {
+      filterCountryCodes = [countryParam];
+    } else if ((CONTINENTS as readonly string[]).includes(continentParam)) {
+      filterCountryCodes = countriesInContinent(continentParam);
+    }
+    const countryFilterActive = filterCountryCodes.length > 0;
+    if (countryFilterActive) {
+      query = query.in("country", filterCountryCodes);
     }
 
     // We might need the user object for certain filters
@@ -158,6 +173,15 @@ export async function GET(request: NextRequest) {
     const { data, error, count } = await query;
 
     if (error) {
+      // Resilient to the `country` column/view not existing yet (i.e. the
+      // migration hasn't been applied): degrade to "no results for this filter"
+      // instead of a 500, so Explore keeps working before the migration lands.
+      if (countryFilterActive && (error.code === "42703" || /country/i.test(error.message || ""))) {
+        return NextResponse.json(
+          { profiles: [], count: 0, hasMore: false, countryUnavailable: true },
+          { status: 200 }
+        );
+      }
       console.error("Explore API DB error:", error);
       return NextResponse.json({ error: "DB Error" }, { status: 500 });
     }

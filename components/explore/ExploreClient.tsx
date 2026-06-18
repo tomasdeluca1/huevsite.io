@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
-import { ArrowRight, Search, Loader2, Sparkles, X, Trophy, ChevronDown } from "lucide-react";
+import { ArrowRight, Search, Loader2, Sparkles, X, Trophy, ChevronDown, Globe } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
+import { CONTINENTS, CONTINENT_LABELS, countriesByContinent, countryName, flagEmoji, type Continent } from "@/lib/countries";
 
 const VALID_EXPLORE_SORTS = new Set([
   "score",
@@ -30,10 +31,12 @@ interface ExploreProfile {
   endorsements_count?: number;
   builder_score?: number;
   is_winner?: boolean;
+  country?: string | null;
 }
 
 export function ExploreClient({ initialTotal }: { initialTotal: number }) {
   const t = useTranslations("explore");
+  const locale = useLocale();
   const [profiles, setProfiles] = useState<ExploreProfile[]>([]);
   const [page, setPage] = useState(0);
 
@@ -79,6 +82,23 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
   const [isSortOpen, setIsSortOpen] = useState(false);
   const sortRef = useRef<HTMLDivElement>(null);
 
+  // Country / continent filter ("place"). country wins over continent.
+  const [continentFilter, setContinentFilter] = useState(() =>
+    typeof window !== "undefined" ? localStorage.getItem("huevsite_explore_continent") || "" : ""
+  );
+  const [countryFilter, setCountryFilter] = useState(() =>
+    typeof window !== "undefined" ? localStorage.getItem("huevsite_explore_country") || "" : ""
+  );
+  const [isPlaceOpen, setIsPlaceOpen] = useState(false);
+  const placeRef = useRef<HTMLDivElement>(null);
+  const grouped = countriesByContinent(locale);
+
+  const placeLabel = countryFilter
+    ? `${flagEmoji(countryFilter)} ${countryName(countryFilter, locale)}`
+    : continentFilter
+      ? CONTINENT_LABELS[continentFilter as Continent]?.[locale === "en" ? "en" : "es"]
+      : t("allPlaces");
+
   const SORT_OPTIONS = [
     { value: "score", label: t("sortScore") },
     { value: "created_at", label: t("sortNew") },
@@ -92,6 +112,9 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
     const handleClickOutside = (e: MouseEvent) => {
       if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
         setIsSortOpen(false);
+      }
+      if (placeRef.current && !placeRef.current.contains(e.target as Node)) {
+        setIsPlaceOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -114,6 +137,8 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
     localStorage.setItem("huevsite_explore_search", search);
     localStorage.setItem("huevsite_explore_sort", sort);
     localStorage.setItem("huevsite_explore_category", category);
+    localStorage.setItem("huevsite_explore_continent", continentFilter);
+    localStorage.setItem("huevsite_explore_country", countryFilter);
     localStorage.setItem("huevsite_explore_last_activity", Date.now().toString());
 
     const timer = setTimeout(() => {
@@ -121,7 +146,7 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
       loadProfiles(0, true);
     }, 300);
     return () => clearTimeout(timer);
-  }, [search, sort, category]);
+  }, [search, sort, category, continentFilter, countryFilter]);
 
   // Store profile list for navigation context
   useEffect(() => {
@@ -141,7 +166,7 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
     try {
       const currentSort = category === 'created_at' ? 'created_at' : (category === 'score' ? 'score' : sort);
       const res = await fetch(
-        `/api/explore?page=${pageToLoad}&limit=24&sort=${currentSort}&filter=${category}&q=${encodeURIComponent(search)}`
+        `/api/explore?page=${pageToLoad}&limit=24&sort=${currentSort}&filter=${category}&q=${encodeURIComponent(search)}&country=${countryFilter}&continent=${continentFilter}`
       );
       if (res.ok) {
         const data = await res.json();
@@ -213,8 +238,55 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
           </button>
         </div>
 
-        {/* Sort Control */}
-        <div className="flex items-center gap-4 w-full lg:w-auto shrink-0 bg-[var(--surface2)]/40 p-1.5 pl-6 rounded-[32px] border border-[var(--border)] backdrop-blur-sm">
+        {/* Sort + Place Controls */}
+        <div className="flex items-center gap-3 w-full lg:w-auto shrink-0 bg-[var(--surface2)]/40 p-1.5 pl-4 rounded-[32px] border border-[var(--border)] backdrop-blur-sm">
+          {/* Place (country / continent) filter */}
+          <div className="flex items-center gap-2" ref={placeRef}>
+            <Globe size={14} className="text-[var(--text-muted)] hidden sm:block opacity-50 shrink-0" />
+            <div className="relative">
+              <button
+                onClick={() => setIsPlaceOpen((o) => !o)}
+                className="flex items-center gap-2 bg-white/5 text-[11px] font-bold uppercase tracking-widest border border-transparent hover:border-white/10 rounded-2xl px-5 py-3 text-white transition-all cursor-pointer whitespace-nowrap max-w-[170px]"
+                suppressHydrationWarning
+              >
+                <span className="truncate">{placeLabel}</span>
+                <ChevronDown size={14} className={`transition-transform shrink-0 ${isPlaceOpen ? "rotate-180" : ""}`} />
+              </button>
+              {isPlaceOpen && (
+                <div className="absolute right-0 top-full mt-2 z-[9999] bg-[var(--surface2)] border border-[var(--border)] rounded-2xl overflow-hidden shadow-2xl w-[260px] max-h-[60vh] overflow-y-auto custom-scrollbar">
+                  <button
+                    onClick={() => { setContinentFilter(""); setCountryFilter(""); setIsPlaceOpen(false); }}
+                    className={`w-full text-left px-5 py-3 text-[11px] font-bold uppercase tracking-widest transition-colors hover:bg-white/10 ${!continentFilter && !countryFilter ? "text-[var(--accent)]" : "text-white"}`}
+                  >
+                    🌎 {t("allPlaces")}
+                  </button>
+                  {CONTINENTS.map((cont) => (
+                    <div key={cont} className="border-t border-white/5">
+                      <button
+                        onClick={() => { setContinentFilter(cont); setCountryFilter(""); setIsPlaceOpen(false); }}
+                        className={`w-full text-left px-5 py-2.5 text-[11px] font-black uppercase tracking-widest transition-colors hover:bg-white/10 ${continentFilter === cont && !countryFilter ? "text-[var(--accent)]" : "text-white/90"}`}
+                      >
+                        {CONTINENT_LABELS[cont][locale === "en" ? "en" : "es"]}
+                      </button>
+                      {grouped[cont].map((c) => (
+                        <button
+                          key={c.code}
+                          onClick={() => { setCountryFilter(c.code); setContinentFilter(""); setIsPlaceOpen(false); }}
+                          className={`w-full text-left pl-8 pr-5 py-2 text-[12px] font-medium transition-colors hover:bg-white/10 flex items-center gap-2 ${countryFilter === c.code ? "text-[var(--accent)]" : "text-[var(--text-dim)]"}`}
+                        >
+                          <span>{flagEmoji(c.code)}</span>
+                          <span className="truncate">{c.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="w-px h-6 bg-white/10 shrink-0" aria-hidden />
+
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-black font-mono text-[var(--text-muted)] uppercase tracking-[0.2em] hidden sm:block opacity-50">{t("sortBy")}</span>
             <div className="relative" ref={sortRef}>
@@ -415,6 +487,9 @@ function ProfileCard({ profile, index, isMobile }: { profile: ExploreProfile; in
                     <h2 className="text-xl font-bold tracking-tight text-white group-hover:text-[var(--accent)] transition-colors truncate">
                       {profile.name || profile.username}
                     </h2>
+                    {profile.country && (
+                      <span className="text-base leading-none shrink-0" title={profile.country}>{flagEmoji(profile.country)}</span>
+                    )}
                     {showWinnerBadge && (
                       <motion.div
                         animate={{ rotate: [0, 10, -10, 0] }}

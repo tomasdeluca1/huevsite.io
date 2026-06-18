@@ -41,6 +41,8 @@ export interface OnboardingState {
   // Step 4
   username: string;
   usernameAvailable: boolean | null;
+  // Optional: ISO-3166-1 alpha-2 country (powers the Explore filter)
+  country?: string;
 }
 
 export interface OnboardingCompletionData {

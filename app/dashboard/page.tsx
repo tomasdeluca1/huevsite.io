@@ -26,6 +26,7 @@ import { useTranslations } from "next-intl";
 
 import { MOCK_PROFILE } from "@/lib/mock-profile";
 import { BlockData, BlockType, ProfileData, PRESET_COLORS, getContrastColor, isDarkColor, MAX_FREE_BLOCKS } from "@/lib/profile-types";
+import CountrySelect from "@/components/CountrySelect";
 import { HeroBlock } from "@/components/blocks/HeroBlock";
 import { BuildingBlock } from "@/components/blocks/BuildingBlock";
 import { GitHubBlock } from "@/components/blocks/GitHubBlock";
@@ -97,7 +98,8 @@ export default function DashboardPage() {
     email: '',
     tagline: '',
     avatarUrl: '',
-    githubHandle: ''
+    githubHandle: '',
+    country: ''
   });
   const [copied, setCopied] = useState(false);
   const [referralCopied, setReferralCopied] = useState(false);
@@ -306,6 +308,7 @@ export default function DashboardPage() {
         tagline: data.profile.tagline || "",
         avatarUrl: data.profile.image || "",
         githubHandle: data.profile.github_handle || "",
+        country: data.profile.country || "",
         builderScore: data.profile.builder_score || 0,
         aiCredits: data.profile.ai_credits || 0,
         isOnboardingTestUser: data.profile.is_onboarding_test_user || false,
@@ -357,7 +360,8 @@ export default function DashboardPage() {
         email: transformedProfile.email || '',
         tagline: transformedProfile.tagline || '',
         avatarUrl: transformedProfile.avatarUrl || '',
-        githubHandle: transformedProfile.githubHandle || ''
+        githubHandle: transformedProfile.githubHandle || '',
+        country: transformedProfile.country || ''
       });
       setDomain(transformedProfile.customDomain || "");
 
@@ -1251,7 +1255,8 @@ export default function DashboardPage() {
             email: profile.email || '',
             tagline: site.description || '',
             avatarUrl: site.avatarUrl || '',
-            githubHandle: ''
+            githubHandle: '',
+            country: ''
           });
           return;
         }
@@ -1263,7 +1268,8 @@ export default function DashboardPage() {
         email: profile.email || '',
         tagline: profile.tagline || '',
         avatarUrl: profile.avatarUrl || '',
-        githubHandle: profile.githubHandle || ''
+        githubHandle: profile.githubHandle || '',
+        country: profile.country || ''
       });
     }
   }, [isProfileModalOpen, profile, selectedSubSiteId]);
@@ -1969,7 +1975,7 @@ export default function DashboardPage() {
         onComplete={handleOnboardingComplete}
       />
       <AnimatePresence>{isDeletingId && <div className="fixed inset-0 z-[500] flex items-center justify-center p-4"><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setIsDeletingId(null)} /><motion.div initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }} className="relative w-full max-w-sm bg-[var(--surface)] border border-red-500/30 rounded-[2rem] shadow-2xl p-8 z-[510] text-center"><div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-6 text-red-500"><Trash2 size={32} /></div><h3 className="text-2xl font-black mb-3 text-white">{t("page.deleteBlockConfirmTitle")}</h3><p className="text-[var(--text-dim)] mb-8 text-sm leading-relaxed">{t("page.actionCannotBeUndone")}</p><div className="flex gap-3"><button onClick={() => setIsDeletingId(null)} className="flex-1 py-3.5 rounded-2xl bg-[var(--surface2)] font-bold text-sm text-white">{t("page.cancel")}</button><button onClick={() => { removeBlock(isDeletingId); setIsDeletingId(null); }} className="flex-1 py-3.5 rounded-2xl bg-red-500 font-bold text-sm text-white transition-all">{t("page.delete")}</button></div></motion.div></div>}</AnimatePresence>
-      <AnimatePresence>{isProfileModalOpen && <div className="fixed inset-0 z-[500] flex items-center justify-center p-4"><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsProfileModalOpen(false)} className="absolute inset-0 bg-black/80 backdrop-blur-md" /><motion.div initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }} className="relative w-full max-w-md bg-[var(--surface)] border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden z-[510] p-8 pt-10"><div className="text-center mb-8"><div className="section-label mb-2 mx-auto w-fit">// {t("page.identity")} {selectedSubSiteId ? t("page.subSiteParenthetical") : ''}</div><h3 className="text-2xl font-black tracking-tighter">{selectedSubSiteId ? t("page.editSubSite") : t("page.editProfile")}</h3></div><div className="space-y-6"><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1">{selectedSubSiteId ? t("page.subSiteUrl") : t("page.profileUrl")}</label><div className="flex items-center gap-2 p-4 rounded-2xl bg-black/40 border border-white/10 focus-within:border-[var(--accent)] transition-all font-mono"><span className="text-xs text-white/20">huevsite.io/{selectedSubSiteId ? `${profile.username}/` : ''}</span><input value={tempProfileData.username} onChange={(e) => setTempProfileData(p => ({ ...p, username: e.target.value.toLowerCase() }))} className="bg-transparent border-none outline-none text-sm font-black text-[var(--accent)] flex-1 p-0" /></div></div><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">{t("page.photoUrl")}</label><input value={tempProfileData.avatarUrl} onChange={(e) => setTempProfileData(p => ({ ...p, avatarUrl: e.target.value }))} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-white/60 focus:border-[var(--accent)] transition-all font-mono" /></div><div className="space-y-4 pt-2"><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">{t("page.name")}</label><input value={tempProfileData.display_name} onChange={(e) => setTempProfileData(p => ({ ...p, display_name: e.target.value }))} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm font-black text-white focus:border-[var(--accent)] transition-all" /></div><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">{selectedSubSiteId ? t("page.description") : t("page.tagline")}</label><input value={tempProfileData.tagline} onChange={(e) => setTempProfileData(p => ({ ...p, tagline: e.target.value }))} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-white/60 focus:border-[var(--accent)] transition-all" /></div>{!selectedSubSiteId && <div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">{t("page.emailLabel")}</label><input type="email" value={tempProfileData.email} onChange={(e) => setTempProfileData(p => ({ ...p, email: e.target.value }))} placeholder={t("page.emailPlaceholder")} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-white/60 focus:border-[var(--accent)] transition-all font-mono" /><p className="text-[10px] text-white/25 px-1">{t("page.emailHelper")}</p></div>}</div></div><div className="flex gap-4 mt-10"><button onClick={() => setIsProfileModalOpen(false)} className="flex-1 py-4 text-sm font-bold text-white/30 hover:text-white transition-colors">{t("page.cancel")}</button><button onClick={async () => {
+      <AnimatePresence>{isProfileModalOpen && <div className="fixed inset-0 z-[500] flex items-center justify-center p-4"><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsProfileModalOpen(false)} className="absolute inset-0 bg-black/80 backdrop-blur-md" /><motion.div initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }} className="relative w-full max-w-md bg-[var(--surface)] border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden z-[510] p-8 pt-10"><div className="text-center mb-8"><div className="section-label mb-2 mx-auto w-fit">// {t("page.identity")} {selectedSubSiteId ? t("page.subSiteParenthetical") : ''}</div><h3 className="text-2xl font-black tracking-tighter">{selectedSubSiteId ? t("page.editSubSite") : t("page.editProfile")}</h3></div><div className="space-y-6"><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1">{selectedSubSiteId ? t("page.subSiteUrl") : t("page.profileUrl")}</label><div className="flex items-center gap-2 p-4 rounded-2xl bg-black/40 border border-white/10 focus-within:border-[var(--accent)] transition-all font-mono"><span className="text-xs text-white/20">huevsite.io/{selectedSubSiteId ? `${profile.username}/` : ''}</span><input value={tempProfileData.username} onChange={(e) => setTempProfileData(p => ({ ...p, username: e.target.value.toLowerCase() }))} className="bg-transparent border-none outline-none text-sm font-black text-[var(--accent)] flex-1 p-0" /></div></div><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">{t("page.photoUrl")}</label><input value={tempProfileData.avatarUrl} onChange={(e) => setTempProfileData(p => ({ ...p, avatarUrl: e.target.value }))} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-white/60 focus:border-[var(--accent)] transition-all font-mono" /></div><div className="space-y-4 pt-2"><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">{t("page.name")}</label><input value={tempProfileData.display_name} onChange={(e) => setTempProfileData(p => ({ ...p, display_name: e.target.value }))} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm font-black text-white focus:border-[var(--accent)] transition-all" /></div><div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">{selectedSubSiteId ? t("page.description") : t("page.tagline")}</label><input value={tempProfileData.tagline} onChange={(e) => setTempProfileData(p => ({ ...p, tagline: e.target.value }))} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-white/60 focus:border-[var(--accent)] transition-all" /></div>{!selectedSubSiteId && <div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">{t("page.countryLabel")}</label><CountrySelect value={tempProfileData.country} onChange={(c) => setTempProfileData(p => ({ ...p, country: c }))} placeholder={t("page.countryPlaceholder")} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-white/60 focus:border-[var(--accent)] transition-all appearance-none cursor-pointer" /></div>}{!selectedSubSiteId && <div className="space-y-2"><label className="text-[10px] uppercase font-mono tracking-widest text-white/40 px-1 font-bold">{t("page.emailLabel")}</label><input type="email" value={tempProfileData.email} onChange={(e) => setTempProfileData(p => ({ ...p, email: e.target.value }))} placeholder={t("page.emailPlaceholder")} className="w-full p-4 rounded-2xl bg-black/40 border border-white/10 outline-none text-sm text-white/60 focus:border-[var(--accent)] transition-all font-mono" /><p className="text-[10px] text-white/25 px-1">{t("page.emailHelper")}</p></div>}</div></div><div className="flex gap-4 mt-10"><button onClick={() => setIsProfileModalOpen(false)} className="flex-1 py-4 text-sm font-bold text-white/30 hover:text-white transition-colors">{t("page.cancel")}</button><button onClick={async () => {
         if (selectedSubSiteId) {
           setProfile(prev => prev ? {
             ...prev,
@@ -2007,7 +2013,7 @@ export default function DashboardPage() {
           try {
             // email: "" fails z.string().email() and would reject the WHOLE patch —
             // only send it when the user actually typed one.
-            const resp = await fetch('/api/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: tempProfileData.username, name: tempProfileData.display_name, tagline: tempProfileData.tagline, image: tempProfileData.avatarUrl, ...(tempProfileData.email ? { email: tempProfileData.email } : {}) }) });
+            const resp = await fetch('/api/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: tempProfileData.username, name: tempProfileData.display_name, tagline: tempProfileData.tagline, image: tempProfileData.avatarUrl, country: tempProfileData.country, ...(tempProfileData.email ? { email: tempProfileData.email } : {}) }) });
             if (!resp.ok) {
               const data = await resp.json().catch(() => ({}));
               alert(data.error || t("page.errorSaveProfile"));

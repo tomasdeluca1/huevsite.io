@@ -668,7 +668,9 @@
       "emailHelper": "This is where you'll get the newsletter and huevsite communications.",
       "errorSaveProfile": "Couldn't save the profile. Check your details and try again.",
       "errorNetworkSaveProfile": "Network error saving the profile.",
-      "shareMessage": "I built my huevsite — my builder portfolio 🚀"
+      "shareMessage": "I built my huevsite — my builder portfolio 🚀",
+      "countryLabel": "Country",
+      "countryPlaceholder": "Select your country"
     },
     "insights": {
       "osTooltipMacOs": "Audience with a work environment typical of builders, founders and creative profiles.",
@@ -1107,7 +1109,8 @@
     "statScore": "Score",
     "navPrev": "Previous",
     "navNext": "Next",
-    "navExploreLabel": "Explore"
+    "navExploreLabel": "Explore",
+    "allPlaces": "Everywhere"
   },
   "feed": {
     "now": "now",
@@ -1611,7 +1614,9 @@
     "doneGoToDashboard": "go to my dashboard →",
     "doneFooter": "huevsite.me shut down • we didn't",
     "doneTweetText": "I built my huevsite — my builder portfolio 🚀",
-    "usernameReserved": "That username is reserved by the system. Try another one."
+    "usernameReserved": "That username is reserved by the system. Try another one.",
+    "countryLabel": "Where are you from? (optional)",
+    "countryPlaceholder": "Select your country"
   },
   "checkout": {
     "metaTitle": "You're PRO now! | huevsite.io",

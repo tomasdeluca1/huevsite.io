@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
+import { isValidCountry } from '@/lib/countries'
 import { scoreService } from '@/lib/score-service'
 import { vercelService } from '@/lib/vercel-service'
 import { hasProAccess } from '@/lib/pro-access'
@@ -316,6 +317,23 @@ export async function PATCH(request: NextRequest) {
         { error: 'Error al actualizar perfil' },
         { status: 500 }
       )
+    }
+
+    // Country (ISO-3166-1 alpha-2) is updated as a best-effort, separate write so
+    // the column being absent (migration not applied yet) never fails the main
+    // profile save. Empty string clears it; invalid codes are ignored.
+    if (body.country !== undefined) {
+      const raw = String(body.country || '').toUpperCase()
+      const val = raw === '' ? null : (isValidCountry(raw) ? raw : null)
+      const { error: countryErr } = await supabase
+        .from('profiles')
+        .update({ country: val })
+        .eq('id', user.id)
+      if (countryErr) {
+        console.warn('country update skipped (column may not exist yet):', countryErr.message)
+      } else if (profile) {
+        ;(profile as any).country = val
+      }
     }
 
     if (updateData.image !== undefined) {

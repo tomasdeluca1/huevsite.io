@@ -668,7 +668,9 @@
       "emailHelper": "Acá te llegará el newsletter y las comunicaciones de huevsite.",
       "errorSaveProfile": "No se pudo guardar el perfil. Revisá los datos y probá de nuevo.",
       "errorNetworkSaveProfile": "Error de red al guardar el perfil.",
-      "shareMessage": "Armé mi huevsite — mi portfolio de builder 🚀"
+      "shareMessage": "Armé mi huevsite — mi portfolio de builder 🚀",
+      "countryLabel": "País",
+      "countryPlaceholder": "Elegí tu país"
     },
     "insights": {
       "osTooltipMacOs": "Audiencia con entorno de trabajo típico de builders, founders y perfiles creativos.",
@@ -1107,7 +1109,8 @@
     "statScore": "Score",
     "navPrev": "Anterior",
     "navNext": "Siguiente",
-    "navExploreLabel": "Explorar"
+    "navExploreLabel": "Explorar",
+    "allPlaces": "Todo el mundo"
   },
   "feed": {
     "now": "ahora",
@@ -1611,7 +1614,9 @@
     "doneGoToDashboard": "ir a mi dashboard →",
     "doneFooter": "huevsite.me cerró • nosotros no",
     "doneTweetText": "Armé mi huevsite — mi portfolio de builder 🚀",
-    "usernameReserved": "Ese username está reservado por el sistema. Probá otro."
+    "usernameReserved": "Ese username está reservado por el sistema. Probá otro.",
+    "countryLabel": "¿De dónde sos? (opcional)",
+    "countryPlaceholder": "Elegí tu país"
   },
   "checkout": {
     "metaTitle": "¡Ya sos PRO! | huevsite.io",

@@ -3,14 +3,16 @@
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { type Role, type OnboardingState } from "@/lib/onboarding-types";
+import CountrySelect from "@/components/CountrySelect";
 
 interface StepRoleProps {
   state: OnboardingState;
   onChange: (roles: Role[]) => void;
+  onCountryChange: (code: string) => void;
   onNext: () => void;
 }
 
-export function StepRole({ state, onChange, onNext }: StepRoleProps) {
+export function StepRole({ state, onChange, onCountryChange, onNext }: StepRoleProps) {
   const t = useTranslations("onboarding");
 
   const ROLES: {
@@ -78,6 +80,16 @@ export function StepRole({ state, onChange, onNext }: StepRoleProps) {
             </button>
           );
         })}
+      </div>
+
+      <div className="mt-6 space-y-2">
+        <div className="section-label !text-[9px] px-1">{t("countryLabel")}</div>
+        <CountrySelect
+          value={state.country}
+          onChange={onCountryChange}
+          placeholder={t("countryPlaceholder")}
+          className="w-full p-4 rounded-2xl bg-black/30 border border-white/10 outline-none text-sm text-white/80 focus:border-[var(--accent)] transition-all appearance-none cursor-pointer"
+        />
       </div>
 
       <button

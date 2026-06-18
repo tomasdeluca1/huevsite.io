@@ -119,6 +119,7 @@ export function OnboardingExperience({
             githubData: completion.githubData,
             linktreeData: completion.linktreeData,
             referredBy: referredBy || undefined,
+            country: state.country || undefined,
           }),
         });
 
@@ -173,6 +174,7 @@ export function OnboardingExperience({
         <StepRole
           state={state}
           onChange={(roles: Role[]) => update({ roles })}
+          onCountryChange={(country: string) => update({ country })}
           onNext={next}
         />
       )}

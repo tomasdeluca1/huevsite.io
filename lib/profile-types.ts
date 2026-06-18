@@ -314,6 +314,7 @@ export interface ProfileData {
   tagline?: string;
   avatarUrl?: string;
   githubHandle?: string;
+  country?: string; // ISO-3166-1 alpha-2 (for the Explore filter)
   accentColor: string;
   roles?: Role[];
   layout?: string;

@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages } from "next-intl/server";
+import { getLocale } from "@/lib/locale";
 import { SITE_URL } from "@/lib/site-url";
 import "./globals.css";
 
@@ -42,15 +45,19 @@ export const metadata: Metadata = {
 };
 
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const locale = await getLocale();
+  const messages = await getMessages();
   return (
-    <html lang="es" className={`${bricolage.variable} ${jetbrains.variable}`}>
+    <html lang={locale} className={`${bricolage.variable} ${jetbrains.variable}`}>
       <body className="antialiased selection:bg-[var(--accent)] selection:text-black font-sans">
-        {children}
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          {children}
+        </NextIntlClientProvider>
       </body>
       <Script
         defer

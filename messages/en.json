@@ -416,7 +416,7 @@
         "statusLabel": "// status",
         "statusPlaceholder": "available for projects",
         "locationLabel": "// location",
-        "locationPlaceholder": "Buenos Aires 🇦🇷"
+        "locationPlaceholder": "Buenos Aires"
       },
       "project": {
         "previewLabel": "Project Preview",
@@ -973,7 +973,7 @@
       "cardEarnDesc": "When 3 go PRO, you unlock your reward."
     },
     "shareModal": {
-      "tweetText": "I built my huevsite at huevsite.io — the portfolio for builders 🇦🇷\n\n👉 huevsite.io/{username}",
+      "tweetText": "I built my huevsite at huevsite.io — the portfolio for builders\n\n👉 huevsite.io/{username}",
       "invalidLinkAlert": "Hmm, that link doesn't look like a Twitter/X one. Make sure you copy the link to your tweet.",
       "verifyErrorAlert": "Error verifying the tweet.",
       "connectionErrorAlert": "Connection error.",
@@ -983,7 +983,7 @@
       "promptIntroHighlight": "3 more free blocks",
       "promptIntroSuffix": "?",
       "promptIntroLine2": "Share your huevsite on Twitter and we'll unlock them for you.",
-      "previewQuote": "\"I built my huevsite — the portfolio for builders 🇦🇷\"",
+      "previewQuote": "\"I built my huevsite — the portfolio for builders\"",
       "preparingTweet": "Preparing tweet...",
       "tweetAndRequest": "Tweet and request +3 blocks →",
       "goToPro": "Go to Pro — $9/month",
@@ -992,7 +992,7 @@
       "verifyAndUnlock": "Verify tweet and unlock ✅",
       "tweetAgain": "Tweet again",
       "unlockedSectionLabel": "// blocks unlocked",
-      "unlockedTitle": "Thanks for sharing! 🇦🇷",
+      "unlockedTitle": "Thanks for sharing!",
       "unlockedBody": "We added 3 extra blocks for you. Now you can keep building your portfolio.",
       "keepBuilding": "Keep building →"
     },
@@ -1029,13 +1029,13 @@
     "mode": "RECRUITER MODE",
     "proAccess": "PRO Access",
     "titleLine1": "Find the best",
-    "titleLine2": "talent in LATAM.",
+    "titleLine2": "builder talent.",
     "subtitle": "Dynamically ranked by <strong>Builder Score</strong>, surfacing who collaborates, learns, and builds the most.",
     "filtersTitle": "// Filters",
     "techStackLabel": "Tech Stack",
     "techStackPlaceholder": "e.g. React, Python...",
     "locationLabel": "Location",
-    "locationPlaceholder": "e.g. Argentina, Remote...",
+    "locationPlaceholder": "e.g. City, Remote...",
     "onlyOpenToWork": "Open to work only",
     "scoreHint": "ℹ️ The Builder Score is recalculated automatically based on projects, community validation, and open source activity.",
     "builderCount": "{count, plural, one {# builder} other {# builders}}",
@@ -1049,7 +1049,7 @@
   },
   "leaderboard": {
     "metaTitle": "Builder Leaderboard — huevsite.io",
-    "metaDescription": "The leaderboard of the most active builders in LATAM. Raise your builder score, gain followers, and climb the ranks.",
+    "metaDescription": "The leaderboard of the most active builders. Raise your builder score, gain followers, and climb the ranks.",
     "metaOgDescription": "See who's leading the builder community and compete for the top spot.",
     "navExplore": "Explore",
     "myHuevsite": "My huevsite",
@@ -1082,7 +1082,7 @@
     "titlePrefix": "Get inspired by",
     "titleStrikethrough": "portfolios",
     "titleSuffix": "huevsites.",
-    "subtitle": "Check out the profiles of the coolest builders in LATAM. Find inspiration and build yours in 3 minutes.",
+    "subtitle": "Check out the profiles of the coolest builders. Find inspiration and build yours in 3 minutes.",
     "footerTagline": "Show what you build.",
     "sortScore": "Builder Score 🔥",
     "sortNew": "New builders ⚡",
@@ -1154,24 +1154,24 @@
     "loadingCommunity": "Loading community..."
   },
   "showcase": {
-    "buildYours": "Build yours 🇦🇷",
+    "buildYours": "Build yours",
     "sectionLabel": "// weekly showcase",
     "title": "The Builder of the Week.",
-    "subtitle": "The most nominated builder in Argentina and LATAM.",
+    "subtitle": "The most nominated builder of the week.",
     "edition": "Edition {week}",
     "nextWinnerIn": "Next winner in:",
     "errorLoading": "Error loading data.",
     "winnerLabel": "🏆 Winner — {week}",
     "viewHuevsite": "View their huevsite →",
     "noWinnerYet": "This week's winner hasn't been chosen yet.",
-    "nominateFavorite": "Nominate your favorite builder 🇦🇷",
+    "nominateFavorite": "Nominate your favorite builder",
     "nominationsOfWeek": "// nominations for week {week}",
     "nominationsCount": "{count, plural, one {# nomination} other {# nominations}}",
     "emptyNominations": "No nominees this week yet. Explore profiles and nominate builders who inspire you."
   },
   "landing": {
     "metaTitle": "huevsite.io | Build your reputation as a builder",
-    "metaDescription": "Projects, real metrics and endorsements from other builders. Get seen shipping, not talking. The builder network lives here.",
+    "metaDescription": "Projects, real metrics and endorsements from other builders. Let them see you shipping, not just talking. This is where the builder network lives.",
     "heroActiveBuilders": "+{count} active builders this week",
     "heroClaimEyebrow": "your corner of the internet",
     "heroClaimTitle": "Your <accent>name</accent>, your work, <br></br>your corner of <br></br>the internet.",
@@ -1227,7 +1227,7 @@
     "winnerTitleCommunity": "discover the community",
     "winnerDescSingle": "Meet {name}, the most-nominated builder of last week ({week}).",
     "winnerDescPlural": "{count} builders tied as the most-nominated of last week ({week}).",
-    "winnerDescCommunity": "Meet the creators from all over building incredible things right now.",
+    "winnerDescCommunity": "Meet creators from all over the world building incredible things right now.",
     "winnerGoToWinner": "Go to winner {index}",
     "winnerEcosystem": "Ecosystem",
     "winnerProjectSingle": "Project",
@@ -1294,7 +1294,7 @@
     "founderEyebrow": "Who's behind it",
     "founderVideoTitle": "The founder of huevsite",
     "founderRole": "Founder of huevsite",
-    "founderQuoteFallback": "“I'm Tomas. I built huevsite so builders' work <accent>gets seen, not just talked about</accent>. It's what I use myself every day.”",
+    "founderQuoteFallback": "“I’m Tomas. I built huevsite so builders’ work <accent>gets seen, not just talked about</accent>. It’s what I use every day.”",
     "founderTagline": "Product Engineer & v0 ambassador",
     "finalCtaSectionLabel": "// for real builders",
     "finalCtaTitleLine1": "Your work.",
@@ -1439,7 +1439,7 @@
     },
     "terms": {
       "metaTitle": "Terms of Service | huevsite.io",
-      "metaDescription": "Terms and conditions of use for huevsite.io — the platform for builders from Argentina and LATAM.",
+      "metaDescription": "Terms and conditions of use for huevsite.io — the platform for builders.",
       "title": "Terms of Service",
       "lastUpdated": "Last updated: April 2025",
       "section1Title": "1. Acceptance of the terms",
@@ -1509,7 +1509,7 @@
   },
   "login": {
     "metaTitle": "Login | huevsite.io",
-    "metaDescription": "Social network and portfolio for builders in Argentina and LATAM.",
+    "metaDescription": "Social network and portfolio for builders.",
     "ogTitle": "huevsite.io | Show what you build",
     "authGatewayLabel": "// auth gateway",
     "title": "Welcome, builder.",
@@ -1773,7 +1773,7 @@
   },
   "meta": {
     "rootTitle": "huevsite.io | Build your reputation as a builder",
-    "rootDescription": "Projects, real metrics and endorsements from other builders. Let them see you shipping, not just talking. The builder network lives here.",
+    "rootDescription": "Projects, real metrics and endorsements from other builders. Let them see you shipping, not just talking. This is where the builder network lives.",
     "loadingCaption": "building your huevsite…"
   },
   "shared": {
@@ -1805,7 +1805,7 @@
     "scoreInfo": {
       "subtitle": "// Gamification and community reputation",
       "calculating": "// Calculating breakdown...",
-      "description": "The <strong>Builder Score</strong> is a system that measures your impact on the LATAM tech scene. It rewards not just how complete your portfolio is, but your activity and how you help other builders grow.",
+      "description": "The <strong>Builder Score</strong> is a system that measures your impact on the tech scene. It rewards not just how complete your portfolio is, but your activity and how you help other builders grow.",
       "baseTitle": "Base Profile (Max 100)",
       "upTo100": "Up to 100 pts",
       "profilePhoto": "Profile photo",

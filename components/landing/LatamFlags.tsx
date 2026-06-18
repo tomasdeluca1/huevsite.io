@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Starts on Argentina, then auto-slides through LATAM flags.
-const FLAGS = ["🇦🇷", "🇧🇷", "🇲🇽", "🇨🇴", "🇨🇱", "🇵🇪", "🇺🇾", "🇪🇨", "🇧🇴", "🇵🇾", "🇻🇪", "🇨🇷", "🇬🇹", "🇩🇴", "🇵🇦", "🇸🇻", "🇭🇳", "🇵🇷"];
+// Auto-slides through a worldwide mix of flags — huevsite is a global builder
+// network (kept a few LATAM flags in the mix for the roots).
+const FLAGS = ["🌎", "🇺🇸", "🇬🇧", "🇪🇸", "🇧🇷", "🇮🇳", "🇩🇪", "🇫🇷", "🇲🇽", "🇯🇵", "🇦🇷", "🇨🇦", "🇳🇬", "🇦🇺", "🇰🇷", "🇮🇹", "🇳🇱", "🇨🇴", "🇵🇹", "🇸🇪"];
 
 export function LatamFlags({ intervalMs = 1400 }: { intervalMs?: number }) {
   const [i, setI] = useState(0);

@@ -57,7 +57,7 @@ const organizationSchema = {
   url: "https://huevsite.io",
   logo: "https://huevsite.io/icons/icon-512.png",
   description:
-    "Red social y plataforma de portfolios para builders, desarrolladores, diseñadores y founders de Argentina y Latinoamérica.",
+    "Red social y plataforma de portfolios para builders, desarrolladores, diseñadores y founders de todo el mundo.",
   sameAs: [
     "https://x.com/huevsite",
     "https://instagram.com/huevsite",
@@ -76,7 +76,7 @@ const websiteSchema = {
   name: "Huevsite.io",
   url: "https://huevsite.io",
   description:
-    "El portfolio que se arma solo y se ve como si lo hubiera hecho un diseñador caro. Red social y portfolio para builders de Argentina y LATAM.",
+    "El portfolio que se arma solo y se ve como si lo hubiera hecho un diseñador caro. Red social y portfolio para builders de todo el mundo.",
   inLanguage: "es",
   potentialAction: {
     "@type": "SearchAction",
@@ -97,7 +97,7 @@ const faqSchema = {
       name: "¿Qué es Huevsite.io?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Huevsite.io es una red social y plataforma de portfolios para builders, desarrolladores, diseñadores y founders de Argentina y Latinoamérica. Permite crear un portfolio profesional de forma automática integrando GitHub, proyectos activos, métricas reales y redes sociales en un solo lugar.",
+        text: "Huevsite.io es una red social y plataforma de portfolios para builders, desarrolladores, diseñadores y founders de todo el mundo. Permite crear un portfolio profesional de forma automática integrando GitHub, proyectos activos, métricas reales y redes sociales en un solo lugar.",
       },
     },
     {
@@ -105,7 +105,7 @@ const faqSchema = {
       name: "¿Para quién es Huevsite.io?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Huevsite está diseñado para builders de LATAM: desarrolladores indie, founders de startups, diseñadores y creadores de contenido tech que quieren mostrar su trabajo de forma profesional y conectar con otros builders de la región.",
+        text: "Huevsite está diseñado para builders de todo el mundo: desarrolladores indie, founders de startups, diseñadores y creadores de contenido tech que quieren mostrar su trabajo de forma profesional y conectar con otros builders.",
       },
     },
     {

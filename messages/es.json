@@ -204,7 +204,7 @@
       "label": "vibras de perfil",
       "customColor": "Color personalizado",
       "customColorPro": "Custom Color (PRO)",
-      "upgradeAlert": "¡Pasate a PRO para usar cualquier color hex! 🇦🇷",
+      "upgradeAlert": "¡Pasate a PRO para usar cualquier color hex!",
       "hint": "Elegí una vibra para tu perfil."
     },
     "imageUpload": {
@@ -281,7 +281,7 @@
       "library": "biblioteca de bloques",
       "libraryTitle": "¿Qué querés mostrar?",
       "proBadge": "Pro",
-      "comingSoon": "Próximamente: bloques de comunidad custom 🇦🇷",
+      "comingSoon": "Próximamente: bloques de comunidad custom",
       "blockCount": "{current} / {max} bloques",
       "limitReached": "límite alcanzado",
       "remaining": "{n} restantes"
@@ -303,7 +303,7 @@
       "sendError": "Error al enviar feedback",
       "connectionError": "Error de conexión",
       "sentTitle": "¡Feedback enviado!",
-      "sentSubtitle": "Gracias por ayudarnos a mejorar huevsite. 🇦🇷",
+      "sentSubtitle": "Gracias por ayudarnos a mejorar huevsite.",
       "title": "Feedback",
       "subtitle": "línea directa con el equipo",
       "categoryLabel": "Categoría",
@@ -416,7 +416,7 @@
         "statusLabel": "// status",
         "statusPlaceholder": "disponible para proyectos",
         "locationLabel": "// ubicación",
-        "locationPlaceholder": "Buenos Aires 🇦🇷"
+        "locationPlaceholder": "Buenos Aires"
       },
       "project": {
         "previewLabel": "Preview del Proyecto",
@@ -973,7 +973,7 @@
       "cardEarnDesc": "Cuando 3 se hagan PRO, desbloqueás tu recompensa."
     },
     "shareModal": {
-      "tweetText": "Armé mi huevsite en huevsite.io — el portfolio para builders 🇦🇷\n\n👉 huevsite.io/{username}",
+      "tweetText": "Armé mi huevsite en huevsite.io — el portfolio para builders\n\n👉 huevsite.io/{username}",
       "invalidLinkAlert": "Uh, parece que ese link no es de Twitter/X. Fijate de copiar el link de tu tweet.",
       "verifyErrorAlert": "Error al verificar el tweet.",
       "connectionErrorAlert": "Error de conexión.",
@@ -983,7 +983,7 @@
       "promptIntroHighlight": "3 bloques más gratis",
       "promptIntroSuffix": "?",
       "promptIntroLine2": "Compartí tu huevsite en Twitter y te los desbloqueamos.",
-      "previewQuote": "\"Armé mi huevsite — el portfolio para builders 🇦🇷\"",
+      "previewQuote": "\"Armé mi huevsite — el portfolio para builders\"",
       "preparingTweet": "Preparando tweet...",
       "tweetAndRequest": "Twittear y pedir +3 bloques →",
       "goToPro": "Ir a Pro — $9/mes",
@@ -992,7 +992,7 @@
       "verifyAndUnlock": "Verificar tweet y desbloquear ✅",
       "tweetAgain": "Twittear de nuevo",
       "unlockedSectionLabel": "// bloques desbloqueados",
-      "unlockedTitle": "¡Gracias por compartir! 🇦🇷",
+      "unlockedTitle": "¡Gracias por compartir!",
       "unlockedBody": "Te agregamos 3 bloques extra. Ahora podés seguir armando tu portfolio.",
       "keepBuilding": "Seguir buildeando →"
     },
@@ -1029,13 +1029,13 @@
     "mode": "RECRUITER MODE",
     "proAccess": "PRO Access",
     "titleLine1": "Encontrá el mejor",
-    "titleLine2": "talento de latam.",
+    "titleLine2": "talento builder.",
     "subtitle": "Listado clasificado dinámicamente según el <strong>Builder Score</strong>, rankeando a quiénes más colaboran, aprenden y buildean.",
     "filtersTitle": "// Filtros",
     "techStackLabel": "Tech Stack",
     "techStackPlaceholder": "ej. React, Python...",
     "locationLabel": "Ubicación",
-    "locationPlaceholder": "ej. Argentina, Remoto...",
+    "locationPlaceholder": "ej. Ciudad, Remoto...",
     "onlyOpenToWork": "Solo Open to Work",
     "scoreHint": "ℹ️ El Builder Score se recalcula de forma automática basándose en proyectos, validación de la comunidad y actividad open source.",
     "builderCount": "{count, plural, one {# builder} other {# builders}}",
@@ -1049,7 +1049,7 @@
   },
   "leaderboard": {
     "metaTitle": "Ranking de Builders — huevsite.io",
-    "metaDescription": "El ranking de los builders más activos de LATAM. Subí tu builder score, sumá seguidores y escalá posiciones.",
+    "metaDescription": "El ranking de los builders más activos. Subí tu builder score, sumá seguidores y escalá posiciones.",
     "metaOgDescription": "Mirá quiénes lideran la comunidad de builders y competí por el primer puesto.",
     "navExplore": "Explorar",
     "myHuevsite": "Mi huevsite",
@@ -1082,7 +1082,7 @@
     "titlePrefix": "Inspirate con",
     "titleStrikethrough": "portfolios",
     "titleSuffix": "huevsites.",
-    "subtitle": "Mirá los perfiles de los builders más piolas de LATAM. Buscá inspiración y armá el tuyo en 3 minutos.",
+    "subtitle": "Mirá los perfiles de los builders más piolas. Buscá inspiración y armá el tuyo en 3 minutos.",
     "footerTagline": "Mostrá lo que buildeás.",
     "sortScore": "Builder Score 🔥",
     "sortNew": "Nuevos builders ⚡",
@@ -1154,24 +1154,24 @@
     "loadingCommunity": "Cargando comunidad..."
   },
   "showcase": {
-    "buildYours": "Buildeá el tuyo 🇦🇷",
+    "buildYours": "Buildeá el tuyo",
     "sectionLabel": "// showcase semanal",
     "title": "El builder de la semana.",
-    "subtitle": "El builder más nominado de Argentina y LATAM.",
+    "subtitle": "El builder más nominado de la semana.",
     "edition": "Edición {week}",
     "nextWinnerIn": "Próximo ganador en:",
     "errorLoading": "Error cargando datos.",
     "winnerLabel": "🏆 Winner — {week}",
     "viewHuevsite": "Ver su huevsite →",
     "noWinnerYet": "El winner de esta semana todavía no fue elegido.",
-    "nominateFavorite": "Nominá a tu builder favorito 🇦🇷",
+    "nominateFavorite": "Nominá a tu builder favorito",
     "nominationsOfWeek": "// nominaciones de la semana {week}",
     "nominationsCount": "{count, plural, one {# nominación} other {# nominaciones}}",
     "emptyNominations": "Todavía no hay nominados esta semana. Explorá perfiles y nominá builders que te inspiran."
   },
   "landing": {
     "metaTitle": "huevsite.io | Construí tu reputación como builder",
-    "metaDescription": "Proyectos, métricas reales y endorsements de otros builders. Que te vean shippeando, no diciendo. Acá vive la red de LATAM.",
+    "metaDescription": "Proyectos, métricas reales y endorsements de otros builders. Que te vean shippeando, no diciendo. Acá vive la red de builders.",
     "heroActiveBuilders": "+{count} builders activos esta semana",
     "heroClaimEyebrow": "tu rincón en internet",
     "heroClaimTitle": "Tu <accent>nombre</accent>, tu trabajo, <br></br>tu rincón en <br></br>internet.",
@@ -1180,7 +1180,7 @@
     "heroClaimSecondary": "Armá tu huevsite — gratis",
     "heroSocialEyebrow": "mostrá lo que buildeás",
     "heroSocialTitle": "No digas que sos builder.<br></br> <accent>Probalo.</accent>",
-    "heroSocialDescription": "El perfil vivo donde los builders de LATAM se muestran, se rankean y se descubren. Tus proyectos, tu código y tus métricas reales — en una URL que pelea por la portada.",
+    "heroSocialDescription": "El perfil vivo donde los builders se muestran, se rankean y se descubren. Tus proyectos, tu código y tus métricas reales — en una URL que pelea por la portada.",
     "heroSocialSecondary": "Ver perfiles reales",
     "heroProductEyebrow": "Así luce tu perfil en producción",
     "heroProductTitle": "Tu perfil. <accent>Vivo</accent>. <br></br>Listo para <br></br>compartir.",
@@ -1227,7 +1227,7 @@
     "winnerTitleCommunity": "descubrí la comunidad",
     "winnerDescSingle": "Conocé a {name}, el builder más nominado de la semana pasada ({week}).",
     "winnerDescPlural": "{count} builders empataron como los más nominados de la semana pasada ({week}).",
-    "winnerDescCommunity": "Conocé a los creadores de todo LATAM que están buildeando cosas increíbles hoy mismo.",
+    "winnerDescCommunity": "Conocé a los creadores de todo el mundo que están buildeando cosas increíbles hoy mismo.",
     "winnerGoToWinner": "Ir al ganador {index}",
     "winnerEcosystem": "Ecosistema",
     "winnerProjectSingle": "Proyecto",
@@ -1294,7 +1294,7 @@
     "founderEyebrow": "Quién está detrás",
     "founderVideoTitle": "El founder de huevsite",
     "founderRole": "Founder de huevsite",
-    "founderQuoteFallback": "“Soy Tomas. Armé huevsite para que el laburo de los builders de LATAM <accent>se vea, no se cuente</accent>. Es lo que uso yo todos los días.”",
+    "founderQuoteFallback": "“Soy Tomas. Armé huevsite para que el laburo de los builders <accent>se vea, no se cuente</accent>. Es lo que uso yo todos los días.”",
     "founderTagline": "Product Engineer & v0 ambassador",
     "finalCtaSectionLabel": "// para builders de verdad",
     "finalCtaTitleLine1": "Tu obra.",
@@ -1340,7 +1340,7 @@
     "founderFeature1": "Todo lo de Pro, para siempre",
     "founderFeature2": "Sin pagos mensuales nunca más",
     "founderFeature3": "Badge Founder exclusivo",
-    "founderFeature4": "Apoyás a un proyecto indie de LATAM",
+    "founderFeature4": "Apoyás a un proyecto indie",
     "founderCta": "Quiero el lifetime →",
     "founderCtaSoon": "Pronto"
   },
@@ -1439,7 +1439,7 @@
     },
     "terms": {
       "metaTitle": "Términos de Servicio | huevsite.io",
-      "metaDescription": "Términos y condiciones de uso de huevsite.io — la plataforma para builders de Argentina y LATAM.",
+      "metaDescription": "Términos y condiciones de uso de huevsite.io — la plataforma para builders.",
       "title": "Términos de Servicio",
       "lastUpdated": "Última actualización: abril 2025",
       "section1Title": "1. Aceptación de los términos",
@@ -1509,7 +1509,7 @@
   },
   "login": {
     "metaTitle": "Login | huevsite.io",
-    "metaDescription": "Red social y portfolio para builders de Argentina y LATAM.",
+    "metaDescription": "Red social y portfolio para builders.",
     "ogTitle": "huevsite.io | Mostrá lo que buildeás",
     "authGatewayLabel": "// auth gateway",
     "title": "Bienvenido, builder.",
@@ -1773,7 +1773,7 @@
   },
   "meta": {
     "rootTitle": "huevsite.io | Construí tu reputación como builder",
-    "rootDescription": "Proyectos, métricas reales y endorsements de otros builders. Que te vean shippeando, no diciendo. Acá vive la red de LATAM.",
+    "rootDescription": "Proyectos, métricas reales y endorsements de otros builders. Que te vean shippeando, no diciendo. Acá vive la red de builders.",
     "loadingCaption": "armando tu huevsite…"
   },
   "shared": {
@@ -1805,7 +1805,7 @@
     "scoreInfo": {
       "subtitle": "// Gamificación y reputación de comunidad",
       "calculating": "// Calculando breakdown...",
-      "description": "El <strong>Builder Score</strong> es un sistema que mide tu impacto en la escena tech de LATAM. No solo premia qué tan completo está tu portfolio, sino tu actividad y cómo ayudás a que otros builders crezcan.",
+      "description": "El <strong>Builder Score</strong> es un sistema que mide tu impacto en la escena tech. No solo premia qué tan completo está tu portfolio, sino tu actividad y cómo ayudás a que otros builders crezcan.",
       "baseTitle": "Perfil Base (Max 100)",
       "upTo100": "Hasta 100 pts",
       "profilePhoto": "Foto de perfil",

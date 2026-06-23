@@ -42,3 +42,8 @@ next-env.d.ts
 
 # supabase cli scratch
 /supabase/.temp
+
+# internal scratch & planning (kept local, not published)
+/.superpowers
+/docs/superpowers
+/postulacion-comunidad

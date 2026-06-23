@@ -517,7 +517,7 @@ export async function processWinnerForWeek(
   try {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://huevsite.io";
     await sendRenderedEmail({
-      to: "admin@example.com",
+      to: process.env.NOTIFY_EMAIL || "",
       subject: `🎙️ ${profile.name || profile.username} es Builder de la Semana (auto-armado)`,
       react: React.createElement(InterviewNotificationEmail, {
         builderName: profile.name || profile.username,

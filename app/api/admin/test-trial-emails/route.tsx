@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
 
-  const to = searchParams.get("to") || "huevsite.studio@gmail.com";
+  const to = searchParams.get("to") || process.env.NOTIFY_EMAIL || "";
   const results: { stage: string; success: boolean; error?: string }[] = [];
 
   for (const stage of STAGES) {

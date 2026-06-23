@@ -166,7 +166,7 @@ export async function POST(
   try {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://huevsite.io";
     await sendRenderedEmail({
-      to: "admin@example.com",
+      to: process.env.NOTIFY_EMAIL || "",
       subject: body.approved
         ? `✅ ${interview.builder_name} aprobó su entrevista`
         : `✍️ ${interview.builder_name} pidió cambios en su entrevista`,

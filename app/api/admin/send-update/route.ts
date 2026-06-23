@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
     );
 
     const subject = "🥚 Novedades en huevsite: GitHub real, leaderboard, quests y más";
-    const from = "hi@huevsite.studio";
+    const from = process.env.EMAIL_FROM || "hi@huevsite.studio";
 
     if (preview) {
       const supabase = createSupabaseClient(

@@ -28,6 +28,11 @@
   --font-mono: var(--font-mono-next, 'JetBrains Mono', monospace);
   --space: 8px;
   --glow: 0 0 30px rgba(200, 255, 0, 0.15);
+  /* Landing section rhythm — one responsive scale so every section shares the
+     same vertical/horizontal padding and shrinks gracefully on phones
+     (was a grab-bag of fixed 56–120px vertical / 24–48px horizontal values). */
+  --section-y: clamp(56px, 8vw, 88px);
+  --section-x: clamp(20px, 5vw, 40px);
 }
 
 .title-tracking {
@@ -209,7 +214,7 @@ nav {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 80px 40px 60px;
+  padding: clamp(56px, 8vw, 80px) var(--section-x) clamp(40px, 6vw, 60px);
   position: relative;
   overflow: hidden;
 }
@@ -344,7 +349,7 @@ nav {
 
 .hero-ctas {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   align-items: center;
   margin-bottom: 60px;
   animation: fadeUp 0.6s ease 0.3s both;
@@ -1689,10 +1694,10 @@ nav {
 .onboarding-inner {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 112px 48px;
+  padding: var(--section-y) var(--section-x);
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 72px;
+  gap: clamp(40px, 6vw, 72px);
   align-items: center;
 }
 
@@ -2891,7 +2896,7 @@ footer {
 
 .final-cta-section {
   text-align: center;
-  padding: 120px 40px;
+  padding: clamp(64px, 9vw, 104px) var(--section-x);
   position: relative;
   overflow: hidden;
   border-top: 1px solid rgba(255, 255, 255, 0.04);
@@ -2930,7 +2935,7 @@ footer {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 14px;
   flex-wrap: wrap;
   margin-bottom: 24px;
 }

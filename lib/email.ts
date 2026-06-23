@@ -11,6 +11,9 @@ export async function sendRenderedEmail({
   subject: string;
   react: ReactElement;
 }) {
+  if (!to) {
+    return null;
+  }
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     console.warn("RESEND_API_KEY is not set. Skipping email.");
@@ -21,7 +24,7 @@ export async function sendRenderedEmail({
   const html = await render(react);
 
   return resend.emails.send({
-    from: "Huevsite <hola@huevsite.studio>",
+    from: process.env.EMAIL_FROM || "Huevsite <hola@huevsite.studio>",
     to,
     subject,
     html,

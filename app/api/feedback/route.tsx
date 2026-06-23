@@ -56,23 +56,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Error al guardar en base de datos" }, { status: 500 });
     }
 
-    // 2. Enviar email si hay API Key de Resend
+    // 2. Enviar email si hay API Key de Resend y NOTIFY_EMAIL configurado
     if (process.env.RESEND_API_KEY) {
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
 
-        await resend.emails.send({
-          from: "onboarding@resend.dev",
-          to: "admin@example.com",
-          subject: `🚀 Nuevo Feedback: ${category}`,
-          react: <FeedbackEmail
-            userEmail={user.email || 'Anónimo'}
-            category={category}
-            content={content}
-            userId={user.id}
-            screenshotUrl={screenshotUrl || undefined}
-          />,
-        });
+        if (process.env.NOTIFY_EMAIL) {
+          await resend.emails.send({
+            from: "onboarding@resend.dev",
+            to: process.env.NOTIFY_EMAIL || "",
+            subject: `🚀 Nuevo Feedback: ${category}`,
+            react: <FeedbackEmail
+              userEmail={user.email || 'Anónimo'}
+              category={category}
+              content={content}
+              userId={user.id}
+              screenshotUrl={screenshotUrl || undefined}
+            />,
+          });
+        }
       } catch (emailError) {
         console.error("Resend email error:", emailError);
       }

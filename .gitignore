@@ -39,3 +39,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .i18n-extract/
+
+# supabase cli scratch
+/supabase/.temp
+
+# internal scratch & planning (kept local, not published)
+/.superpowers
+/docs/superpowers
+/postulacion-comunidad

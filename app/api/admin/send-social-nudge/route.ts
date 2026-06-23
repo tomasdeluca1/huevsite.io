@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
     );
 
     const subject = "🔗 Te falta conectar tus redes en huevsite";
-    const from = "hi@huevsite.studio";
+    const from = process.env.EMAIL_FROM || "hi@huevsite.studio";
 
     if (preview) {
       const authUsers = await getAuthUsers();

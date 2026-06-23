@@ -86,11 +86,11 @@ export function SocialBlock({ data, accentColor }: SocialProps) {
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="huevsite-block block-social h-full flex flex-col justify-between group"
+      className="huevsite-block block-social h-full flex flex-col group"
       style={{ "--accent": accentColor } as React.CSSProperties}
     >
       <div className="block-label opacity-40 uppercase tracking-[0.2em] text-[10px] text-left mb-3">{t('social.connect')}</div>
-      <div className="flex flex-col gap-1.5 mt-auto">
+      <div className="flex flex-col gap-1.5">
         {links.filter(l => l.url).slice(0, isPreview ? 3 : undefined).map((l, i) => {
           const pData = getPlatformData(l.platform);
           const brandColor = (pData as any)?.brandColor || "#ffffff";

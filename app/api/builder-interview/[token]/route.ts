@@ -444,7 +444,7 @@ export async function POST(
     try {
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://huevsite.io";
       await sendRenderedEmail({
-        to: "admin@example.com",
+        to: process.env.NOTIFY_EMAIL || "",
         subject: `🎙️ ${interview.builder_name} completó la entrevista Builder de la Semana`,
         react: React.createElement(InterviewNotificationEmail, {
           builderName: interview.builder_name,

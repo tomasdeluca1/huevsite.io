@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
     );
 
     const subject = `🥚 Somos ${memberCount} huevsites — gracias por estar`;
-    const from = "hi@huevsite.studio";
+    const from = process.env.EMAIL_FROM || "hi@huevsite.studio";
 
     const { data: profs } = await supabase
       .from("profiles")

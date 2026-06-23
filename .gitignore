@@ -39,3 +39,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .i18n-extract/
+
+# supabase cli scratch
+/supabase/.temp

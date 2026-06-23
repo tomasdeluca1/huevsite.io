@@ -156,7 +156,7 @@ export async function GET(request: NextRequest) {
 
             try {
                 await resend.emails.send({
-                    from: "hi@huevsite.studio",
+                    from: process.env.EMAIL_FROM || "hi@huevsite.studio",
                     to: user.email,
                     subject: `📊 Huevsite Digest: Lo mejor de ${capitalizedMonthName}`,
                     html: emailHtml,

@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
                 );
 
                 await resend.emails.send({
-                    from: "hi@huevsite.studio",
+                    from: process.env.EMAIL_FROM || "hi@huevsite.studio",
                     to: userEmail,
                     subject: "🏆 ¡Sos el builder de la semana en Huevsite!",
                     html,

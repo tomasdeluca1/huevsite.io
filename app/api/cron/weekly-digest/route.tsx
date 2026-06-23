@@ -172,7 +172,7 @@ export async function GET(request: NextRequest) {
 
     if (isTest) {
       const html = emailHtmlTemplate.replaceAll(UNSUB_MARKER, buildUnsubscribeUrl("test"));
-      await resend.emails.send({ from: "hi@huevsite.studio", to: testEmail!, subject, html });
+      await resend.emails.send({ from: process.env.EMAIL_FROM || "hi@huevsite.studio", to: testEmail!, subject, html });
       emailsSent = 1;
     } else if (!preview) {
       const authUsers = await listAllAuthUsers(supabase);
@@ -185,7 +185,7 @@ export async function GET(request: NextRequest) {
 
         const html = emailHtmlTemplate.replaceAll(UNSUB_MARKER, buildUnsubscribeUrl(u.id));
         try {
-          await resend.emails.send({ from: "hi@huevsite.studio", to: u.email, subject, html });
+          await resend.emails.send({ from: process.env.EMAIL_FROM || "hi@huevsite.studio", to: u.email, subject, html });
           emailsSent++;
           await new Promise((r) => setTimeout(r, 100));
         } catch (err: any) {

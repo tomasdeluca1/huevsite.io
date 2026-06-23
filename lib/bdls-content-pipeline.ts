@@ -299,7 +299,7 @@ async function sendWinnerEmail(
       })
     );
     await resend.emails.send({
-      from: "hi@huevsite.studio",
+      from: process.env.EMAIL_FROM || "hi@huevsite.studio",
       to: builderEmail,
       subject: "🏆 ¡Sos el builder de la semana en Huevsite!",
       html,

@@ -24,7 +24,7 @@ export async function sendRenderedEmail({
   const html = await render(react);
 
   return resend.emails.send({
-    from: "Huevsite <hola@huevsite.studio>",
+    from: process.env.EMAIL_FROM || "Huevsite <hola@huevsite.studio>",
     to,
     subject,
     html,

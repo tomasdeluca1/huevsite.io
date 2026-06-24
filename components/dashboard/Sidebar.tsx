@@ -125,7 +125,7 @@ export function DashboardSidebar({
         <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-[var(--accent)]/5 to-transparent pointer-events-none" />
         
         <div className="p-6 pb-2 relative z-30">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-6">
             <Link href="/" className="group flex items-center gap-2">
               <div className="w-8 h-8 rounded-xl bg-[var(--accent)] flex items-center justify-center rotate-3 group-hover:rotate-12 transition-transform shadow-[0_0_15px_var(--accent)]/40">
                 <Sparkles size={18} className="text-black" />
@@ -235,7 +235,7 @@ export function DashboardSidebar({
         </div>
 
         {/* Scrollable Content */}
-        <div className="relative z-0 flex-1 overflow-y-auto px-6 space-y-5 pb-8 custom-scrollbar">
+        <div className="relative z-0 flex-1 overflow-y-auto px-6 space-y-4 pb-6 custom-scrollbar">
 
           {/* Share CTA */}
           <button
@@ -315,12 +315,12 @@ export function DashboardSidebar({
           <motion.div
             initial={false}
             onClick={() => openModal(setIsScoreInfoOpen)}
-            className="group/score z-0 p-5 bg-gradient-to-br from-white/[0.03] to-white/[0.01] border border-white/[0.05] hover:border-[var(--accent)]/30 transition-all cursor-pointer relative overflow-hidden"
+            className="group/score z-0 p-4 bg-gradient-to-br from-white/[0.03] to-white/[0.01] border border-white/[0.05] hover:border-[var(--accent)]/30 transition-all cursor-pointer relative overflow-hidden"
             style={{ borderRadius: `calc(${profile.borderRadius || '1.5rem'} + 0.5rem)` }}
           >
             <div className="absolute top-0 right-0 w-24 h-24 bg-[var(--accent)]/10 blur-[30px] -translate-y-1/2 translate-x-1/2" />
             
-            <div className="flex justify-between items-start mb-4 relative z-10">
+            <div className="flex justify-between items-start mb-3 relative z-10">
               <div>
                 <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] block mb-1">{t("sidebar.builderImpact")}</span>
                 <div className="flex items-baseline gap-1">
@@ -333,7 +333,7 @@ export function DashboardSidebar({
               </div>
             </div>
 
-            <div className="relative h-1.5 w-full bg-white/5 rounded-full overflow-hidden mb-4">
+            <div className="relative h-1.5 w-full bg-white/5 rounded-full overflow-hidden mb-3">
               <motion.div 
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.min(((profile.builderScore || 0) / 1000) * 100, 100)}%` }}
@@ -384,7 +384,7 @@ export function DashboardSidebar({
 
           {/* Navigation Links */}
           <div className="space-y-1">
-            <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] pl-1 mb-3">{t("sidebar.communitySection")}</div>
+            <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] pl-1 mb-2">{t("sidebar.communitySection")}</div>
             <SidebarLink href="/feed" icon={<Activity size={18} />} label={t("sidebar.navFeed")} />
             <SidebarLink href="/explore" icon={<Compass size={18} />} label={t("sidebar.navExplore")} />
             <SidebarLink href="/leaderboard" icon={<Medal size={18} />} label={t("sidebar.navLeaderboard")} />
@@ -394,11 +394,11 @@ export function DashboardSidebar({
 
           {/* Settings & Tools */}
           <div className="space-y-1 pb-4">
-            <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] pl-1 mb-3">{t("sidebar.platformSection")}</div>
+            <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] pl-1 mb-2">{t("sidebar.platformSection")}</div>
             
             <button 
               onClick={() => openModal(setIsProfileModalOpen)}
-              className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-white/5 transition-all group"
+              className="w-full flex items-center justify-between p-2.5 rounded-2xl hover:bg-white/5 transition-all group"
             >
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-white/5 text-white/40">
@@ -408,7 +408,7 @@ export function DashboardSidebar({
               </div>
             </button>
 
-            <div className="flex items-center justify-between p-3 rounded-2xl hover:bg-white/5 transition-all group">
+            <div className="flex items-center justify-between p-2.5 rounded-2xl hover:bg-white/5 transition-all group">
               <div className="flex items-center gap-3">
                 <div className={`p-2 rounded-lg ${autoSaveEnabled ? 'bg-blue-500/10 text-blue-400' : 'bg-white/5 text-white/40'}`}>
                   <Save size={18} />
@@ -423,7 +423,7 @@ export function DashboardSidebar({
               </button>
             </div>
 
-            <div className="flex items-center justify-between p-3 rounded-2xl hover:bg-white/5 transition-all group">
+            <div className="flex items-center justify-between p-2.5 rounded-2xl hover:bg-white/5 transition-all group">
               <div className="flex items-center gap-3">
                 <div className={`p-2 rounded-lg ${newsletterSubscribed ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'bg-white/5 text-white/40'}`}>
                   <Mail size={18} />
@@ -446,7 +446,7 @@ export function DashboardSidebar({
             
             <button 
               onClick={() => openModal(setIsFeedbackOpen)}
-              className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-white/5 transition-all text-white/40 hover:text-white"
+              className="w-full flex items-center gap-3 p-2.5 rounded-2xl hover:bg-white/5 transition-all text-white/40 hover:text-white"
             >
               <div className="p-2 rounded-lg bg-white/5">
                 <MessageSquare size={18} />
@@ -456,7 +456,7 @@ export function DashboardSidebar({
 
             <button
               onClick={() => openModal(setIsLinktreeRefactorOpen)}
-              className="w-full flex items-center gap-3 rounded-2xl p-3 text-white/40 transition-all hover:bg-white/5 hover:text-white"
+              className="w-full flex items-center gap-3 rounded-2xl p-2.5 text-white/40 transition-all hover:bg-white/5 hover:text-white"
             >
               <div className="rounded-lg bg-white/5 p-2">
                 <Link2 size={18} />
@@ -471,7 +471,7 @@ export function DashboardSidebar({
 
             <button
               onClick={() => openModal(setIsDeleteAccountOpen)}
-              className="w-full flex items-center gap-3 p-3 rounded-2xl text-red-300/75 transition-all hover:bg-red-500/8 hover:text-red-200"
+              className="w-full flex items-center gap-3 p-2.5 rounded-2xl text-red-300/75 transition-all hover:bg-red-500/8 hover:text-red-200"
             >
               <div className="rounded-lg bg-red-500/10 p-2 text-red-400">
                 <Trash2 size={18} />
@@ -482,7 +482,7 @@ export function DashboardSidebar({
         </div>
 
         {/* Footer Area */}
-        <div className="p-6 mt-auto border-t border-white/[0.03] bg-black/20">
+        <div className="p-5 pt-4 mt-auto border-t border-white/[0.03] bg-black/20">
           <button 
             onClick={handleLogout}
             className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-red-500/5 hover:bg-red-500/10 text-red-500/70 hover:text-red-500 transition-all text-xs font-black uppercase tracking-widest border border-red-500/10"
@@ -500,7 +500,7 @@ function SidebarLink({ href, icon, label }: { href: string; icon: React.ReactNod
   return (
     <Link 
       href={href}
-      className="flex items-center gap-3 p-3 rounded-2xl hover:bg-white/5 transition-all group"
+      className="flex items-center gap-3 p-2.5 rounded-2xl hover:bg-white/5 transition-all group"
     >
       <div className="p-2 rounded-lg bg-white/5 text-white/40 group-hover:text-[var(--accent)] group-hover:bg-[var(--accent)]/5 transition-all">
         {icon}

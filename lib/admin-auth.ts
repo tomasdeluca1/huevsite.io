@@ -17,7 +17,18 @@ export async function getAdminUser() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user?.email || !ADMIN_EMAILS.includes(user.email)) {
+  if (ADMIN_EMAILS.length === 0) {
+    // Misconfiguration: without this env var EVERY admin check fails silently.
+    // Surface it in the logs instead of a mysterious lockout.
+    console.warn(
+      "[admin-auth] ADMIN_EMAILS is not configured — all admin access is denied. Set the ADMIN_EMAILS env var (comma-separated)."
+    );
+  }
+
+  // Email comparison is case-insensitive: ADMIN_EMAILS is already lowercased
+  // in lib/constants.ts, so the session email must be lowercased to match.
+  const email = user?.email?.toLowerCase();
+  if (!email || !ADMIN_EMAILS.includes(email)) {
     return null;
   }
 

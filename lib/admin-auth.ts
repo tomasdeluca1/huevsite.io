@@ -29,6 +29,18 @@ export async function getAdminUser() {
   // in lib/constants.ts, so the session email must be lowercased to match.
   const email = user?.email?.toLowerCase();
   if (!email || !ADMIN_EMAILS.includes(email)) {
+    // Diagnostic for an authenticated-but-denied user: log a MASKED comparison
+    // (no full PII) so a value mismatch in ADMIN_EMAILS is debuggable from logs.
+    if (email && ADMIN_EMAILS.length > 0) {
+      const mask = (e: string) => {
+        const [u, d] = e.split("@");
+        if (!d) return `${e.slice(0, 3)}…(NO @ — looks like not an email)`;
+        return `${u.slice(0, 2)}…${u.slice(-1)}@${d}`;
+      };
+      console.warn(
+        `[admin-auth] denied authed user: session=${mask(email)} not in configured=[${ADMIN_EMAILS.map(mask).join(", ")}]`
+      );
+    }
     return null;
   }
 

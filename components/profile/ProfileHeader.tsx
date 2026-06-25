@@ -30,6 +30,9 @@ interface Props {
   isCustomDomain?: boolean;
   isWinner?: boolean;
   borderRadius?: string;
+  /** Embed chrome-less (iframe en nordelta.tech): oculta la barra superior de
+   *  acciones y la barra de stats/seguidores; deja el board completo. */
+  embed?: boolean;
 }
 
 export function ProfileHeader({
@@ -50,6 +53,7 @@ export function ProfileHeader({
   isCustomDomain = false,
   isWinner = false,
   borderRadius = "1.5rem",
+  embed = false,
 }: Props) {
   const [modalType, setModalType] = useState<"followers" | "following" | null>(null);
   const [localFollowersCount, setLocalFollowersCount] = useState(followersCount);
@@ -87,7 +91,7 @@ export function ProfileHeader({
   };
 
   return (
-    <header className="relative z-[100] mb-8 md:mb-12">
+    <header className={`relative z-[100] ${embed ? "mb-0" : "mb-8 md:mb-12"}`}>
       {isWinner && (
         <div className="flex justify-center mb-6">
           <motion.div
@@ -104,8 +108,8 @@ export function ProfileHeader({
           </motion.div>
         </div>
       )}
-      {/* Upper bar: Logo + Explore Link + Main CTA */}
-      {!isCustomDomain && (
+      {/* Upper bar: Logo + Explore Link + Main CTA — oculto en embed */}
+      {!isCustomDomain && !embed && (
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-4">
             <Link href="/" className="logo shrink-0 text-xl md:text-2xl">
@@ -166,13 +170,15 @@ export function ProfileHeader({
         </div>
       )}
 
-      {/* Stats and Social Actions Bar */}
-      {(isEnabledSocialNetwork || showFollowButton) && (
+      {/* Stats and Social Actions Bar — en embed se muestra solo el score */}
+      {(embed ? (isEnabledSocialNetwork && profileId) : (isEnabledSocialNetwork || showFollowButton)) && (
         <div
           className="overflow-visible px-3 sm:px-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6"
         >
           {isEnabledSocialNetwork && profileId && (
-            <div className="grid grid-cols-4 sm:flex sm:items-center gap-1.5 sm:gap-2 w-full lg:w-auto">
+            <div className={embed ? "flex items-center justify-center w-full lg:w-auto" : "grid grid-cols-4 sm:flex sm:items-center gap-1.5 sm:gap-2 w-full lg:w-auto"}>
+              {!embed && (
+              <>
               <button
                 onClick={() => setModalType("followers")}
                 className="flex flex-col items-center px-1 py-2 sm:px-5 sm:py-2.5 rounded-2xl bg-white/5 border border-white/5 sm:bg-transparent sm:border-transparent hover:bg-white/5 transition-all group shrink-0 hover:border-white/5"
@@ -211,6 +217,8 @@ export function ProfileHeader({
               </div>
 
               <div className="hidden sm:block w-px h-8 bg-white/10 shrink-0" />
+              </>
+              )}
 
               <button
                 onClick={() => setIsScoreOpen(true)}
@@ -230,6 +238,7 @@ export function ProfileHeader({
             </div>
           )}
 
+          {!embed && (
           <div className="flex items-center gap-2 sm:gap-3 w-full lg:w-auto mt-2 lg:mt-0">
             {showFollowButton && profileId && (
               <div className="flex-1 lg:flex-none">
@@ -248,6 +257,7 @@ export function ProfileHeader({
               </div>
             )}
           </div>
+          )}
         </div>
       )}
 

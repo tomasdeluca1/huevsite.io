@@ -278,6 +278,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
           username={profile.username}
           isCustomDomain={isCustomDomain}
           isWinner={profile.isWinner}
+          embed={embed}
         />
 
         {/* BDLS / authored blog posts featured for this builder */}

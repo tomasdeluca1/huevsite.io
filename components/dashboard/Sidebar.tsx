@@ -4,9 +4,9 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Trophy, Settings, ArrowLeft, Copy, Check, Globe, Activity,
-  Compass, Save, LogOut, MessageSquare, Layout as LayoutIcon,
-  Sparkles, ArrowUpRight, Lock, ChevronRight, User, PlusCircle, Trash2, Link2, Mail, Share2, Medal
+  Trophy, Check, Globe, Activity,
+  Compass, Save, LogOut, MessageSquare,
+  Sparkles, Lock, ChevronRight, User, PlusCircle, Trash2, Link2, Mail, Share2, Medal
 } from "lucide-react";
 import Link from "next/link";
 import { ProfileData, BlockType, PRESET_BORDER_RADIUS } from "@/lib/profile-types";
@@ -88,14 +88,6 @@ export function DashboardSidebar({
     modalFn(true);
   };
 
-  const tabs = [
-    { id: 'board', label: t("sidebar.tabEditor"), icon: LayoutIcon },
-    { id: 'insights', label: t("sidebar.tabInsights"), icon: Activity },
-    { id: 'subsites', label: t("sidebar.tabSubsites"), icon: Compass },
-    { id: 'domain', label: t("sidebar.tabDomain"), icon: Globe },
-    { id: 'transfer', label: t("sidebar.tabTransfer"), icon: ArrowUpRight },
-  ];
-
   const currentBoardTitle = selectedSubSiteId ? currentSubSite?.title : t("sidebar.mainProfile");
   const currentBoardSlug = selectedSubSiteId ? `/${profile.username}/${currentSubSite?.slug}` : `/${profile.username}`;
   const currentBoardAvatar = selectedSubSiteId ? currentSubSite?.avatarUrl : profile.avatarUrl;
@@ -123,9 +115,10 @@ export function DashboardSidebar({
         scrollbar-none
       `}>
         <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-[var(--accent)]/5 to-transparent pointer-events-none" />
-        
-        <div className="p-6 pb-2 relative z-30">
-          <div className="flex items-center justify-between mb-6">
+
+        {/* Header: identity (logo + board switcher) */}
+        <div className="px-6 pt-5 pb-2 relative z-30">
+          <div className="flex items-center justify-between mb-5">
             <Link href="/" className="group flex items-center gap-2">
               <div className="w-8 h-8 rounded-xl bg-[var(--accent)] flex items-center justify-center rotate-3 group-hover:rotate-12 transition-transform shadow-[0_0_15px_var(--accent)]/40">
                 <Sparkles size={18} className="text-black" />
@@ -135,12 +128,12 @@ export function DashboardSidebar({
           </div>
 
           {/* Board Switcher Popover */}
-          <div className="relative mb-6">
-             <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] px-2 mb-2 block">
+          <div className="relative mb-1">
+             <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] px-2 mb-1.5 block">
                {isPro ? t("sidebar.activeBoard") : t("sidebar.yourProfile")}
              </span>
              <div
-               className={`w-full group p-3 rounded-2xl bg-white/[0.03] border border-white/5 transition-all flex items-center gap-3 text-left relative ${isPro ? "hover:border-white/20 hover:bg-white/[0.05]" : ""}`}
+               className={`w-full group p-2.5 rounded-2xl bg-white/[0.03] border border-white/5 transition-all flex items-center gap-3 text-left relative ${isPro ? "hover:border-white/20 hover:bg-white/[0.05]" : ""}`}
                onClick={isPro ? () => setIsSwitcherOpen(!isSwitcherOpen) : undefined}
              >
                 <div className="shrink-0 relative">
@@ -177,7 +170,7 @@ export function DashboardSidebar({
                      className="absolute top-full left-0 right-0 mt-2 p-2 bg-[#121214] border border-white/10 rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-[260] overflow-hidden backdrop-blur-xl"
                    >
                       <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
-                        <button 
+                        <button
                           onClick={() => { setSelectedSubSiteId(null); setIsSwitcherOpen(false); }}
                           className={`w-full p-3 rounded-xl flex items-center gap-3 text-left transition-all ${!selectedSubSiteId ? 'bg-[var(--accent)]/10 text-white' : 'hover:bg-white/5 text-white/40'}`}
                         >
@@ -219,7 +212,7 @@ export function DashboardSidebar({
                         )}
 
                         {isPro && (
-                          <button 
+                          <button
                             onClick={() => { openModal(setIsCreateSubSiteOpen); setIsSwitcherOpen(false); }}
                             className="w-full mt-2 p-3 rounded-xl border border-dashed border-white/10 hover:border-[var(--accent)]/30 transition-all flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-[var(--accent)]"
                           >
@@ -235,12 +228,12 @@ export function DashboardSidebar({
         </div>
 
         {/* Scrollable Content */}
-        <div className="relative z-0 flex-1 overflow-y-auto px-6 space-y-4 pb-6 custom-scrollbar">
+        <div className="relative z-0 flex-1 overflow-y-auto px-6 space-y-5 pb-6 custom-scrollbar">
 
-          {/* Share CTA */}
+          {/* Primary action: share your profile */}
           <button
             onClick={() => { setIsSidebarOpen(false); onShareProfile(); }}
-            className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-[var(--accent)]/10 border border-[var(--accent)]/25 hover:bg-[var(--accent)]/15 hover:border-[var(--accent)]/40 transition-all group text-left"
+            className="w-full flex items-center gap-3 p-3 rounded-2xl bg-[var(--accent)]/10 border border-[var(--accent)]/25 hover:bg-[var(--accent)]/15 hover:border-[var(--accent)]/40 transition-all group text-left"
           >
             <div className="w-9 h-9 rounded-xl bg-[var(--accent)] flex items-center justify-center text-black shrink-0 group-hover:scale-105 transition-transform shadow-[0_0_15px_var(--accent)]/40">
               <Share2 size={16} />
@@ -252,12 +245,9 @@ export function DashboardSidebar({
             <ChevronRight size={14} className="text-white/30 group-hover:translate-x-0.5 transition-transform" />
           </button>
 
-          {/* Main Actions Section */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between pl-1 mb-2">
-              <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">{t("sidebar.editorSectionLabel")}</div>
-              <LocaleToggle />
-            </div>
+          {/* === DESIGN: everything that edits the site === */}
+          <div className="space-y-2.5">
+            <SectionLabel>{t("sidebar.editorSectionLabel")}</SectionLabel>
 
             <ColorPicker
               value={profile.accentColor}
@@ -309,82 +299,91 @@ export function DashboardSidebar({
               extraBlocksFromShare={profile.extraBlocksFromShare}
               onShareUnlocked={onShareUnlocked}
             />
+
+            {/* Edit profile/sub-site — an editing action, grouped with the design tools */}
+            <button
+              onClick={() => openModal(setIsProfileModalOpen)}
+              className="w-full flex items-center gap-3 p-2.5 rounded-2xl hover:bg-white/5 transition-all group"
+            >
+              <div className="p-1.5 rounded-lg bg-white/5 text-white/40 group-hover:text-[var(--accent)] group-hover:bg-[var(--accent)]/5 transition-all">
+                <User size={18} />
+              </div>
+              <span className="text-sm font-bold text-white/70 group-hover:text-white transition-colors">{selectedSubSiteId ? t("sidebar.editSubsite") : t("sidebar.editProfile")}</span>
+              <ChevronRight size={14} className="ml-auto opacity-0 group-hover:opacity-20 transition-all -translate-x-2 group-hover:translate-x-0" />
+            </button>
           </div>
 
-          {/* Dynamic Builder Score Card */}
-          <motion.div
-            initial={false}
-            onClick={() => openModal(setIsScoreInfoOpen)}
-            className="group/score z-0 p-4 bg-gradient-to-br from-white/[0.03] to-white/[0.01] border border-white/[0.05] hover:border-[var(--accent)]/30 transition-all cursor-pointer relative overflow-hidden"
-            style={{ borderRadius: `calc(${profile.borderRadius || '1.5rem'} + 0.5rem)` }}
-          >
-            <div className="absolute top-0 right-0 w-24 h-24 bg-[var(--accent)]/10 blur-[30px] -translate-y-1/2 translate-x-1/2" />
-            
-            <div className="flex justify-between items-start mb-3 relative z-10">
-              <div>
-                <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] block mb-1">{t("sidebar.builderImpact")}</span>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-[950] text-white tracking-tighter">{profile.builderScore || 0}</span>
-                  <span className="text-xs font-bold text-[var(--accent)]">pts</span>
+          {/* === PROGRESS: score + quests + AI credits, clustered === */}
+          <div className="space-y-2.5">
+            {/* Builder Score Card */}
+            <motion.div
+              initial={false}
+              onClick={() => openModal(setIsScoreInfoOpen)}
+              className="group/score z-0 p-4 bg-gradient-to-br from-white/[0.03] to-white/[0.01] border border-white/[0.05] hover:border-[var(--accent)]/30 transition-all cursor-pointer relative overflow-hidden"
+              style={{ borderRadius: `calc(${profile.borderRadius || '1.5rem'} + 0.5rem)` }}
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-[var(--accent)]/10 blur-[30px] -translate-y-1/2 translate-x-1/2" />
+
+              <div className="flex justify-between items-center mb-2.5 relative z-10">
+                <div>
+                  <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] block mb-0.5">{t("sidebar.builderImpact")}</span>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl font-[950] text-white tracking-tighter">{profile.builderScore || 0}</span>
+                    <span className="text-xs font-bold text-[var(--accent)]">pts</span>
+                  </div>
+                </div>
+                <div className="w-9 h-9 rounded-2xl bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)] group-hover/score:scale-110 transition-transform shadow-[0_0_15px_rgba(200,255,0,0.15)]">
+                  <Trophy size={16} />
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-2xl bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)] group-hover/score:scale-110 transition-transform shadow-[0_0_15px_rgba(200,255,0,0.15)]">
-                <Trophy size={18} />
+
+              <div className="relative h-1.5 w-full bg-white/5 rounded-full overflow-hidden mb-2">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min(((profile.builderScore || 0) / 1000) * 100, 100)}%` }}
+                  className="h-full bg-[var(--accent)] shadow-[0_0_10px_var(--accent)]"
+                />
               </div>
-            </div>
 
-            <div className="relative h-1.5 w-full bg-white/5 rounded-full overflow-hidden mb-3">
-              <motion.div 
-                initial={{ width: 0 }}
-                animate={{ width: `${Math.min(((profile.builderScore || 0) / 1000) * 100, 100)}%` }}
-                className="h-full bg-[var(--accent)] shadow-[0_0_10px_var(--accent)]"
-              />
-            </div>
+              <p className="text-[10px] text-white/40 leading-relaxed italic line-clamp-1">
+                {(profile.builderScore || 0) < 100 ? t("sidebar.scoreHintLow") : t("sidebar.scoreHintHigh")}
+              </p>
+            </motion.div>
 
-            <p className="text-[10px] text-white/40 leading-relaxed italic line-clamp-2">
-              {(profile.builderScore || 0) < 100 ? t("sidebar.scoreHintLow") : t("sidebar.scoreHintHigh")}
-            </p>
-          </motion.div>
+            {/* Quests / Badge progress */}
+            <QuestPanel
+              profile={profile}
+              visibleBlockCount={visibleBlockCount ?? profile.blocks.length}
+              accentColor={profile.accentColor}
+              borderRadius={profile.borderRadius}
+              onAddBlock={addBlock}
+              onEditProfile={() => openModal(setIsProfileModalOpen)}
+              onShare={() => { setIsSidebarOpen(false); onShareProfile(); }}
+              onUpgrade={() => openModal(setIsUpgradeModalOpen)}
+            />
 
-          {/* Quests / Badge progress */}
-          <QuestPanel
-            profile={profile}
-            visibleBlockCount={visibleBlockCount ?? profile.blocks.length}
-            accentColor={profile.accentColor}
-            borderRadius={profile.borderRadius}
-            onAddBlock={addBlock}
-            onEditProfile={() => openModal(setIsProfileModalOpen)}
-            onShare={() => { setIsSidebarOpen(false); onShareProfile(); }}
-            onUpgrade={() => openModal(setIsUpgradeModalOpen)}
-          />
-
-          {/* AI Credits Card */}
-          <div
-            className="p-4 bg-white/[0.02] border border-white/[0.05] flex items-center justify-between group"
-            style={{ borderRadius: `calc(${profile.borderRadius || '1.5rem'} + 0.75rem)` }}
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 group-hover:bg-purple-500/20 transition-all">
-                <Sparkles size={14} />
+            {/* AI Credits — slim row */}
+            <div className="p-2.5 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center justify-between group">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 shrink-0 group-hover:bg-purple-500/20 transition-all">
+                  <Sparkles size={13} />
+                </div>
+                <span className="text-xs font-bold text-white/60 truncate">{t("sidebar.aiCreditsAvailable", { n: profile.aiCredits ?? 0 })}</span>
               </div>
-              <div>
-                <span className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] block">{t("sidebar.aiCredits")}</span>
-                <span className="text-xs font-bold text-white/60">{t("sidebar.aiCreditsAvailable", { n: profile.aiCredits ?? 0 })}</span>
-              </div>
+              {!isPro && (
+                <button
+                  onClick={() => openModal(setIsUpgradeModalOpen)}
+                  className="shrink-0 text-[8px] font-black text-purple-400 uppercase tracking-widest bg-purple-400/10 px-2 py-1 rounded-md hover:bg-purple-400/20 transition-all border border-purple-400/20"
+                >
+                  + PRO
+                </button>
+              )}
             </div>
-            {!isPro && (
-                  <button 
-                    onClick={() => openModal(setIsUpgradeModalOpen)}
-                  className="text-[8px] font-black text-purple-400 uppercase tracking-widest bg-purple-400/10 px-2 py-1 rounded-md hover:bg-purple-400/20 transition-all border border-purple-400/20"
-               >
-                 + PRO
-               </button>
-            )}
           </div>
 
-          {/* Navigation Links */}
+          {/* === NETWORK === */}
           <div className="space-y-1">
-            <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] pl-1 mb-2">{t("sidebar.communitySection")}</div>
+            <SectionLabel className="mb-2">{t("sidebar.communitySection")}</SectionLabel>
             <SidebarLink href="/feed" icon={<Activity size={18} />} label={t("sidebar.navFeed")} />
             <SidebarLink href="/explore" icon={<Compass size={18} />} label={t("sidebar.navExplore")} />
             <SidebarLink href="/leaderboard" icon={<Medal size={18} />} label={t("sidebar.navLeaderboard")} />
@@ -392,25 +391,13 @@ export function DashboardSidebar({
             <SidebarLink href="/testimonio" icon={<MessageSquare size={18} />} label={t("sidebar.navTestimonial")} />
           </div>
 
-          {/* Settings & Tools */}
-          <div className="space-y-1 pb-4">
-            <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] pl-1 mb-2">{t("sidebar.platformSection")}</div>
-            
-            <button 
-              onClick={() => openModal(setIsProfileModalOpen)}
-              className="w-full flex items-center justify-between p-2.5 rounded-2xl hover:bg-white/5 transition-all group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-white/5 text-white/40">
-                  <User size={18} />
-                </div>
-                <span className="text-sm font-bold text-white/70">{selectedSubSiteId ? t("sidebar.editSubsite") : t("sidebar.editProfile")}</span>
-              </div>
-            </button>
+          {/* === ACCOUNT / SETTINGS === */}
+          <div className="space-y-1 pb-2">
+            <SectionLabel className="mb-2">{t("sidebar.platformSection")}</SectionLabel>
 
             <div className="flex items-center justify-between p-2.5 rounded-2xl hover:bg-white/5 transition-all group">
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${autoSaveEnabled ? 'bg-blue-500/10 text-blue-400' : 'bg-white/5 text-white/40'}`}>
+                <div className={`p-1.5 rounded-lg ${autoSaveEnabled ? 'bg-blue-500/10 text-blue-400' : 'bg-white/5 text-white/40'}`}>
                   <Save size={18} />
                 </div>
                 <span className="text-sm font-bold text-white/70">{t("sidebar.autoSave")}</span>
@@ -425,7 +412,7 @@ export function DashboardSidebar({
 
             <div className="flex items-center justify-between p-2.5 rounded-2xl hover:bg-white/5 transition-all group">
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${newsletterSubscribed ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'bg-white/5 text-white/40'}`}>
+                <div className={`p-1.5 rounded-lg ${newsletterSubscribed ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'bg-white/5 text-white/40'}`}>
                   <Mail size={18} />
                 </div>
                 <div className="flex-1 text-left">
@@ -443,12 +430,12 @@ export function DashboardSidebar({
                 <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all duration-300 ${newsletterSubscribed ? 'right-1' : 'left-1'}`} />
               </button>
             </div>
-            
-            <button 
+
+            <button
               onClick={() => openModal(setIsFeedbackOpen)}
               className="w-full flex items-center gap-3 p-2.5 rounded-2xl hover:bg-white/5 transition-all text-white/40 hover:text-white"
             >
-              <div className="p-2 rounded-lg bg-white/5">
+              <div className="p-1.5 rounded-lg bg-white/5">
                 <MessageSquare size={18} />
               </div>
               <span className="text-sm font-bold">{t("sidebar.feedback")}</span>
@@ -458,7 +445,7 @@ export function DashboardSidebar({
               onClick={() => openModal(setIsLinktreeRefactorOpen)}
               className="w-full flex items-center gap-3 rounded-2xl p-2.5 text-white/40 transition-all hover:bg-white/5 hover:text-white"
             >
-              <div className="rounded-lg bg-white/5 p-2">
+              <div className="rounded-lg bg-white/5 p-1.5">
                 <Link2 size={18} />
               </div>
               <div className="flex-1 text-left">
@@ -473,7 +460,7 @@ export function DashboardSidebar({
               onClick={() => openModal(setIsDeleteAccountOpen)}
               className="w-full flex items-center gap-3 p-2.5 rounded-2xl text-red-300/75 transition-all hover:bg-red-500/8 hover:text-red-200"
             >
-              <div className="rounded-lg bg-red-500/10 p-2 text-red-400">
+              <div className="rounded-lg bg-red-500/10 p-1.5 text-red-400">
                 <Trash2 size={18} />
               </div>
               <span className="text-sm font-bold">{t("sidebar.deleteAccount")}</span>
@@ -481,11 +468,12 @@ export function DashboardSidebar({
           </div>
         </div>
 
-        {/* Footer Area */}
-        <div className="p-5 pt-4 mt-auto border-t border-white/[0.03] bg-black/20">
-          <button 
+        {/* Footer: language preference + logout */}
+        <div className="p-5 pt-3 mt-auto border-t border-white/[0.03] bg-black/20 flex items-center gap-2">
+          <LocaleToggle />
+          <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-red-500/5 hover:bg-red-500/10 text-red-500/70 hover:text-red-500 transition-all text-xs font-black uppercase tracking-widest border border-red-500/10"
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl bg-red-500/5 hover:bg-red-500/10 text-red-500/70 hover:text-red-500 transition-all text-xs font-black uppercase tracking-widest border border-red-500/10"
           >
             <LogOut size={16} />
             {t("sidebar.logout")}
@@ -496,13 +484,21 @@ export function DashboardSidebar({
   );
 }
 
+function SectionLabel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={`text-[10px] font-black text-white/20 uppercase tracking-[0.2em] pl-1 ${className}`}>
+      {children}
+    </div>
+  );
+}
+
 function SidebarLink({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
   return (
-    <Link 
+    <Link
       href={href}
       className="flex items-center gap-3 p-2.5 rounded-2xl hover:bg-white/5 transition-all group"
     >
-      <div className="p-2 rounded-lg bg-white/5 text-white/40 group-hover:text-[var(--accent)] group-hover:bg-[var(--accent)]/5 transition-all">
+      <div className="p-1.5 rounded-lg bg-white/5 text-white/40 group-hover:text-[var(--accent)] group-hover:bg-[var(--accent)]/5 transition-all">
         {icon}
       </div>
       <span className="text-sm font-bold text-white/60 group-hover:text-white transition-colors">{label}</span>

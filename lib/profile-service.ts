@@ -308,7 +308,9 @@ export const profileService = {
           visible: b.visible,
           ...data
         };
-      }) as BlockData[]
+      // Hide archived projects from the public profile (the dashboard loads
+      // blocks via /api/profile, which is unaffected, so they stay editable).
+      }).filter((b: any) => !(b.type === "project" && b.archived === true)) as BlockData[]
     };
   },
 

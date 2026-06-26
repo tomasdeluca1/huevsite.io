@@ -439,7 +439,8 @@
         "statusIdea": "Idea",
         "statusBuilding": "Building",
         "statusLaunched": "Launched",
-        "launchDateLabel": "// launch date"
+        "launchDateLabel": "// launch date",
+        "archivedLabel": "Archive (hide from profile)"
       },
       "metric": {
         "labelLabel": "// label",

@@ -311,6 +311,16 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
               </div>
             )}
             {block.type === "project" && (
+              <label className="flex items-center gap-2 text-sm text-white/70">
+                <input
+                  type="checkbox"
+                  checked={!!formData.archived}
+                  onChange={(e) => handleChange("archived", e.target.checked)}
+                />
+                {t("blockEditor.project.archivedLabel")}
+              </label>
+            )}
+            {block.type === "project" && (
               <div className="space-y-2">
                 <div className="section-label !text-[9px] px-1">{t("blockEditor.project.metricsLabel")}</div>
                 <input

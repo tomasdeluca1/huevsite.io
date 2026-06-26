@@ -741,6 +741,9 @@ export default function DashboardPage() {
           link: "",
           metrics: "",
           stack: [],
+          status: "idea",
+          launchDate: "",
+          archived: false,
         };
         break;
       case "stack":

@@ -88,16 +88,23 @@ export function ProjectBlock({ data, accentColor }: Props) {
         )}
 
         <div className="mt-auto pt-4 flex items-center justify-between border-t border-white/5">
-          {metrics ? (
-            <div className="flex gap-4">
-              {metrics.split(',').map((m, i) => (
-                <div key={i} className="flex flex-col">
-                  <span className="text-xs font-bold text-white tracking-tighter">{m.trim().split(' ')[0]}</span>
-                  <span className="text-[9px] text-[var(--text-muted)] uppercase tracking-widest">{m.trim().split(' ').slice(1).join(' ')}</span>
-                </div>
-              ))}
-            </div>
-          ) : <div />}
+          <div className="flex items-center gap-3">
+            {metrics ? (
+              <div className="flex gap-4">
+                {metrics.split(',').map((m, i) => (
+                  <div key={i} className="flex flex-col">
+                    <span className="text-xs font-bold text-white tracking-tighter">{m.trim().split(' ')[0]}</span>
+                    <span className="text-[9px] text-[var(--text-muted)] uppercase tracking-widest">{m.trim().split(' ').slice(1).join(' ')}</span>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+            {data.launch && data.launch.live > 0 && (
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-white/70">
+                🚀 {t("project.liveInDirectories", { live: data.launch.live })}
+              </span>
+            )}
+          </div>
 
           {link !== "#" && (
             <a

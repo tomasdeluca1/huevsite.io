@@ -208,7 +208,9 @@
       "noDate": "No launch date",
       "liveCount": "live on {live}/{total}",
       "markLaunched": "Mark launched",
-      "edit": "Edit"
+      "edit": "Edit",
+      "launchInLaunchy": "Launch on Launchy",
+      "launchNeedsLink": "Add a link to launch"
     },
     "colorPicker": {
       "label": "profile vibes",
@@ -1998,7 +2000,8 @@
       "statusLaunched": "Launched",
       "launchesInDays": "Launches in {days} days",
       "launchesToday": "Launches today",
-      "launchedOn": "Launched {date}"
+      "launchedOn": "Launched {date}",
+      "liveInDirectories": "Launched in {live} directories"
     },
     "building": {
       "untitledProject": "Untitled project",

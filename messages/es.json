@@ -208,7 +208,9 @@
       "noDate": "Sin fecha de lanzamiento",
       "liveCount": "live en {live}/{total}",
       "markLaunched": "Marcar lanzado",
-      "edit": "Editar"
+      "edit": "Editar",
+      "launchInLaunchy": "Lanzar en Launchy",
+      "launchNeedsLink": "Agregá un link para lanzar"
     },
     "colorPicker": {
       "label": "vibras de perfil",
@@ -1998,7 +2000,8 @@
       "statusLaunched": "Lanzado",
       "launchesInDays": "Lanza en {days} días",
       "launchesToday": "Lanza hoy",
-      "launchedOn": "Lanzado el {date}"
+      "launchedOn": "Lanzado el {date}",
+      "liveInDirectories": "Lanzado en {live} directorios"
     },
     "building": {
       "untitledProject": "Proyecto sin nombre",

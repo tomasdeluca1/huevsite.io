@@ -7,6 +7,7 @@ import {
   getLaunchCountdownDays,
   isLaunchOverdue,
 } from "@/lib/project-lifecycle";
+import { buildLaunchyNewProductUrl } from "@/lib/launchy";
 
 interface Props {
   blocks: BlockData[];
@@ -42,6 +43,8 @@ export function ProjectTracker({ blocks, onUpdateBlock, onEdit }: Props) {
               {items.map((p) => {
                 const days = getLaunchCountdownDays(p.launchDate);
                 const overdue = isLaunchOverdue(p.status, p.launchDate);
+                const launchyUrl = buildLaunchyNewProductUrl(p);
+                const alreadyLaunched = !!p.launch;
                 return (
                   <div
                     key={p.id}
@@ -79,6 +82,23 @@ export function ProjectTracker({ blocks, onUpdateBlock, onEdit }: Props) {
                       <option value="building">{t("status.building")}</option>
                       <option value="launched">{t("status.launched")}</option>
                     </select>
+
+                    {!alreadyLaunched && launchyUrl && (
+                      <a
+                        href={launchyUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 rounded-lg bg-[var(--accent)]/15 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[var(--accent)]"
+                        title={t("launchInLaunchy")}
+                      >
+                        {t("launchInLaunchy")}
+                      </a>
+                    )}
+                    {!alreadyLaunched && !launchyUrl && (
+                      <span className="shrink-0 text-[10px] text-white/30" title={t("launchNeedsLink")}>
+                        {t("launchNeedsLink")}
+                      </span>
+                    )}
 
                     <button
                       onClick={() => onEdit(p)}

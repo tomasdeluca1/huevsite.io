@@ -424,7 +424,12 @@
         "descriptionLabel": "// descripción",
         "stackLabel": "// tech stack (separadas por coma)",
         "linkLabel": "// link",
-        "metricsLabel": "// métricas"
+        "metricsLabel": "// métricas",
+        "statusLabel": "// estado",
+        "statusIdea": "Idea",
+        "statusBuilding": "En construcción",
+        "statusLaunched": "Lanzado",
+        "launchDateLabel": "// fecha de lanzamiento"
       },
       "metric": {
         "labelLabel": "// etiqueta",

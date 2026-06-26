@@ -200,6 +200,16 @@
     }
   },
   "dashboard": {
+    "projects": {
+      "empty": "Todavía no agregaste proyectos. Agregá un bloque de proyecto desde el board.",
+      "status": { "idea": "Idea", "building": "En construcción", "launched": "Lanzado" },
+      "countdown": "Lanza en {days} días",
+      "dateOn": "Fecha: {date}",
+      "noDate": "Sin fecha de lanzamiento",
+      "liveCount": "live en {live}/{total}",
+      "markLaunched": "Marcar lanzado",
+      "edit": "Editar"
+    },
     "colorPicker": {
       "label": "vibras de perfil",
       "customColor": "Color personalizado",
@@ -630,6 +640,7 @@
       "tabSubsites": "Sub-sites",
       "tabDomain": "Dominio",
       "tabTransfer": "Transferir",
+      "tabProjects": "Proyectos",
       "activeView": "Vista Activa",
       "boards": "boards",
       "boardDefaultName": "Board {n}",

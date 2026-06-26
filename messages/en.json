@@ -200,6 +200,16 @@
     }
   },
   "dashboard": {
+    "projects": {
+      "empty": "No projects yet. Add a project block from the board.",
+      "status": { "idea": "Idea", "building": "Building", "launched": "Launched" },
+      "countdown": "Launches in {days} days",
+      "dateOn": "Date: {date}",
+      "noDate": "No launch date",
+      "liveCount": "live on {live}/{total}",
+      "markLaunched": "Mark launched",
+      "edit": "Edit"
+    },
     "colorPicker": {
       "label": "profile vibes",
       "customColor": "Custom color",
@@ -630,6 +640,7 @@
       "tabSubsites": "Sub-sites",
       "tabDomain": "Domain",
       "tabTransfer": "Transfer",
+      "tabProjects": "Projects",
       "activeView": "Active View",
       "boards": "boards",
       "boardDefaultName": "Board {n}",

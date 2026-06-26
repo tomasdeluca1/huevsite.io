@@ -19,7 +19,7 @@ import {
 import {
   Save, Eye, EyeOff, Layout as LayoutIcon, Settings, LogOut, Plus, Sparkles, MessageSquare,
   Activity, Compass, Trash2, Copy, Check, Trophy, ArrowUpRight, BadgeCheck, ArrowLeft, Lock, Globe, ChevronRight,
-  Globe2, AlertCircle, SendHorizontal, ChevronDown, X
+  Globe2, AlertCircle, SendHorizontal, ChevronDown, X, Rocket
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
@@ -37,6 +37,7 @@ import { MediaBlock, CertificationBlock, AchievementBlock, CustomBlock, CollabBl
 import { SortableBlock } from "@/components/dashboard/SortableBlock";
 import { BlockSelector } from "@/components/dashboard/BlockSelector";
 import { BlockEditorModal } from "@/components/dashboard/BlockEditorModal";
+import { ProjectTracker } from "@/components/dashboard/ProjectTracker";
 import { ColorPicker } from "@/components/dashboard/ColorPicker";
 import { FeedbackModal } from "@/components/dashboard/FeedbackModal";
 import { OnboardingModal } from "@/components/dashboard/OnboardingModal";
@@ -64,7 +65,7 @@ import { BadgeItem } from "@/components/profile/BadgeItem";
 import { ProFeatureTour } from "@/components/dashboard/ProFeatureTour";
 import { TrialExpiredBlockChooser } from "@/components/dashboard/TrialExpiredBlockChooser";
 
-const DASHBOARD_TABS = ["board", "insights", "subsites", "domain", "transfer"] as const;
+const DASHBOARD_TABS = ["board", "projects", "insights", "subsites", "domain", "transfer"] as const;
 const PRO_ONLY_TABS = ["insights", "subsites", "domain", "transfer"] as const;
 
 export default function DashboardPage() {
@@ -116,7 +117,7 @@ export default function DashboardPage() {
   const boardInitRef = useRef(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [badgesCollapsed, setBadgesCollapsed] = useState(true);
-  const [activeTab, setActiveTab] = useState<'board' | 'insights' | 'subsites' | 'domain' | 'transfer'>('board');
+  const [activeTab, setActiveTab] = useState<'board' | 'projects' | 'insights' | 'subsites' | 'domain' | 'transfer'>('board');
   const [domain, setDomain] = useState("");
   const [transferEmail, setTransferEmail] = useState("");
   const [verifying, setVerifying] = useState(false);
@@ -1689,7 +1690,7 @@ export default function DashboardPage() {
                       transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                     />
                   )}
-                  <span className="relative z-10">{tab === 'board' ? t("page.tabEditor") : tab === 'insights' ? t("page.tabInsights") : tab === 'subsites' ? t("page.tabSubsites") : tab === 'domain' ? t("page.tabDomain") : t("page.tabTransfer")}</span>
+                  <span className="relative z-10">{tab === 'board' ? t("page.tabEditor") : tab === 'projects' ? t("page.tabProjects") : tab === 'insights' ? t("page.tabInsights") : tab === 'subsites' ? t("page.tabSubsites") : tab === 'domain' ? t("page.tabDomain") : t("page.tabTransfer")}</span>
                 </button>
               ))}
             </div>
@@ -1706,7 +1707,8 @@ export default function DashboardPage() {
              >
                 <div className="flex items-center gap-3">
                    <div className="w-10 h-10 rounded-xl bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)] border border-[var(--accent)]/20 shadow-[0_0_15px_rgba(var(--accent-rgb),0.2)]">
-                      {activeTab === 'board' ? <LayoutIcon size={18} /> : 
+                      {activeTab === 'board' ? <LayoutIcon size={18} /> :
+                       activeTab === 'projects' ? <Rocket size={18} /> :
                        activeTab === 'insights' ? <Activity size={18} /> :
                        activeTab === 'subsites' ? <Compass size={18} /> :
                        activeTab === 'domain' ? <Globe size={18} /> : <ArrowUpRight size={18} />}
@@ -1714,7 +1716,7 @@ export default function DashboardPage() {
                    <div className="text-left">
                       <span className="text-[10px] block font-black text-white/20 uppercase tracking-[0.2em] mb-0.5">{t("page.activeView")}</span>
                       <span className="text-sm font-black uppercase tracking-widest">
-                        {activeTab === 'board' ? t("page.tabEditor") : activeTab === 'insights' ? t("page.tabInsights") : activeTab === 'subsites' ? t("page.tabSubsites") : activeTab === 'domain' ? t("page.tabDomain") : t("page.tabTransfer")}
+                        {activeTab === 'board' ? t("page.tabEditor") : activeTab === 'projects' ? t("page.tabProjects") : activeTab === 'insights' ? t("page.tabInsights") : activeTab === 'subsites' ? t("page.tabSubsites") : activeTab === 'domain' ? t("page.tabDomain") : t("page.tabTransfer")}
                       </span>
                    </div>
                 </div>
@@ -1746,12 +1748,13 @@ export default function DashboardPage() {
                             >
                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${activeTab === tab ? 'bg-[var(--accent)] text-black' : 'bg-white/5 text-white/30'}`}>
                                   {tab === 'board' ? <LayoutIcon size={16} /> :
+                                   tab === 'projects' ? <Rocket size={16} /> :
                                    tab === 'insights' ? <Activity size={16} /> :
                                    tab === 'subsites' ? <Compass size={16} /> :
                                    tab === 'domain' ? <Globe size={16} /> : <ArrowUpRight size={16} />}
                                </div>
                                <span className={`text-xs font-black uppercase tracking-[0.1em] ${activeTab === tab ? 'text-white' : 'text-white/40'}`}>
-                                  {tab === 'board' ? t("page.tabEditor") : tab === 'insights' ? t("page.tabInsights") : tab === 'subsites' ? t("page.tabSubsites") : tab === 'domain' ? t("page.tabDomain") : t("page.tabTransfer")}
+                                  {tab === 'board' ? t("page.tabEditor") : tab === 'projects' ? t("page.tabProjects") : tab === 'insights' ? t("page.tabInsights") : tab === 'subsites' ? t("page.tabSubsites") : tab === 'domain' ? t("page.tabDomain") : t("page.tabTransfer")}
                                </span>
                                {activeTab === tab && <Check size={14} className="ml-auto text-[var(--accent)]" />}
                             </button>
@@ -1892,6 +1895,16 @@ export default function DashboardPage() {
                 <div ref={referralsSectionRef} className="mt-12 max-w-[1200px] mx-auto scroll-mt-28">
                    <ReferralDashboard profile={profile} />
                 </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'projects' && (
+              <motion.div key="projects" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} className="max-w-3xl mx-auto px-2">
+                <ProjectTracker
+                  blocks={boardBlocks}
+                  onUpdateBlock={updateBlock}
+                  onEdit={(b) => setEditingBlock(b)}
+                />
               </motion.div>
             )}
 

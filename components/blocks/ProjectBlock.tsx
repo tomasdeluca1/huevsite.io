@@ -2,7 +2,8 @@
 
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
-import { ProjectBlockData } from "@/lib/profile-types";
+import { ProjectBlockData, ProjectStatus } from "@/lib/profile-types";
+import { getLaunchCountdownDays } from "@/lib/project-lifecycle";
 import { ExternalLink } from "lucide-react";
 
 interface Props {
@@ -18,6 +19,8 @@ export function ProjectBlock({ data, accentColor }: Props) {
   const metrics = data.metrics || "";
   const imageUrl = data.imageUrl;
   const stack = data.stack || [];
+  const status: ProjectStatus = data.status || "idea";
+  const statusLabel = status === "launched" ? "LIVE" : status === "building" ? "WIP" : "IDEA";
 
   return (
     <motion.div
@@ -42,7 +45,7 @@ export function ProjectBlock({ data, accentColor }: Props) {
               <div className="text-sm"><span className="kw" style={{ color: accentColor }}>import</span> {'{ Project }'} <span className="kw" style={{ color: accentColor }}>from</span> <span className="str">&lsquo;huevsite&rsquo;</span></div>
               <div className="text-sm"><span className="kw" style={{ color: accentColor }}>const</span> <span className="fn" style={{ color: '#4D9FFF' }}>{title.replace(/\s+/g, '')}</span> = () <span className="kw" style={{ color: accentColor }}>=&gt;</span> {'{'}</div>
               <div className="text-sm">&nbsp; <span className="kw" style={{ color: accentColor }}>return</span> (</div>
-              <div className="text-sm">&nbsp; &nbsp; &lt;<span className="fn" style={{ color: '#4D9FFF' }}>Showcase</span> <span className="str">status</span>=<span className="str">&quot;LIVE&quot;</span> /&gt;</div>
+              <div className="text-sm">&nbsp; &nbsp; &lt;<span className="fn" style={{ color: '#4D9FFF' }}>Showcase</span> <span className="str">status</span>=<span className="str">&quot;{statusLabel}&quot;</span> /&gt;</div>
               <div className="text-sm">&nbsp; )</div>
               <div className="text-sm">{'}'}</div>
             </div>
@@ -58,8 +61,11 @@ export function ProjectBlock({ data, accentColor }: Props) {
 
       <div className="project-info p-4 md:p-5 h-full flex flex-col">
         <div className="flex items-start justify-between gap-4 mb-2">
-          <h3 className="project-name text-xl md:text-2xl font-black text-white title-tracking leading-tight">{title}</h3>
-          {link !== "#" && (
+          <div className="flex flex-col gap-1.5">
+            <h3 className="project-name text-xl md:text-2xl font-black text-white title-tracking leading-tight">{title}</h3>
+            <ProjectStatusPill status={status} launchDate={data.launchDate} accentColor={accentColor} />
+          </div>
+          {link !== "#" && status === "launched" && (
             <div
               className="w-2 h-2 rounded-full animate-pulse shadow-[0_0_10px_rgba(200,255,0,0.5)]"
               style={{ backgroundColor: accentColor }}
@@ -108,4 +114,53 @@ export function ProjectBlock({ data, accentColor }: Props) {
       </div>
     </motion.div>
   );
+}
+
+function ProjectStatusPill({
+  status,
+  launchDate,
+  accentColor,
+}: {
+  status: ProjectStatus;
+  launchDate?: string;
+  accentColor: string;
+}) {
+  const t = useTranslations("blocks");
+  const days = getLaunchCountdownDays(launchDate);
+
+  let label: string;
+  if (status === "launched") {
+    label = launchDate
+      ? t("project.launchedOn", { date: formatShort(launchDate) })
+      : t("project.statusLaunched");
+  } else if (status === "building") {
+    label =
+      days !== null && days > 0
+        ? t("project.launchesInDays", { days })
+        : days === 0
+        ? t("project.launchesToday")
+        : t("project.statusBuilding");
+  } else {
+    label = t("project.statusIdea");
+  }
+
+  const dim = status === "launched";
+  return (
+    <span
+      className="inline-flex w-fit items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest"
+      style={{
+        color: dim ? accentColor : "rgba(255,255,255,0.6)",
+        backgroundColor: dim ? `${accentColor}1A` : "rgba(255,255,255,0.06)",
+        border: `1px solid ${dim ? `${accentColor}33` : "rgba(255,255,255,0.1)"}`,
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
+function formatShort(iso: string): string {
+  const d = new Date(iso + "T00:00:00");
+  if (isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString(undefined, { day: "numeric", month: "short" });
 }

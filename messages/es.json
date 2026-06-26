@@ -1980,7 +1980,13 @@
     "project": {
       "viewDemo": "Ver Demo",
       "fallbackTitle": "Proyecto",
-      "fallbackDescription": "Descripción del proyecto"
+      "fallbackDescription": "Descripción del proyecto",
+      "statusIdea": "Idea",
+      "statusBuilding": "En construcción",
+      "statusLaunched": "Lanzado",
+      "launchesInDays": "Lanza en {days} días",
+      "launchesToday": "Lanza hoy",
+      "launchedOn": "Lanzado el {date}"
     },
     "building": {
       "untitledProject": "Proyecto sin nombre",

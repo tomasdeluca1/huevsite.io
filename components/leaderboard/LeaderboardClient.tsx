@@ -18,23 +18,34 @@ interface LbProfile {
   nominations_count?: number;
   endorsements_count?: number;
   builder_score?: number;
+  github_commits_year?: number;
+  github_commits_month?: number;
   is_winner?: boolean;
 }
 
 const TABS = [
   { value: "score", emoji: "🔥" },
+  { value: "commits", emoji: "⚡" },
   { value: "followers", emoji: "📈" },
   { value: "nominations", emoji: "🏆" },
   { value: "endorsements", emoji: "💬" },
 ] as const;
 
-type SortKey = (typeof TABS)[number]["value"];
+type PrimaryTab = (typeof TABS)[number]["value"];
+type CommitsRange = "year" | "month";
 
-function metricOf(p: LbProfile, sort: SortKey): number {
+/** The actual `sort` sent to /api/explore — commits expands into year/month. */
+function effectiveSort(tab: PrimaryTab, range: CommitsRange): string {
+  return tab === "commits" ? `commits_${range}` : tab;
+}
+
+function metricOf(p: LbProfile, sort: string): number {
   switch (sort) {
     case "followers": return p.followers_count || 0;
     case "nominations": return p.nominations_count || 0;
     case "endorsements": return p.endorsements_count || 0;
+    case "commits_year": return p.github_commits_year || 0;
+    case "commits_month": return p.github_commits_month || 0;
     default: return p.builder_score || 0;
   }
 }
@@ -43,19 +54,22 @@ const PAGE_SIZE = 50;
 
 export function LeaderboardClient({ currentUserId }: { currentUserId?: string | null }) {
   const t = useTranslations("leaderboard");
-  const [sort, setSort] = useState<SortKey>("score");
+  const [tab, setTab] = useState<PrimaryTab>("score");
+  const [commitsRange, setCommitsRange] = useState<CommitsRange>("year");
   const [profiles, setProfiles] = useState<LbProfile[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
 
+  const sort = effectiveSort(tab, commitsRange);
+
   const load = useCallback(async (pageToLoad: number, reset: boolean) => {
     reset ? setIsLoading(true) : setIsFetchingMore(true);
     try {
       // Pass a non-"score" (but valid) filter so the API does NOT pin winners/Pro
       // to the top — a ranking must be pure metric order or the rank numbers lie.
-      const filterParam = sort === "score" ? "created_at" : sort;
+      const filterParam = sort === "score" || sort.startsWith("commits") ? "created_at" : sort;
       const res = await fetch(`/api/explore?page=${pageToLoad}&limit=${PAGE_SIZE}&sort=${sort}&filter=${filterParam}&q=`);
       if (res.ok) {
         const data = await res.json();
@@ -90,20 +104,39 @@ export function LeaderboardClient({ currentUserId }: { currentUserId?: string | 
     <div className="flex flex-col gap-10">
       {/* Tabs */}
       <div className="flex flex-wrap items-center justify-center gap-2">
-        {TABS.map((tab) => (
+        {TABS.map((tabItem) => (
           <button
-            key={tab.value}
-            onClick={() => setSort(tab.value)}
+            key={tabItem.value}
+            onClick={() => setTab(tabItem.value)}
             className={`px-5 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border ${
-              sort === tab.value
+              tab === tabItem.value
                 ? "bg-[var(--accent)] text-black border-[var(--accent)] shadow-lg shadow-[var(--accent)]/20"
                 : "bg-[var(--surface2)] text-[var(--text-muted)] border-[var(--border)] hover:text-white hover:border-[var(--border-bright)]"
             }`}
           >
-            {t(`tab_${tab.value}`)} {tab.emoji}
+            {t(`tab_${tabItem.value}`)} {tabItem.emoji}
           </button>
         ))}
       </div>
+
+      {/* Commits sub-tabs (year / month) */}
+      {tab === "commits" && (
+        <div className="flex items-center justify-center gap-2 -mt-6">
+          {(["year", "month"] as CommitsRange[]).map((r) => (
+            <button
+              key={r}
+              onClick={() => setCommitsRange(r)}
+              className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border ${
+                commitsRange === r
+                  ? "bg-[var(--accent)]/15 text-[var(--accent)] border-[var(--accent)]/40"
+                  : "bg-transparent text-[var(--text-muted)] border-[var(--border)] hover:text-white"
+              }`}
+            >
+              {t(`commits_range_${r}`)}
+            </button>
+          ))}
+        </div>
+      )}
 
       {isLoading ? (
         <div className="py-20 flex justify-center text-[var(--text-muted)]">

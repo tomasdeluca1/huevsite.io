@@ -14,6 +14,8 @@ const VALID_SORTS = new Set([
   "endorsements",
   "following",
   "followers_me",
+  "commits_year",
+  "commits_month",
 ]);
 
 const VALID_FILTERS = new Set([
@@ -111,8 +113,18 @@ export async function GET(request: NextRequest) {
         'updated_at': 'updated_at',
         'followers': 'followers_count',
         'nominations': 'nominations_count',
-        'endorsements': 'endorsements_count'
+        'endorsements': 'endorsements_count',
+        'commits_year': 'github_commits_year',
+        'commits_month': 'github_commits_month'
       }[sort] || 'builder_score';
+    }
+
+    // Commits leaderboard: only rank users who actually have commits, so the
+    // list isn't padded with zeros from people without a GitHub block.
+    if (sort === 'commits_year') {
+      query = query.gt('github_commits_year', 0);
+    } else if (sort === 'commits_month') {
+      query = query.gt('github_commits_month', 0);
     }
 
     if (isFollowingFilter) {
@@ -179,6 +191,18 @@ export async function GET(request: NextRequest) {
       if (countryFilterActive && (error.code === "42703" || /country/i.test(error.message || ""))) {
         return NextResponse.json(
           { profiles: [], count: 0, hasMore: false, countryUnavailable: true },
+          { status: 200 }
+        );
+      }
+      // Same resilience for the commits columns: if the github-commits migration
+      // hasn't been applied yet, degrade to empty instead of a 500 so the rest
+      // of the leaderboard/explore keeps working.
+      if (
+        (sort === "commits_year" || sort === "commits_month") &&
+        (error.code === "42703" || /github_commits/i.test(error.message || ""))
+      ) {
+        return NextResponse.json(
+          { profiles: [], count: 0, hasMore: false, commitsUnavailable: true },
           { status: 200 }
         );
       }

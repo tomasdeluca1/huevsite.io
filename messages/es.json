@@ -200,6 +200,26 @@
     }
   },
   "dashboard": {
+    "projects": {
+      "empty": "Todavía no agregaste proyectos. Agregá un bloque de proyecto desde el board.",
+      "status": { "idea": "Idea", "building": "En construcción", "launched": "Lanzado" },
+      "countdown": "Lanza en {days} días",
+      "dateOn": "Fecha: {date}",
+      "noDate": "Sin fecha de lanzamiento",
+      "liveCount": "live en {live}/{total}",
+      "markLaunched": "Marcar lanzado",
+      "edit": "Editar",
+      "launchInLaunchy": "Lanzar en Launchy",
+      "launchNeedsLink": "Agregá un link para lanzar",
+      "addProject": "Agregar proyecto",
+      "addTitle": "Agregar un proyecto",
+      "addHint": "Pegá la URL del proyecto y autocompletamos nombre, descripción e imagen. O cargalo a mano.",
+      "addUrlPlaceholder": "https://tu-proyecto.com",
+      "addAnalyze": "Autocompletar desde la URL",
+      "addAnalyzing": "Analizando...",
+      "addManual": "Agregar manualmente",
+      "addError": "No pudimos leer esa URL. Probá de nuevo o cargalo a mano."
+    },
     "colorPicker": {
       "label": "vibras de perfil",
       "customColor": "Color personalizado",
@@ -424,7 +444,13 @@
         "descriptionLabel": "// descripción",
         "stackLabel": "// tech stack (separadas por coma)",
         "linkLabel": "// link",
-        "metricsLabel": "// métricas"
+        "metricsLabel": "// métricas",
+        "statusLabel": "// estado",
+        "statusIdea": "Idea",
+        "statusBuilding": "En construcción",
+        "statusLaunched": "Lanzado",
+        "launchDateLabel": "// fecha de lanzamiento",
+        "archivedLabel": "Archivar (ocultar del perfil)"
       },
       "metric": {
         "labelLabel": "// etiqueta",
@@ -625,6 +651,7 @@
       "tabSubsites": "Sub-sites",
       "tabDomain": "Dominio",
       "tabTransfer": "Transferir",
+      "tabProjects": "Proyectos",
       "activeView": "Vista Activa",
       "boards": "boards",
       "boardDefaultName": "Board {n}",
@@ -1975,7 +2002,14 @@
     "project": {
       "viewDemo": "Ver Demo",
       "fallbackTitle": "Proyecto",
-      "fallbackDescription": "Descripción del proyecto"
+      "fallbackDescription": "Descripción del proyecto",
+      "statusIdea": "Idea",
+      "statusBuilding": "En construcción",
+      "statusLaunched": "Lanzado",
+      "launchesInDays": "Lanza en {days} días",
+      "launchesToday": "Lanza hoy",
+      "launchedOn": "Lanzado el {date}",
+      "liveInDirectories": "Lanzado en {live} directorios"
     },
     "building": {
       "untitledProject": "Proyecto sin nombre",

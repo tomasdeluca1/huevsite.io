@@ -183,6 +183,16 @@ export interface GitHubBlockData extends BaseBlock {
   };
 }
 
+export type ProjectStatus = "idea" | "building" | "launched";
+
+export interface ProjectLaunchSnapshot {
+  productId: string | null;
+  total: number;
+  live: number;
+  submitted: number;
+  updatedAt: string; // ISO
+}
+
 export interface ProjectBlockData extends BaseBlock {
   type: "project";
   title: string;
@@ -191,6 +201,10 @@ export interface ProjectBlockData extends BaseBlock {
   metrics?: string;
   link: string;
   stack: string[];
+  status?: ProjectStatus; // default "idea" when absent
+  launchDate?: string; // ISO date (yyyy-mm-dd)
+  archived?: boolean; // hidden from public profile when true
+  launch?: ProjectLaunchSnapshot; // populated by the Launchy pull webhook (Phase 3)
 }
 
 export interface StackBlockData extends BaseBlock {

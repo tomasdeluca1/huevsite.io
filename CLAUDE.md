@@ -75,6 +75,8 @@ NEXT_PUBLIC_FF_SOCIAL          # "true" to enable social features
 ADMIN_SECRET
 TWITTER_API_KEY / SECRET / ACCESS_TOKEN / ACCESS_SECRET
 GITHUB_TOKEN                   # app-level GitHub PAT (classic, no scopes needed for public data) used by lib/github-service.ts. Raises the API limit to 5000/h and unlocks GraphQL (real contribution heatmap + per-month commits). Without it, the GitHub block falls back to unauthenticated REST (rate-limited, no heatmap/commits).
+LAUNCHY_WEBHOOK_SECRET         # shared secret for the inbound Launchy webhook (app/api/webhooks/launchy). Must match HUEVSITE_WEBHOOK_SECRET in the launchy repo. Generate with: openssl rand -base64 32
+NEXT_PUBLIC_LAUNCHY_URL        # base URL of Launchy (default https://launchy.huevsite.com) — used to build the "Lanzar en Launchy" deep link
 ```
 
 ## Database: `profiles` table (key columns)

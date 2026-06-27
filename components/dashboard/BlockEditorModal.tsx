@@ -286,6 +286,41 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
               />
             </div>
             {block.type === "project" && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <div className="section-label !text-[9px] px-1">{t("blockEditor.project.statusLabel")}</div>
+                  <select
+                    value={formData.status || "idea"}
+                    onChange={(e) => handleChange("status", e.target.value)}
+                    className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all"
+                  >
+                    <option value="idea">{t("blockEditor.project.statusIdea")}</option>
+                    <option value="building">{t("blockEditor.project.statusBuilding")}</option>
+                    <option value="launched">{t("blockEditor.project.statusLaunched")}</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <div className="section-label !text-[9px] px-1">{t("blockEditor.project.launchDateLabel")}</div>
+                  <input
+                    type="date"
+                    value={formData.launchDate || ""}
+                    onChange={(e) => handleChange("launchDate", e.target.value)}
+                    className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all"
+                  />
+                </div>
+              </div>
+            )}
+            {block.type === "project" && (
+              <label className="flex items-center gap-2 text-sm text-white/70">
+                <input
+                  type="checkbox"
+                  checked={!!formData.archived}
+                  onChange={(e) => handleChange("archived", e.target.checked)}
+                />
+                {t("blockEditor.project.archivedLabel")}
+              </label>
+            )}
+            {block.type === "project" && (
               <div className="space-y-2">
                 <div className="section-label !text-[9px] px-1">{t("blockEditor.project.metricsLabel")}</div>
                 <input

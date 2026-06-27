@@ -40,8 +40,8 @@ interface SidebarProps {
   autoSaveEnabled: boolean;
   toggleNewsletter: () => void;
   newsletterSubscribed: boolean;
-  activeTab: 'board' | 'insights' | 'subsites' | 'domain' | 'transfer';
-  setActiveTab: (tab: 'board' | 'insights' | 'subsites' | 'domain' | 'transfer') => void;
+  activeTab: 'board' | 'projects' | 'insights' | 'subsites' | 'domain' | 'transfer';
+  setActiveTab: (tab: 'board' | 'projects' | 'insights' | 'subsites' | 'domain' | 'transfer') => void;
   onShareUnlocked: (extraBlocks: number) => void;
   onShareProfile: () => void;
   visibleBlockCount?: number;

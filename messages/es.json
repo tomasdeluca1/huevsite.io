@@ -210,7 +210,15 @@
       "markLaunched": "Marcar lanzado",
       "edit": "Editar",
       "launchInLaunchy": "Lanzar en Launchy",
-      "launchNeedsLink": "Agregá un link para lanzar"
+      "launchNeedsLink": "Agregá un link para lanzar",
+      "addProject": "Agregar proyecto",
+      "addTitle": "Agregar un proyecto",
+      "addHint": "Pegá la URL del proyecto y autocompletamos nombre, descripción e imagen. O cargalo a mano.",
+      "addUrlPlaceholder": "https://tu-proyecto.com",
+      "addAnalyze": "Autocompletar desde la URL",
+      "addAnalyzing": "Analizando...",
+      "addManual": "Agregar manualmente",
+      "addError": "No pudimos leer esa URL. Probá de nuevo o cargalo a mano."
     },
     "colorPicker": {
       "label": "vibras de perfil",

@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { Plus } from "lucide-react";
 import type { BlockData, ProjectBlockData, ProjectStatus } from "@/lib/profile-types";
 import {
   PROJECT_STATUS_ORDER,
@@ -8,15 +10,19 @@ import {
   isLaunchOverdue,
 } from "@/lib/project-lifecycle";
 import { buildLaunchyNewProductUrl } from "@/lib/launchy";
+import { AddProjectModal } from "@/components/dashboard/AddProjectModal";
 
 interface Props {
   blocks: BlockData[];
   onUpdateBlock: (block: BlockData) => void;
   onEdit: (block: BlockData) => void;
+  onAddProject: (prefill?: Partial<ProjectBlockData>) => void;
+  accentColor?: string;
 }
 
-export function ProjectTracker({ blocks, onUpdateBlock, onEdit }: Props) {
+export function ProjectTracker({ blocks, onUpdateBlock, onEdit, onAddProject, accentColor }: Props) {
   const t = useTranslations("dashboard.projects");
+  const [addOpen, setAddOpen] = useState(false);
 
   const projects = blocks
     .filter((b): b is ProjectBlockData => b.type === "project")
@@ -25,12 +31,41 @@ export function ProjectTracker({ blocks, onUpdateBlock, onEdit }: Props) {
   const statusLabel = (s: ProjectStatus) =>
     t(s === "idea" ? "status.idea" : s === "building" ? "status.building" : "status.launched");
 
+  const addButton = (
+    <button
+      onClick={() => setAddOpen(true)}
+      className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-black uppercase tracking-wide text-black"
+      style={{ backgroundColor: accentColor || "var(--accent)" }}
+    >
+      <Plus size={14} /> {t("addProject")}
+    </button>
+  );
+
+  const modal = (
+    <AddProjectModal
+      open={addOpen}
+      onClose={() => setAddOpen(false)}
+      onCreate={(prefill) => {
+        setAddOpen(false);
+        onAddProject(prefill);
+      }}
+      accentColor={accentColor}
+    />
+  );
+
   if (projects.length === 0) {
-    return <p className="text-sm text-white/40 py-8 text-center">{t("empty")}</p>;
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-end">{addButton}</div>
+        <p className="text-sm text-white/40 py-8 text-center">{t("empty")}</p>
+        {modal}
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-end">{addButton}</div>
       {PROJECT_STATUS_ORDER.map((status) => {
         const items = projects.filter((p) => (p.status || "idea") === status);
         if (items.length === 0) return null;
@@ -113,6 +148,7 @@ export function ProjectTracker({ blocks, onUpdateBlock, onEdit }: Props) {
           </div>
         );
       })}
+      {modal}
     </div>
   );
 }

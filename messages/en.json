@@ -210,7 +210,15 @@
       "markLaunched": "Mark launched",
       "edit": "Edit",
       "launchInLaunchy": "Launch on Launchy",
-      "launchNeedsLink": "Add a link to launch"
+      "launchNeedsLink": "Add a link to launch",
+      "addProject": "Add project",
+      "addTitle": "Add a project",
+      "addHint": "Paste the project URL and we'll auto-fill name, description and image. Or add it manually.",
+      "addUrlPlaceholder": "https://your-project.com",
+      "addAnalyze": "Auto-fill from URL",
+      "addAnalyzing": "Analyzing...",
+      "addManual": "Add manually",
+      "addError": "Couldn't read that URL. Try again or add it manually."
     },
     "colorPicker": {
       "label": "profile vibes",

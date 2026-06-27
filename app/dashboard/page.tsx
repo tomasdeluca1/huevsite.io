@@ -690,7 +690,7 @@ export default function DashboardPage() {
     setBlockChooserResolved(true);
   };
 
-  const addBlock = async (type: BlockType) => {
+  const addBlock = async (type: BlockType, prefill?: Record<string, any>) => {
     const newId = `temp-${type}-${Date.now()}`;
     const colSpan = type === "hero" || type === "ecosystem" ? 2 : (type === "github" || type === "project" ? 1 : 1);
     const rowSpan = type === "hero" || type === "ecosystem" ? 2 : (type === "github" || type === "project" ? 2 : 1);
@@ -842,6 +842,15 @@ export default function DashboardPage() {
           hideHeaderEcosystem: true,
         };
         break;
+    }
+
+    // Optional prefill (e.g. "add project from URL") — only non-empty values
+    // override the defaults so a missing OG field keeps its placeholder.
+    if (prefill) {
+      const clean = Object.fromEntries(
+        Object.entries(prefill).filter(([, v]) => v !== "" && v != null)
+      );
+      initialData = { ...initialData, ...clean };
     }
 
     setProfile((prev) => prev ? { ...prev, blocks: [...prev.blocks, initialData as BlockData] } : prev);
@@ -1904,6 +1913,8 @@ export default function DashboardPage() {
                   blocks={boardBlocks}
                   onUpdateBlock={updateBlock}
                   onEdit={(b) => setEditingBlock(b)}
+                  onAddProject={(prefill) => addBlock("project", prefill)}
+                  accentColor={profile.accentColor}
                 />
               </motion.div>
             )}

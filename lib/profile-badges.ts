@@ -80,8 +80,18 @@ function createBadge(key: ProfileBadge["key"]): ProfileBadge {
   return { key, ...BADGE_CATALOG[key] };
 }
 
-export function isProfileComplete(profile: BadgeProfile, blockCount: number) {
-  return Boolean(profile.name && profile.image && profile.github_handle && profile.tagline && blockCount >= 4);
+export function isProfileComplete(profile: BadgeProfile, blockCount: number, blocks: BadgeBlock[] = []) {
+  // Respect the EFFECTIVE profile header, not just the profiles columns. name /
+  // tagline / avatar are commonly set in the HERO BLOCK (the visual header) but
+  // only synced to the profiles row via the Edit Profile modal — so a user who
+  // filled their hero (the natural action) but skipped the modal stayed silently
+  // locked out. Likewise "GitHub" counts via the handle column OR a GitHub block.
+  const hero: any = blocks.find((b) => b.type === "hero")?.data || {};
+  const name = profile.name || hero.name;
+  const image = profile.image || hero.avatarUrl;
+  const tagline = profile.tagline || hero.tagline;
+  const hasGithub = Boolean(profile.github_handle) || hasGithubBlock(blocks);
+  return Boolean(name && image && hasGithub && tagline && blockCount >= 4);
 }
 
 function hasTwitterInBlocks(blocks: BadgeBlock[]): boolean {
@@ -104,7 +114,7 @@ export function getProfileBadges(
   const badges: ProfileBadge[] = [];
   const blocks = options.blocks || [];
 
-  if (isProfileComplete(profile, options.blockCount)) badges.push(createBadge("profile_complete"));
+  if (isProfileComplete(profile, options.blockCount, blocks)) badges.push(createBadge("profile_complete"));
 
   if (profile.updated_at && new Date(profile.updated_at) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) {
     badges.push(createBadge("active_this_week"));

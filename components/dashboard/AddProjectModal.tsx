@@ -54,6 +54,8 @@ export function AddProjectModal({
         title: data.title || "",
         description: data.description || "",
         imageUrl: data.imageUrl || "",
+        faviconUrl: data.faviconUrl || "",
+        imageMode: data.imageUrl ? "og" : data.faviconUrl ? "favicon" : "og",
         link: data.url || value,
       });
       setUrl("");

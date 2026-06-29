@@ -83,16 +83,23 @@ export function getBadgeProgress(input: QuestInput): BadgeProgress[] {
 
   // profile_complete — name + avatar + github + tagline + >=4 blocks
   {
+    // Mirror isProfileComplete: respect the hero block for name/tagline/avatar
+    // (set there, not always synced to the profiles row) and accept a GitHub block.
+    const hero: any = blocks.find((b) => b.type === "hero")?.data || {};
+    const effName = input.name || hero.name;
+    const effAvatar = input.avatarUrl || hero.avatarUrl;
+    const effTagline = input.tagline || hero.tagline;
+    const hasGithub = Boolean(input.githubHandle) || hasGithubBlock(blocks);
     const steps = [
-      Boolean(input.name),
-      Boolean(input.avatarUrl),
-      Boolean(input.githubHandle),
-      Boolean(input.tagline),
+      Boolean(effName),
+      Boolean(effAvatar),
+      hasGithub,
+      Boolean(effTagline),
       blockCount >= 4,
     ];
     const current = steps.filter(Boolean).length;
     const earned = current === steps.length;
-    const missingProfileField = !input.name || !input.avatarUrl || !input.githubHandle || !input.tagline;
+    const missingProfileField = !effName || !effAvatar || !hasGithub || !effTagline;
     result.push({
       ...meta("profile_complete"),
       earned,

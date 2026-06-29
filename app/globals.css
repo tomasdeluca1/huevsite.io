@@ -155,7 +155,12 @@ nav {
   }
 }
 
-@media (max-width: 768px) {
+/* Desktop nav shows from the lg breakpoint up. Below that the mobile cluster +
+   floating bottom nav take over. Hiding at <=1023px (instead of <=768px) avoids
+   two bugs: (1) a dead zone at exactly 768px (iPad portrait) where the CSS hide
+   and Tailwind `md:hidden` overlapped and left ONLY the logo, and (2) the desktop
+   nav overflowing/clipping in the cramped 769–900px range. */
+@media (max-width: 1023px) {
   .nav-right {
     display: none !important;
   }
@@ -235,7 +240,10 @@ nav {
   width: 100%;
   max-width: 1180px;
   display: grid;
-  grid-template-columns: 1fr;
+  /* minmax(0,1fr) — NOT 1fr — so the single column can't blow out past the
+     container. With a plain `1fr` the track's auto-minimum grew to the preview
+     card's min-content (~436px) and overflowed (clipped) the hero on phones. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 28px;
   align-items: center;
 }
@@ -253,7 +261,11 @@ nav {
 .badge {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
   gap: 8px;
+  max-width: 100%;
+  text-align: center;
   background: var(--surface2);
   border: 1px solid var(--border-bright) !important;
   border-radius: 100px;
@@ -2261,11 +2273,12 @@ footer {
   }
 
   .hero-shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .hero-copy {
     align-items: center;
+    min-width: 0;
   }
 
   .hero h1 {
@@ -2559,9 +2572,13 @@ footer {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  min-width: 320px;
+  /* min-width:320px forced horizontal overflow on phones <360px and pinned the
+     card to the left of its track on tablets. The grid track (xl two-col) already
+     enforces a 320px floor, so the element just needs to fill/center its column. */
+  min-width: 0;
   max-width: 420px;
   width: 100%;
+  margin-inline: auto;
 }
 
 .hpp-badge {

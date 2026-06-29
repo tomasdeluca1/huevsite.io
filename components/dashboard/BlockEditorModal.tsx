@@ -235,6 +235,45 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                 folder="projects"
               />
             )}
+            {block.type === "project" && (
+              <div className="space-y-2">
+                <div className="section-label !text-[9px] px-1">{t("blockEditor.project.imageModeLabel")}</div>
+                <div className="flex gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface2)] p-1">
+                  {(["og", "favicon"] as const).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => handleChange("imageMode", m)}
+                      className={`flex-1 rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-wide transition-colors ${
+                        (formData.imageMode || "og") === m
+                          ? "bg-[var(--accent)] text-black"
+                          : "text-white/50 hover:text-white"
+                      }`}
+                    >
+                      {m === "og" ? t("blockEditor.project.imageModeOg") : t("blockEditor.project.imageModeFavicon")}
+                    </button>
+                  ))}
+                </div>
+                {formData.imageMode === "favicon" && (
+                  <div className="flex items-center gap-2">
+                    {formData.faviconUrl ? (
+                      <img
+                        src={formData.faviconUrl}
+                        alt=""
+                        className="w-8 h-8 shrink-0 rounded-md border border-white/10 bg-black object-contain p-1"
+                      />
+                    ) : null}
+                    <input
+                      type="text"
+                      value={formData.faviconUrl || ""}
+                      onChange={(e) => handleChange("faviconUrl", e.target.value)}
+                      placeholder={t("blockEditor.project.faviconPlaceholder")}
+                      className="flex-1 rounded-lg bg-[var(--surface2)] border border-[var(--border)] px-3 py-2 text-xs text-white outline-none focus:border-[var(--accent)]"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
             <div className="space-y-2">
               <div className="flex items-center justify-between section-label !text-[9px] px-1">
                 <span>{t("blockEditor.project.titleLabel")}</span>

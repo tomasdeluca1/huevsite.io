@@ -1,10 +1,21 @@
 /* Shared toolkit for next/og (edge) OpenGraph images.
  *
- * Primitives mirror app/opengraph-image.tsx so every page OG shares one visual
- * language. Satori (the edge renderer) can't decode webp, so remote avatars go
- * through safeAvatarUrl (re-encodes to JPEG). All data fetchers are wrapped by
- * callers in try/catch and degrade to a static layout — an OG route must never
- * 500 or social crawlers report the image as unreachable.
+ * Single source of visual language for every social-share image on huevsite —
+ * home, profile, blog, leaderboard, explore, feed/Builders Hunt, etc. Every
+ * page OG composes these primitives so the whole discovery family reads as one
+ * brand: dark base, lime (#C8FF00) accent, the real wordmark (huev + lime site +
+ * dim .io), a hairline inner frame and a faint dot grid.
+ *
+ * Hardening rules baked in here:
+ *  - Satori (the edge renderer) can't decode webp/avif, so every remote avatar
+ *    goes through safeAvatarUrl, which re-encodes to JPEG at a fixed size via a
+ *    proxy. AvatarCircle falls back to a monogram when there's no usable URL, so
+ *    a missing/foreign-host avatar never produces a broken image.
+ *  - All data fetchers swallow errors and return null/[] — an OG route must
+ *    never 500 or social crawlers report the image as unreachable. Callers
+ *    additionally wrap render in try/catch and fall back to BrandFallback.
+ *  - No custom font fetch: we ride Satori's bundled sans so a font-CDN hiccup
+ *    can't break the image.
  *
  * JSX-returning helpers (not React components) — fine for ImageResponse.
  */
@@ -15,17 +26,22 @@ export const OG_SIZE = { width: 1200, height: 630 };
 export const OG_CONTENT_TYPE = "image/png";
 
 export const ACCENT = "#C8FF00";
+export const BG_TOP = "#07070b";
+export const BG_BOTTOM = "#0a0a0f";
 export const BORDER = "rgba(255,255,255,0.08)";
-export const TEXT_DIM = "rgba(255,255,255,0.62)";
-export const TEXT_MUTED = "rgba(255,255,255,0.40)";
+export const TEXT_DIM = "rgba(255,255,255,0.64)";
+export const TEXT_MUTED = "rgba(255,255,255,0.42)";
+export const TEXT_FAINT = "rgba(255,255,255,0.30)";
 
 export function truncate(text: string, max: number) {
   if (!text) return "";
-  return text.length <= max ? text : `${text.slice(0, max - 1).trimEnd()}…`;
+  const t = text.trim();
+  return t.length <= max ? t : `${t.slice(0, max - 1).trimEnd()}…`;
 }
 
-// Satori on edge doesn't decode webp. Route remote avatars through a free image
-// proxy that re-encodes to jpeg at a fixed size.
+// Satori on edge doesn't decode webp/avif. Route remote avatars through a free
+// image proxy that re-encodes to jpeg at a fixed size, with width/height pinned
+// so Satori never has to probe the image dimensions.
 export function safeAvatarUrl(src: string | null | undefined, size: number): string | null {
   if (!src || !src.startsWith("http")) return null;
   const encoded = encodeURIComponent(src);
@@ -38,11 +54,29 @@ export function rootStyle(accent: string) {
     height: "100%",
     display: "flex",
     flexDirection: "column" as const,
-    padding: "56px 64px",
+    padding: "54px 64px",
     color: "white",
-    background: `radial-gradient(circle at 14% 12%, ${accent}26 0%, transparent 42%), radial-gradient(circle at 88% 88%, ${accent}1f 0%, transparent 48%), linear-gradient(160deg, #050505 0%, #0c0c0c 55%, #0a0a0a 100%)`,
+    background: `radial-gradient(circle at 12% 8%, ${accent}24 0%, transparent 40%), radial-gradient(circle at 90% 96%, ${accent}1a 0%, transparent 46%), linear-gradient(155deg, ${BG_TOP} 0%, ${BG_BOTTOM} 58%, #07070a 100%)`,
     position: "relative" as const,
   };
+}
+
+// Faint technical dot grid — gives the dark base texture without competing with
+// the content. Rendered as its own absolutely-positioned layer so it never
+// fights the radial glows in the `background` shorthand.
+export function Texture() {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        display: "flex",
+        backgroundImage:
+          "radial-gradient(rgba(255,255,255,0.05) 1.4px, transparent 1.4px)",
+        backgroundSize: "34px 34px",
+      }}
+    />
+  );
 }
 
 export function InnerBorder() {
@@ -50,29 +84,28 @@ export function InnerBorder() {
     <div
       style={{
         position: "absolute",
-        top: 24,
-        left: 24,
-        right: 24,
-        bottom: 24,
+        top: 22,
+        left: 22,
+        right: 22,
+        bottom: 22,
         border: `1px solid ${BORDER}`,
-        borderRadius: 28,
+        borderRadius: 30,
         display: "flex",
       }}
     />
   );
 }
 
-export function Wordmark({ accent = ACCENT }: { accent?: string } = {}) {
-  // Mirror the real site logo (.logo span { color: var(--accent) }): "huev" +
-  // "site" (accent) + ".io" (dim). No floating brand-lime dot — it read as a
-  // foreign second color whenever the image's accent wasn't lime. With "site"
-  // carrying the page accent, the wordmark belongs to the same palette as the
-  // rest of the image.
+export function Wordmark({ accent = ACCENT, size = 30 }: { accent?: string; size?: number } = {}) {
+  // Mirrors the live site logo (.logo span { color: var(--accent) }): "huev" +
+  // "site" (accent) + ".io" (dim). "site" carries the page accent so the
+  // wordmark belongs to the same palette as the rest of the image.
+  const base = { fontSize: size, fontWeight: 900, letterSpacing: "-0.045em" };
   return (
     <div style={{ display: "flex", alignItems: "baseline" }}>
-      <span style={{ color: "white", fontSize: 28, fontWeight: 900, letterSpacing: "-0.04em" }}>huev</span>
-      <span style={{ color: accent, fontSize: 28, fontWeight: 900, letterSpacing: "-0.04em" }}>site</span>
-      <span style={{ color: "white", opacity: 0.4, fontSize: 28, fontWeight: 900, letterSpacing: "-0.04em" }}>.io</span>
+      <span style={{ ...base, color: "white" }}>huev</span>
+      <span style={{ ...base, color: accent }}>site</span>
+      <span style={{ ...base, color: "white", opacity: 0.4 }}>.io</span>
     </div>
   );
 }
@@ -83,20 +116,20 @@ export function Eyebrow({ label, accent = ACCENT }: { label: string; accent?: st
       style={{
         display: "flex",
         alignItems: "center",
-        gap: 12,
-        padding: "10px 18px",
+        gap: 11,
+        padding: "9px 16px 9px 14px",
         borderRadius: 999,
-        background: `${accent}1f`,
-        border: `1px solid ${accent}66`,
+        background: `${accent}1c`,
+        border: `1px solid ${accent}59`,
       }}
     >
-      <div style={{ width: 10, height: 10, borderRadius: 999, background: accent, display: "flex", boxShadow: `0 0 14px ${accent}` }} />
+      <div style={{ width: 9, height: 9, borderRadius: 999, background: accent, display: "flex", boxShadow: `0 0 14px ${accent}` }} />
       <span
         style={{
           color: accent,
           fontSize: 14,
           fontWeight: 900,
-          letterSpacing: "0.24em",
+          letterSpacing: "0.2em",
           textTransform: "uppercase",
           display: "flex",
         }}
@@ -112,12 +145,15 @@ export function AvatarCircle({
   name,
   size: avatarSize,
   accent,
+  radius,
 }: {
   url: string | null | undefined;
   name: string;
   size: number;
   accent: string;
+  radius?: number;
 }) {
+  const r = radius ?? 999;
   const proxied = safeAvatarUrl(url, avatarSize);
   if (proxied) {
     return (
@@ -125,7 +161,7 @@ export function AvatarCircle({
         src={proxied}
         width={avatarSize}
         height={avatarSize}
-        style={{ width: avatarSize, height: avatarSize, borderRadius: 999, objectFit: "cover", border: `4px solid ${accent}` }}
+        style={{ width: avatarSize, height: avatarSize, borderRadius: r, objectFit: "cover", border: `4px solid ${accent}` }}
       />
     );
   }
@@ -134,12 +170,12 @@ export function AvatarCircle({
       style={{
         width: avatarSize,
         height: avatarSize,
-        borderRadius: 999,
+        borderRadius: r,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         background: `linear-gradient(135deg, ${accent} 0%, ${accent}aa 100%)`,
-        color: "black",
+        color: getContrastColor(accent),
         fontSize: Math.round(avatarSize * 0.42),
         fontWeight: 900,
         border: `4px solid ${accent}`,
@@ -172,7 +208,7 @@ export function FooterCTA({
       <div
         style={{
           display: "flex",
-          padding: "12px 22px",
+          padding: "13px 24px",
           borderRadius: 14,
           background: accent,
           color: getContrastColor(accent),
@@ -188,7 +224,7 @@ export function FooterCTA({
           color: TEXT_MUTED,
           fontSize: 14,
           fontWeight: 700,
-          letterSpacing: "0.22em",
+          letterSpacing: "0.2em",
           textTransform: "uppercase",
           display: "flex",
         }}
@@ -212,13 +248,14 @@ export function OgFrame({
 }) {
   return (
     <div style={rootStyle(accent)}>
+      <Texture />
       <InnerBorder />
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", zIndex: 1 }}>
         <Wordmark accent={accent} />
         {eyebrow ?? null}
       </div>
-      <div style={{ display: "flex", flex: 1, width: "100%", marginTop: 32 }}>{children}</div>
-      {footer ?? null}
+      <div style={{ display: "flex", flex: 1, width: "100%", marginTop: 30, position: "relative", zIndex: 1 }}>{children}</div>
+      {footer ? <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column" }}>{footer}</div> : null}
     </div>
   );
 }
@@ -226,11 +263,11 @@ export function OgFrame({
 // Full-width hero body: big headline + subtitle (for static / single-column OGs).
 export function HeroBody({ headline, sub }: { headline: string; sub: string }) {
   return (
-    <div style={{ flex: 1, width: "100%", display: "flex", flexDirection: "column", justifyContent: "center", gap: 26, maxWidth: 1000 }}>
+    <div style={{ flex: 1, width: "100%", display: "flex", flexDirection: "column", justifyContent: "center", gap: 26, maxWidth: 1010 }}>
       <div
         style={{
-          fontSize: 76,
-          lineHeight: 1.02,
+          fontSize: 78,
+          lineHeight: 1.0,
           fontWeight: 900,
           letterSpacing: "-0.05em",
           display: "flex",
@@ -242,12 +279,12 @@ export function HeroBody({ headline, sub }: { headline: string; sub: string }) {
       </div>
       <div
         style={{
-          fontSize: 24,
+          fontSize: 25,
           lineHeight: 1.4,
           color: TEXT_DIM,
           display: "flex",
           flexWrap: "wrap",
-          maxWidth: 760,
+          maxWidth: 800,
           fontWeight: 500,
         }}
       >
@@ -264,8 +301,8 @@ export function SplitBody({ headline, sub, right }: { headline: string; sub: str
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", gap: 22 }}>
         <div
           style={{
-            fontSize: 58,
-            lineHeight: 1.05,
+            fontSize: 60,
+            lineHeight: 1.02,
             fontWeight: 900,
             letterSpacing: "-0.045em",
             display: "flex",
@@ -277,12 +314,80 @@ export function SplitBody({ headline, sub, right }: { headline: string; sub: str
           {headline}
         </div>
         <div
-          style={{ fontSize: 21, lineHeight: 1.42, color: TEXT_DIM, display: "flex", flexWrap: "wrap", maxWidth: 540, fontWeight: 500 }}
+          style={{ fontSize: 22, lineHeight: 1.42, color: TEXT_DIM, display: "flex", flexWrap: "wrap", maxWidth: 540, fontWeight: 500 }}
         >
           {sub}
         </div>
       </div>
       {right}
+    </div>
+  );
+}
+
+// Glass card used for the right-hand panel in split layouts (winner, ranking…).
+export function Card({ accent = ACCENT, width, children }: { accent?: string; width: number; children: any }) {
+  return (
+    <div
+      style={{
+        width,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        padding: 28,
+        borderRadius: 28,
+        background: "rgba(255,255,255,0.05)",
+        border: `1px solid ${accent}40`,
+        gap: 18,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+// Last-resort branded image for dynamic API OG routes: any unrecoverable error
+// (DB down, bad data, proxy hiccup) renders this instead of a 500/blank, so a
+// shared link never previews as broken.
+export function BrandFallback({ accent = ACCENT, label }: { accent?: string; label?: string } = {}) {
+  return (
+    <div style={rootStyle(accent)}>
+      <Texture />
+      <InnerBorder />
+      <div style={{ display: "flex", position: "relative", zIndex: 1 }}>
+        <Wordmark accent={accent} />
+      </div>
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          gap: 22,
+          position: "relative",
+          zIndex: 1,
+          maxWidth: 920,
+        }}
+      >
+        <div
+          style={{
+            fontSize: 74,
+            lineHeight: 1.02,
+            fontWeight: 900,
+            letterSpacing: "-0.05em",
+            display: "flex",
+            flexWrap: "wrap",
+            color: "white",
+          }}
+        >
+          Construí tu reputación como builder.
+        </div>
+        <div style={{ fontSize: 25, lineHeight: 1.4, color: TEXT_DIM, display: "flex", flexWrap: "wrap", maxWidth: 820, fontWeight: 500 }}>
+          {label || "Proyectos, métricas reales y endorsements. Que te vean shippeando, no diciendo."}
+        </div>
+      </div>
+      <div style={{ position: "relative", zIndex: 1, display: "flex" }}>
+        <FooterCTA cta="Empezá gratis" hint="huevsite.io" accent={accent} />
+      </div>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import LocaleToggle from "@/components/LocaleToggle";
 import { ExploreClient } from "@/components/explore/ExploreClient";
+import { DiscoveryHeader } from "@/components/discovery/DiscoveryHeader";
 
 export const revalidate = 60; // Revalidate simple cache every 60s
 
@@ -38,34 +39,19 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] font-display flex flex-col">
-      {/* NAV */}
-      <nav className="flex items-center justify-between px-6 py-6 md:px-10 max-w-7xl mx-auto w-full relative z-50">
-        <Link href={fromDashboard ? "/dashboard" : "/"} className="logo text-2xl">
-          huev<span>site</span>.io
-        </Link>
-        <div className="flex items-center gap-2">
-          <LocaleToggle />
-          <Link
-            href="/leaderboard"
-            className="hidden sm:flex items-center text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] hover:text-white transition-colors px-4 py-3"
-          >
-            {t("navRanking")}
-          </Link>
-          <Link href={user ? "/dashboard" : "/login"} className="btn btn-accent text-xs md:text-sm font-bold !px-6 !py-3 !rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-lg shadow-[var(--accent)]/20">
-            {user ? t("myHuevsite") : t("createMyHuevsite")}
-          </Link>
-        </div>
-      </nav>
+    <div
+      className="min-h-screen font-display flex flex-col"
+      style={{ background: "radial-gradient(circle at 50% 0%, rgba(200,255,0,0.06), transparent 720px), var(--bg)" }}
+    >
+      <DiscoveryHeader currentUserId={user?.id ?? null} maxWidthClass="max-w-[1440px]" />
 
-      {/* HEADER */}
-      <header className="relative py-20 px-6 text-center overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(200,255,0,0.05)_0%,transparent_60%)] pointer-events-none" />
+      {/* HERO (full-width; gradient lives on the page wrapper so it never cuts) */}
+      <header className="relative py-12 px-6 text-center">
         <div className="max-w-3xl mx-auto relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--surface2)] border border-[var(--border-bright)] text-[var(--accent)] text-xs font-mono mb-8 justify-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--surface2)] border border-[var(--border-bright)] text-[var(--accent)] text-xs font-mono mb-6 justify-center">
             <Sparkles size={14} /> {t("badge", { count: totalRegistered })}
           </div>
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-6">
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tighter mb-4">
             {t("titlePrefix")}
             <br />
             <span className="text-[var(--text-muted)] line-through mr-2 inline-block -rotate-1 decoration-[var(--accent)] text-4xl md:text-6xl">
@@ -73,19 +59,19 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
             </span>
             {t("titleSuffix")}
           </h1>
-          <p className="text-lg md:text-xl text-[var(--text-dim)] max-w-xl mx-auto leading-relaxed">
+          <p className="text-base md:text-lg text-[var(--text-dim)] max-w-xl mx-auto leading-relaxed">
             {t("subtitle")}
           </p>
         </div>
       </header>
 
-      {/* GRID */}
-      <main className="flex-1 px-6 md:px-10 pb-32 max-w-7xl mx-auto w-full pt-12">
+      {/* GRID (full-width, no rail) */}
+      <main className="flex-1 px-6 md:px-10 pb-32 max-w-[1440px] mx-auto w-full pt-4">
         <ExploreClient initialTotal={totalRegistered} />
       </main>
 
       {/* FOOTER */}
-      <footer className="py-10 px-6 border-t border-[var(--border)] flex flex-col md:flex-row items-center justify-between gap-4 max-w-7xl mx-auto w-full">
+      <footer className="py-10 px-6 border-t border-[var(--border)] flex flex-col md:flex-row items-center justify-between gap-4 max-w-[1440px] mx-auto w-full">
         <div className="flex flex-col items-center md:items-start gap-1">
           <div className="logo text-[var(--text-muted)] text-sm font-mono font-bold tracking-tight">
             huevsite.io

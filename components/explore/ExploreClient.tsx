@@ -199,32 +199,32 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative z-10 flex flex-col lg:flex-row gap-6 items-center justify-between w-full"
+        className="relative z-10 flex flex-wrap items-center gap-2 w-full"
       >
         {/* Search Bar Group */}
-        <div className="flex items-center gap-3 flex-1 w-full max-w-2xl">
+        <div className="flex items-center gap-2 flex-1 min-w-[220px]">
           <div className="relative flex-1 group">
-            <Search size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-[var(--text-muted)] group-focus-within:text-[var(--accent)] transition-colors" />
+            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] group-focus-within:text-[var(--accent)] transition-colors" />
             <input
               type="text"
               placeholder={t("searchPlaceholder")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-16 pr-12 py-5 rounded-[32px] bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)]/50 focus:ring-4 focus:ring-[var(--accent)]/5 outline-none text-[16px] transition-all text-white placeholder-[var(--text-dim)] shadow-xl shadow-black/20"
+              className="w-full pl-10 pr-9 py-3 rounded-xl bg-white/[0.03] border border-white/10 focus:border-[var(--accent)]/50 outline-none text-sm transition-all text-white placeholder-[var(--text-dim)]"
             />
             {search && (
               <button
                 onClick={() => setSearch("")}
-                className="absolute right-5 top-1/2 -translate-y-1/2 p-2 rounded-xl hover:bg-[var(--surface)] text-[var(--text-muted)] transition-colors"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg hover:bg-white/5 text-[var(--text-muted)] transition-colors"
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             )}
           </div>
 
           <button
             onClick={() => setIsScoreInfoOpen(true)}
-            className="flex items-center gap-2 h-[60px] px-6 rounded-[32px] bg-[var(--surface2)] border border-[var(--border)] text-[var(--text-dim)] hover:border-[var(--accent)]/50 hover:text-white transition-all group shrink-0 relative"
+            className="flex items-center gap-2 px-3 py-3 rounded-xl bg-white/[0.03] border border-white/10 text-[var(--text-dim)] hover:border-[var(--accent)]/50 hover:text-white transition-all group shrink-0 relative"
           >
             <Sparkles size={18} className="text-[var(--accent)] group-hover:scale-110 transition-transform" />
             <span className="hidden md:block text-[11px] font-black uppercase tracking-widest">{t("scoreSystem")}</span>
@@ -239,14 +239,14 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
         </div>
 
         {/* Sort + Place Controls */}
-        <div className="flex items-center gap-3 w-full lg:w-auto shrink-0 bg-[var(--surface2)]/40 p-1.5 pl-4 rounded-[32px] border border-[var(--border)] backdrop-blur-sm">
+        <div className="flex items-center gap-2 shrink-0">
           {/* Place (country / continent) filter */}
           <div className="flex items-center gap-2" ref={placeRef}>
             <Globe size={14} className="text-[var(--text-muted)] hidden sm:block opacity-50 shrink-0" />
             <div className="relative">
               <button
                 onClick={() => setIsPlaceOpen((o) => !o)}
-                className="flex items-center gap-2 bg-white/5 text-[11px] font-bold uppercase tracking-widest border border-transparent hover:border-white/10 rounded-2xl px-5 py-3 text-white transition-all cursor-pointer whitespace-nowrap max-w-[170px]"
+                className="flex items-center gap-2 bg-white/[0.03] text-[11px] font-bold uppercase tracking-widest border border-white/10 hover:border-white/20 rounded-xl px-3 py-3 text-white transition-all cursor-pointer whitespace-nowrap max-w-[160px]"
                 suppressHydrationWarning
               >
                 <span className="truncate">{placeLabel}</span>
@@ -292,7 +292,7 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
             <div className="relative" ref={sortRef}>
               <button
                 onClick={() => setIsSortOpen((o) => !o)}
-                className="flex items-center gap-2 bg-white/5 text-[11px] font-bold uppercase tracking-widest border border-transparent hover:border-white/10 rounded-2xl px-5 py-3 text-white transition-all cursor-pointer whitespace-nowrap"
+                className="flex items-center gap-2 bg-white/[0.03] text-[11px] font-bold uppercase tracking-widest border border-white/10 hover:border-white/20 rounded-xl px-3 py-3 text-white transition-all cursor-pointer whitespace-nowrap"
                 suppressHydrationWarning
               >
                 {SORT_OPTIONS.find((o) => o.value === sort)?.label}
@@ -332,7 +332,7 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
         </div>
       ) : (
         <div className="flex flex-col gap-12">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10 pt-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10 pt-10">
             {profiles.map((profile, i) => (
               <ProfileCard 
                 key={profile.id} 

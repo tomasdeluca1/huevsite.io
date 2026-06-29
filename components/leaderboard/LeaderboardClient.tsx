@@ -151,9 +151,13 @@ export function LeaderboardClient({ currentUserId }: { currentUserId?: string | 
           {/* Podium */}
           {podium.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 items-end">
-              {/* Reorder so #1 is centered on desktop: 2, 1, 3 */}
-              {[podium[1], podium[0], podium[2]].map((p, idx) => {
-                if (!p) return <div key={`empty-${idx}`} className="hidden sm:block" />;
+              {/* Natural order 1,2,3 so mobile stacks correctly; CSS order centers #1 on desktop (2,1,3). */}
+              {[
+                { p: podium[0], order: "order-1 sm:order-2" },
+                { p: podium[1], order: "order-2 sm:order-1" },
+                { p: podium[2], order: "order-3 sm:order-3" },
+              ].map(({ p, order }, idx) => {
+                if (!p) return <div key={`empty-${idx}`} className={`hidden sm:block ${order}`} />;
                 const rank = profiles.indexOf(p) + 1;
                 return (
                   <PodiumCard
@@ -164,6 +168,7 @@ export function LeaderboardClient({ currentUserId }: { currentUserId?: string | 
                     unit={unit}
                     elevated={rank === 1}
                     isMe={!!currentUserId && p.id === currentUserId}
+                    orderClass={order}
                   />
                 );
               })}
@@ -208,9 +213,9 @@ export function LeaderboardClient({ currentUserId }: { currentUserId?: string | 
 }
 
 function PodiumCard({
-  profile, rank, value, unit, elevated, isMe,
+  profile, rank, value, unit, elevated, isMe, orderClass = "",
 }: {
-  profile: LbProfile; rank: number; value: number; unit: string; elevated: boolean; isMe: boolean;
+  profile: LbProfile; rank: number; value: number; unit: string; elevated: boolean; isMe: boolean; orderClass?: string;
 }) {
   const t = useTranslations("leaderboard");
   const accent = profile.accent_color || "var(--accent)";
@@ -221,7 +226,7 @@ function PodiumCard({
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: rank * 0.05 }}
-      className={elevated ? "sm:-mt-6" : ""}
+      className={`${elevated ? "sm:-mt-6" : ""} ${orderClass}`}
     >
       <Link
         href={`/${profile.username}`}

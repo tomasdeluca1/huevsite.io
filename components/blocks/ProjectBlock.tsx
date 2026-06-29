@@ -18,7 +18,8 @@ export function ProjectBlock({ data, accentColor }: Props) {
   const description = data.description || t('project.fallbackDescription');
   const link = data.link || "#";
   const metrics = data.metrics || "";
-  const imageUrl = data.imageUrl;
+  const useFavicon = data.imageMode === "favicon" && !!data.faviconUrl;
+  const imageUrl = useFavicon ? data.faviconUrl : data.imageUrl;
   const stack = data.stack || [];
   const status: ProjectStatus = data.status || "idea";
   const statusLabel = status === "launched" ? "LIVE" : status === "building" ? "WIP" : "IDEA";
@@ -34,7 +35,11 @@ export function ProjectBlock({ data, accentColor }: Props) {
         {imageUrl ? (
           <img
             src={imageUrl}
-            className="w-full h-full object-cover opacity-80 transition-all duration-500 group-hover:opacity-100 group-hover:scale-110"
+            className={`w-full h-full opacity-80 transition-all duration-500 group-hover:opacity-100 ${
+              useFavicon
+                ? "object-contain p-10 group-hover:scale-105"
+                : "object-cover group-hover:scale-110"
+            }`}
             alt={title}
           />
         ) : (

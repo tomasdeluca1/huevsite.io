@@ -8,9 +8,11 @@ import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import LocaleToggle from "@/components/LocaleToggle";
 import { BadgeCheck, Loader2, Activity as ActivityIcon, ArrowUpRight, Users, UserPlus, ChevronUp, ChevronLeft, ChevronRight, Rocket } from "lucide-react";
-import { currentLaunchWeek, addWeeks, weekLabel, compareWeeks } from "@/lib/launch-week";
+import { currentLaunchWeek, addWeeks, weekLabel, compareWeeks, daysUntilWeekClose } from "@/lib/launch-week";
 import { withHuevsiteUtm } from "@/lib/utm";
 import { trackClick } from "@/components/analytics/AnalyticsTracker";
+import { DiscoveryRail } from "@/components/discovery/DiscoveryRail";
+import { DiscoveryHeader } from "@/components/discovery/DiscoveryHeader";
 
 type FeedT = ReturnType<typeof useTranslations>;
 
@@ -172,7 +174,7 @@ function FeedContent() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [tab, setTab] = useState<"activity" | "launches">("activity");
+  const [tab, setTab] = useState<"activity" | "launches">("launches");
   const [audienceFilter, setAudienceFilter] = useState<"all" | "following">("all");
   const [filterType, setFilterType] = useState<string>("all");
   const [page, setPage] = useState(1);
@@ -180,6 +182,7 @@ function FeedContent() {
   const [launches, setLaunches] = useState<any[]>([]);
   const [launchWeek, setLaunchWeek] = useState<string>("");
   const [votedIds, setVotedIds] = useState<string[]>([]);
+  const [stackFilter, setStackFilter] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
@@ -296,37 +299,47 @@ function FeedContent() {
   };
 
   const isCurrentWeek = !launchWeek || compareWeeks(launchWeek, currentLaunchWeek()) >= 0;
+  const closeDays = daysUntilWeekClose();
+
+  const stackChips = useMemo(() => {
+    const freq = new Map<string, number>();
+    launches.forEach((l: any) => (l.stack || []).forEach((s: string) => freq.set(s, (freq.get(s) || 0) + 1)));
+    return Array.from(freq.entries()).sort((a, b) => b[1] - a[1]).slice(0, 6).map((e) => e[0]);
+  }, [launches]);
+  const shownLaunches = stackFilter
+    ? launches.filter((l: any) => (l.stack || []).includes(stackFilter))
+    : launches;
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] font-display py-12 px-4 max-w-2xl mx-auto">
-      <header className="mb-12">
-        <div className="flex items-center justify-between mb-8">
-          <Link href={fromDashboard ? "/dashboard" : "/"} className="logo">huev<span>site</span>.io</Link>
-          <div className="flex items-center gap-3">
-             <LocaleToggle />
-             <Link href="/explore" className="hidden sm:block text-[10px] font-mono uppercase tracking-widest text-[var(--text-muted)] hover:text-white transition-colors">{t("navExplore")}</Link>
-             <Link href={currentUserId ? "/dashboard" : "/login"} className="btn btn-accent !text-[10px] !py-2 !px-4 !rounded-xl">{currentUserId ? t("myHuevsite") : t("createMyHuevsite")}</Link>
-          </div>
-        </div>
+    <div
+      className="min-h-screen font-display"
+      style={{ background: "radial-gradient(circle at 50% 0%, rgba(200,255,0,0.06), transparent 720px), var(--bg)" }}
+    >
+      <DiscoveryHeader currentUserId={currentUserId} maxWidthClass="max-w-[1440px]" />
+      <div className="max-w-[1440px] mx-auto w-full px-6 lg:px-10 py-10 flex flex-col lg:flex-row gap-6 items-start">
+      <div className="flex-1 min-w-0">
+      <header className="mb-8 max-w-2xl">
         <div className="section-label mb-2">{t("sectionLabel")}</div>
         <h1 className="text-4xl font-extrabold tracking-tighter">{t("title")}</h1>
-        <p className="mt-3 max-w-xl text-sm leading-relaxed text-[var(--text-dim)]">
+        <p className="mt-3 text-sm leading-relaxed text-[var(--text-dim)]">
           {t("subtitle")}
         </p>
-        
-        <div className="flex gap-2 mt-8 bg-black/20 p-1 rounded-2xl border border-[var(--border)] overflow-hidden">
-          {(["launches", "activity"] as const).map((tabId) => (
-            <button
-              key={tabId}
-              onClick={() => setTab(tabId)}
-              className={`flex-1 py-3 px-2 text-center rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${tab === tabId ? 'bg-[var(--surface2)] text-white' : 'text-[var(--text-muted)] hover:text-white'}`}
-            >
-              {tabId === "launches" ? t("tabLaunches") : t("tabActivity")}
-            </button>
-          ))}
-        </div>
+      </header>
 
-        <div className="mt-4 flex gap-2">
+      <div className="mb-6 inline-flex items-center gap-1 rounded-xl border border-[var(--border)] bg-black/20 p-1">
+        {(["launches", "activity"] as const).map((tabId) => (
+          <button
+            key={tabId}
+            onClick={() => setTab(tabId)}
+            className={`rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all ${tab === tabId ? 'bg-[var(--surface2)] text-white' : 'text-[var(--text-muted)] hover:text-white'}`}
+          >
+            {tabId === "launches" ? t("tabLaunchesShort") : t("tabActivity")}
+          </button>
+        ))}
+      </div>
+
+        {tab === "activity" && (
+        <div className="mt-4 mb-6 flex gap-2">
           {[
             { id: "all", label: t("filterAll"), icon: Users },
             { id: "following", label: t("filterFollowing"), icon: UserPlus },
@@ -349,14 +362,39 @@ function FeedContent() {
             );
           })}
         </div>
-      </header>
+        )}
+
 
       {loading ? (
-        <div className="space-y-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-24 rounded-2xl bg-[var(--surface)] border border-[var(--border)] animate-pulse" />
-          ))}
-        </div>
+        tab === "launches" ? (
+          <div className="space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex gap-3 sm:gap-4 p-4 rounded-3xl border border-[var(--border)] bg-[var(--surface)] animate-pulse">
+                <div className="w-7 shrink-0" />
+                <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl bg-white/[0.06] shrink-0" />
+                <div className="flex-1 min-w-0 space-y-2 py-1">
+                  <div className="h-4 w-1/2 rounded bg-white/10" />
+                  <div className="h-3 w-4/5 rounded bg-white/[0.05]" />
+                  <div className="h-3 w-1/3 rounded bg-white/[0.05]" />
+                </div>
+                <div className="w-12 shrink-0 rounded-xl bg-white/[0.05]" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="flex items-center gap-3 p-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] animate-pulse">
+                <div className="w-10 h-10 rounded-full bg-white/10 shrink-0" />
+                <div className="flex-1 min-w-0 space-y-2">
+                  <div className="h-3.5 w-1/3 rounded bg-white/10" />
+                  <div className="h-3 w-2/3 rounded bg-white/[0.05]" />
+                </div>
+                <div className="h-3 w-8 rounded bg-white/[0.05] shrink-0" />
+              </div>
+            ))}
+          </div>
+        )
       ) : error && audienceFilter === "following" && !currentUserId ? (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -397,7 +435,27 @@ function FeedContent() {
             </button>
           </div>
 
-          {launches.length === 0 ? (
+          {stackChips.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setStackFilter(null)}
+                className={`text-[10px] px-3 py-1 rounded-full border transition-all ${!stackFilter ? "bg-[var(--accent)] text-black border-[var(--accent)] font-black" : "border-white/10 text-white/55 hover:text-white"}`}
+              >
+                {t("filterStackAll")}
+              </button>
+              {stackChips.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setStackFilter(s === stackFilter ? null : s)}
+                  className={`text-[10px] px-3 py-1 rounded-full border transition-all ${stackFilter === s ? "bg-[var(--accent)] text-black border-[var(--accent)] font-black" : "border-white/10 text-white/55 hover:text-white"}`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {shownLaunches.length === 0 ? (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -407,29 +465,34 @@ function FeedContent() {
                 <Rocket size={32} />
               </div>
               <h3 className="text-xl font-bold mb-2 text-white">{t("launchesEmptyTitle")}</h3>
-              <p className="text-sm text-[var(--text-dim)] font-mono leading-relaxed mb-8 max-w-xs mx-auto">
+              <p className="text-sm text-[var(--text-dim)] font-mono leading-relaxed mb-4 max-w-xs mx-auto">
                 {t("launchesEmptyBody")}
               </p>
+              {isCurrentWeek && closeDays > 0 && (
+                <p className="text-xs font-black uppercase tracking-widest text-[var(--accent)] mb-6">
+                  {t("emptyUrgency", { days: closeDays })}
+                </p>
+              )}
               <Link href="/dashboard" className="btn btn-accent inline-flex !rounded-2xl shadow-lg shadow-[var(--accent)]/20">
                 {t("addProject")}
               </Link>
             </motion.div>
           ) : (
             <div className="space-y-3">
-              {launches.map((launch: any, i: number) => {
+              {shownLaunches.map((launch: any, i: number) => {
                 const voted = votedIds.includes(launch.id);
                 const rank = i + 1;
                 const live = launch.launch?.live || 0;
                 return (
                   <div
                     key={launch.id}
-                    className={`flex gap-3 sm:gap-4 p-4 rounded-3xl border transition-all ${
+                    className={`flex gap-2.5 sm:gap-4 p-3 sm:p-4 rounded-3xl border transition-all ${
                       launch.featured
                         ? "border-[var(--accent)]/40 bg-[var(--accent)]/[0.04]"
                         : "border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border-bright)]"
                     }`}
                   >
-                    <div className="flex flex-col items-center justify-center w-7 shrink-0">
+                    <div className="flex flex-col items-center justify-center w-6 sm:w-7 shrink-0">
                       <span className="text-sm font-black text-[var(--text-muted)]">
                         {!isCurrentWeek && rank === 1 ? "🏆" : rank}
                       </span>
@@ -439,10 +502,10 @@ function FeedContent() {
                       <img
                         src={launch.imageUrl}
                         alt={launch.title}
-                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border border-white/10 bg-black shrink-0"
+                        className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl object-cover border border-white/10 bg-black shrink-0"
                       />
                     ) : (
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border border-white/10 bg-black/40 flex items-center justify-center text-[var(--text-muted)] shrink-0">
+                      <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl border border-white/10 bg-black/40 flex items-center justify-center text-[var(--text-muted)] shrink-0">
                         <Rocket size={20} />
                       </div>
                     )}
@@ -496,7 +559,7 @@ function FeedContent() {
 
                     <button
                       onClick={() => toggleUpvote(launch.id, voted)}
-                      className={`flex flex-col items-center justify-center w-12 shrink-0 rounded-xl border transition-all ${
+                      className={`flex flex-col items-center justify-center w-11 sm:w-12 shrink-0 rounded-xl border transition-all ${
                         voted
                           ? "border-[var(--accent)] text-[var(--accent)] bg-[var(--accent)]/10"
                           : "border-white/10 text-white/60 hover:text-white hover:border-white/30"
@@ -513,7 +576,7 @@ function FeedContent() {
           )}
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {activityGroups.length === 0 ? (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -540,8 +603,14 @@ function FeedContent() {
           
           {loadingMore && (
              <div className="space-y-4">
-               {[...Array(2)].map((_, i) => (
-                 <div key={i} className="h-24 rounded-2xl bg-[var(--surface)] border border-[var(--border)] animate-pulse" />
+               {[...Array(3)].map((_, i) => (
+                 <div key={i} className="flex items-center gap-3 p-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] animate-pulse">
+                   <div className="w-10 h-10 rounded-full bg-white/10 shrink-0" />
+                   <div className="flex-1 min-w-0 space-y-2">
+                     <div className="h-3.5 w-1/3 rounded bg-white/10" />
+                     <div className="h-3 w-2/3 rounded bg-white/[0.05]" />
+                   </div>
+                 </div>
                ))}
              </div>
           )}
@@ -555,14 +624,70 @@ function FeedContent() {
           </div>
         </div>
       )}
+      </div>
+      <DiscoveryRail
+        currentUserId={currentUserId}
+        weekLaunches={launches.map((l: any) => ({ id: l.id, userId: l.userId, upvoteCount: l.upvoteCount }))}
+      />
+      </div>
+    </div>
+  );
+}
+
+/** Full-page skeleton that mirrors the real /feed layout (header + 2-col + rail)
+ *  so the loading state fills the screen instead of a lonely spinner on black. */
+function FeedSkeleton() {
+  return (
+    <div
+      className="min-h-screen font-display"
+      style={{ background: "radial-gradient(circle at 50% 0%, rgba(200,255,0,0.06), transparent 720px), var(--bg)" }}
+    >
+      <div className="border-b border-[var(--border)]">
+        <div className="max-w-[1440px] mx-auto w-full px-6 py-5 flex items-center justify-between gap-4">
+          <div className="h-5 w-28 rounded bg-white/10 animate-pulse" />
+          <div className="h-9 w-72 rounded-xl bg-white/[0.04] animate-pulse hidden md:block" />
+          <div className="h-8 w-24 rounded-xl bg-white/10 animate-pulse" />
+        </div>
+      </div>
+      <div className="max-w-[1440px] mx-auto w-full px-6 lg:px-10 py-10 flex flex-col lg:flex-row gap-6 items-start">
+        <div className="flex-1 min-w-0 space-y-6">
+          <div className="space-y-3">
+            <div className="h-3 w-24 rounded bg-white/10 animate-pulse" />
+            <div className="h-9 w-80 max-w-full rounded bg-white/10 animate-pulse" />
+            <div className="h-4 w-[28rem] max-w-full rounded bg-white/[0.05] animate-pulse" />
+          </div>
+          <div className="h-8 w-44 rounded-xl bg-white/[0.05] animate-pulse" />
+          <div className="space-y-3">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="flex gap-4 p-4 rounded-3xl border border-[var(--border)] bg-[var(--surface)] animate-pulse">
+                <div className="w-7 shrink-0" />
+                <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl bg-white/[0.06] shrink-0" />
+                <div className="flex-1 min-w-0 space-y-2 py-1">
+                  <div className="h-4 w-1/2 rounded bg-white/10" />
+                  <div className="h-3 w-4/5 rounded bg-white/[0.05]" />
+                  <div className="h-3 w-1/3 rounded bg-white/[0.05]" />
+                </div>
+                <div className="w-12 shrink-0 rounded-xl bg-white/[0.05]" />
+              </div>
+            ))}
+          </div>
+        </div>
+        <aside className="w-full lg:w-[320px] lg:shrink-0 space-y-3">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 animate-pulse">
+              <div className="mb-3 h-3 w-24 rounded bg-white/10" />
+              <div className="h-10 w-full rounded bg-white/[0.05]" />
+            </div>
+          ))}
+        </aside>
+      </div>
     </div>
   );
 }
 
 export default function FeedPage() {
-  const t = useTranslations("feed");
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-mono text-[var(--text-dim)]">{t("loadingCommunity")}</div>}>
+    <Suspense fallback={<FeedSkeleton />}>
       <FeedContent />
     </Suspense>
   );

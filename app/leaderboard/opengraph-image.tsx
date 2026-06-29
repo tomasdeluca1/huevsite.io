@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import {
   OG_SIZE, OG_CONTENT_TYPE, ACCENT,
-  OgFrame, Eyebrow, SplitBody, HeroBody, FooterCTA, AvatarCircle, truncate, fetchTopBuilders,
+  OgFrame, Eyebrow, SplitBody, HeroBody, FooterCTA, AvatarCircle, truncate, fetchTopBuilders, BrandFallback,
 } from "@/lib/og/shared";
 
 export const runtime = "edge";
@@ -13,6 +13,7 @@ export const contentType = OG_CONTENT_TYPE;
 const MEDAL = ["#FFD600", "#C0C0C0", "#CD7F32"];
 
 export default async function Image() {
+  try {
   const top = (await fetchTopBuilders(3)).slice(0, 3);
   const headline = "El ranking de builders.";
   const sub = "Subí tu builder score, sumá seguidores y escalá posiciones. ¿Llegás al podio?";
@@ -46,4 +47,7 @@ export default async function Image() {
     </OgFrame>,
     { ...size }
   );
+  } catch {
+    return new ImageResponse(<BrandFallback label="El ranking de builders de huevsite.io" />, { ...size });
+  }
 }

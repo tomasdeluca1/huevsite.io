@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { getActiveBuildersThisWeek } from "@/lib/showcase-service";
+import { getWeekLaunches } from "@/lib/launch-service";
+import { currentLaunchWeek } from "@/lib/launch-week";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -63,5 +65,17 @@ export async function GET() {
     console.error("[feed/sidebar] pulse:", e);
   }
 
-  return NextResponse.json({ winner, topBuilders, pulse });
+  let weekTopLaunches: { title: string; username: string; upvoteCount: number }[] = [];
+  try {
+    const { launches } = await getWeekLaunches(currentLaunchWeek());
+    weekTopLaunches = launches.slice(0, 3).map((l) => ({
+      title: l.title,
+      username: l.user.username,
+      upvoteCount: l.upvoteCount,
+    }));
+  } catch (e) {
+    console.error("[feed/sidebar] weekTopLaunches:", e);
+  }
+
+  return NextResponse.json({ winner, topBuilders, pulse, weekTopLaunches });
 }

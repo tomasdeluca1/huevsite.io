@@ -69,6 +69,17 @@ export function compareWeeks(a: string, b: string): number {
   return 0;
 }
 
+/** Whole days remaining until the current ISO week closes (Sunday 23:59 UTC). */
+export function daysUntilWeekClose(): number {
+  const p = parseWeek(currentLaunchWeek());
+  if (!p) return 0;
+  const sunday = isoWeekToMonday(p.year, p.week);
+  sunday.setUTCDate(sunday.getUTCDate() + 6);
+  sunday.setUTCHours(23, 59, 59, 999);
+  const ms = sunday.getTime() - Date.now();
+  return Math.max(0, Math.ceil(ms / 86_400_000));
+}
+
 /** Human label for a week, e.g. "30 jun – 6 jul". */
 export function weekLabel(week: string, locale = "es"): string {
   const p = parseWeek(week);

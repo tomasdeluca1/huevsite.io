@@ -1178,7 +1178,10 @@
     "railPulseLabel": "Pulso de la red",
     "railPulseActive": "Activos esta semana",
     "railPulseProjects": "Proyectos nuevos",
-    "railPulseEndorsements": "Endorsements"
+    "railPulseEndorsements": "Endorsements",
+    "railWeekClose": "Cierra en {days} días",
+    "railWeekLaunchesLabel": "Builders Hunt esta semana",
+    "railWeekLaunchesMore": "Ver todos"
   },
   "feed": {
     "now": "ahora",

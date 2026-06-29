@@ -2,13 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Rocket, Trophy, Flame, Radio } from "lucide-react";
+import { daysUntilWeekClose } from "@/lib/launch-week";
 
 interface SidebarData {
   winner: { username: string; name: string; image: string | null } | null;
   topBuilders: { username: string; name: string; image: string | null; score: number }[];
   pulse: { activeThisWeek: number; newProjects: number; endorsements: number };
+  weekTopLaunches: { title: string; username: string; upvoteCount: number }[];
 }
 
 export interface RailWeekLaunch {
@@ -43,6 +46,9 @@ export function DiscoveryRail({
   const myIdx =
     weekLaunches && currentUserId ? weekLaunches.findIndex((l) => l.userId === currentUserId) : -1;
   const myLaunch = myIdx >= 0 ? weekLaunches![myIdx] : null;
+  const pathname = usePathname() || "";
+  const onFeed = pathname === "/feed";
+  const closeDays = daysUntilWeekClose();
 
   const card = "rounded-2xl border border-white/10 bg-white/[0.02] p-4";
   const label =
@@ -85,7 +91,33 @@ export function DiscoveryRail({
             </Link>
           </>
         )}
+        {closeDays > 0 && (
+          <div className="mt-2 text-[10px] text-white/30">{t("railWeekClose", { days: closeDays })}</div>
+        )}
       </div>
+
+      {/* Builders Hunt — esta semana (cross-promo; hidden on /feed) */}
+      {!onFeed && data && data.weekTopLaunches.length > 0 && (
+        <div className={card}>
+          <div className={label}>
+            <Rocket size={12} /> {t("railWeekLaunchesLabel")}
+          </div>
+          <div className="space-y-1.5">
+            {data.weekTopLaunches.map((l, i) => (
+              <div key={i} className="flex items-center justify-between text-xs text-white/70">
+                <span className="truncate">
+                  <span className="mr-1.5 text-white/30">{i + 1}</span>
+                  {l.title}
+                </span>
+                <span className="ml-2 shrink-0 font-black text-[var(--accent)]">▲ {l.upvoteCount}</span>
+              </div>
+            ))}
+          </div>
+          <Link href="/feed" className="mt-2 block text-[10px] font-bold text-[var(--accent)]">
+            {t("railWeekLaunchesMore")} →
+          </Link>
+        </div>
+      )}
 
       {/* Builder de la semana */}
       {data?.winner && (

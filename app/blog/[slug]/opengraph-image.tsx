@@ -4,7 +4,6 @@ import {
   isBuilderOfTheWeekPost,
   type BlogPost,
 } from "@/lib/blog-data";
-import { SITE_URL } from "@/lib/site-url";
 import { ogAvatarUrl } from "@/lib/og-avatar";
 
 // BDLS posts are published from the DB after deploy, so this metadata route
@@ -26,13 +25,6 @@ const BG_BOTTOM = "#0c0c0c";
 const BORDER = "rgba(255,255,255,0.08)";
 const TEXT_DIM = "rgba(255,255,255,0.62)";
 const TEXT_MUTED = "rgba(255,255,255,0.38)";
-
-function absoluteAssetUrl(src?: string | null) {
-  if (!src) return null;
-  if (src.startsWith("http://") || src.startsWith("https://")) return src;
-  if (src.startsWith("/")) return `${SITE_URL}${src}`;
-  return `${SITE_URL}/${src}`;
-}
 
 function truncate(text: string, max: number) {
   if (!text) return "";
@@ -102,6 +94,16 @@ function FrameBackground({ tinted = false }: { tinted?: boolean }) {
             tinted ? "#111307" : "#0a0a0a"
           } 100%)`,
           display: "flex",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          backgroundImage:
+            "radial-gradient(rgba(255,255,255,0.05) 1.4px, transparent 1.4px)",
+          backgroundSize: "34px 34px",
         }}
       />
       <div
@@ -436,7 +438,9 @@ function renderBuilderOfTheWeek(post: BlogPost) {
 }
 
 function renderDefaultPost(post: BlogPost) {
-  const avatarUrl = absoluteAssetUrl(post.author.avatarUrl);
+  // Re-encode through the proxy: a webp/foreign-host author avatar passed raw to
+  // Satori throws ("Image size cannot be determined") and 500s the whole OG.
+  const avatarUrl = ogAvatarUrl(post.author.avatarUrl, 56);
   const title = truncate(post.title, 110);
   const excerpt = truncate(post.excerpt, 230);
   const readingLabel = post.readingTime
@@ -601,17 +605,22 @@ export default async function Image({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params;
-  const post = await getPostBySlugAsync(slug.toLowerCase());
+  try {
+    const { slug } = await params;
+    const post = await getPostBySlugAsync(slug.toLowerCase());
 
-  if (!post) {
+    if (!post) {
+      return new ImageResponse(renderFallback(), { ...size });
+    }
+
+    return new ImageResponse(
+      isBuilderOfTheWeekPost(post)
+        ? renderBuilderOfTheWeek(post)
+        : renderDefaultPost(post),
+      { ...size }
+    );
+  } catch {
+    // Never 500 a share preview — fall back to the branded cover.
     return new ImageResponse(renderFallback(), { ...size });
   }
-
-  return new ImageResponse(
-    isBuilderOfTheWeekPost(post)
-      ? renderBuilderOfTheWeek(post)
-      : renderDefaultPost(post),
-    { ...size }
-  );
 }

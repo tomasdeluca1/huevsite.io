@@ -9,7 +9,7 @@ interface BadgeAwardEmailProps {
 // Sent to Builder de la Semana winners (one-time to past winners + future ones)
 // so they can drop their official laurel badge on their portfolio / personal site.
 export const BadgeAwardEmail: React.FC<Readonly<BadgeAwardEmailProps>> = ({ name, username }) => {
-  const badge = `https://huevsite.io/api/badge/bdls/${username}`;
+  const badge = `https://huevsite.io/api/badge/bdls/${username}?v=2`;
   const profile = `https://huevsite.io/${username}`;
   const html = `<a href="${profile}"><img src="${badge}" alt="Builder de la Semana en huevsite.io" width="240" /></a>`;
 
@@ -28,7 +28,7 @@ export const BadgeAwardEmail: React.FC<Readonly<BadgeAwardEmailProps>> = ({ name
 
       <div style={{ background: "#ffffff", borderRadius: "16px", padding: "24px", textAlign: "center", marginBottom: "24px" }}>
         {/* light theme renders the laurel + text in slate on the white card */}
-        <img src={`${badge}?theme=light`} alt="Builder de la Semana" width={260} style={{ maxWidth: "100%", height: "auto" }} />
+        <img src={`${badge}&theme=light`} alt="Builder de la Semana" width={260} style={{ maxWidth: "100%", height: "auto" }} />
       </div>
 
       <p style={{ fontSize: "14px", color: "#a1a1aa", lineHeight: 1.6, margin: "0 0 8px" }}>

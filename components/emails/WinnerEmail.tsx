@@ -68,7 +68,7 @@ export const WinnerEmail: React.FC<Readonly<WinnerEmailProps>> = ({
     {/* Embeddable badge for their portfolio */}
     <div style={{ marginTop: '36px', background: '#ffffff', borderRadius: '16px', padding: '24px', textAlign: 'center' }}>
       <img
-        src={`https://huevsite.io/api/badge/bdls/${username}?theme=light`}
+        src={`https://huevsite.io/api/badge/bdls/${username}?theme=light&v=2`}
         alt="Builder de la Semana en huevsite.io"
         width={240}
         style={{ maxWidth: '100%', height: 'auto' }}

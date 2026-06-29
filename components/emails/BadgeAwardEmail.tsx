@@ -31,8 +31,30 @@ export const BadgeAwardEmail: React.FC<Readonly<BadgeAwardEmailProps>> = ({ name
         <img src={badge} alt="Builder de la Semana" width={340} style={{ maxWidth: "100%", height: "auto" }} />
       </div>
 
-      <p style={{ fontSize: "14px", color: "#a1a1aa", lineHeight: 1.6, margin: "0 0 8px" }}>
-        Pegá este código en tu sitio (o copialo con un click desde tu dashboard):
+      <p style={{ fontSize: "15px", color: "#a1a1aa", lineHeight: 1.6, margin: "0 0 16px", textAlign: "center" }}>
+        Copiá el código (HTML o Markdown) con un solo click desde tu dashboard:
+      </p>
+
+      <div style={{ textAlign: "center", marginBottom: "28px" }}>
+        <a
+          href="https://huevsite.io/dashboard"
+          style={{
+            backgroundColor: "#C8FF00",
+            color: "#000000",
+            padding: "16px 32px",
+            borderRadius: "12px",
+            fontWeight: "bold",
+            textDecoration: "none",
+            display: "inline-block",
+            fontSize: "16px",
+          }}
+        >
+          📋 Copiar mi badge →
+        </a>
+      </div>
+
+      <p style={{ fontSize: "13px", color: "#71717a", lineHeight: 1.6, margin: "0 0 8px" }}>
+        ¿Lo preferís a mano? Pegá este HTML en tu sitio:
       </p>
       <code
         style={{
@@ -49,24 +71,6 @@ export const BadgeAwardEmail: React.FC<Readonly<BadgeAwardEmailProps>> = ({ name
       >
         {html}
       </code>
-
-      <div style={{ textAlign: "center", marginTop: "28px" }}>
-        <a
-          href="https://huevsite.io/dashboard"
-          style={{
-            backgroundColor: "#C8FF00",
-            color: "#000000",
-            padding: "16px 32px",
-            borderRadius: "12px",
-            fontWeight: "bold",
-            textDecoration: "none",
-            display: "inline-block",
-            fontSize: "16px",
-          }}
-        >
-          Copiar desde mi dashboard →
-        </a>
-      </div>
     </EmailLayout>
   );
 };

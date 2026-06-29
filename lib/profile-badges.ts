@@ -81,12 +81,17 @@ function createBadge(key: ProfileBadge["key"]): ProfileBadge {
 }
 
 export function isProfileComplete(profile: BadgeProfile, blockCount: number, blocks: BadgeBlock[] = []) {
-  // "GitHub" is satisfied by EITHER the profile.github_handle column (set via the
-  // Edit Profile modal) OR a GitHub block on the board — otherwise a user who adds
-  // a GitHub block (and earns github_linked) but never fills the handle field stays
-  // silently locked out of profile_complete.
+  // Respect the EFFECTIVE profile header, not just the profiles columns. name /
+  // tagline / avatar are commonly set in the HERO BLOCK (the visual header) but
+  // only synced to the profiles row via the Edit Profile modal — so a user who
+  // filled their hero (the natural action) but skipped the modal stayed silently
+  // locked out. Likewise "GitHub" counts via the handle column OR a GitHub block.
+  const hero: any = blocks.find((b) => b.type === "hero")?.data || {};
+  const name = profile.name || hero.name;
+  const image = profile.image || hero.avatarUrl;
+  const tagline = profile.tagline || hero.tagline;
   const hasGithub = Boolean(profile.github_handle) || hasGithubBlock(blocks);
-  return Boolean(profile.name && profile.image && hasGithub && profile.tagline && blockCount >= 4);
+  return Boolean(name && image && hasGithub && tagline && blockCount >= 4);
 }
 
 function hasTwitterInBlocks(blocks: BadgeBlock[]): boolean {

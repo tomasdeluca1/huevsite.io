@@ -114,6 +114,9 @@ export async function POST(req: Request) {
   // Favicon (any rel containing "icon"). Resolve against origin; fall back to
   // the conventional /favicon.ico so we always offer a favicon option.
   let faviconUrl = pickMeta(html, [
+    // Prefer the apple-touch-icon (usually 180×180) — crisper than favicon.ico.
+    /<link[^>]+rel=["'][^"']*apple-touch-icon[^"']*["'][^>]+href=["']([^"']+)["']/i,
+    /<link[^>]+href=["']([^"']+)["'][^>]+rel=["'][^"']*apple-touch-icon[^"']*["']/i,
     /<link[^>]+rel=["'][^"']*icon[^"']*["'][^>]+href=["']([^"']+)["']/i,
     /<link[^>]+href=["']([^"']+)["'][^>]+rel=["'][^"']*icon[^"']*["']/i,
   ]);

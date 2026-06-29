@@ -1,5 +1,6 @@
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { currentLaunchWeek, compareWeeks } from "@/lib/launch-week";
+import { hiResFaviconUrl } from "@/lib/favicon";
 
 export interface LaunchFeedItem {
   id: string;
@@ -82,7 +83,10 @@ export async function getWeekLaunches(
         userId: r.user_id,
         title: d.title || "Proyecto",
         description: d.description || "",
-        imageUrl: d.imageMode === "favicon" && d.faviconUrl ? d.faviconUrl : d.imageUrl || "",
+        imageUrl:
+          d.imageMode === "favicon"
+            ? hiResFaviconUrl(d.link, d.faviconUrl)
+            : d.imageUrl || "",
         link: d.link || "",
         stack: Array.isArray(d.stack) ? d.stack : [],
         status: d.status || null,

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { ProjectBlockData, ProjectStatus } from "@/lib/profile-types";
 import { getLaunchCountdownDays } from "@/lib/project-lifecycle";
 import { withHuevsiteUtm } from "@/lib/utm";
+import { hiResFaviconUrl } from "@/lib/favicon";
 import { ExternalLink } from "lucide-react";
 
 interface Props {
@@ -18,8 +19,8 @@ export function ProjectBlock({ data, accentColor }: Props) {
   const description = data.description || t('project.fallbackDescription');
   const link = data.link || "#";
   const metrics = data.metrics || "";
-  const useFavicon = data.imageMode === "favicon" && !!data.faviconUrl;
-  const imageUrl = useFavicon ? data.faviconUrl : data.imageUrl;
+  const useFavicon = data.imageMode === "favicon" && !!(data.faviconUrl || data.link);
+  const imageUrl = useFavicon ? hiResFaviconUrl(data.link, data.faviconUrl) : data.imageUrl;
   const stack = data.stack || [];
   const status: ProjectStatus = data.status || "idea";
   const statusLabel = status === "launched" ? "LIVE" : status === "building" ? "WIP" : "IDEA";

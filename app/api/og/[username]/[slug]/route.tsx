@@ -1,209 +1,205 @@
 import { ImageResponse } from 'next/og';
 import { profileService } from '@/lib/profile-service';
 import { ogAvatarUrl } from '@/lib/og-avatar';
+import { getContrastColor } from '@/lib/profile-types';
+import {
+  ACCENT,
+  BORDER,
+  TEXT_DIM,
+  TEXT_MUTED,
+  OG_SIZE,
+  truncate,
+  rootStyle,
+  Texture,
+  InnerBorder,
+  Wordmark,
+  Eyebrow,
+  BrandFallback,
+} from '@/lib/og/shared';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+function fallback() {
+  return new ImageResponse(<BrandFallback label="Un proyecto, hecho en huevsite.io" />, { ...OG_SIZE });
+}
+
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: { username: string; slug: string } }
 ) {
   try {
     const { username, slug } = params;
     const profile = await profileService.getSubSiteProfile(username, slug);
+    if (!profile) return fallback();
 
-    if (!profile) return new Response('Sub-site not found', { status: 404 });
-
-    const title = profile.displayName;
-    const tagline = profile.tagline || 'Proyecto built on huevsite.io';
-    const accentColor = profile.accentColor || '#C8FF00';
+    const accent = profile.accentColor || ACCENT;
+    const onAccent = getContrastColor(accent);
+    const title = truncate(profile.displayName || slug, 40);
+    const tagline = truncate(profile.tagline || 'Proyecto hecho en huevsite.io', 90);
     const creator = profile.parentProfile;
     // Proxy + re-encode to JPEG; Satori can't decode the webp avatars huevsite stores.
     const creatorAvatarSrc = ogAvatarUrl(creator?.avatarUrl, 32);
-    const profileAvatarSrc = ogAvatarUrl(profile.avatarUrl, 320);
+    const projectAvatarSrc = ogAvatarUrl(profile.avatarUrl, 320);
 
     return new ImageResponse(
       (
-        <div
-          style={{
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            backgroundColor: '#050507',
-            color: 'white',
-            position: 'relative',
-            padding: 60,
-            overflow: 'hidden',
-            fontFamily: 'sans-serif',
-          }}
-        >
-          <div
-            style={{
-              position: 'absolute',
-              top: '-20%',
-              right: '-10%',
-              width: '60%',
-              height: '120%',
-              backgroundColor: accentColor,
-              opacity: 0.1,
-              filter: 'blur(100px)',
-              borderRadius: '50%',
-            }}
-          />
+        <div style={rootStyle(accent)}>
+          <Texture />
+          <InnerBorder />
 
+          {/* Top bar: wordmark + creator chip */}
           <div
             style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              marginBottom: 40,
+              position: 'relative',
+              zIndex: 1,
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'baseline' }}>
-              <span style={{ fontSize: 24, fontWeight: 900, color: 'white', letterSpacing: '-0.04em' }}>huev</span>
-              <span style={{ fontSize: 24, fontWeight: 900, color: accentColor, letterSpacing: '-0.04em' }}>site</span>
-            </div>
-
+            <Wordmark accent={accent} />
             {creator && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.05)', padding: '8px 16px', borderRadius: 40, border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  background: 'rgba(255,255,255,0.05)',
+                  padding: '8px 16px',
+                  borderRadius: 999,
+                  border: `1px solid ${BORDER}`,
+                }}
+              >
                 {creatorAvatarSrc && (
-                  <img src={creatorAvatarSrc} width={32} height={32} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${accentColor}` }} />
+                  <img
+                    src={creatorAvatarSrc}
+                    width={28}
+                    height={28}
+                    style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${accent}` }}
+                  />
                 )}
-                <span style={{ fontSize: 16, fontWeight: 600, color: 'rgba(255,255,255,0.5)' }}>por</span>
-                <span style={{ fontSize: 18, fontWeight: 800, color: 'white' }}>@{creator.username}</span>
+                <span style={{ fontSize: 15, fontWeight: 600, color: TEXT_MUTED, display: 'flex' }}>por</span>
+                <span style={{ fontSize: 16, fontWeight: 800, color: 'white', display: 'flex' }}>@{creator.username}</span>
               </div>
             )}
           </div>
 
+          {/* Body */}
           <div
             style={{
               display: 'flex',
-              flexDirection: 'row',
               alignItems: 'center',
               flex: 1,
-              gap: 60,
+              gap: 52,
+              position: 'relative',
+              zIndex: 1,
+              marginTop: 8,
             }}
           >
             <div style={{ display: 'flex', flexDirection: 'column', flex: 1.2, justifyContent: 'center' }}>
-              <div style={{
-                display: 'flex',
-                padding: '6px 14px',
-                backgroundColor: `${accentColor}12`,
-                color: accentColor,
-                borderRadius: 100,
-                fontSize: 12,
-                fontWeight: 900,
-                textTransform: 'uppercase',
-                letterSpacing: '0.15em',
-                marginBottom: 20,
-                border: `1px solid ${accentColor}25`,
-                alignSelf: 'flex-start',
-              }}>
-                PROYECTO DESTACADO
+              <div style={{ display: 'flex', marginBottom: 22 }}>
+                <Eyebrow label="Proyecto" accent={accent} />
               </div>
 
-              <h1
+              <div
                 style={{
-                  fontSize: 84,
+                  fontSize: 76,
                   fontWeight: 900,
                   lineHeight: 1,
                   letterSpacing: '-0.05em',
-                  margin: '0 0 20px 0',
                   color: 'white',
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  marginBottom: 20,
                 }}
               >
                 {title}
-              </h1>
+              </div>
 
-              <p
+              <div
                 style={{
-                  fontSize: 32,
-                  color: 'rgba(255,255,255,0.5)',
-                  lineHeight: 1.3,
-                  margin: 0,
+                  fontSize: 28,
+                  color: TEXT_DIM,
+                  lineHeight: 1.32,
                   fontWeight: 500,
                   maxWidth: 580,
-                  letterSpacing: '-0.02em',
+                  letterSpacing: '-0.01em',
+                  display: 'flex',
+                  flexWrap: 'wrap',
                 }}
               >
                 {tagline}
-              </p>
+              </div>
             </div>
 
-            <div style={{ display: 'flex', flex: 1, position: 'relative', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{
-                position: 'absolute',
-                width: '120%',
-                height: '100%',
-                background: `radial-gradient(circle, ${accentColor}26 0%, transparent 70%)`,
-                borderRadius: '50%',
-              }} />
-
-              {profileAvatarSrc ? (
+            <div style={{ display: 'flex', flex: 1, position: 'relative', alignItems: 'center', justifyContent: 'center' }}>
+              <div
+                style={{
+                  position: 'absolute',
+                  width: '120%',
+                  height: '100%',
+                  background: `radial-gradient(circle, ${accent}2e 0%, transparent 70%)`,
+                  borderRadius: '50%',
+                  display: 'flex',
+                }}
+              />
+              {projectAvatarSrc ? (
                 <img
-                  src={profileAvatarSrc}
-                  width={320}
-                  height={320}
+                  src={projectAvatarSrc}
+                  width={300}
+                  height={300}
                   style={{
-                    width: 320,
-                    height: 320,
-                    borderRadius: 80,
+                    width: 300,
+                    height: 300,
+                    borderRadius: 72,
                     objectFit: 'cover',
-                    border: `4.5px solid ${accentColor}40`,
-                    boxShadow: `0 40px 80px ${accentColor}20`,
+                    border: `4px solid ${accent}`,
                   }}
                 />
               ) : (
-                <div style={{
-                  width: 320,
-                  height: 320,
-                  borderRadius: 80,
-                  backgroundColor: '#0A0A0C',
-                  border: `1.5px dashed ${accentColor}40`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <span style={{ fontSize: 140 }}>🚀</span>
+                <div
+                  style={{
+                    width: 300,
+                    height: 300,
+                    borderRadius: 72,
+                    background: `linear-gradient(135deg, ${accent} 0%, ${accent}aa 100%)`,
+                    border: `4px solid ${accent}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: onAccent,
+                    fontSize: 150,
+                    fontWeight: 900,
+                  }}
+                >
+                  {title.charAt(0).toUpperCase()}
                 </div>
               )}
             </div>
           </div>
 
-          <div style={{
-            display: 'flex',
-            justifyContent: 'flex-start',
-            alignItems: 'center',
-            marginTop: 40,
-          }}>
-            <div style={{
+          {/* Footer */}
+          <div
+            style={{
               display: 'flex',
-              backgroundColor: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              padding: '10px 20px',
-              borderRadius: 100,
-              fontSize: 18,
-              fontWeight: 800,
-              color: 'rgba(255,255,255,0.4)',
-              fontFamily: 'monospace'
-            }}>
-              huevsite.io/{username}/<span style={{ color: 'white' }}>{slug}</span>
+              alignItems: 'center',
+              paddingTop: 22,
+              borderTop: `1px solid ${BORDER}`,
+              position: 'relative',
+              zIndex: 1,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', fontSize: 17, fontWeight: 800, color: TEXT_MUTED }}>
+              huevsite.io/{username}/<span style={{ color: 'white', display: 'flex' }}>{slug}</span>
             </div>
           </div>
         </div>
       ),
-      {
-        width: 1200,
-        height: 630,
-      }
+      { ...OG_SIZE }
     );
-  } catch (e: any) {
-    console.error('OG sub-site API error:', e);
-    return new Response('Failed to generate the image', {
-      status: 500,
-    });
+  } catch {
+    return fallback();
   }
 }

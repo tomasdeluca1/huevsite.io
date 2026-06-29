@@ -13,11 +13,14 @@ interface Props {
   subscriptionTier?: "free" | "pro";
   isWinner?: boolean;
   badges?: ProfileBadge[];
+  username?: string;
 }
 
-export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = false, badges = [] }: Props) {
+export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = false, badges = [], username }: Props) {
   const isPreview = useBlockPreview();
   const t = useTranslations('blocks');
+  // Ever won Builder de la Semana → show the embeddable laurel badge on the board.
+  const everWonBdls = badges.some((b) => b.key === "builder_of_the_week");
   const roles = data.roles || [];
   const name = data.name || t('hero.fallbackName');
   const tagline = data.tagline || t('hero.fallbackTagline');
@@ -145,6 +148,22 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
 
         {/* ROW 2: Descripción (con un espacio según el diagrama) */}
         <div className="mt-6 flex-1 min-w-0">
+          {everWonBdls && username && (
+            <a
+              href="/leaderboard"
+              className="mb-4 inline-flex transition-transform hover:scale-[1.02]"
+              title={t('hero.builderOfWeek')}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/api/badge/bdls/${username}?theme=dark`}
+                alt={t('hero.builderOfWeek')}
+                width={200}
+                height={80}
+                style={{ height: "auto", maxWidth: "220px" }}
+              />
+            </a>
+          )}
           {badges.length > 0 && (
             <div className="mb-4 flex items-end gap-3">
               {badges.map((badge) => (

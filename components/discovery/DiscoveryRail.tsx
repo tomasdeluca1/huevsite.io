@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Rocket, Trophy, Flame, Radio } from "lucide-react";
+import { Rocket, Trophy, Flame, Radio, Zap, Newspaper } from "lucide-react";
 import { daysUntilWeekClose } from "@/lib/launch-week";
 
 interface SidebarData {
@@ -12,6 +12,8 @@ interface SidebarData {
   topBuilders: { username: string; name: string; image: string | null; score: number }[];
   pulse: { activeThisWeek: number; newProjects: number; endorsements: number };
   weekTopLaunches: { title: string; username: string; upvoteCount: number }[];
+  topCommits: { username: string; name: string; image: string | null; commits: number }[];
+  latestPosts: { slug: string; title: string }[];
 }
 
 export interface RailWeekLaunch {
@@ -173,6 +175,56 @@ export function DiscoveryRail({
           </div>
           <Link href="/leaderboard" className="mt-2 block text-[10px] font-bold text-[var(--accent)]">
             {t("railTopMore")} →
+          </Link>
+        </div>
+      )}
+
+      {/* Top por commits (distinct ranking) */}
+      {data && data.topCommits.length > 0 && (
+        <div className={card}>
+          <div className={label}>
+            <Zap size={12} /> {t("railCommitsLabel")}
+          </div>
+          <div className="space-y-1.5">
+            {data.topCommits.map((b, i) => (
+              <Link
+                key={b.username}
+                href={`/${b.username}`}
+                className="flex items-center justify-between text-xs text-white/70 hover:text-white"
+              >
+                <span className="truncate">
+                  <span className="mr-1.5 text-white/30">{i + 1}</span>
+                  {b.name}
+                </span>
+                <span className="ml-2 shrink-0 font-black text-[var(--accent)]">{b.commits}</span>
+              </Link>
+            ))}
+          </div>
+          <Link href="/leaderboard" className="mt-2 block text-[10px] font-bold text-[var(--accent)]">
+            {t("railCommitsMore")} →
+          </Link>
+        </div>
+      )}
+
+      {/* Últimas del blog */}
+      {data && data.latestPosts.length > 0 && (
+        <div className={card}>
+          <div className={label}>
+            <Newspaper size={12} /> {t("railBlogLabel")}
+          </div>
+          <div className="space-y-2">
+            {data.latestPosts.map((p) => (
+              <Link
+                key={p.slug}
+                href={`/blog/${p.slug}`}
+                className="block text-xs leading-snug text-white/70 hover:text-white"
+              >
+                {p.title}
+              </Link>
+            ))}
+          </div>
+          <Link href="/blog" className="mt-2 block text-[10px] font-bold text-[var(--accent)]">
+            {t("railBlogMore")} →
           </Link>
         </div>
       )}

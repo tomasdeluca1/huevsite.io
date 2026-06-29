@@ -3,6 +3,7 @@ import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { getActiveBuildersThisWeek } from "@/lib/showcase-service";
 import { getWeekLaunches } from "@/lib/launch-service";
 import { currentLaunchWeek } from "@/lib/launch-week";
+import { BLOG_POSTS } from "@/lib/blog-data";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -77,5 +78,38 @@ export async function GET() {
     console.error("[feed/sidebar] weekTopLaunches:", e);
   }
 
-  return NextResponse.json({ winner, topBuilders, pulse, weekTopLaunches });
+  // Distinct ranking: top by GitHub commits (year) — from the profiles_explore view.
+  let topCommits: { username: string; name: string; image: string | null; commits: number }[] = [];
+  try {
+    const { data } = await db
+      .from("profiles_explore")
+      .select("username, name, image, github_commits_year")
+      .not("username", "is", null)
+      .gt("github_commits_year", 0)
+      .order("github_commits_year", { ascending: false })
+      .limit(3);
+    topCommits = (data || [])
+      .filter((p: any) => p.username)
+      .map((p: any) => ({
+        username: p.username,
+        name: p.name || p.username,
+        image: p.image || null,
+        commits: p.github_commits_year || 0,
+      }));
+  } catch (e) {
+    console.error("[feed/sidebar] topCommits:", e);
+  }
+
+  // Latest blog posts (newest first).
+  let latestPosts: { slug: string; title: string }[] = [];
+  try {
+    latestPosts = [...BLOG_POSTS]
+      .sort((a, b) => (a.date < b.date ? 1 : -1))
+      .slice(0, 3)
+      .map((p) => ({ slug: p.slug, title: p.title }));
+  } catch (e) {
+    console.error("[feed/sidebar] latestPosts:", e);
+  }
+
+  return NextResponse.json({ winner, topBuilders, pulse, weekTopLaunches, topCommits, latestPosts });
 }

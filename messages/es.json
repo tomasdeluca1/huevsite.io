@@ -1181,7 +1181,11 @@
     "railPulseEndorsements": "Endorsements",
     "railWeekClose": "Cierra en {days} días",
     "railWeekLaunchesLabel": "Builders Hunt esta semana",
-    "railWeekLaunchesMore": "Ver todos"
+    "railWeekLaunchesMore": "Ver todos",
+    "railCommitsLabel": "Top por commits",
+    "railCommitsMore": "Ver ranking",
+    "railBlogLabel": "Del blog",
+    "railBlogMore": "Ver todas"
   },
   "feed": {
     "now": "ahora",

@@ -7,7 +7,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import LocaleToggle from "@/components/LocaleToggle";
-import { BadgeCheck, Loader2, Activity as ActivityIcon, ArrowUpRight, Users, UserPlus } from "lucide-react";
+import { BadgeCheck, Loader2, Activity as ActivityIcon, ArrowUpRight, Users, UserPlus, ChevronUp, ChevronLeft, ChevronRight, Rocket } from "lucide-react";
+import { currentLaunchWeek, addWeeks, weekLabel, compareWeeks } from "@/lib/launch-week";
 
 type FeedT = ReturnType<typeof useTranslations>;
 
@@ -175,6 +176,8 @@ function FeedContent() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [launches, setLaunches] = useState<any[]>([]);
+  const [launchWeek, setLaunchWeek] = useState<string>("");
+  const [votedIds, setVotedIds] = useState<string[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
@@ -197,18 +200,14 @@ function FeedContent() {
       setCurrentUserId(authData.user?.id || null);
 
       if (tab === "launches") {
-        fetch(`/api/social/feed?tab=launches&audience=${audienceFilter}&page=${page}&limit=24`)
+        const wk = launchWeek || "";
+        fetch(`/api/launches${wk ? `?week=${wk}` : ""}`)
           .then(r => r.json())
           .then(data => {
-            if (data.error) {
-              setError(data.error);
-              if (page === 1) setLaunches([]);
-              return;
-            }
-            const newLaunches = data.launches ?? [];
-            if (page === 1) setLaunches(newLaunches);
-            else setLaunches(prev => [...prev, ...newLaunches]);
-            setTotalPages(data.totalPages ?? 1);
+            setLaunches(data.launches ?? []);
+            setVotedIds(data.votedIds ?? []);
+            if (!launchWeek && data.week) setLaunchWeek(data.week);
+            setTotalPages(1);
           })
           .catch(console.error)
           .finally(() => {
@@ -240,7 +239,7 @@ function FeedContent() {
       }
     }
     loadData();
-  }, [tab, page, filterType, audienceFilter, supabase]);
+  }, [tab, page, filterType, audienceFilter, supabase, launchWeek]);
 
   // Infinite scroll observer
   useEffect(() => {
@@ -270,6 +269,31 @@ function FeedContent() {
     });
     return groups;
   }, [activities]);
+
+  const toggleUpvote = async (launchId: string, voted: boolean) => {
+    if (!currentUserId) {
+      window.location.href = "/login";
+      return;
+    }
+    // optimistic
+    setVotedIds(prev => (voted ? prev.filter(id => id !== launchId) : [...prev, launchId]));
+    setLaunches(prev => prev.map((l: any) =>
+      l.id === launchId ? { ...l, upvoteCount: (l.upvoteCount || 0) + (voted ? -1 : 1) } : l
+    ));
+    try {
+      const res = await fetch(`/api/launches/${launchId}/upvote`, { method: voted ? "DELETE" : "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && typeof data.upvoteCount === "number") {
+        setLaunches(prev => prev.map((l: any) =>
+          l.id === launchId ? { ...l, upvoteCount: data.upvoteCount } : l
+        ));
+      }
+    } catch {
+      /* keep optimistic state */
+    }
+  };
+
+  const isCurrentWeek = !launchWeek || compareWeeks(launchWeek, currentLaunchWeek()) >= 0;
 
   return (
     <div className="min-h-screen bg-[var(--bg)] font-display py-12 px-4 max-w-2xl mx-auto">
@@ -349,117 +373,137 @@ function FeedContent() {
           </Link>
         </motion.div>
       ) : tab === "launches" ? (
-        launches.length === 0 ? (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center py-24 px-8 border border-dashed border-[var(--border)] rounded-[2.5rem] bg-black/10"
-          >
-            <div className="w-16 h-16 bg-[var(--surface2)] rounded-2xl flex items-center justify-center mx-auto mb-6 text-[var(--accent)] shadow-xl shadow-[var(--accent)]/5">
-              <ActivityIcon size={32} />
+        <div className="space-y-5">
+          {/* Week navigation */}
+          <div className="flex items-center justify-between gap-2">
+            <button
+              onClick={() => launchWeek && setLaunchWeek(addWeeks(launchWeek, -1))}
+              className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] hover:text-white transition-colors"
+            >
+              <ChevronLeft size={14} /> {t("prevWeek")}
+            </button>
+            <div className="text-center">
+              <div className="text-[9px] uppercase tracking-widest font-mono text-[var(--text-muted)]">{t("launchesOfWeek")}</div>
+              <div className="text-sm font-black text-white">{launchWeek ? weekLabel(launchWeek) : "…"}</div>
             </div>
-            <h3 className="text-xl font-bold mb-2 text-white">
-              {audienceFilter === "following" ? t("launchesEmptyFollowingTitle") : t("launchesEmptyTitle")}
-            </h3>
-            <p className="text-sm text-[var(--text-dim)] font-mono leading-relaxed mb-8 max-w-xs mx-auto">
-              {audienceFilter === "following"
-                ? t("launchesEmptyFollowingBody")
-                : t("launchesEmptyBody")}
-            </p>
-            <Link href="/dashboard" className="btn btn-accent inline-flex !rounded-2xl shadow-lg shadow-[var(--accent)]/20">
-              {t("addProject")}
-            </Link>
-          </motion.div>
-        ) : (
-          <div className="space-y-4">
-            {launches.map(launch => (
-              <div key={launch.id} className="bg-[var(--surface)] border border-[var(--border)] p-5 md:p-6 rounded-3xl group overflow-hidden">
-                <div className="flex flex-col md:flex-row gap-5">
-                  <div className="w-full md:w-40 lg:w-48 shrink-0">
+            <button
+              onClick={() => { if (!isCurrentWeek && launchWeek) setLaunchWeek(addWeeks(launchWeek, 1)); }}
+              disabled={isCurrentWeek}
+              className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] hover:text-white transition-colors disabled:opacity-30"
+            >
+              {t("nextWeek")} <ChevronRight size={14} />
+            </button>
+          </div>
+
+          {launches.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-20 px-8 border border-dashed border-[var(--border)] rounded-[2.5rem] bg-black/10"
+            >
+              <div className="w-16 h-16 bg-[var(--surface2)] rounded-2xl flex items-center justify-center mx-auto mb-6 text-[var(--accent)] shadow-xl shadow-[var(--accent)]/5">
+                <Rocket size={32} />
+              </div>
+              <h3 className="text-xl font-bold mb-2 text-white">{t("launchesEmptyTitle")}</h3>
+              <p className="text-sm text-[var(--text-dim)] font-mono leading-relaxed mb-8 max-w-xs mx-auto">
+                {t("launchesEmptyBody")}
+              </p>
+              <Link href="/dashboard" className="btn btn-accent inline-flex !rounded-2xl shadow-lg shadow-[var(--accent)]/20">
+                {t("addProject")}
+              </Link>
+            </motion.div>
+          ) : (
+            <div className="space-y-3">
+              {launches.map((launch: any, i: number) => {
+                const voted = votedIds.includes(launch.id);
+                const rank = i + 1;
+                const live = launch.launch?.live || 0;
+                return (
+                  <div
+                    key={launch.id}
+                    className={`flex gap-3 sm:gap-4 p-4 rounded-3xl border transition-all ${
+                      launch.featured
+                        ? "border-[var(--accent)]/40 bg-[var(--accent)]/[0.04]"
+                        : "border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border-bright)]"
+                    }`}
+                  >
+                    <div className="flex flex-col items-center justify-center w-7 shrink-0">
+                      <span className="text-sm font-black text-[var(--text-muted)]">
+                        {!isCurrentWeek && rank === 1 ? "🏆" : rank}
+                      </span>
+                    </div>
+
                     {launch.imageUrl ? (
                       <img
                         src={launch.imageUrl}
                         alt={launch.title}
-                        className="w-full aspect-[1.2/1] rounded-2xl object-cover border border-white/10 bg-black"
+                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border border-white/10 bg-black shrink-0"
                       />
                     ) : (
-                      <div className="w-full aspect-[1.2/1] rounded-2xl border border-white/10 bg-black/40 flex items-center justify-center text-[var(--text-muted)] text-[10px] font-mono uppercase tracking-widest">
-                        {t("noPreview")}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-2 text-[10px] uppercase tracking-widest font-mono text-[var(--text-muted)]">
-                      <Link href={`/${launch.user.username}?from=feed&return_to=/feed`} className="hover:text-white transition-colors">
-                        @{launch.user.username}
-                      </Link>
-                      <span>•</span>
-                      <span>{timeAgo(launch.created_at, t("now"))}</span>
-                      {launch.subSite?.slug && (
-                        <>
-                          <span>•</span>
-                          <span className="text-[var(--accent)]">/{launch.subSite.slug}</span>
-                        </>
-                      )}
-                    </div>
-
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0">
-                        <h2 className="text-xl font-bold group-hover:text-[var(--accent)] transition-colors text-white tracking-tight">
-                          {launch.title}
-                        </h2>
-                        {launch.description && (
-                          <p className="text-sm text-[var(--text-dim)] line-clamp-3 mt-2 leading-relaxed">
-                            {launch.description}
-                          </p>
-                        )}
-                      </div>
-
-                      {(launch.user.subscription_tier === 'pro' || !!launch.user.pro_since) && (
-                        <BadgeCheck size={18} className="shrink-0 text-[var(--accent)] mt-1" />
-                      )}
-                    </div>
-
-                    {(launch.metrics || (launch.stack && launch.stack.length > 0)) && (
-                      <div className="flex flex-wrap gap-2 mt-4">
-                        {launch.metrics && (
-                          <span className="px-3 py-1 rounded-full bg-[var(--accent)]/10 border border-[var(--accent)]/20 text-[var(--accent)] text-[10px] font-black uppercase tracking-widest">
-                            {launch.metrics}
-                          </span>
-                        )}
-                        {(launch.stack || []).slice(0, 4).map((item: string) => (
-                          <span key={item} className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/70 text-[10px] font-bold uppercase tracking-wide">
-                            {item}
-                          </span>
-                        ))}
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border border-white/10 bg-black/40 flex items-center justify-center text-[var(--text-muted)] shrink-0">
+                        <Rocket size={20} />
                       </div>
                     )}
 
-                    <div className="flex flex-wrap gap-3 mt-5">
-                      {launch.link && (
-                        <Link
-                          href={launch.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn btn-accent !rounded-2xl !px-5 !py-3 !text-[11px] uppercase tracking-widest"
-                        >
-                          {t("viewProject")} <ArrowUpRight size={14} className="ml-2" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h2 className="text-base font-bold text-white tracking-tight truncate">{launch.title}</h2>
+                        {launch.user.pro && <BadgeCheck size={15} className="shrink-0 text-[var(--accent)]" />}
+                        {launch.featured && (
+                          <span className="text-[8px] font-black tracking-widest text-[var(--accent)] border border-[var(--accent)]/30 rounded px-1">PRO</span>
+                        )}
+                      </div>
+                      {launch.description && (
+                        <p className="text-xs text-[var(--text-dim)] line-clamp-2 mt-0.5 leading-relaxed">{launch.description}</p>
+                      )}
+                      <div className="flex items-center gap-2 flex-wrap mt-2 text-[10px] uppercase tracking-widest font-mono text-[var(--text-muted)]">
+                        <Link href={`/${launch.user.username}?from=feed&return_to=/feed`} className="hover:text-white transition-colors">
+                          @{launch.user.username}
                         </Link>
+                        {live > 0 && (
+                          <>
+                            <span>•</span>
+                            <span className="text-[var(--accent)]">🚀 {t("liveBadge", { n: live })}</span>
+                          </>
+                        )}
+                        {launch.link && (
+                          <>
+                            <span>•</span>
+                            <Link href={launch.link} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors inline-flex items-center gap-1">
+                              {t("viewProject")} <ArrowUpRight size={11} />
+                            </Link>
+                          </>
+                        )}
+                      </div>
+                      {launch.stack && launch.stack.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          {launch.stack.slice(0, 4).map((item: string) => (
+                            <span key={item} className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-white/50 text-[9px] font-mono">
+                              {item}
+                            </span>
+                          ))}
+                        </div>
                       )}
-                      <Link
-                        href={`/${launch.user.username}?from=feed&return_to=/feed`}
-                        className="btn btn-ghost !rounded-2xl !px-5 !py-3 !text-[11px] uppercase tracking-widest"
-                      >
-                        {t("viewProfile")}
-                      </Link>
                     </div>
+
+                    <button
+                      onClick={() => toggleUpvote(launch.id, voted)}
+                      className={`flex flex-col items-center justify-center w-12 shrink-0 rounded-xl border transition-all ${
+                        voted
+                          ? "border-[var(--accent)] text-[var(--accent)] bg-[var(--accent)]/10"
+                          : "border-white/10 text-white/60 hover:text-white hover:border-white/30"
+                      }`}
+                      title={t("upvote")}
+                    >
+                      <ChevronUp size={16} />
+                      <span className="text-xs font-black">{launch.upvoteCount || 0}</span>
+                    </button>
                   </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )
+                );
+              })}
+            </div>
+          )}
+        </div>
       ) : (
         <div className="space-y-6">
           {activityGroups.length === 0 ? (

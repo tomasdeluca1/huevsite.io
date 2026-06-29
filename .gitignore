@@ -47,3 +47,6 @@ next-env.d.ts
 /.superpowers
 /docs/superpowers
 /postulacion-comunidad
+
+# Claude Code local (worktrees, local settings)
+.claude/

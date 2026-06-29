@@ -18,6 +18,128 @@ export interface BlogPost {
 
 const RAW_BLOG_POSTS: Omit<BlogPost, 'readingTime'>[] = [
   {
+    slug: "lanzamos-builders-hunt-el-feed-semanal-de-lanzamientos",
+    title: "Lanzamos Builders Hunt: el feed semanal de lanzamientos",
+    excerpt: "Lanzá tu proyecto a la semana, la comunidad lo vota, y el ranking se renueva cada lunes. Más un recap por mail los viernes. Está en /feed.",
+    date: "2026-06-29",
+    tags: ["feed", "launches", "feature"],
+    author: {
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
+    },
+    content: `
+Durante mucho tiempo el feed mostraba actividad, pero no tenía un lugar claro para decir "esto lo terminé, miralo". Eso cambia hoy: lanzamos **Builders Hunt**, un feed semanal de lanzamientos al estilo Product Hunt, pero hecho para la comunidad.
+
+## Cómo funciona
+1. Desde tu dashboard, en la pestaña **Proyectos**, tocás **"Lanzar en huevsite"**.
+2. Tu proyecto entra al feed de **esta semana**.
+3. La comunidad **vota** (▲, un voto por persona), y los lanzamientos se rankean en vivo.
+4. El **lunes** arranca una semana nueva: el ranking se renueva y el #1 de la semana anterior queda marcado con un trofeo.
+
+Es simple a propósito: no hace falta inventar un posteo ni armar nada nuevo. Si ya tenés el proyecto cargado en tu board, lo lanzás en dos clics.
+
+## El ranking
+Cada semana los lanzamientos se ordenan por votos. Arriba de todo se destacan los lanzamientos **Pro** (con borde de acento y fijados), después manda la cantidad de upvotes, y a igualdad pesa tu actividad real. Podés navegar a semanas anteriores con las flechas para ver cómo quedó cada ronda.
+
+Y hay un detalle que importa: arriba ves **cuántos días faltan para que cierre la semana**. Si querés que tu lanzamiento entre en este ranking, tenés una ventana clara.
+
+## Pro: agendá tu lanzamiento
+Con el plan free lanzás a la semana actual. Si sos **Pro**, podés **agendar** tu lanzamiento para una semana futura (ideal si estás coordinando un launch), aparecés destacado en el feed y primero en el mail.
+
+## El recap de los viernes
+Lo que se lanza no se pierde: cada **viernes** el resumen semanal de la comunidad incluye una sección de **lanzamientos de la semana** con su ranking final, en X y en tu inbox. Los lanzamientos Pro van primero, con imagen grande.
+
+## /feed, /explore y /leaderboard, ahora una sola familia
+Builders Hunt no vive aislado. Unificamos la navegación de **descubrimiento**: [/feed](/feed), [/explore](/explore) y [/leaderboard](/leaderboard) comparten ahora la misma barra arriba, así saltás entre ellos sin perderte. Y al costado del feed sumamos un panel de comunidad: tu lanzamiento, el **Builder de la Semana**, los **top builders** y el **pulso de la red** (cuánta gente se movió esta semana, proyectos nuevos, endorsements). De paso, /showcase ahora redirige a /leaderboard, para no tener dos rankings.
+
+## Por qué lo hicimos
+huevsite siempre fue una red, no un link-in-bio más. Builders Hunt le da un latido semanal: una razón para volver el lunes, mostrar lo que terminaste, y descubrir lo que están lanzando los demás. Construir en público es más lindo cuando hay quién lo mire.
+
+Entrá a [/feed](/feed), mirá lo que se está lanzando esta semana, y tirá el tuyo.
+
+¡A buildeaRRR!
+    `,
+  },
+  {
+    slug: "proyectos-de-la-idea-al-lanzado-y-agregalos-pegando-la-url",
+    title: "Proyectos: de la idea al lanzado, y agregalos pegando la URL",
+    excerpt: "Tus proyectos ahora tienen ciclo de vida (idea → en construcción → lanzado), fecha de lanzamiento y una pestaña propia. Y podés agregar uno pegando su link.",
+    date: "2026-06-27",
+    tags: ["feature", "proyectos", "launches"],
+    author: {
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
+    },
+    content: `
+Hasta ahora un proyecto en tu huevsite era una foto fija: lo cargabas y listo. Pero los proyectos tienen vida —arrancan como idea, los construís, los lanzás. Así que les dimos un **ciclo de vida** de verdad y una pestaña propia para manejarlos.
+
+## Idea → En construcción → Lanzado
+Cada bloque de proyecto ahora tiene un **estado**:
+
+- **Idea**: algo que querés hacer.
+- **En construcción**: lo estás buildeando. Podés ponerle una **fecha de lanzamiento** y en tu perfil aparece la cuenta regresiva ("Lanza en 5 días").
+- **Lanzado**: ya salió. Recién ahí se prende el puntito "live" en tu board.
+
+Antes todos los proyectos decían "LIVE" aunque no estuvieran terminados. Ahora el estado es real, y se nota.
+
+## La pestaña Proyectos
+En tu [dashboard](/dashboard) sumamos una pestaña **Proyectos**: tus proyectos agrupados por estado, con un selector para cambiarlo en el momento. Si un proyecto "en construcción" ya pasó su fecha de lanzamiento, te aparece un botón **"Marcar lanzado"** para que no quede colgado.
+
+También podés **archivar** un proyecto: se oculta del perfil público pero lo seguís viendo y manejando desde el dashboard. Ideal para algo que pausaste y no querés borrar.
+
+## Agregá un proyecto pegando su URL
+Cargar un proyecto a mano es tedioso: nombre, descripción, imagen... Ahora hay un atajo. Tocás **"Agregar proyecto"**, **pegás el link**, y leemos las etiquetas de la página (las mismas que usan WhatsApp o X para la previa) para **autocompletar** título, descripción e imagen. Revisás, ajustás, y listo.
+
+Si la página no expone nada útil, igual te creamos el proyecto con el link puesto, así no perdés el laburo. Y si preferís cargarlo a mano, ese camino sigue estando.
+
+## Y cuando estás listo, lanzalo
+La pestaña Proyectos es también desde donde lanzás. Tenés dos botones, complementarios:
+
+- **Lanzar en huevsite**: entra al feed semanal de la comunidad (el nuevo [Builders Hunt](/feed)).
+- **Lanzar en Launchy**: empuja tu proyecto a **33 directorios** externos de una. Cuando empieza a salir live en cada uno, el número vuelve solo a tu huevsite y se muestra como prueba social en el bloque ("🚀 Lanzado en 12 directorios").
+
+Pegás los datos una vez, y desde ahí lo movés a todos lados.
+
+Entrá a tu [dashboard](/dashboard), abrí Proyectos, y ponéle estado a lo que estás construyendo.
+
+¡A buildeaRRR!
+    `,
+  },
+  {
+    slug: "rankea-por-commits-el-leaderboard-ahora-mide-quien-codea",
+    title: "Rankeá por commits: el leaderboard ahora mide quién más codea",
+    excerpt: "Sumamos una pestaña de commits al leaderboard: rankeá a los builders por commits del año o del mes, con datos reales de GitHub.",
+    date: "2026-06-25",
+    tags: ["feature", "github", "leaderboard"],
+    author: {
+      name: "Equipo huevsite",
+      username: "huevsite",
+      avatarUrl: "/huevsite-avatar.png",
+    },
+    content: `
+El [leaderboard](/leaderboard) ya rankeaba por builder score, seguidores, nominaciones y endorsements. Le faltaba lo más concreto de todo: **quién está codeando**. Ya está.
+
+## La pestaña de commits
+Sumamos una pestaña nueva, **Commits ⚡**, al lado de las otras. Rankea a los builders por cantidad de commits, con dos vistas:
+
+- **Año**: tu volumen de los últimos 12 meses.
+- **Mes**: lo que vas commiteando este mes, para ver quién la está rompiendo ahora.
+
+Los números salen de los datos reales de GitHub que ya trae tu bloque —los mismos del heatmap— así que no hay que cargar nada a mano. Si tenés tu GitHub conectado, ya estás en la tabla.
+
+## Por qué un ranking de commits
+Un ranking de score mide qué tan completo y activo está tu perfil. Uno de commits mide otra cosa: **constancia**. No premia al que tiene el portfolio más lindo, sino al que aparece todos los días a buildear. Las dos cosas conviven, y la de commits es la más honesta para la gente que vive en la terminal.
+
+No es para inflar egos: es contexto. Ver a otros builders metiendo código te da una referencia real de dónde estás parado y, con suerte, un poco de envidia sana para abrir el editor.
+
+Si todavía no tenés el bloque de GitHub, conectalo desde tu [dashboard](/dashboard) y entrá al [leaderboard](/leaderboard) a ver dónde caés.
+
+¡A buildeaRRR!
+    `,
+  },
+  {
     slug: "api-publica-de-perfiles",
     title: "API pública de perfiles: embebé huevsites donde quieras",
     excerpt: "Abrimos una API JSON abierta + modo embed para iframes, así cualquier plataforma puede mostrar tu huevsite. La estrenamos en nordelta.tech.",

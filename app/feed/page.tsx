@@ -11,6 +11,7 @@ import { BadgeCheck, Loader2, Activity as ActivityIcon, ArrowUpRight, Users, Use
 import { currentLaunchWeek, addWeeks, weekLabel, compareWeeks } from "@/lib/launch-week";
 import { withHuevsiteUtm } from "@/lib/utm";
 import { trackClick } from "@/components/analytics/AnalyticsTracker";
+import { DiscoveryRail } from "@/components/discovery/DiscoveryRail";
 
 type FeedT = ReturnType<typeof useTranslations>;
 
@@ -172,7 +173,7 @@ function FeedContent() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [tab, setTab] = useState<"activity" | "launches">("activity");
+  const [tab, setTab] = useState<"activity" | "launches">("launches");
   const [audienceFilter, setAudienceFilter] = useState<"all" | "following">("all");
   const [filterType, setFilterType] = useState<string>("all");
   const [page, setPage] = useState(1);
@@ -180,6 +181,7 @@ function FeedContent() {
   const [launches, setLaunches] = useState<any[]>([]);
   const [launchWeek, setLaunchWeek] = useState<string>("");
   const [votedIds, setVotedIds] = useState<string[]>([]);
+  const [stackFilter, setStackFilter] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
@@ -297,9 +299,18 @@ function FeedContent() {
 
   const isCurrentWeek = !launchWeek || compareWeeks(launchWeek, currentLaunchWeek()) >= 0;
 
+  const stackChips = useMemo(() => {
+    const freq = new Map<string, number>();
+    launches.forEach((l: any) => (l.stack || []).forEach((s: string) => freq.set(s, (freq.get(s) || 0) + 1)));
+    return Array.from(freq.entries()).sort((a, b) => b[1] - a[1]).slice(0, 6).map((e) => e[0]);
+  }, [launches]);
+  const shownLaunches = stackFilter
+    ? launches.filter((l: any) => (l.stack || []).includes(stackFilter))
+    : launches;
+
   return (
-    <div className="min-h-screen bg-[var(--bg)] font-display py-12 px-4 max-w-2xl mx-auto">
-      <header className="mb-12">
+    <div className="min-h-screen bg-[var(--bg)] font-display py-12 px-4 max-w-5xl mx-auto">
+      <header className="mb-12 max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <Link href={fromDashboard ? "/dashboard" : "/"} className="logo">huev<span>site</span>.io</Link>
           <div className="flex items-center gap-3">
@@ -326,6 +337,7 @@ function FeedContent() {
           ))}
         </div>
 
+        {tab === "activity" && (
         <div className="mt-4 flex gap-2">
           {[
             { id: "all", label: t("filterAll"), icon: Users },
@@ -349,10 +361,11 @@ function FeedContent() {
             );
           })}
         </div>
+        )}
       </header>
 
       {loading ? (
-        <div className="space-y-4">
+        <div className="space-y-4 max-w-2xl mx-auto">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="h-24 rounded-2xl bg-[var(--surface)] border border-[var(--border)] animate-pulse" />
           ))}
@@ -375,7 +388,8 @@ function FeedContent() {
           </Link>
         </motion.div>
       ) : tab === "launches" ? (
-        <div className="space-y-5">
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
+        <div className="flex-1 min-w-0 space-y-5">
           {/* Week navigation */}
           <div className="flex items-center justify-between gap-2">
             <button
@@ -397,7 +411,27 @@ function FeedContent() {
             </button>
           </div>
 
-          {launches.length === 0 ? (
+          {stackChips.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setStackFilter(null)}
+                className={`text-[10px] px-3 py-1 rounded-full border transition-all ${!stackFilter ? "bg-[var(--accent)] text-black border-[var(--accent)] font-black" : "border-white/10 text-white/55 hover:text-white"}`}
+              >
+                {t("filterStackAll")}
+              </button>
+              {stackChips.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setStackFilter(s === stackFilter ? null : s)}
+                  className={`text-[10px] px-3 py-1 rounded-full border transition-all ${stackFilter === s ? "bg-[var(--accent)] text-black border-[var(--accent)] font-black" : "border-white/10 text-white/55 hover:text-white"}`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {shownLaunches.length === 0 ? (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -416,7 +450,7 @@ function FeedContent() {
             </motion.div>
           ) : (
             <div className="space-y-3">
-              {launches.map((launch: any, i: number) => {
+              {shownLaunches.map((launch: any, i: number) => {
                 const voted = votedIds.includes(launch.id);
                 const rank = i + 1;
                 const live = launch.launch?.live || 0;
@@ -512,8 +546,13 @@ function FeedContent() {
             </div>
           )}
         </div>
+        <DiscoveryRail
+          currentUserId={currentUserId}
+          weekLaunches={launches.map((l: any) => ({ id: l.id, userId: l.userId, upvoteCount: l.upvoteCount }))}
+        />
+        </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-6 max-w-2xl mx-auto">
           {activityGroups.length === 0 ? (
             <motion.div
               initial={{ opacity: 0, y: 20 }}

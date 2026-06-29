@@ -604,7 +604,14 @@ function FeedContent() {
 export default function FeedPage() {
   const t = useTranslations("feed");
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-mono text-[var(--text-dim)]">{t("loadingCommunity")}</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex flex-col items-center justify-center gap-3 text-[var(--text-dim)]">
+          <Loader2 size={28} className="animate-spin text-[var(--accent)]" />
+          <span className="font-mono text-[10px] uppercase tracking-[0.3em]">{t("loadingCommunity")}</span>
+        </div>
+      }
+    >
       <FeedContent />
     </Suspense>
   );

@@ -5,7 +5,6 @@ import { Sparkles } from "lucide-react";
 import LocaleToggle from "@/components/LocaleToggle";
 import { ExploreClient } from "@/components/explore/ExploreClient";
 import { DiscoveryHeader } from "@/components/discovery/DiscoveryHeader";
-import { DiscoveryRail } from "@/components/discovery/DiscoveryRail";
 
 export const revalidate = 60; // Revalidate simple cache every 60s
 
@@ -43,31 +42,30 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
     <div className="min-h-screen bg-[var(--bg)] font-display flex flex-col">
       <DiscoveryHeader currentUserId={user?.id ?? null} maxWidthClass="max-w-[1440px]" />
 
-      <main className="flex-1 max-w-[1440px] mx-auto w-full px-6 md:px-10 pt-4 pb-32 flex flex-col lg:flex-row gap-6 items-start">
-        <div className="flex-1 min-w-0">
-          {/* HERO */}
-          <header className="relative py-8 text-center overflow-hidden">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(200,255,0,0.05)_0%,transparent_60%)] pointer-events-none" />
-            <div className="max-w-3xl mx-auto relative z-10">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--surface2)] border border-[var(--border-bright)] text-[var(--accent)] text-xs font-mono mb-6 justify-center">
-                <Sparkles size={14} /> {t("badge", { count: totalRegistered })}
-              </div>
-              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tighter mb-4">
-                {t("titlePrefix")}
-                <br />
-                <span className="text-[var(--text-muted)] line-through mr-2 inline-block -rotate-1 decoration-[var(--accent)] text-4xl md:text-6xl">
-                  {t("titleStrikethrough")}
-                </span>
-                {t("titleSuffix")}
-              </h1>
-              <p className="text-base md:text-lg text-[var(--text-dim)] max-w-xl mx-auto leading-relaxed">
-                {t("subtitle")}
-              </p>
-            </div>
-          </header>
-          <ExploreClient initialTotal={totalRegistered} />
+      {/* HERO (full-width) */}
+      <header className="relative py-12 px-6 text-center overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,rgba(200,255,0,0.06)_0%,transparent_55%)]" />
+        <div className="max-w-3xl mx-auto relative z-10">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--surface2)] border border-[var(--border-bright)] text-[var(--accent)] text-xs font-mono mb-6 justify-center">
+            <Sparkles size={14} /> {t("badge", { count: totalRegistered })}
+          </div>
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tighter mb-4">
+            {t("titlePrefix")}
+            <br />
+            <span className="text-[var(--text-muted)] line-through mr-2 inline-block -rotate-1 decoration-[var(--accent)] text-4xl md:text-6xl">
+              {t("titleStrikethrough")}
+            </span>
+            {t("titleSuffix")}
+          </h1>
+          <p className="text-base md:text-lg text-[var(--text-dim)] max-w-xl mx-auto leading-relaxed">
+            {t("subtitle")}
+          </p>
         </div>
-        <DiscoveryRail currentUserId={user?.id ?? null} />
+      </header>
+
+      {/* GRID (full-width, no rail) */}
+      <main className="flex-1 px-6 md:px-10 pb-32 max-w-[1440px] mx-auto w-full pt-4">
+        <ExploreClient initialTotal={totalRegistered} />
       </main>
 
       {/* FOOTER */}

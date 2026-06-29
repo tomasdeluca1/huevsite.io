@@ -371,7 +371,7 @@ function FeedContent() {
             {[...Array(5)].map((_, i) => (
               <div key={i} className="flex gap-3 sm:gap-4 p-4 rounded-3xl border border-[var(--border)] bg-[var(--surface)] animate-pulse">
                 <div className="w-7 shrink-0" />
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white/[0.06] shrink-0" />
+                <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl bg-white/[0.06] shrink-0" />
                 <div className="flex-1 min-w-0 space-y-2 py-1">
                   <div className="h-4 w-1/2 rounded bg-white/10" />
                   <div className="h-3 w-4/5 rounded bg-white/[0.05]" />
@@ -486,13 +486,13 @@ function FeedContent() {
                 return (
                   <div
                     key={launch.id}
-                    className={`flex gap-3 sm:gap-4 p-4 rounded-3xl border transition-all ${
+                    className={`flex gap-2.5 sm:gap-4 p-3 sm:p-4 rounded-3xl border transition-all ${
                       launch.featured
                         ? "border-[var(--accent)]/40 bg-[var(--accent)]/[0.04]"
                         : "border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border-bright)]"
                     }`}
                   >
-                    <div className="flex flex-col items-center justify-center w-7 shrink-0">
+                    <div className="flex flex-col items-center justify-center w-6 sm:w-7 shrink-0">
                       <span className="text-sm font-black text-[var(--text-muted)]">
                         {!isCurrentWeek && rank === 1 ? "🏆" : rank}
                       </span>
@@ -502,10 +502,10 @@ function FeedContent() {
                       <img
                         src={launch.imageUrl}
                         alt={launch.title}
-                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border border-white/10 bg-black shrink-0"
+                        className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl object-cover border border-white/10 bg-black shrink-0"
                       />
                     ) : (
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border border-white/10 bg-black/40 flex items-center justify-center text-[var(--text-muted)] shrink-0">
+                      <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl border border-white/10 bg-black/40 flex items-center justify-center text-[var(--text-muted)] shrink-0">
                         <Rocket size={20} />
                       </div>
                     )}
@@ -559,7 +559,7 @@ function FeedContent() {
 
                     <button
                       onClick={() => toggleUpvote(launch.id, voted)}
-                      className={`flex flex-col items-center justify-center w-12 shrink-0 rounded-xl border transition-all ${
+                      className={`flex flex-col items-center justify-center w-11 sm:w-12 shrink-0 rounded-xl border transition-all ${
                         voted
                           ? "border-[var(--accent)] text-[var(--accent)] bg-[var(--accent)]/10"
                           : "border-white/10 text-white/60 hover:text-white hover:border-white/30"
@@ -661,7 +661,7 @@ function FeedSkeleton() {
             {[...Array(4)].map((_, i) => (
               <div key={i} className="flex gap-4 p-4 rounded-3xl border border-[var(--border)] bg-[var(--surface)] animate-pulse">
                 <div className="w-7 shrink-0" />
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white/[0.06] shrink-0" />
+                <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl bg-white/[0.06] shrink-0" />
                 <div className="flex-1 min-w-0 space-y-2 py-1">
                   <div className="h-4 w-1/2 rounded bg-white/10" />
                   <div className="h-3 w-4/5 rounded bg-white/[0.05]" />

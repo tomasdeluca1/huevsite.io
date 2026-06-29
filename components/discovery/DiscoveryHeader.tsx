@@ -30,10 +30,10 @@ export function DiscoveryHeader({
   const tn = useTranslations("nav");
   const pathname = usePathname() || "";
 
-  const tabs = (size: "full" | "auto") => (
+  const tabs = (mobile: boolean) => (
     <nav
-      className={`flex items-center gap-1 rounded-2xl border border-white/10 bg-white/[0.03] p-1 ${
-        size === "full" ? "w-full" : ""
+      className={`items-center rounded-2xl border border-white/10 bg-white/[0.03] p-1 ${
+        mobile ? "grid grid-cols-3 w-full gap-1" : "flex gap-1"
       }`}
     >
       {TABS.map(({ href, key, icon: Icon }) => {
@@ -42,11 +42,11 @@ export function DiscoveryHeader({
           <Link
             key={href}
             href={href}
-            className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-widest transition-all ${
-              size === "full" ? "flex-1" : ""
+            className={`inline-flex min-w-0 items-center justify-center gap-1.5 rounded-xl py-2 font-black uppercase transition-all ${
+              mobile ? "px-2 text-[10px] tracking-wide" : "px-4 text-[11px] tracking-widest"
             } ${active ? "bg-[var(--accent)] text-black" : "text-[var(--text-muted)] hover:text-white"}`}
           >
-            <Icon size={14} /> {t(key)}
+            <Icon size={14} className="shrink-0" /> <span className="truncate">{t(key)}</span>
           </Link>
         );
       })}
@@ -59,7 +59,7 @@ export function DiscoveryHeader({
         <Link href="/" className="logo text-xl shrink-0">
           huev<span>site</span>.io
         </Link>
-        <div className="hidden md:block">{tabs("auto")}</div>
+        <div className="hidden md:block">{tabs(false)}</div>
         <div className="flex items-center gap-2 shrink-0">
           <LocaleToggle />
           <Link
@@ -71,7 +71,7 @@ export function DiscoveryHeader({
         </div>
       </div>
       {/* Mobile: tabs on their own full-width row */}
-      <div className={`md:hidden ${maxWidthClass} mx-auto w-full px-6 pb-3`}>{tabs("full")}</div>
+      <div className={`md:hidden ${maxWidthClass} mx-auto w-full px-6 pb-3`}>{tabs(true)}</div>
     </header>
   );
 }

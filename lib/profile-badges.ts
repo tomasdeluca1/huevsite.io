@@ -80,8 +80,13 @@ function createBadge(key: ProfileBadge["key"]): ProfileBadge {
   return { key, ...BADGE_CATALOG[key] };
 }
 
-export function isProfileComplete(profile: BadgeProfile, blockCount: number) {
-  return Boolean(profile.name && profile.image && profile.github_handle && profile.tagline && blockCount >= 4);
+export function isProfileComplete(profile: BadgeProfile, blockCount: number, blocks: BadgeBlock[] = []) {
+  // "GitHub" is satisfied by EITHER the profile.github_handle column (set via the
+  // Edit Profile modal) OR a GitHub block on the board — otherwise a user who adds
+  // a GitHub block (and earns github_linked) but never fills the handle field stays
+  // silently locked out of profile_complete.
+  const hasGithub = Boolean(profile.github_handle) || hasGithubBlock(blocks);
+  return Boolean(profile.name && profile.image && hasGithub && profile.tagline && blockCount >= 4);
 }
 
 function hasTwitterInBlocks(blocks: BadgeBlock[]): boolean {
@@ -104,7 +109,7 @@ export function getProfileBadges(
   const badges: ProfileBadge[] = [];
   const blocks = options.blocks || [];
 
-  if (isProfileComplete(profile, options.blockCount)) badges.push(createBadge("profile_complete"));
+  if (isProfileComplete(profile, options.blockCount, blocks)) badges.push(createBadge("profile_complete"));
 
   if (profile.updated_at && new Date(profile.updated_at) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) {
     badges.push(createBadge("active_this_week"));

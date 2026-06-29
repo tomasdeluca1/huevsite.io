@@ -137,6 +137,8 @@ export const profileService = {
       !!userWinnerData &&
       !!latestWinnerData &&
       userWinnerData.week === latestWinnerData.week;
+    // Most recent week this builder won BDLS — for the laurel hover on the board.
+    transformed.winnerWeek = (userWinnerData as any)?.week || null;
     transformed.badges = getProfileBadges(profile, {
       blockCount: transformed.blocks.length,
       hasWonBuilderOfTheWeek: !!userWinnerData,

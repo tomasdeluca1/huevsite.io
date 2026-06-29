@@ -294,6 +294,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
             subscriptionTier={profile.subscriptionTier}
             userId={profile.id}
             isWinner={profile.isWinner}
+            winnerWeek={profile.winnerWeek}
             badges={profile.badges}
             subSites={profile.subSites}
             username={username}

@@ -1,9 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { BadgeCheck, Trophy } from "lucide-react";
 import { HeroBlockData, ProfileBadge, getContrastColor } from "@/lib/profile-types";
+import { weekLabel } from "@/lib/launch-week";
 import { useBlockPreview } from "@/lib/block-preview-context";
 import { BadgeItem } from "@/components/profile/BadgeItem";
 
@@ -14,13 +15,16 @@ interface Props {
   isWinner?: boolean;
   badges?: ProfileBadge[];
   username?: string;
+  winnerWeek?: string | null;
 }
 
-export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = false, badges = [], username }: Props) {
+export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = false, badges = [], username, winnerWeek }: Props) {
   const isPreview = useBlockPreview();
   const t = useTranslations('blocks');
-  // Ever won Builder de la Semana → show the embeddable laurel badge on the board.
+  const locale = useLocale();
+  // Ever won Builder de la Semana → show the laurel on the board (hover for details).
   const everWonBdls = badges.some((b) => b.key === "builder_of_the_week");
+  const bdlsHover = `🏆 ${t('hero.builderOfWeek')}${winnerWeek ? ` · ${weekLabel(winnerWeek, locale)} ${winnerWeek.slice(0, 4)}` : ""}`;
   const roles = data.roles || [];
   const name = data.name || t('hero.fallbackName');
   const tagline = data.tagline || t('hero.fallbackTagline');
@@ -148,21 +152,20 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
 
         {/* ROW 2: Descripción (con un espacio según el diagrama) */}
         <div className="mt-6 flex-1 min-w-0">
-          {everWonBdls && username && (
-            <a
-              href="/leaderboard"
-              className="mb-4 inline-flex transition-transform hover:scale-[1.02]"
-              title={t('hero.builderOfWeek')}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`/api/badge/bdls/${username}?v=3`}
-                alt={t('hero.builderOfWeek')}
-                width={200}
-                height={80}
-                style={{ height: "auto", maxWidth: "220px" }}
-              />
-            </a>
+          {everWonBdls && (
+            <div className="group relative mb-4 inline-flex">
+              <a
+                href="/leaderboard"
+                className="inline-flex transition-transform hover:scale-[1.04]"
+                title={bdlsHover}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/badge/laurel-dark.png" alt={bdlsHover} width={120} style={{ height: "auto" }} />
+              </a>
+              <span className="pointer-events-none absolute left-1/2 top-full z-30 mt-1 -translate-x-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-black/90 px-3 py-1.5 text-[10px] font-bold text-white opacity-0 shadow-xl transition-opacity duration-200 group-hover:opacity-100">
+                {bdlsHover}
+              </span>
+            </div>
           )}
           {badges.length > 0 && (
             <div className="mb-4 flex items-end gap-3">

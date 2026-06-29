@@ -21,13 +21,14 @@ interface ProfileGridProps {
   userId?: string
   subSiteId?: string
   isWinner?: boolean
+  winnerWeek?: string | null
   badges?: ProfileBadge[]
   subSites?: any[]
   username?: string
   isCustomDomain?: boolean
 }
 
-export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscriptionTier, userId, subSiteId, isWinner = false, badges = [], subSites = [], username, isCustomDomain = false }: ProfileGridProps) {
+export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscriptionTier, userId, subSiteId, isWinner = false, winnerWeek = null, badges = [], subSites = [], username, isCustomDomain = false }: ProfileGridProps) {
   const isPreview = useBlockPreview()
   // Filtrar solo bloques visibles y ordenar
   const visibleBlocks = blocks
@@ -52,7 +53,7 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscri
 
     switch (block.type) {
       case "hero":
-        return <HeroBlock {...props} subscriptionTier={subscriptionTier} isWinner={isWinner} badges={badges} username={username} />
+        return <HeroBlock {...props} subscriptionTier={subscriptionTier} isWinner={isWinner} badges={badges} username={username} winnerWeek={winnerWeek} />
       case "building":
         return <BuildingBlock {...props} />
       case "github":

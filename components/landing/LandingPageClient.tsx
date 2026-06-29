@@ -11,7 +11,7 @@ import { LatamFlags } from "@/components/landing/LatamFlags";
 import { supabase } from "@/lib/supabase";
 import { PricingTiers } from "@/components/landing/PricingTiers";
 import { User } from "@supabase/supabase-js";
-import { Activity, Compass, Users, PlusCircle, Layout, Check, BookOpen, Globe, BarChart3, Loader2, ArrowRight, Sparkles, Zap, Star, LayoutGrid, Eye, ChevronDown, X, Trophy, TrendingUp, HeartHandshake } from "lucide-react";
+import { Activity, Compass, Users, PlusCircle, Layout, Check, BookOpen, Globe, BarChart3, Loader2, ArrowRight, Sparkles, Zap, Star, LayoutGrid, Eye, ChevronDown, X, Trophy, TrendingUp, HeartHandshake, Rocket, ArrowBigUp, CalendarDays, ThumbsUp } from "lucide-react";
 import type { LandingTestimonial } from "@/lib/testimonial-service";
 import type { Faq } from "@/lib/faq-service";
 import type { NetworkPulse } from "@/lib/showcase-service";
@@ -281,7 +281,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
       {/* NAV */}
       <nav>
         <Link href="/" className="logo">huev<span style={{ color: 'var(--accent)' }}>site</span>.io</Link>
-        <div className="nav-right hidden md:flex">
+        <div className="nav-right hidden lg:flex">
           {/* Content links */}
           <Link href="/feed" className="btn btn-ghost">
             <span>{tNav("launches")}</span>
@@ -313,8 +313,8 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
           </Link>
         </div>
 
-        {/* Mobile Mini Nav (just Login/Dashboard for space) */}
-        <div className="md:hidden flex items-center gap-2">
+        {/* Mobile / tablet mini nav (just Login/Dashboard for space) */}
+        <div className="lg:hidden flex items-center gap-2">
           <LocaleToggle />
           <Link href={user ? "/dashboard" : "/login"} className="btn btn-accent !py-1.5 !px-4 !text-[11px] !font-bold">
             {user ? tNav("dashboard") : tNav("enter")}
@@ -330,7 +330,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
             animate={{ opacity: 1, y: 0, x: "-50%", scale: 1 }}
             exit={{ opacity: 0, y: 20, x: "-50%", scale: 0.95 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="md:hidden fixed bottom-8 left-1/2 z-[100] w-[90%] max-w-[400px]"
+            className="lg:hidden fixed bottom-8 left-1/2 z-[100] w-[90%] max-w-[400px]"
           >
             <div className="bg-black/80 backdrop-blur-xl border border-white/10 rounded-full p-2 flex items-center justify-between shadow-2xl">
               <Link href="/feed" className="flex-1 flex flex-col items-center gap-1 py-1.5 text-[var(--text-dim)] hover:text-[var(--accent)] transition-colors">
@@ -384,30 +384,35 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
 
             <p className="text-center xl:text-left mx-auto xl:mx-0">{currentHero.description}</p>
 
-            <div className="hero-ctas flex justify-center xl:justify-start items-center flex-wrap gap-3.5">
-              <Link
-                href={currentHero.primaryHref}
-                className="btn btn-accent !px-8 !py-4 text-base"
-                onClick={() => trackLandingEvent("landing_hero_primary_click", { variant: heroVariant, href: currentHero.primaryHref })}
-              >
-                {currentHero.primaryLabel}
-              </Link>
-              <Link
-                href={currentHero.secondaryHref}
-                className="btn btn-ghost !px-6 !py-4 text-sm"
-                onClick={() => trackLandingEvent("landing_hero_secondary_click", { variant: heroVariant, href: currentHero.secondaryHref })}
-              >
-                {currentHero.secondaryLabel}
-              </Link>
-            </div>
+            {/* Logged-in users skip the claim bar (they already own a URL), so they
+                get the explicit primary/secondary button pair instead. */}
+            {user && (
+              <div className="hero-ctas flex justify-center xl:justify-start items-center flex-wrap gap-3.5">
+                <Link
+                  href={currentHero.primaryHref}
+                  className="btn btn-accent !px-8 !py-4 text-base"
+                  onClick={() => trackLandingEvent("landing_hero_primary_click", { variant: heroVariant, href: currentHero.primaryHref })}
+                >
+                  {currentHero.primaryLabel}
+                </Link>
+                <Link
+                  href={currentHero.secondaryHref}
+                  className="btn btn-ghost !px-6 !py-4 text-sm"
+                  onClick={() => trackLandingEvent("landing_hero_secondary_click", { variant: heroVariant, href: currentHero.secondaryHref })}
+                >
+                  {currentHero.secondaryLabel}
+                </Link>
+              </div>
+            )}
 
             {/* Live username claim — the highest-intent hook on the page: a typed
-                username means the visitor already owns the URL in their head.
+                username means the visitor already owns the URL in their head. For
+                guests this IS the primary CTA (no redundant green button above it).
                 Validates in real time against /api/username/check. */}
             {!user && (
-              <div className="mt-4 flex flex-col items-center xl:items-start gap-2">
+              <div className="mt-2 mb-9 w-full max-w-[440px] mx-auto xl:mx-0 flex flex-col items-center xl:items-start gap-3">
                 <div
-                  className={`flex items-center rounded-2xl border bg-black/30 overflow-hidden transition-colors ${
+                  className={`flex w-full items-center rounded-2xl border bg-black/30 overflow-hidden transition-colors ${
                     claimStatus === "available"
                       ? "border-[var(--accent)]/50"
                       : claimStatus === "taken" || claimStatus === "invalid"
@@ -415,7 +420,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                       : "border-white/10"
                   }`}
                 >
-                  <span className="pl-4 py-3 text-sm font-mono text-[var(--text-muted)] select-none">huevsite.io/</span>
+                  <span className="pl-3.5 sm:pl-4 py-3 text-sm font-mono text-[var(--text-muted)] select-none shrink-0">huevsite.io/</span>
                   <input
                     value={claimInput}
                     onChange={(e) => setClaimInput(e.target.value.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase())}
@@ -423,7 +428,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                     placeholder={t("claimPlaceholder")}
                     maxLength={20}
                     aria-label={t("claimAriaLabel")}
-                    className="bg-transparent py-3 pr-1 text-sm font-mono text-white outline-none w-[110px] sm:w-[140px] placeholder:text-white/25"
+                    className="min-w-0 flex-1 bg-transparent py-3 pr-1 text-sm font-mono text-white outline-none placeholder:text-white/25"
                   />
                   <span className="flex w-5 shrink-0 items-center justify-center">
                     {claimStatus === "checking" && <Loader2 size={14} className="animate-spin text-white/40" />}
@@ -433,7 +438,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                   <button
                     onClick={submitClaim}
                     disabled={claimStatus !== "available"}
-                    className="m-1.5 ml-2 rounded-xl bg-[var(--accent)] px-4 py-2 text-sm font-bold text-black transition-opacity disabled:opacity-30 disabled:cursor-not-allowed whitespace-nowrap"
+                    className="m-1.5 ml-1.5 shrink-0 rounded-xl bg-[var(--accent)] px-3.5 sm:px-4 py-2 text-sm font-bold text-black transition-opacity disabled:opacity-30 disabled:cursor-not-allowed whitespace-nowrap min-h-[44px]"
                   >
                     {t("claimButton")}
                   </button>
@@ -458,6 +463,14 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                     ))}
                   </div>
                 )}
+                <Link
+                  href={currentHero.secondaryHref}
+                  onClick={() => trackLandingEvent("landing_hero_secondary_click", { variant: heroVariant, href: currentHero.secondaryHref })}
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--text-dim)] hover:text-white transition-colors"
+                >
+                  {currentHero.secondaryLabel}
+                  <ArrowRight size={14} />
+                </Link>
               </div>
             )}
 
@@ -566,6 +579,125 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
               </Link>
             );
           })}
+        </div>
+      </section>
+
+      {/* BUILDERS HUNT — the new flagship: a weekly launch feed where builders
+          ship projects and the community upvotes. Surfaces /feed as a reason to
+          join. The right-side card is an illustrative sample (mirrors the real
+          feed UI), consistent with the hero preview pattern. */}
+      <section style={{ padding: 'var(--section-y) var(--section-x) 0' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-14">
+            {/* Copy */}
+            <div className="text-center lg:text-left">
+              <div className="section-label text-center lg:text-left">{t("bhSectionLabel")}</div>
+              <h2 className="section-title">
+                {t("bhTitleLine1")} <span style={{ color: 'var(--accent)' }}>{t("bhTitleAccent")}</span>
+              </h2>
+              <p className="section-sub mx-auto lg:mx-0">{t("bhSub")}</p>
+
+              <div className="mt-7 flex flex-col gap-4 text-left">
+                {[
+                  { icon: Rocket, title: t("bhPoint1Title"), desc: t("bhPoint1Desc") },
+                  { icon: ThumbsUp, title: t("bhPoint2Title"), desc: t("bhPoint2Desc") },
+                  { icon: CalendarDays, title: t("bhPoint3Title"), desc: t("bhPoint3Desc") },
+                ].map((p) => {
+                  const Icon = p.icon;
+                  return (
+                    <div key={p.title} className="flex items-start gap-3.5">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--accent)]/10 text-[var(--accent)]">
+                        <Icon size={16} />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-black tracking-tight text-white">{p.title}</div>
+                        <p className="mt-0.5 text-sm leading-6 text-[var(--text-dim)]">{p.desc}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3">
+                <Link
+                  href="/feed"
+                  onClick={() => trackLandingEvent("landing_builders_hunt_primary_click", {})}
+                  className="btn btn-accent !px-7 !py-3.5 text-base w-full sm:w-auto"
+                >
+                  {t("bhPrimaryCta")}
+                </Link>
+                <Link
+                  href={user ? "/dashboard" : "/login"}
+                  onClick={() => trackLandingEvent("landing_builders_hunt_secondary_click", {})}
+                  className="btn btn-ghost !px-6 !py-3.5 text-sm w-full sm:w-auto"
+                >
+                  {t("bhSecondaryCta")}
+                </Link>
+              </div>
+            </div>
+
+            {/* Illustrative launch list (mirrors the feed UI) */}
+            <div className="relative w-full max-w-[440px] mx-auto lg:mx-0 lg:ml-auto">
+              <div className="hpp-badge mb-3 justify-center lg:justify-start">
+                <Eye size={12} />
+                {t("bhCardBadge")}
+              </div>
+              <div className="rounded-[1.6rem] border border-white/10 bg-[var(--surface)] p-4 sm:p-5 shadow-2xl shadow-black/40">
+                <div className="mb-3.5 flex items-center justify-between gap-3 border-b border-white/[0.07] pb-3.5">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--accent)]/[0.12] text-[var(--accent)]">
+                      <Rocket size={15} />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="truncate text-[13px] font-black tracking-tight text-white">{t("bhCardTitle")}</div>
+                      <div className="truncate text-[10px] font-mono text-[var(--text-muted)]">{t("bhCardSubtitle")}</div>
+                    </div>
+                  </div>
+                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--accent)]/30 bg-[var(--accent)]/5 px-2.5 py-1 text-[9px] font-mono uppercase tracking-[0.15em] text-[var(--accent)]">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent)] opacity-75" />
+                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
+                    </span>
+                    {t("bhCardLive")}
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-2.5">
+                  {[
+                    { emoji: "🚀", name: t("bhCardYouName"), tag: t("bhCardYouTag"), votes: "47", you: true },
+                    { emoji: "🛠️", name: t("bhEx2Name"), tag: t("bhEx2Tag"), votes: "29", you: false },
+                    { emoji: "⚡", name: t("bhEx3Name"), tag: t("bhEx3Tag"), votes: "18", you: false },
+                  ].map((r, i) => (
+                    <div
+                      key={r.name}
+                      className={`flex items-center gap-2.5 sm:gap-3 rounded-xl border p-2.5 ${
+                        r.you ? "border-[var(--accent)]/40 bg-[var(--accent)]/[0.06]" : "border-white/[0.07] bg-white/[0.02]"
+                      }`}
+                    >
+                      <span className="w-3.5 shrink-0 text-center text-xs font-black text-white/30">{i + 1}</span>
+                      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-base ${r.you ? "bg-[var(--accent)]" : "bg-white/[0.06]"}`}>
+                        {r.emoji}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-[13px] font-bold text-white">{r.name}</div>
+                        <div className="truncate text-[11px] text-[var(--text-muted)]">{r.tag}</div>
+                      </div>
+                      <div
+                        className={`flex shrink-0 flex-col items-center justify-center rounded-lg border px-2.5 py-1 ${
+                          r.you
+                            ? "border-[var(--accent)]/50 bg-[var(--accent)]/15 text-[var(--accent)]"
+                            : "border-white/10 bg-white/[0.03] text-[var(--text-dim)]"
+                        }`}
+                      >
+                        <ArrowBigUp size={15} className={r.you ? "fill-[var(--accent)]" : ""} />
+                        <span className="text-[11px] font-black leading-none">{r.votes}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

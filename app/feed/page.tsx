@@ -12,6 +12,7 @@ import { currentLaunchWeek, addWeeks, weekLabel, compareWeeks } from "@/lib/laun
 import { withHuevsiteUtm } from "@/lib/utm";
 import { trackClick } from "@/components/analytics/AnalyticsTracker";
 import { DiscoveryRail } from "@/components/discovery/DiscoveryRail";
+import { DiscoveryNav } from "@/components/discovery/DiscoveryNav";
 
 type FeedT = ReturnType<typeof useTranslations>;
 
@@ -310,6 +311,7 @@ function FeedContent() {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] font-display py-12 px-4 max-w-5xl mx-auto">
+      <DiscoveryNav />
       <header className="mb-12 max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <Link href={fromDashboard ? "/dashboard" : "/"} className="logo">huev<span>site</span>.io</Link>

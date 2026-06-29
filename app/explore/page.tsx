@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import LocaleToggle from "@/components/LocaleToggle";
 import { ExploreClient } from "@/components/explore/ExploreClient";
+import { DiscoveryNav } from "@/components/discovery/DiscoveryNav";
+import { DiscoveryRail } from "@/components/discovery/DiscoveryRail";
 
 export const revalidate = 60; // Revalidate simple cache every 60s
 
@@ -58,6 +60,8 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
         </div>
       </nav>
 
+      <div className="px-6 max-w-7xl mx-auto w-full"><DiscoveryNav /></div>
+
       {/* HEADER */}
       <header className="relative py-20 px-6 text-center overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(200,255,0,0.05)_0%,transparent_60%)] pointer-events-none" />
@@ -81,7 +85,12 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
 
       {/* GRID */}
       <main className="flex-1 px-6 md:px-10 pb-32 max-w-7xl mx-auto w-full pt-12">
-        <ExploreClient initialTotal={totalRegistered} />
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
+          <div className="flex-1 min-w-0">
+            <ExploreClient initialTotal={totalRegistered} />
+          </div>
+          <DiscoveryRail currentUserId={user?.id ?? null} />
+        </div>
       </main>
 
       {/* FOOTER */}

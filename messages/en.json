@@ -1161,6 +1161,25 @@
     "navExploreLabel": "Explore",
     "allPlaces": "Everywhere"
   },
+  "discovery": {
+    "navBuildersHunt": "Builders Hunt",
+    "navExplore": "Explore",
+    "navRanking": "Ranking",
+    "railYourLaunchLabel": "Your launch",
+    "railYourRank": "You're #{rank} this week",
+    "railShareNudge": "share it to climb",
+    "railNotLaunched": "You haven't launched this week.",
+    "railLaunchCta": "Launch your project",
+    "railLoggedOut": "Add your project to the network.",
+    "railCreateCta": "Build your huevsite",
+    "railWinnerLabel": "Builder of the week",
+    "railTopLabel": "Top builders",
+    "railTopMore": "View leaderboard",
+    "railPulseLabel": "Network pulse",
+    "railPulseActive": "Active this week",
+    "railPulseProjects": "New projects",
+    "railPulseEndorsements": "Endorsements"
+  },
   "feed": {
     "now": "now",
     "someone": "someone",

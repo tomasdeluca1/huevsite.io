@@ -1161,6 +1161,25 @@
     "navExploreLabel": "Explorar",
     "allPlaces": "Todo el mundo"
   },
+  "discovery": {
+    "navBuildersHunt": "Builders Hunt",
+    "navExplore": "Explorar",
+    "navRanking": "Ranking",
+    "railYourLaunchLabel": "Tu lanzamiento",
+    "railYourRank": "Vas #{rank} esta semana",
+    "railShareNudge": "compartilo para subir",
+    "railNotLaunched": "Todavía no lanzaste esta semana.",
+    "railLaunchCta": "Lanzá tu proyecto",
+    "railLoggedOut": "Sumá tu proyecto a la red.",
+    "railCreateCta": "Armá tu huevsite",
+    "railWinnerLabel": "Builder de la semana",
+    "railTopLabel": "Top builders",
+    "railTopMore": "Ver leaderboard",
+    "railPulseLabel": "Pulso de la red",
+    "railPulseActive": "Activos esta semana",
+    "railPulseProjects": "Proyectos nuevos",
+    "railPulseEndorsements": "Endorsements"
+  },
   "feed": {
     "now": "ahora",
     "someone": "alguien",

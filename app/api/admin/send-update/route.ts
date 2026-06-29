@@ -9,41 +9,45 @@ import { listAllAuthUsers } from "@/lib/list-auth-users";
 import { SITE_URL } from "@/lib/site-url";
 
 export const dynamic = "force-dynamic";
+// Sending to the whole base (~250) at ~100ms/email would exceed the default
+// function timeout and cut off mid-send. 60s gives margin for one full pass.
+export const maxDuration = 60;
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const UNSUB_MARKER = "__UNSUB_URL__";
 
 // The recent batch of features being announced. Edit this list before sending.
+// Current campaign: the Builders Hunt launch (2026-06-29).
 const FEATURES = [
   {
-    emoji: "🐙",
-    title: "Tu GitHub, con números de verdad",
-    blurb: "Stars, repos y followers reales, heatmap de contribuciones de verdad y un contador de commits navegable mes a mes.",
-    slug: "tu-github-con-numeros-de-verdad",
+    emoji: "🚀",
+    title: "Builders Hunt",
+    blurb: "Un feed semanal de lanzamientos: mostrá tu proyecto, la comunidad lo vota ▲, y cada semana arranca de cero. Lanzá lo que estás construyendo.",
+    slug: "lanzamos-builders-hunt-el-feed-semanal-de-lanzamientos",
+  },
+  {
+    emoji: "🧭",
+    title: "Descubrimiento unificado",
+    blurb: "Builders Hunt, Explorar y Ranking ahora son una sola red conectada — descubrí builders y proyectos en un solo lugar.",
+    slug: "lanzamos-builders-hunt-el-feed-semanal-de-lanzamientos",
+  },
+  {
+    emoji: "📦",
+    title: "Proyectos: de la idea al lanzado",
+    blurb: "Trackeá el ciclo de tus proyectos (idea → en construcción → lanzado) y agregalos pegando la URL: se autocompletan solos.",
+    slug: "proyectos-de-la-idea-al-lanzado-y-agregalos-pegando-la-url",
+  },
+  {
+    emoji: "⚡",
+    title: "Ranking por commits",
+    blurb: "El leaderboard ahora también mide quién más codea, con vistas por año y por mes.",
+    slug: "rankea-por-commits-el-leaderboard-ahora-mide-quien-codea",
   },
   {
     emoji: "🏆",
-    title: "Leaderboard de Builders",
-    blurb: "El ranking público de los builders más activos de LATAM. Subí tu builder score y escalá posiciones.",
-    slug: "leaderboard-de-builders-el-ranking-de-quien-construye",
-  },
-  {
-    emoji: "🎯",
-    title: "Quests en vivo",
-    blurb: "Un panel de misiones que te dice exactamente qué hacer para subir tu score y desbloquear badges, paso a paso.",
-    slug: "quests-en-vivo-misiones-para-potenciar-tu-board",
-  },
-  {
-    emoji: "🔓",
-    title: "Compartí y sumá +3 bloques",
-    blurb: "Tuiteás mencionando a huevsite, verificamos el posteo y desbloqueás 3 bloques extra. Una sola vez, gratis.",
-    slug: "comparti-y-suma-3-bloques-extra",
-  },
-  {
-    emoji: "📨",
-    title: "Resumen semanal de comunidad",
-    blurb: "Todos los viernes: quién más subió puntos, los proyectos nuevos y la última novedad. En X y en tu inbox.",
-    slug: "resumen-semanal-de-comunidad-todos-los-viernes",
+    title: "Badges para tu portfolio",
+    blurb: "¿Ganaste Builder de la Semana o lanzaste un proyecto? Ahora tenés un badge embebible para tu web o producto.",
+    slug: "lanzamos-builders-hunt-el-feed-semanal-de-lanzamientos",
   },
 ];
 
@@ -78,7 +82,7 @@ export async function GET(request: NextRequest) {
       React.createElement(ProductUpdateEmail, { features, unsubscribeUrl: UNSUB_MARKER })
     );
 
-    const subject = "🥚 Novedades en huevsite: GitHub real, leaderboard, quests y más";
+    const subject = "🚀 Llegó Builders Hunt — lanzá tu proyecto y que la comunidad vote";
     const from = process.env.EMAIL_FROM || "hi@huevsite.studio";
 
     if (preview) {

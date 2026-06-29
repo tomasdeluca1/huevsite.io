@@ -1925,6 +1925,7 @@ export default function DashboardPage() {
                 <InsightsTab
                   accentColor={profile.accentColor}
                   blocks={profile.blocks}
+                  subscriptionTier={profile.subscriptionTier}
                   onOptimizeBoard={() => setActiveTab('board')}
                   onLastTrialViewConsumed={() => {
                     setProfile((prev) => prev ? {

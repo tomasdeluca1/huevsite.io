@@ -218,7 +218,18 @@
       "addAnalyze": "Autocompletar desde la URL",
       "addAnalyzing": "Analizando...",
       "addManual": "Agregar manualmente",
-      "addError": "No pudimos leer esa URL. Probá de nuevo o cargalo a mano."
+      "addError": "No pudimos leer esa URL. Probá de nuevo o cargalo a mano.",
+      "launchInHuevsite": "Lanzar en huevsite",
+      "launchTitle": "Lanzar en huevsite",
+      "launchHint": "\"{title}\" entra al feed de lanzamientos de la semana, donde la comunidad lo descubre y lo vota.",
+      "launchWeekLabel": "// semana de lanzamiento",
+      "launchThisWeek": "Esta semana",
+      "launchProSchedule": "Pro puede agendar una semana futura.",
+      "launchConfirm": "Lanzar",
+      "launchSubmitting": "Lanzando...",
+      "launchAlready": "Ya lanzaste este proyecto esa semana.",
+      "launchError": "No se pudo lanzar. Revisá que el proyecto tenga un link.",
+      "launchedToast": "🚀 ¡Lanzado! Ya está en el feed de la semana."
     },
     "colorPicker": {
       "label": "vibras de perfil",

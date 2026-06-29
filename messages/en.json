@@ -218,7 +218,18 @@
       "addAnalyze": "Auto-fill from URL",
       "addAnalyzing": "Analyzing...",
       "addManual": "Add manually",
-      "addError": "Couldn't read that URL. Try again or add it manually."
+      "addError": "Couldn't read that URL. Try again or add it manually.",
+      "launchInHuevsite": "Launch on huevsite",
+      "launchTitle": "Launch on huevsite",
+      "launchHint": "\"{title}\" joins this week's launch feed, where the community discovers and upvotes it.",
+      "launchWeekLabel": "// launch week",
+      "launchThisWeek": "This week",
+      "launchProSchedule": "Pro can schedule a future week.",
+      "launchConfirm": "Launch",
+      "launchSubmitting": "Launching...",
+      "launchAlready": "You already launched this project that week.",
+      "launchError": "Couldn't launch. Make sure the project has a link.",
+      "launchedToast": "🚀 Launched! It's in this week's feed."
     },
     "colorPicker": {
       "label": "profile vibes",

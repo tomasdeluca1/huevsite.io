@@ -1915,6 +1915,7 @@ export default function DashboardPage() {
                   onEdit={(b) => setEditingBlock(b)}
                   onAddProject={(prefill) => addBlock("project", prefill)}
                   accentColor={profile.accentColor}
+                  subscriptionTier={profile.subscriptionTier}
                 />
               </motion.div>
             )}

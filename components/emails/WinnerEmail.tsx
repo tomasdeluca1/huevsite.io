@@ -65,6 +65,20 @@ export const WinnerEmail: React.FC<Readonly<WinnerEmailProps>> = ({
       </a>
     </div>
 
+    {/* Embeddable badge for their portfolio */}
+    <div style={{ marginTop: '36px', background: '#ffffff', borderRadius: '16px', padding: '24px', textAlign: 'center' }}>
+      <img
+        src={`https://huevsite.io/api/badge/bdls/${username}?theme=light`}
+        alt="Builder de la Semana en huevsite.io"
+        width={240}
+        style={{ maxWidth: '100%', height: 'auto' }}
+      />
+    </div>
+    <p style={{ fontSize: '15px', color: '#a1a1aa', lineHeight: '1.6', textAlign: 'center', marginTop: '16px' }}>
+      🏆 Tenés un <strong>badge oficial</strong> para sumar a tu portfolio o web personal.
+      Copialo con un click desde tu <a href="https://huevsite.io/dashboard" style={{ color: '#C8FF00' }}>dashboard</a>.
+    </p>
+
     {/* Optional form CTA — frames the interview as an upgrade over the
         auto-generated draft we already armed. No deadline pressure: the
         nudge is "tu nota va con tus palabras", not "completala o no

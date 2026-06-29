@@ -13,11 +13,19 @@ interface FeaturedProject {
   username: string;
 }
 
+interface WeekLaunchEmailItem {
+  title: string;
+  username: string;
+  upvoteCount: number;
+  featured: boolean;
+}
+
 interface WeeklyDigestEmailProps {
   weekLabel: string;
   movers: Mover[];
   newProjectsCount: number;
   featuredProjects: FeaturedProject[];
+  weekLaunches?: WeekLaunchEmailItem[];
   news: { title: string; slug: string } | null;
   unsubscribeUrl: string;
 }
@@ -30,6 +38,7 @@ export const WeeklyDigestEmail: React.FC<WeeklyDigestEmailProps> = ({
   movers,
   newProjectsCount,
   featuredProjects,
+  weekLaunches = [],
   news,
   unsubscribeUrl,
 }) => (
@@ -89,6 +98,45 @@ export const WeeklyDigestEmail: React.FC<WeeklyDigestEmailProps> = ({
             <span style={{ color: ACCENT, fontWeight: 800, fontSize: "14px", float: "right" }}>+{m.delta} pts</span>
           </a>
         ))}
+      </div>
+    )}
+
+    {/* LAUNCHES OF THE WEEK (ranked; Pro featured first) */}
+    {weekLaunches.length > 0 && (
+      <div style={{ padding: "28px 0 8px" }}>
+        <h3 style={{ color: "#fff", fontSize: "18px", margin: "0 0 14px" }}>🚀 Lanzamientos de la semana</h3>
+        {weekLaunches.map((l, i) => (
+          <a
+            key={i}
+            href={`${SITE}/feed?utm_source=email&utm_medium=email&utm_campaign=weekly-digest&utm_content=launches`}
+            style={{
+              display: "block",
+              textDecoration: "none",
+              border: l.featured ? "1px solid rgba(200,255,0,0.3)" : "1px solid #1a1a1a",
+              borderRadius: "14px",
+              padding: "14px 16px",
+              marginBottom: "8px",
+              background: l.featured ? "rgba(200,255,0,0.05)" : "rgba(255,255,255,0.02)",
+            }}
+          >
+            <span style={{ color: "#fff", fontWeight: 700, fontSize: "15px" }}>
+              #{i + 1} {l.title}
+            </span>
+            {l.featured && (
+              <span style={{ color: ACCENT, fontSize: "10px", fontWeight: 800, marginLeft: "6px" }}>PRO</span>
+            )}
+            <span style={{ color: "#71717a", fontSize: "13px" }}> · @{l.username}</span>
+            <span style={{ color: ACCENT, fontWeight: 800, fontSize: "14px", float: "right" }}>▲ {l.upvoteCount}</span>
+          </a>
+        ))}
+        <div style={{ textAlign: "center", marginTop: "6px" }}>
+          <a
+            href={`${SITE}/feed?utm_source=email&utm_medium=email&utm_campaign=weekly-digest&utm_content=launches`}
+            style={{ color: ACCENT, fontSize: "13px", fontWeight: 700, textDecoration: "none" }}
+          >
+            Ver todos los lanzamientos →
+          </a>
+        </div>
       </div>
     )}
 

@@ -80,6 +80,7 @@ interface InsightsData {
 interface Props {
   accentColor: string;
   blocks: any[];
+  subscriptionTier?: "free" | "pro";
   onOptimizeBoard?: () => void;
   onLastTrialViewConsumed?: () => void;
 }
@@ -601,7 +602,7 @@ function StatCard({
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialViewConsumed }: Props) {
+export function InsightsTab({ accentColor, blocks, subscriptionTier, onOptimizeBoard, onLastTrialViewConsumed }: Props) {
   const t = useTranslations("dashboard");
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<InsightsData | null>(null);
@@ -763,6 +764,11 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
   const averageDailyVisitors = data?.dailyVisitors?.length ? Math.round(totalDailyVisitors / data.dailyVisitors.length) : 0;
   const activeDays = data?.dailyVisitors?.filter((day) => day.count > 0).length || 0;
   const filteredTotalClicks = topBlocks.reduce((sum, block) => sum + block.clicks, 0);
+
+  // huevsite attribution: clicks huevsite drove to the user's project links.
+  const isPro = subscriptionTier === "pro";
+  const projectClicks = topBlocks.filter((b) => b.type === "project");
+  const projectClickTotal = projectClicks.reduce((s, b) => s + b.clicks, 0);
   const selectedVisitor = visibleVisitors.find((visitor) => visitor.id === selectedVisitorId) || null;
   const selectedVisitorIndex = selectedVisitor ? visibleVisitors.findIndex((visitor) => visitor.id === selectedVisitor.id) : -1;
   const totalVisitorPages = Math.max(1, Math.ceil(visibleVisitors.length / VISITORS_PER_PAGE));
@@ -877,6 +883,43 @@ export function InsightsTab({ accentColor, blocks, onOptimizeBoard, onLastTrialV
           trend="neutral"
           tooltip={t("insights.kpiCtrTooltip")}
         />
+      </div>
+
+      {/* ── huevsite attribution ── */}
+      <div className="rounded-3xl border border-[var(--accent)]/20 bg-[var(--accent)]/[0.04] p-5">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--accent)]">
+              {t("insights.attributionTitle")}
+            </div>
+            <div className="text-2xl font-[950] text-white tracking-tight mt-0.5">
+              {formatNum(projectClickTotal)}{" "}
+              <span className="text-xs font-black uppercase tracking-widest text-white/30">
+                {t("insights.attributionClicks")}
+              </span>
+            </div>
+          </div>
+          <MousePointer2 size={20} className="text-[var(--accent)]" />
+        </div>
+        <p className="text-xs text-white/40 mb-3">{t("insights.attributionSubtitle")}</p>
+        {isPro ? (
+          projectClicks.length > 0 ? (
+            <div className="space-y-1.5">
+              {projectClicks.slice(0, 5).map((b) => (
+                <div key={b.id} className="flex items-center justify-between text-sm">
+                  <span className="truncate text-white/70">{b.title}</span>
+                  <span className="font-black text-white shrink-0 ml-3">{formatNum(b.clicks)}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-white/30">{t("insights.attributionEmpty")}</p>
+          )
+        ) : (
+          <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-xs text-white/50">
+            {t("insights.attributionProTeaser")}
+          </div>
+        )}
       </div>
 
       {/* ── Charts & Lists Grid ── */}

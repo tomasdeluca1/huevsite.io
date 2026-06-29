@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { ProjectBlockData, ProjectStatus } from "@/lib/profile-types";
 import { getLaunchCountdownDays } from "@/lib/project-lifecycle";
+import { withHuevsiteUtm } from "@/lib/utm";
 import { ExternalLink } from "lucide-react";
 
 interface Props {
@@ -108,7 +109,7 @@ export function ProjectBlock({ data, accentColor }: Props) {
 
           {link !== "#" && (
             <a
-              href={link}
+              href={withHuevsiteUtm(link, "profile")}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest hover:translate-x-1 transition-transform"

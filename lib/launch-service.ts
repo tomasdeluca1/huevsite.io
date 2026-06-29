@@ -82,7 +82,7 @@ export async function getWeekLaunches(
         userId: r.user_id,
         title: d.title || "Proyecto",
         description: d.description || "",
-        imageUrl: d.imageUrl || "",
+        imageUrl: d.imageMode === "favicon" && d.faviconUrl ? d.faviconUrl : d.imageUrl || "",
         link: d.link || "",
         stack: Array.isArray(d.stack) ? d.stack : [],
         status: d.status || null,

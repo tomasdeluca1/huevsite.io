@@ -111,5 +111,20 @@ export async function POST(req: Request) {
     }
   }
 
-  return NextResponse.json({ url: parsed.toString(), title, description, imageUrl });
+  // Favicon (any rel containing "icon"). Resolve against origin; fall back to
+  // the conventional /favicon.ico so we always offer a favicon option.
+  let faviconUrl = pickMeta(html, [
+    /<link[^>]+rel=["'][^"']*icon[^"']*["'][^>]+href=["']([^"']+)["']/i,
+    /<link[^>]+href=["']([^"']+)["'][^>]+rel=["'][^"']*icon[^"']*["']/i,
+  ]);
+  if (faviconUrl) {
+    try {
+      faviconUrl = new URL(faviconUrl, parsed.origin).toString();
+    } catch {
+      faviconUrl = "";
+    }
+  }
+  if (!faviconUrl) faviconUrl = `${parsed.origin}/favicon.ico`;
+
+  return NextResponse.json({ url: parsed.toString(), title, description, imageUrl, faviconUrl });
 }

@@ -451,6 +451,10 @@
       },
       "project": {
         "previewLabel": "Preview del Proyecto",
+        "imageModeLabel": "// imagen a mostrar",
+        "imageModeOg": "OG image",
+        "imageModeFavicon": "Favicon",
+        "faviconPlaceholder": "https://tusitio.com/favicon.ico",
         "titleLabel": "// título",
         "descriptionLabel": "// descripción",
         "stackLabel": "// tech stack (separadas por coma)",

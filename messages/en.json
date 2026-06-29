@@ -451,6 +451,10 @@
       },
       "project": {
         "previewLabel": "Project Preview",
+        "imageModeLabel": "// image to show",
+        "imageModeOg": "OG image",
+        "imageModeFavicon": "Favicon",
+        "faviconPlaceholder": "https://yoursite.com/favicon.ico",
         "titleLabel": "// title",
         "descriptionLabel": "// description",
         "stackLabel": "// tech stack (comma-separated)",

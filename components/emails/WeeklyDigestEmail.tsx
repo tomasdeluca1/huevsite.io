@@ -104,7 +104,7 @@ export const WeeklyDigestEmail: React.FC<WeeklyDigestEmailProps> = ({
     {/* LAUNCHES OF THE WEEK (ranked; Pro featured first) */}
     {weekLaunches.length > 0 && (
       <div style={{ padding: "28px 0 8px" }}>
-        <h3 style={{ color: "#fff", fontSize: "18px", margin: "0 0 14px" }}>🚀 Lanzamientos de la semana</h3>
+        <h3 style={{ color: "#fff", fontSize: "18px", margin: "0 0 14px" }}>🚀 Builders Hunt de la semana</h3>
         {weekLaunches.map((l, i) => (
           <a
             key={i}

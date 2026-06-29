@@ -156,7 +156,7 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={`/api/badge/bdls/${username}?theme=dark&v=2`}
+                src={`/api/badge/bdls/${username}?v=3`}
                 alt={t('hero.builderOfWeek')}
                 width={200}
                 height={80}

@@ -5,14 +5,14 @@ export const runtime = "edge";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-// Embeddable "Builder de la Semana" badge (transparent PNG) for any builder who
-// has EVER won the weekly showcase. The laurel wreath is a designed asset in
-// /public/badge (light = slate, dark = lime); the text is composited here so it
-// stays crisp and on-brand. ?theme=dark for dark backgrounds (default light).
+// Embeddable "Builder de la Semana" badge (transparent PNG). Designed laurel
+// halves in /public/badge flank the title on one line, in huevsite's own fonts
+// (Bricolage Grotesque title + JetBrains Mono wordmark). ?theme=dark for dark
+// backgrounds (default light). Validates the user ever won the weekly showcase.
 export async function GET(req: Request, { params }: { params: { username: string } }) {
   const url = new URL(req.url);
   const username = (params.username || "").toLowerCase();
-  const theme = url.searchParams.get("theme") === "dark" ? "dark" : "light";
+  const theme = url.searchParams.get("theme") === "light" ? "light" : "dark";
   const checkOnly = url.searchParams.get("check") === "1";
 
   let everWon = false;
@@ -23,24 +23,48 @@ export async function GET(req: Request, { params }: { params: { username: string
     everWon = false;
   }
 
-  // Lightweight winner check (no image) so the dashboard card can self-gate.
   if (checkOnly) {
     return new Response(JSON.stringify({ winner: everWon }), {
       status: 200,
       headers: { "content-type": "application/json", "cache-control": "no-store" },
     });
   }
-
   if (!everWon) {
     return new Response("Not a Builder de la Semana", { status: 404 });
   }
 
-  const ink = theme === "dark" ? "#FFFFFF" : "#3D4A6B";
-  const sub = theme === "dark" ? "#C8FF00" : "#6B7894";
-  const wreath = new URL(`/badge/laurel-${theme}.png`, req.url).toString();
+  // Branded dark card: black bg + subtle lime glow + lime laurels. (theme=light
+  // keeps a transparent slate version for light portfolios.)
+  const dark = theme !== "light";
+  const ink = dark ? "#FFFFFF" : "#3D4A6B";
+  const sub = dark ? "#C8FF00" : "#6B7894";
+  const lkey = dark ? "dark" : "light";
+  const leftUrl = new URL(`/badge/laurel-${lkey}-left.png`, req.url).toString();
+  const rightUrl = new URL(`/badge/laurel-${lkey}-right.png`, req.url).toString();
+  const bg = dark
+    ? "radial-gradient(circle at 50% 45%, rgba(200,255,0,0.10), rgba(0,0,0,0) 62%), linear-gradient(180deg, #0c0c0f, #000000)"
+    : "transparent";
 
-  const W = 680;
-  const H = 372;
+  // Brand fonts (same-origin, bundled in /public/fonts). Degrade to the default
+  // sans if the fetch ever fails so the badge still renders.
+  let fonts: any[] | undefined;
+  try {
+    const [display, mono] = await Promise.all([
+      fetch(new URL("/fonts/Bricolage-800.ttf", req.url)).then((r) => r.arrayBuffer()),
+      fetch(new URL("/fonts/JetBrainsMono-700.ttf", req.url)).then((r) => r.arrayBuffer()),
+    ]);
+    fonts = [
+      { name: "Bricolage", data: display, weight: 800, style: "normal" },
+      { name: "JetBrainsMono", data: mono, weight: 700, style: "normal" },
+    ];
+  } catch {
+    fonts = undefined;
+  }
+
+  const W = 760;
+  const H = 220;
+  const lH = 180;
+  const lW = theme === "dark" ? 160 : 165;
 
   return new ImageResponse(
     (
@@ -48,39 +72,50 @@ export async function GET(req: Request, { params }: { params: { username: string
         style={{
           width: "100%",
           height: "100%",
-          position: "relative",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "transparent",
-          fontFamily: "sans-serif",
+          gap: 6,
+          background: bg,
+          borderRadius: 28,
+          fontFamily: "Bricolage, sans-serif",
         }}
       >
-        <img src={wreath} width={W} height={H} style={{ position: "absolute", top: 0, left: 0, width: W, height: H }} />
-        <div
-          style={{
-            position: "relative",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <div style={{ fontSize: 28, fontWeight: 800, color: ink, lineHeight: 1.1, display: "flex" }}>
-            Builder de la
+        <img src={leftUrl} width={lW} height={lH} />
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+          <div
+            style={{
+              fontFamily: "Bricolage, sans-serif",
+              fontSize: 34,
+              fontWeight: 800,
+              letterSpacing: "-0.02em",
+              color: ink,
+              whiteSpace: "nowrap",
+              display: "flex",
+            }}
+          >
+            Builder de la Semana
           </div>
-          <div style={{ fontSize: 46, fontWeight: 900, letterSpacing: "-0.02em", color: ink, lineHeight: 1.02, display: "flex" }}>
-            Semana
-          </div>
-          <div style={{ fontSize: 19, fontWeight: 700, color: sub, marginTop: 6, display: "flex" }}>
+          <div
+            style={{
+              fontFamily: "JetBrainsMono, monospace",
+              fontSize: 16,
+              fontWeight: 700,
+              color: sub,
+              marginTop: 8,
+              display: "flex",
+            }}
+          >
             huevsite.io
           </div>
         </div>
+        <img src={rightUrl} width={lW} height={lH} />
       </div>
     ),
     {
       width: W,
       height: H,
+      ...(fonts ? { fonts } : {}),
       headers: {
         "cache-control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
       },

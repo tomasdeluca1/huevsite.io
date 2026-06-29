@@ -30,7 +30,7 @@ export function BadgeSnippetCard({ username }: { username: string }) {
 
   if (!winner) return null;
 
-  const badgeUrl = `${SITE}/api/badge/bdls/${username}?v=2`;
+  const badgeUrl = `${SITE}/api/badge/bdls/${username}?v=3`;
   const profileUrl = `${SITE}/${username}`;
   const html = `<a href="${profileUrl}" target="_blank" rel="noopener"><img src="${badgeUrl}" alt="Builder de la Semana en huevsite.io" width="240" /></a>`;
   const md = `[![Builder de la Semana en huevsite.io](${badgeUrl})](${profileUrl})`;
@@ -56,7 +56,7 @@ export function BadgeSnippetCard({ username }: { username: string }) {
 
       <div className="mb-3 flex justify-center rounded-xl bg-black/30 border border-white/10 p-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={`/api/badge/bdls/${username}?theme=dark&v=2`} alt={t("title")} width={220} style={{ height: "auto" }} />
+        <img src={`/api/badge/bdls/${username}?v=3`} alt={t("title")} width={300} style={{ height: "auto" }} />
       </div>
 
       <div className="space-y-2">

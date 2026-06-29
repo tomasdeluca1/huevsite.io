@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Medal } from "lucide-react";
 import LocaleToggle from "@/components/LocaleToggle";
 import { LeaderboardClient } from "@/components/leaderboard/LeaderboardClient";
+import { DiscoveryNav } from "@/components/discovery/DiscoveryNav";
+import { DiscoveryRail } from "@/components/discovery/DiscoveryRail";
 import type { Metadata } from "next";
 
 export const revalidate = 60;
@@ -58,6 +60,8 @@ export default async function LeaderboardPage({
         </div>
       </nav>
 
+      <div className="px-6 max-w-6xl mx-auto w-full"><DiscoveryNav /></div>
+
       {/* HEADER */}
       <header className="relative py-16 md:py-20 px-6 text-center overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(200,255,0,0.06)_0%,transparent_60%)] pointer-events-none" />
@@ -77,8 +81,13 @@ export default async function LeaderboardPage({
       </header>
 
       {/* CONTENT */}
-      <main className="flex-1 px-6 md:px-10 pb-32 max-w-4xl mx-auto w-full pt-4">
-        <LeaderboardClient currentUserId={user?.id} />
+      <main className="flex-1 px-6 md:px-10 pb-32 max-w-6xl mx-auto w-full pt-4">
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
+          <div className="flex-1 min-w-0">
+            <LeaderboardClient currentUserId={user?.id} />
+          </div>
+          <DiscoveryRail currentUserId={user?.id ?? null} />
+        </div>
       </main>
 
       {/* FOOTER */}

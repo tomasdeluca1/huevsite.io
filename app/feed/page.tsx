@@ -8,7 +8,7 @@ import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import LocaleToggle from "@/components/LocaleToggle";
 import { BadgeCheck, Loader2, Activity as ActivityIcon, ArrowUpRight, Users, UserPlus, ChevronUp, ChevronLeft, ChevronRight, Rocket } from "lucide-react";
-import { currentLaunchWeek, addWeeks, weekLabel, compareWeeks } from "@/lib/launch-week";
+import { currentLaunchWeek, addWeeks, weekLabel, compareWeeks, daysUntilWeekClose } from "@/lib/launch-week";
 import { withHuevsiteUtm } from "@/lib/utm";
 import { trackClick } from "@/components/analytics/AnalyticsTracker";
 import { DiscoveryRail } from "@/components/discovery/DiscoveryRail";
@@ -299,6 +299,7 @@ function FeedContent() {
   };
 
   const isCurrentWeek = !launchWeek || compareWeeks(launchWeek, currentLaunchWeek()) >= 0;
+  const closeDays = daysUntilWeekClose();
 
   const stackChips = useMemo(() => {
     const freq = new Map<string, number>();
@@ -437,9 +438,14 @@ function FeedContent() {
                 <Rocket size={32} />
               </div>
               <h3 className="text-xl font-bold mb-2 text-white">{t("launchesEmptyTitle")}</h3>
-              <p className="text-sm text-[var(--text-dim)] font-mono leading-relaxed mb-8 max-w-xs mx-auto">
+              <p className="text-sm text-[var(--text-dim)] font-mono leading-relaxed mb-4 max-w-xs mx-auto">
                 {t("launchesEmptyBody")}
               </p>
+              {isCurrentWeek && closeDays > 0 && (
+                <p className="text-xs font-black uppercase tracking-widest text-[var(--accent)] mb-6">
+                  {t("emptyUrgency", { days: closeDays })}
+                </p>
+              )}
               <Link href="/dashboard" className="btn btn-accent inline-flex !rounded-2xl shadow-lg shadow-[var(--accent)]/20">
                 {t("addProject")}
               </Link>

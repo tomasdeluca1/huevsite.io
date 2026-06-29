@@ -1207,6 +1207,7 @@
     "subtitle": "Follow the real activity of the community and discover projects published straight from builders' blocks.",
     "tabLaunches": "🚀 Builders Hunt",
     "tabLaunchesShort": "Launches",
+    "emptyUrgency": "Closes in {days} days · be the first this week 🚀",
     "tabActivity": "Activity",
     "filterStackAll": "All",
     "filterAll": "All",

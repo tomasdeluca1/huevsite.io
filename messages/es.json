@@ -1207,6 +1207,7 @@
     "subtitle": "Seguí la actividad real de la comunidad y descubrí proyectos publicados directamente desde los bloques de los builders.",
     "tabLaunches": "🚀 Builders Hunt",
     "tabLaunchesShort": "Lanzamientos",
+    "emptyUrgency": "Cierra en {days} días · sé el primero de la semana 🚀",
     "tabActivity": "Actividad",
     "filterStackAll": "Todos",
     "filterAll": "Todos",

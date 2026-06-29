@@ -97,26 +97,42 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
       <div className="flex flex-col h-full w-full">
         {/* ROW 1: Imagen y Nombre */}
         <div className="flex flex-col sm:flex-row items-start gap-4 md:gap-5">
-          <div className="shrink-0 relative">
-            <div
-              className={`absolute inset-0 rounded-full blur-xl transition-opacity ${isWinner ? 'opacity-40 animate-pulse' : 'opacity-30 group-hover:opacity-50'}`}
-              style={{ backgroundColor: accentColor }}
-            />
-            <div
-              className={`hero-avatar w-14 h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 border-2 shadow-xl rounded-full flex items-center justify-center font-black overflow-hidden relative z-10 ${isWinner ? 'border-[var(--accent)]' : 'border-white/10'}`}
-              style={{
-                background: avatarUrl ? 'transparent' : `linear-gradient(135deg, ${accentColor}, #00FF88)`,
-                color: getContrastColor(accentColor)
-              }}
-            >
-              {avatarUrl ? (
-                <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-lg md:text-xl lg:text-2xl">{name.charAt(0).toUpperCase()}</span>
-              )}
+          <div
+            className={everWonBdls ? "group relative flex items-center gap-1" : "contents"}
+            title={everWonBdls ? bdlsHover : undefined}
+          >
+            {everWonBdls && (
+              <img src="/badge/laurel-dark-left.png" alt="" className="h-12 md:h-14 lg:h-[68px] w-auto shrink-0 self-center" />
+            )}
+            <div className="shrink-0 relative">
+              <div
+                className={`absolute inset-0 rounded-full blur-xl transition-opacity ${isWinner ? 'opacity-40 animate-pulse' : 'opacity-30 group-hover:opacity-50'}`}
+                style={{ backgroundColor: accentColor }}
+              />
+              <div
+                className={`hero-avatar w-14 h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 border-2 shadow-xl rounded-full flex items-center justify-center font-black overflow-hidden relative z-10 ${isWinner ? 'border-[var(--accent)]' : 'border-white/10'}`}
+                style={{
+                  background: avatarUrl ? 'transparent' : `linear-gradient(135deg, ${accentColor}, #00FF88)`,
+                  color: getContrastColor(accentColor)
+                }}
+              >
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-lg md:text-xl lg:text-2xl">{name.charAt(0).toUpperCase()}</span>
+                )}
+              </div>
+              {/* Status dot */}
+              <div className="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full border-2 border-[#121212] bg-[#00FF88] z-20 shadow-lg" />
             </div>
-            {/* Status dot */}
-            <div className="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full border-2 border-[#121212] bg-[#00FF88] z-20 shadow-lg" />
+            {everWonBdls && (
+              <img src="/badge/laurel-dark-right.png" alt="" className="h-12 md:h-14 lg:h-[68px] w-auto shrink-0 self-center" />
+            )}
+            {everWonBdls && (
+              <span className="pointer-events-none absolute left-1/2 top-full z-30 mt-1 -translate-x-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-black/90 px-2.5 py-1 text-[10px] font-bold text-white opacity-0 shadow-xl transition-opacity duration-200 group-hover:opacity-100">
+                {bdlsHover}
+              </span>
+            )}
           </div>
 
           <div className="flex flex-col min-w-0 pt-0 px-1">
@@ -152,21 +168,6 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
 
         {/* ROW 2: Descripción (con un espacio según el diagrama) */}
         <div className="mt-6 flex-1 min-w-0">
-          {everWonBdls && (
-            <div className="group relative mb-4 inline-flex">
-              <a
-                href="/leaderboard"
-                className="inline-flex transition-transform hover:scale-[1.04]"
-                title={bdlsHover}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/badge/laurel-dark.png" alt={bdlsHover} width={120} style={{ height: "auto" }} />
-              </a>
-              <span className="pointer-events-none absolute left-1/2 top-full z-30 mt-1 -translate-x-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-black/90 px-3 py-1.5 text-[10px] font-bold text-white opacity-0 shadow-xl transition-opacity duration-200 group-hover:opacity-100">
-                {bdlsHover}
-              </span>
-            </div>
-          )}
           {badges.length > 0 && (
             <div className="mb-4 flex items-end gap-3">
               {badges.map((badge) => (

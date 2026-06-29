@@ -344,6 +344,7 @@ export interface ProfileData {
   customDomain?: string;
   subSiteId?: string;
   isWinner?: boolean;
+  winnerWeek?: string | null;
   ogImageVersion?: string;
   isOnboardingTestUser?: boolean;
   newsletterSubscribed?: boolean;

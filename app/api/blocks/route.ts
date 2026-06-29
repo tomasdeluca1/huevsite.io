@@ -24,28 +24,32 @@ const blockCreateLimiter = rateLimit({ interval: 60_000, uniqueTokenPerInterval:
 
 export const dynamic = 'force-dynamic'
 
-async function syncOwnerAvatarFromHero(
+// Sync the hero block's header fields (avatar + name + tagline) down to the
+// owner's profiles row, so consumers that read the columns (recruiter, explore,
+// OG, BDLS, badges) stay in sync with what the user actually set in their hero.
+// Only mirror a field when the hero provides it: `image` follows avatarUrl when
+// that key is present (preserving the old clear-on-empty behavior); name/tagline
+// are only written when non-empty, so a partial save never wipes a modal-set value.
+async function syncOwnerProfileFromHero(
   supabase: any,
   userId: string,
   subSiteId: string | null,
-  avatarUrl: string | null
+  heroData: any
 ) {
+  const d = heroData || {};
   if (subSiteId) {
-    await supabase
-      .from('sub_sites')
-      .update({
-        avatar_url: avatarUrl || null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', subSiteId)
-      .eq('user_id', userId);
+    const sub: any = { updated_at: new Date().toISOString() };
+    if ('avatarUrl' in d) sub.avatar_url = d.avatarUrl || null;
+    await supabase.from('sub_sites').update(sub).eq('id', subSiteId).eq('user_id', userId);
     return;
   }
-
-  await supabase
-    .from('profiles')
-    .update({ image: avatarUrl || null })
-    .eq('id', userId);
+  const update: any = {};
+  if ('avatarUrl' in d) update.image = d.avatarUrl || null;
+  if (typeof d.name === 'string' && d.name.trim()) update.name = d.name.trim();
+  if (typeof d.tagline === 'string' && d.tagline.trim()) update.tagline = d.tagline.trim();
+  if (Object.keys(update).length > 0) {
+    await supabase.from('profiles').update(update).eq('id', userId);
+  }
 }
 
 // POST /api/blocks - crear nuevo bloque
@@ -213,11 +217,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (body.type === 'hero') {
-      await syncOwnerAvatarFromHero(
+      await syncOwnerProfileFromHero(
         supabase,
         user.id,
         body.sub_site_id || null,
-        body.data?.avatarUrl || null
+        body.data || {}
       );
     }
 

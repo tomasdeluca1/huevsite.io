@@ -1,5 +1,5 @@
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
-import { currentLaunchWeek, compareWeeks } from "@/lib/launch-week";
+import { currentLaunchWeek, compareWeeks, daysUntilWeekClose } from "@/lib/launch-week";
 import { hiResFaviconUrl } from "@/lib/favicon";
 
 export interface LaunchFeedItem {
@@ -155,4 +155,40 @@ export async function createLaunch(
     throw error;
   }
   return { ok: true, launchId: inserted.id };
+}
+
+export interface LaunchBadge {
+  state: "live" | "featured";
+  title: string;
+  upvotes: number;
+  week: string;
+  closeDays: number;
+}
+
+/** Badge data for a launched project block (live this week, or featured/evergreen).
+ *  Returns null if the block was never launched on Builders Hunt. */
+export async function getLaunchBadge(blockId: string): Promise<LaunchBadge | null> {
+  const db = createServiceRoleClient();
+
+  const { data: rows, error } = await db
+    .from("project_launches")
+    .select("launch_week, upvote_count")
+    .eq("block_id", blockId)
+    .order("launch_week", { ascending: false })
+    .limit(1);
+  if (error || !rows || rows.length === 0) return null;
+
+  const r = rows[0];
+  const { data: block } = await db.from("blocks").select("data").eq("id", blockId).maybeSingle();
+  const title = ((block?.data as any)?.title as string) || "Proyecto";
+  // current or future (scheduled) week = live; a past week = featured/evergreen.
+  const live = compareWeeks(r.launch_week, currentLaunchWeek()) >= 0;
+
+  return {
+    state: live ? "live" : "featured",
+    title,
+    upvotes: r.upvote_count || 0,
+    week: r.launch_week,
+    closeDays: live ? daysUntilWeekClose() : 0,
+  };
 }

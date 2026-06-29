@@ -206,6 +206,12 @@
       "copy": "Copiar",
       "copied": "¡Copiado!"
     },
+    "launchBadge": {
+      "title": "Tu badge de lanzamiento",
+      "hint": "Promocioná tu launch en tu web — tu audiencia vota y se suma a huevsite.",
+      "copy": "Copiar",
+      "copied": "¡Copiado!"
+    },
     "projects": {
       "empty": "Todavía no agregaste proyectos. Agregá un bloque de proyecto desde el board.",
       "status": { "idea": "Idea", "building": "En construcción", "launched": "Lanzado" },

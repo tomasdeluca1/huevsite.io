@@ -10,6 +10,7 @@ import {
   isLaunchOverdue,
 } from "@/lib/project-lifecycle";
 import { buildLaunchyNewProductUrl } from "@/lib/launchy";
+import { LaunchBadgeCard } from "@/components/dashboard/LaunchBadgeCard";
 import { AddProjectModal } from "@/components/dashboard/AddProjectModal";
 import { LaunchOnHuevsiteModal } from "@/components/dashboard/LaunchOnHuevsiteModal";
 
@@ -105,10 +106,8 @@ export function ProjectTracker({ blocks, onUpdateBlock, onEdit, onAddProject, ac
                 const launchyUrl = buildLaunchyNewProductUrl(p);
                 const alreadyLaunched = !!p.launch;
                 return (
-                  <div
-                    key={p.id}
-                    className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5"
-                  >
+                  <div key={p.id}>
+                  <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-semibold text-white">{p.title}</div>
                       <div className="text-xs text-white/40">
@@ -175,6 +174,8 @@ export function ProjectTracker({ blocks, onUpdateBlock, onEdit, onAddProject, ac
                     >
                       {t("edit")}
                     </button>
+                  </div>
+                  <LaunchBadgeCard blockId={p.id} />
                   </div>
                 );
               })}

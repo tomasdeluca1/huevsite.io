@@ -206,6 +206,12 @@
       "copy": "Copy",
       "copied": "Copied!"
     },
+    "launchBadge": {
+      "title": "Your launch badge",
+      "hint": "Promote your launch on your site — your audience votes and joins huevsite.",
+      "copy": "Copy",
+      "copied": "Copied!"
+    },
     "projects": {
       "empty": "No projects yet. Add a project block from the board.",
       "status": { "idea": "Idea", "building": "Building", "launched": "Launched" },

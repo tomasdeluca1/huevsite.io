@@ -313,7 +313,8 @@ function FeedContent() {
   return (
     <div className="min-h-screen bg-[var(--bg)] font-display">
       <DiscoveryHeader currentUserId={currentUserId} maxWidthClass="max-w-[1440px]" />
-      <div className="max-w-[1440px] mx-auto w-full px-6 lg:px-10 py-10">
+      <div className="max-w-[1440px] mx-auto w-full px-6 lg:px-10 py-10 flex flex-col lg:flex-row gap-6 items-start">
+      <div className="flex-1 min-w-0">
       <header className="mb-8 max-w-2xl">
         <div className="section-label mb-2">{t("sectionLabel")}</div>
         <h1 className="text-4xl font-extrabold tracking-tighter">{t("title")}</h1>
@@ -385,8 +386,7 @@ function FeedContent() {
           </Link>
         </motion.div>
       ) : tab === "launches" ? (
-        <div className="flex flex-col lg:flex-row gap-6 items-start">
-        <div className="flex-1 min-w-0 space-y-5">
+        <div className="space-y-5">
           {/* Week navigation */}
           <div className="flex items-center justify-between gap-2">
             <button
@@ -548,11 +548,6 @@ function FeedContent() {
             </div>
           )}
         </div>
-        <DiscoveryRail
-          currentUserId={currentUserId}
-          weekLaunches={launches.map((l: any) => ({ id: l.id, userId: l.userId, upvoteCount: l.upvoteCount }))}
-        />
-        </div>
       ) : (
         <div className="space-y-6 max-w-2xl mx-auto">
           {activityGroups.length === 0 ? (
@@ -596,6 +591,11 @@ function FeedContent() {
           </div>
         </div>
       )}
+      </div>
+      <DiscoveryRail
+        currentUserId={currentUserId}
+        weekLaunches={launches.map((l: any) => ({ id: l.id, userId: l.userId, upvoteCount: l.upvoteCount }))}
+      />
       </div>
     </div>
   );

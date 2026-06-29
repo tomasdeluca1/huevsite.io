@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Medal } from "lucide-react";
 import LocaleToggle from "@/components/LocaleToggle";
 import { LeaderboardClient } from "@/components/leaderboard/LeaderboardClient";
-import { DiscoveryNav } from "@/components/discovery/DiscoveryNav";
+import { DiscoveryHeader } from "@/components/discovery/DiscoveryHeader";
 import { DiscoveryRail } from "@/components/discovery/DiscoveryRail";
 import type { Metadata } from "next";
 
@@ -38,29 +38,7 @@ export default async function LeaderboardPage({
 
   return (
     <div className="min-h-screen bg-[var(--bg)] font-display flex flex-col">
-      {/* NAV */}
-      <nav className="flex items-center justify-between px-6 py-6 md:px-10 max-w-6xl mx-auto w-full relative z-50">
-        <Link href={fromDashboard ? "/dashboard" : "/"} className="logo text-2xl">
-          huev<span>site</span>.io
-        </Link>
-        <div className="flex items-center gap-2">
-          <LocaleToggle />
-          <Link
-            href="/explore"
-            className="hidden sm:flex items-center text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] hover:text-white transition-colors px-4 py-3"
-          >
-            {t("navExplore")}
-          </Link>
-          <Link
-            href={user ? "/dashboard" : "/login"}
-            className="btn btn-accent text-xs md:text-sm font-bold !px-6 !py-3 !rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-lg shadow-[var(--accent)]/20"
-          >
-            {user ? t("myHuevsite") : t("createMyHuevsite")}
-          </Link>
-        </div>
-      </nav>
-
-      <div className="px-6 max-w-6xl mx-auto w-full"><DiscoveryNav /></div>
+      <DiscoveryHeader currentUserId={user?.id ?? null} maxWidthClass="max-w-6xl" />
 
       {/* HEADER */}
       <header className="relative py-16 md:py-20 px-6 text-center overflow-hidden">

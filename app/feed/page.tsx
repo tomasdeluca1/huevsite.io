@@ -12,7 +12,7 @@ import { currentLaunchWeek, addWeeks, weekLabel, compareWeeks } from "@/lib/laun
 import { withHuevsiteUtm } from "@/lib/utm";
 import { trackClick } from "@/components/analytics/AnalyticsTracker";
 import { DiscoveryRail } from "@/components/discovery/DiscoveryRail";
-import { DiscoveryNav } from "@/components/discovery/DiscoveryNav";
+import { DiscoveryHeader } from "@/components/discovery/DiscoveryHeader";
 
 type FeedT = ReturnType<typeof useTranslations>;
 
@@ -310,34 +310,28 @@ function FeedContent() {
     : launches;
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] font-display py-12 px-4 max-w-5xl mx-auto">
-      <DiscoveryNav />
-      <header className="mb-12 max-w-2xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <Link href={fromDashboard ? "/dashboard" : "/"} className="logo">huev<span>site</span>.io</Link>
-          <div className="flex items-center gap-3">
-             <LocaleToggle />
-             <Link href="/explore" className="hidden sm:block text-[10px] font-mono uppercase tracking-widest text-[var(--text-muted)] hover:text-white transition-colors">{t("navExplore")}</Link>
-             <Link href={currentUserId ? "/dashboard" : "/login"} className="btn btn-accent !text-[10px] !py-2 !px-4 !rounded-xl">{currentUserId ? t("myHuevsite") : t("createMyHuevsite")}</Link>
-          </div>
-        </div>
+    <div className="min-h-screen bg-[var(--bg)] font-display">
+      <DiscoveryHeader currentUserId={currentUserId} maxWidthClass="max-w-6xl" />
+      <div className="max-w-6xl mx-auto w-full px-6 py-10">
+      <header className="mb-8 max-w-2xl">
         <div className="section-label mb-2">{t("sectionLabel")}</div>
         <h1 className="text-4xl font-extrabold tracking-tighter">{t("title")}</h1>
-        <p className="mt-3 max-w-xl text-sm leading-relaxed text-[var(--text-dim)]">
+        <p className="mt-3 text-sm leading-relaxed text-[var(--text-dim)]">
           {t("subtitle")}
         </p>
-        
-        <div className="flex gap-2 mt-8 bg-black/20 p-1 rounded-2xl border border-[var(--border)] overflow-hidden">
-          {(["launches", "activity"] as const).map((tabId) => (
-            <button
-              key={tabId}
-              onClick={() => setTab(tabId)}
-              className={`flex-1 py-3 px-2 text-center rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${tab === tabId ? 'bg-[var(--surface2)] text-white' : 'text-[var(--text-muted)] hover:text-white'}`}
-            >
-              {tabId === "launches" ? t("tabLaunches") : t("tabActivity")}
-            </button>
-          ))}
-        </div>
+      </header>
+
+      <div className="mb-6 inline-flex items-center gap-1 rounded-xl border border-[var(--border)] bg-black/20 p-1">
+        {(["launches", "activity"] as const).map((tabId) => (
+          <button
+            key={tabId}
+            onClick={() => setTab(tabId)}
+            className={`rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all ${tab === tabId ? 'bg-[var(--surface2)] text-white' : 'text-[var(--text-muted)] hover:text-white'}`}
+          >
+            {tabId === "launches" ? t("tabLaunchesShort") : t("tabActivity")}
+          </button>
+        ))}
+      </div>
 
         {tab === "activity" && (
         <div className="mt-4 flex gap-2">
@@ -364,7 +358,7 @@ function FeedContent() {
           })}
         </div>
         )}
-      </header>
+
 
       {loading ? (
         <div className="space-y-4 max-w-2xl mx-auto">
@@ -596,6 +590,7 @@ function FeedContent() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

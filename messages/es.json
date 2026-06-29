@@ -200,6 +200,12 @@
     }
   },
   "dashboard": {
+    "badgeShare": {
+      "title": "Tu badge de Builder de la Semana",
+      "hint": "Ganaste el premio — sumá este badge a tu portfolio o web personal y mostralo.",
+      "copy": "Copiar",
+      "copied": "¡Copiado!"
+    },
     "projects": {
       "empty": "Todavía no agregaste proyectos. Agregá un bloque de proyecto desde el board.",
       "status": { "idea": "Idea", "building": "En construcción", "launched": "Lanzado" },

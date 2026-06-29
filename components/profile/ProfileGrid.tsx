@@ -52,7 +52,7 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscri
 
     switch (block.type) {
       case "hero":
-        return <HeroBlock {...props} subscriptionTier={subscriptionTier} isWinner={isWinner} badges={badges} />
+        return <HeroBlock {...props} subscriptionTier={subscriptionTier} isWinner={isWinner} badges={badges} username={username} />
       case "building":
         return <BuildingBlock {...props} />
       case "github":

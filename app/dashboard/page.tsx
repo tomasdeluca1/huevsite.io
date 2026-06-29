@@ -44,6 +44,7 @@ import { OnboardingModal } from "@/components/dashboard/OnboardingModal";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
+import { BadgeSnippetCard } from "@/components/dashboard/BadgeSnippetCard";
 import { TestimonialNudgeToast } from "@/components/dashboard/TestimonialNudgeToast";
 import { UpgradeModal } from "@/components/dashboard/UpgradeModal";
 import { DashboardSidebar } from "@/components/dashboard/Sidebar";
@@ -1637,6 +1638,11 @@ export default function DashboardPage() {
                               const badge = { key, ...BADGE_CATALOG[key] };
                               return <BadgeItem key={key} badge={badge} earned={earned} size="md" />;
                             })}
+                          </div>
+
+                          {/* Builder de la Semana embeddable badge (winners only; self-hides) */}
+                          <div className="mt-5">
+                            <BadgeSnippetCard username={profile.username} />
                           </div>
 
                           {/* Referral link */}

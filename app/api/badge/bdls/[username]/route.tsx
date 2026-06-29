@@ -14,8 +14,10 @@ export async function GET(
   req: Request,
   { params }: { params: { username: string } }
 ) {
+  const url = new URL(req.url);
   const username = (params.username || "").toLowerCase();
-  const theme = new URL(req.url).searchParams.get("theme") === "dark" ? "dark" : "light";
+  const theme = url.searchParams.get("theme") === "dark" ? "dark" : "light";
+  const checkOnly = url.searchParams.get("check") === "1";
 
   let everWon = false;
   try {
@@ -24,6 +26,15 @@ export async function GET(
   } catch {
     everWon = false;
   }
+
+  // Lightweight winner check (no image) for the dashboard snippet card to self-gate.
+  if (checkOnly) {
+    return new Response(JSON.stringify({ winner: everWon }), {
+      status: 200,
+      headers: { "content-type": "application/json", "cache-control": "no-store" },
+    });
+  }
+
   if (!everWon) {
     return new Response("Not a Builder de la Semana", { status: 404 });
   }
@@ -73,6 +84,13 @@ export async function GET(
         <img src={laurelDataUri({ color: leaf, side: "right", width: laurelW, height: laurelH })} width={laurelW} height={laurelH} />
       </div>
     ),
-    { width: W, height: H }
+    {
+      width: W,
+      height: H,
+      headers: {
+        // Winner status changes rarely; let browsers/CDN cache the embed.
+        "cache-control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+      },
+    }
   );
 }

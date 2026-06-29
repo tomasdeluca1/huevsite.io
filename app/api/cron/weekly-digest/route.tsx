@@ -8,6 +8,8 @@ import { postWeeklyDigest } from "@/lib/twitter";
 import { buildUnsubscribeUrl } from "@/lib/email-unsubscribe";
 import { listAllAuthUsers } from "@/lib/list-auth-users";
 import { getAllBlogPosts, getPostCategory } from "@/lib/blog-data";
+import { getWeekLaunches } from "@/lib/launch-service";
+import { currentLaunchWeek } from "@/lib/launch-week";
 
 export const dynamic = "force-dynamic";
 
@@ -125,6 +127,20 @@ export async function GET(request: NextRequest) {
       }))
       .filter((p) => p.username !== "builder");
 
+    // -- 4b. This week's launches (ranked; Pro/featured first). ------------
+    let weekLaunches: { title: string; username: string; upvoteCount: number; featured: boolean }[] = [];
+    try {
+      const { launches } = await getWeekLaunches(currentLaunchWeek());
+      weekLaunches = launches.slice(0, 8).map((l) => ({
+        title: l.title,
+        username: l.user.username,
+        upvoteCount: l.upvoteCount,
+        featured: l.featured,
+      }));
+    } catch (e) {
+      console.error("[weekly-digest] week launches failed:", e);
+    }
+
     // -- 5. Latest "Novedades" blog post. ---------------------------------
     const allPosts = await getAllBlogPosts();
     const latestNews = allPosts
@@ -161,6 +177,7 @@ export async function GET(request: NextRequest) {
         movers: movers.map((m) => ({ name: m.name, username: m.username, delta: m.delta })),
         newProjectsCount: newProjectsCount || 0,
         featuredProjects,
+        weekLaunches,
         news,
         unsubscribeUrl: UNSUB_MARKER,
       })

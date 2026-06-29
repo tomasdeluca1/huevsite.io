@@ -332,7 +332,7 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
         </div>
       ) : (
         <div className="flex flex-col gap-12">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-10 pt-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10 pt-10">
             {profiles.map((profile, i) => (
               <ProfileCard 
                 key={profile.id} 

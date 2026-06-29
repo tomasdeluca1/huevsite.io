@@ -96,6 +96,15 @@ export function DiscoveryRail({
         )}
       </div>
 
+      {/* Loading skeletons for the data widgets */}
+      {!data &&
+        [0, 1, 2].map((i) => (
+          <div key={i} className={card}>
+            <div className="mb-3 h-3 w-24 rounded bg-white/10 animate-pulse" />
+            <div className="h-10 w-full rounded bg-white/5 animate-pulse" />
+          </div>
+        ))}
+
       {/* Builders Hunt — esta semana (cross-promo; hidden on /feed) */}
       {!onFeed && data && data.weekTopLaunches.length > 0 && (
         <div className={card}>

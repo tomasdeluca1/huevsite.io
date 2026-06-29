@@ -387,7 +387,6 @@ export function DashboardSidebar({
             <SidebarLink href="/feed" icon={<Activity size={18} />} label={t("sidebar.navFeed")} />
             <SidebarLink href="/explore" icon={<Compass size={18} />} label={t("sidebar.navExplore")} />
             <SidebarLink href="/leaderboard" icon={<Medal size={18} />} label={t("sidebar.navLeaderboard")} />
-            <SidebarLink href="/showcase" icon={<Sparkles size={18} />} label={t("sidebar.navShowcase")} />
             <SidebarLink href="/testimonio" icon={<MessageSquare size={18} />} label={t("sidebar.navTestimonial")} />
           </div>
 

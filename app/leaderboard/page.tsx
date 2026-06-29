@@ -76,7 +76,6 @@ export default async function LeaderboardPage({
         </div>
         <div className="flex gap-6">
           <Link href="/explore" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">{t("navExplore")}</Link>
-          <Link href="/showcase" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">{t("footerShowcase")}</Link>
           <Link href="/feed" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">{t("footerFeed")}</Link>
         </div>
       </footer>

@@ -12,7 +12,10 @@ interface SidebarData {
   topBuilders: { username: string; name: string; image: string | null; score: number }[];
   pulse: { activeThisWeek: number; newProjects: number; endorsements: number };
   weekTopLaunches: { title: string; username: string; upvoteCount: number }[];
-  topCommits: { username: string; name: string; image: string | null; commits: number }[];
+  topCommits: {
+    year: { username: string; name: string; image: string | null; commits: number }[];
+    month: { username: string; name: string; image: string | null; commits: number }[];
+  };
   latestPosts: { slug: string; title: string }[];
 }
 
@@ -31,6 +34,7 @@ export function DiscoveryRail({
 }) {
   const t = useTranslations("discovery");
   const [data, setData] = useState<SidebarData | null>(null);
+  const [commitsRange, setCommitsRange] = useState<"year" | "month">("year");
 
   useEffect(() => {
     let alive = true;
@@ -179,26 +183,45 @@ export function DiscoveryRail({
         </div>
       )}
 
-      {/* Top por commits (distinct ranking) */}
-      {data && data.topCommits.length > 0 && (
+      {/* Top por commits (distinct ranking, year/month toggle) */}
+      {data && (data.topCommits.year.length > 0 || data.topCommits.month.length > 0) && (
         <div className={card}>
-          <div className={label}>
-            <Zap size={12} /> {t("railCommitsLabel")}
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-[var(--accent)]">
+              <Zap size={12} /> {t("railCommitsLabel")}
+            </div>
+            <div className="flex items-center gap-0.5 rounded-lg border border-white/10 bg-white/[0.03] p-0.5">
+              {(["year", "month"] as const).map((r) => (
+                <button
+                  key={r}
+                  onClick={() => setCommitsRange(r)}
+                  className={`rounded px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider transition-colors ${
+                    commitsRange === r ? "bg-[var(--accent)] text-black" : "text-white/40 hover:text-white"
+                  }`}
+                >
+                  {r === "year" ? t("railCommitsYear") : t("railCommitsMonth")}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="space-y-1.5">
-            {data.topCommits.map((b, i) => (
-              <Link
-                key={b.username}
-                href={`/${b.username}`}
-                className="flex items-center justify-between text-xs text-white/70 hover:text-white"
-              >
-                <span className="truncate">
-                  <span className="mr-1.5 text-white/30">{i + 1}</span>
-                  {b.name}
-                </span>
-                <span className="ml-2 shrink-0 font-black text-[var(--accent)]">{b.commits}</span>
-              </Link>
-            ))}
+            {data.topCommits[commitsRange].length === 0 ? (
+              <div className="text-[10px] text-white/30">{t("railCommitsEmpty")}</div>
+            ) : (
+              data.topCommits[commitsRange].map((b, i) => (
+                <Link
+                  key={b.username}
+                  href={`/${b.username}`}
+                  className="flex items-center justify-between text-xs text-white/70 hover:text-white"
+                >
+                  <span className="truncate">
+                    <span className="mr-1.5 text-white/30">{i + 1}</span>
+                    {b.name}
+                  </span>
+                  <span className="ml-2 shrink-0 font-black text-[var(--accent)]">{b.commits}</span>
+                </Link>
+              ))
+            )}
           </div>
           <Link href="/leaderboard" className="mt-2 block text-[10px] font-bold text-[var(--accent)]">
             {t("railCommitsMore")} →
@@ -212,12 +235,12 @@ export function DiscoveryRail({
           <div className={label}>
             <Newspaper size={12} /> {t("railBlogLabel")}
           </div>
-          <div className="space-y-2">
+          <div className="divide-y divide-white/10">
             {data.latestPosts.map((p) => (
               <Link
                 key={p.slug}
                 href={`/blog/${p.slug}`}
-                className="block text-xs leading-snug text-white/70 hover:text-white"
+                className="block py-2.5 text-xs leading-snug text-white/70 hover:text-white first:pt-0 last:pb-0"
               >
                 {p.title}
               </Link>

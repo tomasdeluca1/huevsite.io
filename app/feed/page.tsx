@@ -311,7 +311,10 @@ function FeedContent() {
     : launches;
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] font-display">
+    <div
+      className="min-h-screen font-display"
+      style={{ background: "radial-gradient(circle at 50% 0%, rgba(200,255,0,0.06), transparent 720px), var(--bg)" }}
+    >
       <DiscoveryHeader currentUserId={currentUserId} maxWidthClass="max-w-[1440px]" />
       <div className="max-w-[1440px] mx-auto w-full px-6 lg:px-10 py-10 flex flex-col lg:flex-row gap-6 items-start">
       <div className="flex-1 min-w-0">
@@ -336,7 +339,7 @@ function FeedContent() {
       </div>
 
         {tab === "activity" && (
-        <div className="mt-4 flex gap-2">
+        <div className="mt-4 mb-6 flex gap-2">
           {[
             { id: "all", label: t("filterAll"), icon: Users },
             { id: "following", label: t("filterFollowing"), icon: UserPlus },
@@ -635,7 +638,10 @@ function FeedContent() {
  *  so the loading state fills the screen instead of a lonely spinner on black. */
 function FeedSkeleton() {
   return (
-    <div className="min-h-screen bg-[var(--bg)] font-display">
+    <div
+      className="min-h-screen font-display"
+      style={{ background: "radial-gradient(circle at 50% 0%, rgba(200,255,0,0.06), transparent 720px), var(--bg)" }}
+    >
       <div className="border-b border-[var(--border)]">
         <div className="max-w-[1440px] mx-auto w-full px-6 py-5 flex items-center justify-between gap-4">
           <div className="h-5 w-28 rounded bg-white/10 animate-pulse" />

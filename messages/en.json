@@ -1184,6 +1184,9 @@
     "railWeekLaunchesMore": "View all",
     "railCommitsLabel": "Top by commits",
     "railCommitsMore": "View ranking",
+    "railCommitsYear": "Year",
+    "railCommitsMonth": "Month",
+    "railCommitsEmpty": "No data this period",
     "railBlogLabel": "From the blog",
     "railBlogMore": "View all"
   },

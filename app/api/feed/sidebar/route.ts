@@ -78,24 +78,33 @@ export async function GET() {
     console.error("[feed/sidebar] weekTopLaunches:", e);
   }
 
-  // Distinct ranking: top by GitHub commits (year) — from the profiles_explore view.
-  let topCommits: { username: string; name: string; image: string | null; commits: number }[] = [];
-  try {
+  // Distinct ranking: top by GitHub commits (year + month) — from profiles_explore.
+  const commitsByCol = async (col: "github_commits_year" | "github_commits_month") => {
     const { data } = await db
       .from("profiles_explore")
-      .select("username, name, image, github_commits_year")
+      .select(`username, name, image, ${col}`)
       .not("username", "is", null)
-      .gt("github_commits_year", 0)
-      .order("github_commits_year", { ascending: false })
+      .gt(col, 0)
+      .order(col, { ascending: false })
       .limit(3);
-    topCommits = (data || [])
+    return (data || [])
       .filter((p: any) => p.username)
       .map((p: any) => ({
         username: p.username,
         name: p.name || p.username,
         image: p.image || null,
-        commits: p.github_commits_year || 0,
+        commits: p[col] || 0,
       }));
+  };
+  let topCommits: {
+    year: { username: string; name: string; image: string | null; commits: number }[];
+    month: { username: string; name: string; image: string | null; commits: number }[];
+  } = { year: [], month: [] };
+  try {
+    topCommits = {
+      year: await commitsByCol("github_commits_year"),
+      month: await commitsByCol("github_commits_month"),
+    };
   } catch (e) {
     console.error("[feed/sidebar] topCommits:", e);
   }

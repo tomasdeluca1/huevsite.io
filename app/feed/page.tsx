@@ -363,11 +363,35 @@ function FeedContent() {
 
 
       {loading ? (
-        <div className="space-y-4 max-w-2xl mx-auto">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-24 rounded-2xl bg-[var(--surface)] border border-[var(--border)] animate-pulse" />
-          ))}
-        </div>
+        tab === "launches" ? (
+          <div className="space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex gap-3 sm:gap-4 p-4 rounded-3xl border border-[var(--border)] bg-[var(--surface)] animate-pulse">
+                <div className="w-7 shrink-0" />
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white/[0.06] shrink-0" />
+                <div className="flex-1 min-w-0 space-y-2 py-1">
+                  <div className="h-4 w-1/2 rounded bg-white/10" />
+                  <div className="h-3 w-4/5 rounded bg-white/[0.05]" />
+                  <div className="h-3 w-1/3 rounded bg-white/[0.05]" />
+                </div>
+                <div className="w-12 shrink-0 rounded-xl bg-white/[0.05]" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="flex items-center gap-3 p-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] animate-pulse">
+                <div className="w-10 h-10 rounded-full bg-white/10 shrink-0" />
+                <div className="flex-1 min-w-0 space-y-2">
+                  <div className="h-3.5 w-1/3 rounded bg-white/10" />
+                  <div className="h-3 w-2/3 rounded bg-white/[0.05]" />
+                </div>
+                <div className="h-3 w-8 rounded bg-white/[0.05] shrink-0" />
+              </div>
+            ))}
+          </div>
+        )
       ) : error && audienceFilter === "following" && !currentUserId ? (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -549,7 +573,7 @@ function FeedContent() {
           )}
         </div>
       ) : (
-        <div className="space-y-6 max-w-2xl mx-auto">
+        <div className="space-y-4">
           {activityGroups.length === 0 ? (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -576,8 +600,14 @@ function FeedContent() {
           
           {loadingMore && (
              <div className="space-y-4">
-               {[...Array(2)].map((_, i) => (
-                 <div key={i} className="h-24 rounded-2xl bg-[var(--surface)] border border-[var(--border)] animate-pulse" />
+               {[...Array(3)].map((_, i) => (
+                 <div key={i} className="flex items-center gap-3 p-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] animate-pulse">
+                   <div className="w-10 h-10 rounded-full bg-white/10 shrink-0" />
+                   <div className="flex-1 min-w-0 space-y-2">
+                     <div className="h-3.5 w-1/3 rounded bg-white/10" />
+                     <div className="h-3 w-2/3 rounded bg-white/[0.05]" />
+                   </div>
+                 </div>
                ))}
              </div>
           )}
@@ -601,17 +631,57 @@ function FeedContent() {
   );
 }
 
-export default function FeedPage() {
-  const t = useTranslations("feed");
+/** Full-page skeleton that mirrors the real /feed layout (header + 2-col + rail)
+ *  so the loading state fills the screen instead of a lonely spinner on black. */
+function FeedSkeleton() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex flex-col items-center justify-center gap-3 text-[var(--text-dim)]">
-          <Loader2 size={28} className="animate-spin text-[var(--accent)]" />
-          <span className="font-mono text-[10px] uppercase tracking-[0.3em]">{t("loadingCommunity")}</span>
+    <div className="min-h-screen bg-[var(--bg)] font-display">
+      <div className="border-b border-[var(--border)]">
+        <div className="max-w-[1440px] mx-auto w-full px-6 py-5 flex items-center justify-between gap-4">
+          <div className="h-5 w-28 rounded bg-white/10 animate-pulse" />
+          <div className="h-9 w-72 rounded-xl bg-white/[0.04] animate-pulse hidden md:block" />
+          <div className="h-8 w-24 rounded-xl bg-white/10 animate-pulse" />
         </div>
-      }
-    >
+      </div>
+      <div className="max-w-[1440px] mx-auto w-full px-6 lg:px-10 py-10 flex flex-col lg:flex-row gap-6 items-start">
+        <div className="flex-1 min-w-0 space-y-6">
+          <div className="space-y-3">
+            <div className="h-3 w-24 rounded bg-white/10 animate-pulse" />
+            <div className="h-9 w-80 max-w-full rounded bg-white/10 animate-pulse" />
+            <div className="h-4 w-[28rem] max-w-full rounded bg-white/[0.05] animate-pulse" />
+          </div>
+          <div className="h-8 w-44 rounded-xl bg-white/[0.05] animate-pulse" />
+          <div className="space-y-3">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="flex gap-4 p-4 rounded-3xl border border-[var(--border)] bg-[var(--surface)] animate-pulse">
+                <div className="w-7 shrink-0" />
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white/[0.06] shrink-0" />
+                <div className="flex-1 min-w-0 space-y-2 py-1">
+                  <div className="h-4 w-1/2 rounded bg-white/10" />
+                  <div className="h-3 w-4/5 rounded bg-white/[0.05]" />
+                  <div className="h-3 w-1/3 rounded bg-white/[0.05]" />
+                </div>
+                <div className="w-12 shrink-0 rounded-xl bg-white/[0.05]" />
+              </div>
+            ))}
+          </div>
+        </div>
+        <aside className="w-full lg:w-[320px] lg:shrink-0 space-y-3">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 animate-pulse">
+              <div className="mb-3 h-3 w-24 rounded bg-white/10" />
+              <div className="h-10 w-full rounded bg-white/[0.05]" />
+            </div>
+          ))}
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+export default function FeedPage() {
+  return (
+    <Suspense fallback={<FeedSkeleton />}>
       <FeedContent />
     </Suspense>
   );

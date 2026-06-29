@@ -36,12 +36,14 @@ export default async function LeaderboardPage({
   } = await supabase.auth.getUser();
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] font-display flex flex-col">
+    <div
+      className="min-h-screen font-display flex flex-col"
+      style={{ background: "radial-gradient(circle at 50% 0%, rgba(200,255,0,0.06), transparent 720px), var(--bg)" }}
+    >
       <DiscoveryHeader currentUserId={user?.id ?? null} maxWidthClass="max-w-[1440px]" />
 
-      {/* HERO (full-width) */}
-      <header className="relative py-12 px-6 text-center overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,rgba(200,255,0,0.06)_0%,transparent_55%)]" />
+      {/* HERO (full-width; gradient lives on the page wrapper so it never cuts) */}
+      <header className="relative py-12 px-6 text-center">
         <div className="max-w-3xl mx-auto relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--surface2)] border border-[var(--border-bright)] text-[var(--accent)] text-xs font-mono mb-6 justify-center">
             <Medal size={14} /> {t("badge")}

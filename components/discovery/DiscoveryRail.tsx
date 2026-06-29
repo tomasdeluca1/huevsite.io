@@ -49,7 +49,7 @@ export function DiscoveryRail({
     "text-[9px] font-black uppercase tracking-[0.18em] text-[var(--accent)] mb-2 flex items-center gap-1.5";
 
   return (
-    <aside className="flex w-full flex-col gap-3 lg:w-[320px] lg:shrink-0">
+    <aside className="flex w-full flex-col gap-3 lg:w-[320px] lg:shrink-0 lg:sticky lg:top-6 lg:self-start">
       {/* Tu lanzamiento (context-aware) */}
       <div className={`${card} !border-[var(--accent)]/20 bg-[var(--accent)]/[0.04]`}>
         <div className={label}>

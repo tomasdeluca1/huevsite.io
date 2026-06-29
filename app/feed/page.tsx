@@ -311,8 +311,8 @@ function FeedContent() {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] font-display">
-      <DiscoveryHeader currentUserId={currentUserId} maxWidthClass="max-w-6xl" />
-      <div className="max-w-6xl mx-auto w-full px-6 py-10">
+      <DiscoveryHeader currentUserId={currentUserId} maxWidthClass="max-w-[1440px]" />
+      <div className="max-w-[1440px] mx-auto w-full px-6 lg:px-10 py-10">
       <header className="mb-8 max-w-2xl">
         <div className="section-label mb-2">{t("sectionLabel")}</div>
         <h1 className="text-4xl font-extrabold tracking-tighter">{t("title")}</h1>

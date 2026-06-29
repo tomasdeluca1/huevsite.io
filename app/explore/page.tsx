@@ -41,7 +41,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
 
   return (
     <div className="min-h-screen bg-[var(--bg)] font-display flex flex-col">
-      <DiscoveryHeader currentUserId={user?.id ?? null} maxWidthClass="max-w-7xl" />
+      <DiscoveryHeader currentUserId={user?.id ?? null} maxWidthClass="max-w-[1440px]" />
 
       {/* HEADER */}
       <header className="relative py-20 px-6 text-center overflow-hidden">
@@ -65,7 +65,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
       </header>
 
       {/* GRID */}
-      <main className="flex-1 px-6 md:px-10 pb-32 max-w-7xl mx-auto w-full pt-12">
+      <main className="flex-1 px-6 md:px-10 pb-32 max-w-[1440px] mx-auto w-full pt-12">
         <div className="flex flex-col lg:flex-row gap-6 items-start">
           <div className="flex-1 min-w-0">
             <ExploreClient initialTotal={totalRegistered} />
@@ -75,7 +75,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
       </main>
 
       {/* FOOTER */}
-      <footer className="py-10 px-6 border-t border-[var(--border)] flex flex-col md:flex-row items-center justify-between gap-4 max-w-7xl mx-auto w-full">
+      <footer className="py-10 px-6 border-t border-[var(--border)] flex flex-col md:flex-row items-center justify-between gap-4 max-w-[1440px] mx-auto w-full">
         <div className="flex flex-col items-center md:items-start gap-1">
           <div className="logo text-[var(--text-muted)] text-sm font-mono font-bold tracking-tight">
             huevsite.io

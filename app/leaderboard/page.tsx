@@ -41,13 +41,13 @@ export default async function LeaderboardPage({
       <DiscoveryHeader currentUserId={user?.id ?? null} maxWidthClass="max-w-[1440px]" />
 
       {/* HEADER */}
-      <header className="relative py-16 md:py-20 px-6 text-center overflow-hidden">
+      <header className="relative py-10 md:py-12 px-6 text-center overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(200,255,0,0.06)_0%,transparent_60%)] pointer-events-none" />
         <div className="max-w-3xl mx-auto relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--surface2)] border border-[var(--border-bright)] text-[var(--accent)] text-xs font-mono mb-8 justify-center">
             <Medal size={14} /> {t("badge")}
           </div>
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-6">
+          <h1 className="text-3xl md:text-5xl font-extrabold tracking-tighter mb-4">
             {t("titleLine1")}
             <br />
             <span className="text-[var(--accent)]">{t("titleLine2")}</span>

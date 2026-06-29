@@ -4,6 +4,7 @@ import { currentLaunchWeek, compareWeeks } from "@/lib/launch-week";
 export interface LaunchFeedItem {
   id: string;
   blockId: string;
+  userId: string;
   title: string;
   description: string;
   imageUrl: string;
@@ -78,6 +79,7 @@ export async function getWeekLaunches(
       return {
         id: r.id,
         blockId: r.block_id,
+        userId: r.user_id,
         title: d.title || "Proyecto",
         description: d.description || "",
         imageUrl: d.imageUrl || "",

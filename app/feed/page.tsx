@@ -9,6 +9,8 @@ import { createClient } from "@/lib/supabase/client";
 import LocaleToggle from "@/components/LocaleToggle";
 import { BadgeCheck, Loader2, Activity as ActivityIcon, ArrowUpRight, Users, UserPlus, ChevronUp, ChevronLeft, ChevronRight, Rocket } from "lucide-react";
 import { currentLaunchWeek, addWeeks, weekLabel, compareWeeks } from "@/lib/launch-week";
+import { withHuevsiteUtm } from "@/lib/utm";
+import { trackClick } from "@/components/analytics/AnalyticsTracker";
 
 type FeedT = ReturnType<typeof useTranslations>;
 
@@ -469,9 +471,15 @@ function FeedContent() {
                         {launch.link && (
                           <>
                             <span>•</span>
-                            <Link href={launch.link} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors inline-flex items-center gap-1">
+                            <a
+                              href={withHuevsiteUtm(launch.link, "feed")}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => launch.userId && launch.blockId && trackClick(launch.userId, launch.blockId)}
+                              className="hover:text-white transition-colors inline-flex items-center gap-1"
+                            >
                               {t("viewProject")} <ArrowUpRight size={11} />
-                            </Link>
+                            </a>
                           </>
                         )}
                       </div>

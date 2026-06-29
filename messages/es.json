@@ -409,7 +409,7 @@
       "aiCredits": "Créditos IA",
       "aiCreditsAvailable": "{n} disponibles",
       "communitySection": "Comunidad",
-      "navFeed": "Feed Global",
+      "navFeed": "Builders Hunt",
       "navExplore": "Explorar Builders",
       "navLeaderboard": "Ranking",
       "navShowcase": "Showcase",
@@ -1432,7 +1432,7 @@
     "founderCtaSoon": "Pronto"
   },
   "nav": {
-    "launches": "Lanzamientos",
+    "launches": "Builders Hunt",
     "explore": "Explorar",
     "blog": "Blog",
     "pricing": "Precios",
@@ -1440,7 +1440,7 @@
     "buildCta": "Armá tu huevsite →",
     "dashboard": "Dashboard",
     "enter": "Entrar",
-    "feed": "Feed",
+    "feed": "Builders Hunt",
     "create": "Crear",
     "login": "Iniciar sesión"
   },

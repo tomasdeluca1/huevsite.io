@@ -409,7 +409,7 @@
       "aiCredits": "AI Credits",
       "aiCreditsAvailable": "{n} available",
       "communitySection": "Community",
-      "navFeed": "Global Feed",
+      "navFeed": "Builders Hunt",
       "navExplore": "Explore Builders",
       "navLeaderboard": "Ranking",
       "navShowcase": "Showcase",
@@ -1432,7 +1432,7 @@
     "founderCtaSoon": "Soon"
   },
   "nav": {
-    "launches": "Launches",
+    "launches": "Builders Hunt",
     "explore": "Explore",
     "blog": "Blog",
     "pricing": "Pricing",
@@ -1440,7 +1440,7 @@
     "buildCta": "Build your huevsite →",
     "dashboard": "Dashboard",
     "enter": "Enter",
-    "feed": "Feed",
+    "feed": "Builders Hunt",
     "create": "Create",
     "login": "Log in"
   },

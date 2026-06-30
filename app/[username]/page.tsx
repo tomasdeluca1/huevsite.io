@@ -7,7 +7,7 @@ import { isEnabled } from "@/lib/feature-flags";
 import { EndorsementsSection } from "@/components/social/EndorsementsSection";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { WinnerBanner } from "@/components/profile/WinnerBanner";
-import { getPostBySlugAsync } from "@/lib/blog-data";
+import { getBdlsSlugsByUsername } from "@/lib/blog-data";
 import { AuthoredPostsCard } from "@/components/profile/AuthoredPostsCard";
 import { MobileBottomNav, MobileStickyHeader } from "@/components/profile/MobileProfileUI";
 import { createClient } from "@/lib/supabase/server";
@@ -200,14 +200,14 @@ export default async function ProfilePage({ params, searchParams }: Props) {
     !!profile.id &&
     currentUserId !== profile.id;
 
-  // BDLS winner banner: link to the builder's "Builder de la Semana" blog post
-  // for the week they won, only when that post actually exists.
+  // BDLS winner banner: link to the builder's published "Builder de la Semana"
+  // blog post. Match by author (slugs are inconsistent), only when one exists.
   let bdlsNotaHref: string | null = null;
   if (profile.winnerWeek) {
-    const notaSlug = `builder-de-la-semana-${profile.username}-${profile.winnerWeek.toLowerCase()}`;
     try {
-      const post = await getPostBySlugAsync(notaSlug);
-      if (post) bdlsNotaHref = `/blog/${notaSlug}`;
+      const bdlsSlugs = await getBdlsSlugsByUsername();
+      const slug = bdlsSlugs[(profile.username || "").toLowerCase()];
+      if (slug) bdlsNotaHref = `/blog/${slug}`;
     } catch {}
   }
 

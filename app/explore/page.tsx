@@ -5,6 +5,7 @@ import { Sparkles } from "lucide-react";
 import LocaleToggle from "@/components/LocaleToggle";
 import { ExploreClient } from "@/components/explore/ExploreClient";
 import { DiscoveryHeader } from "@/components/discovery/DiscoveryHeader";
+import { HallOfFameButton } from "@/components/discovery/HallOfFameButton";
 
 export const revalidate = 60; // Revalidate simple cache every 60s
 
@@ -62,6 +63,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
           <p className="text-base md:text-lg text-[var(--text-dim)] max-w-xl mx-auto leading-relaxed">
             {t("subtitle")}
           </p>
+          <HallOfFameButton className="mt-7 flex justify-center" />
         </div>
       </header>
 

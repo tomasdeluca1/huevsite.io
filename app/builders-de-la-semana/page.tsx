@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getAllWinners } from "@/lib/showcase-service";
-import { getAllBlogPosts } from "@/lib/blog-data";
+import { getBdlsSlugsByUsername } from "@/lib/blog-data";
 import { weekLabel } from "@/lib/launch-week";
 
 export const dynamic = "force-dynamic";
@@ -17,8 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function BuildersDeLaSemanaPage() {
   const locale = await getLocale();
   const t = await getTranslations("winnerHistory");
-  const [winners, posts] = await Promise.all([getAllWinners(), getAllBlogPosts(locale)]);
-  const slugs = new Set(posts.map((p) => p.slug.toLowerCase()));
+  const [winners, bdlsSlugs] = await Promise.all([getAllWinners(), getBdlsSlugsByUsername()]);
 
   return (
     <main className="min-h-screen bg-[#070708] px-4 pb-24 pt-10 md:pt-16">
@@ -42,8 +41,8 @@ export default async function BuildersDeLaSemanaPage() {
         ) : (
           <ol className="space-y-2.5">
             {winners.map((w) => {
-              const noteSlug = `builder-de-la-semana-${w.username}-${w.week.toLowerCase()}`;
-              const hasNote = slugs.has(noteSlug);
+              const noteSlug = bdlsSlugs[w.username.toLowerCase()];
+              const hasNote = !!noteSlug;
               return (
                 <li
                   key={`${w.week}-${w.username}`}

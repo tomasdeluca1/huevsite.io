@@ -153,6 +153,12 @@ export function DiscoveryRail({
               <div className="text-[10px] text-white/40">@{data.winner.username}</div>
             </div>
           </Link>
+          <Link
+            href="/builders-de-la-semana"
+            className="mt-2.5 flex items-center justify-center gap-1 rounded-lg border border-[var(--accent)]/20 py-1.5 text-[10px] font-bold uppercase tracking-wide text-[var(--accent)]/80 transition-colors hover:border-[var(--accent)]/50 hover:text-[var(--accent)]"
+          >
+            {t("railWinnerHistory")} →
+          </Link>
         </div>
       )}
 

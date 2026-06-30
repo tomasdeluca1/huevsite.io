@@ -1557,6 +1557,23 @@ export async function getAllBlogPosts(locale: string = "es"): Promise<BlogPost[]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
+/**
+ * Map of builder username (lowercased) → their PUBLISHED Builder-de-la-Semana
+ * post slug. Match by author, NOT by a constructed slug: BDLS slugs are
+ * inconsistent (`builder-de-la-semana-{user}` vs `...-{user}-{week}`), so the
+ * only reliable key is the post's author_username.
+ */
+export async function getBdlsSlugsByUsername(): Promise<Record<string, string>> {
+  const posts = await getDBBlogPosts();
+  const map: Record<string, string> = {};
+  for (const p of posts) {
+    if (!isBuilderOfTheWeekPost(p)) continue;
+    const u = (p.author.username || "").toLowerCase();
+    if (u && !map[u]) map[u] = p.slug;
+  }
+  return map;
+}
+
 export const BLOG_POSTS_PER_PAGE = 9;
 
 // Canonical username we use to credit posts written by the platform itself

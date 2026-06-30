@@ -5,6 +5,7 @@ import { Medal } from "lucide-react";
 import LocaleToggle from "@/components/LocaleToggle";
 import { LeaderboardClient } from "@/components/leaderboard/LeaderboardClient";
 import { DiscoveryHeader } from "@/components/discovery/DiscoveryHeader";
+import { HallOfFameButton } from "@/components/discovery/HallOfFameButton";
 import type { Metadata } from "next";
 
 export const revalidate = 60;
@@ -56,6 +57,7 @@ export default async function LeaderboardPage({
           <p className="text-base md:text-lg text-[var(--text-dim)] max-w-xl mx-auto leading-relaxed">
             {t("subtitle")}
           </p>
+          <HallOfFameButton className="mt-7 flex justify-center" />
         </div>
       </header>
 

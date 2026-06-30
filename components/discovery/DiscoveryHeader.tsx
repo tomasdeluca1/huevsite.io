@@ -26,9 +26,12 @@ const SHELL = "max-w-[1440px] mx-auto w-full px-6 md:px-10";
 export function DiscoveryHeader({
   currentUserId,
   username,
+  hideTabs = false,
 }: {
   currentUserId?: string | null;
   username?: string | null;
+  /** Landing: hide the product section tabs so the header doesn't compete with the hero. */
+  hideTabs?: boolean;
 }) {
   const t = useTranslations("discovery");
   const tn = useTranslations("nav");
@@ -72,7 +75,7 @@ export function DiscoveryHeader({
         <Link href="/" className="logo text-xl shrink-0">
           huev<span>site</span>.io
         </Link>
-        <div className="hidden md:block">{tabs(false)}</div>
+        {!hideTabs && <div className="hidden md:block">{tabs(false)}</div>}
         <div className="flex items-center gap-2 shrink-0">
           <LocaleToggle />
           <Link
@@ -84,7 +87,7 @@ export function DiscoveryHeader({
         </div>
       </div>
       {/* Mobile: tabs on their own full-width row */}
-      <div className={`md:hidden ${SHELL} pb-3`}>{tabs(true)}</div>
+      {!hideTabs && <div className={`md:hidden ${SHELL} pb-3`}>{tabs(true)}</div>}
     </header>
   );
 }

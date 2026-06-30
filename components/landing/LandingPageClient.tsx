@@ -279,8 +279,8 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
 
   return (
     <div className="landing">
-      {/* NAV — unified product header (same component as the rest of the app) */}
-      <DiscoveryHeader currentUserId={user?.id ?? null} />
+      {/* NAV — same header component, but tabs hidden so it doesn't compete with the hero */}
+      <DiscoveryHeader currentUserId={user?.id ?? null} hideTabs />
 
       {/* MOBILE FLOATING NAV */}
       <AnimatePresence>

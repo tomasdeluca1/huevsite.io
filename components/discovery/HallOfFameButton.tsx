@@ -18,7 +18,7 @@ export function HallOfFameButton() {
       initial={{ opacity: 0, x: 40 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.4, type: "spring", stiffness: 200, damping: 22 }}
-      className="fixed right-0 top-1/2 z-40 -translate-y-1/2"
+      className="fixed right-0 top-1/3 z-40 -translate-y-1/2"
     >
       <Link
         href="/builders-de-la-semana"

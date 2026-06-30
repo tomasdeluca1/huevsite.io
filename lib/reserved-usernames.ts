@@ -14,9 +14,9 @@
 
 // Top-level app routes (app/<segment>) that are valid username shapes.
 const ROUTE_RESERVED = [
-  'admin', 'api', 'auth', 'blog', 'checkout', 'dashboard', 'explore', 'feed',
-  'leaderboard', 'linktree', 'login', 'onboarding', 'precios', 'privacy',
-  'recruiter', 'referrals', 'showcase', 'terms', 'testimonio', 'welcome',
+  'admin', 'api', 'auth', 'blog', 'builders-de-la-semana', 'checkout', 'dashboard',
+  'explore', 'feed', 'leaderboard', 'linktree', 'login', 'onboarding', 'precios',
+  'privacy', 'recruiter', 'referrals', 'showcase', 'terms', 'testimonio', 'welcome',
 ];
 
 // Framework / file-based routes and static assets at the app root.

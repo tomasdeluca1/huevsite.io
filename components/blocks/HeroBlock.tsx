@@ -1,10 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { BadgeCheck, Trophy } from "lucide-react";
 import { HeroBlockData, ProfileBadge, getContrastColor } from "@/lib/profile-types";
-import { weekLabel } from "@/lib/launch-week";
 import { useBlockPreview } from "@/lib/block-preview-context";
 import { BadgeItem } from "@/components/profile/BadgeItem";
 
@@ -21,10 +20,6 @@ interface Props {
 export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = false, badges = [], username, winnerWeek }: Props) {
   const isPreview = useBlockPreview();
   const t = useTranslations('blocks');
-  const locale = useLocale();
-  // Ever won Builder de la Semana → show the laurel on the board (hover for details).
-  const everWonBdls = badges.some((b) => b.key === "builder_of_the_week");
-  const bdlsHover = `🏆 ${t('hero.builderOfWeek')}${winnerWeek ? ` · ${weekLabel(winnerWeek, locale)} ${winnerWeek.slice(0, 4)}` : ""}`;
   const roles = data.roles || [];
   const name = data.name || t('hero.fallbackName');
   const tagline = data.tagline || t('hero.fallbackTagline');
@@ -152,13 +147,11 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
 
         {/* ROW 2: Descripción (con un espacio según el diagrama) */}
         <div className="mt-6 flex-1 min-w-0">
-          {badges.filter((b) => b.key !== "builder_of_the_week").length > 0 && (
-            <div className="mb-4 flex flex-wrap items-center gap-3">
-              {badges
-                .filter((badge) => badge.key !== "builder_of_the_week")
-                .map((badge) => (
-                  <BadgeItem key={badge.key} badge={badge} earned size="sm" />
-                ))}
+          {badges.length > 0 && (
+            <div className="mb-4 flex items-end gap-3">
+              {badges.map((badge) => (
+                <BadgeItem key={badge.key} badge={badge} earned size="sm" />
+              ))}
             </div>
           )}
           {data.description && (
@@ -169,17 +162,7 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
         </div>
 
         {/* ROW 3: Estado y Lugar */}
-        <div className="mt-6 flex flex-wrap items-center gap-2 pt-4 border-t border-white/5">
-          {everWonBdls && (
-            <a
-              href="/leaderboard"
-              title={bdlsHover}
-              className="flex items-center gap-1.5 bg-[var(--accent-dim)] border border-[var(--accent-mid)] text-[var(--accent)] text-[10px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap transition-colors hover:border-[var(--accent)]"
-            >
-              <img src="/badge/laurel-dark.png" alt="" className="h-3.5 w-auto" />
-              {t('hero.builderOfWeek')}
-            </a>
-          )}
+        <div className="mt-6 flex flex-wrap gap-2 pt-4 border-t border-white/5">
           {status && (
             <span className="tag accent flex items-center gap-1.5 bg-[var(--accent-dim)] border border-[var(--accent-mid)] text-[var(--accent)] text-[10px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap">
               <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />

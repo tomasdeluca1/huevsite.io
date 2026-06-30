@@ -2120,5 +2120,19 @@
       "projectCount": "{count, plural, one {# Project} other {# Projects}}",
       "noLinked": "No linked projects"
     }
+  },
+  "winnerBanner": {
+    "title": "Builder of the Week",
+    "wonWeek": "Won the week of {week}",
+    "readPost": "Read the story",
+    "history": "See the history"
+  },
+  "winnerHistory": {
+    "title": "Builders of the Week",
+    "subtitle": "The hall of fame: every builder who won the week on Builders Hunt.",
+    "backToRanking": "Back to the ranking",
+    "profile": "View profile",
+    "readPost": "Read the story",
+    "empty": "No winners yet."
   }
 }

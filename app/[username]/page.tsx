@@ -6,6 +6,8 @@ import Link from "next/link";
 import { isEnabled } from "@/lib/feature-flags";
 import { EndorsementsSection } from "@/components/social/EndorsementsSection";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
+import { WinnerBanner } from "@/components/profile/WinnerBanner";
+import { getPostBySlugAsync } from "@/lib/blog-data";
 import { AuthoredPostsCard } from "@/components/profile/AuthoredPostsCard";
 import { MobileBottomNav, MobileStickyHeader } from "@/components/profile/MobileProfileUI";
 import { createClient } from "@/lib/supabase/server";
@@ -198,6 +200,17 @@ export default async function ProfilePage({ params, searchParams }: Props) {
     !!profile.id &&
     currentUserId !== profile.id;
 
+  // BDLS winner banner: link to the builder's "Builder de la Semana" blog post
+  // for the week they won, only when that post actually exists.
+  let bdlsNotaHref: string | null = null;
+  if (profile.winnerWeek) {
+    const notaSlug = `builder-de-la-semana-${profile.username}-${profile.winnerWeek.toLowerCase()}`;
+    try {
+      const post = await getPostBySlugAsync(notaSlug);
+      if (post) bdlsNotaHref = `/blog/${notaSlug}`;
+    } catch {}
+  }
+
   return (
     <div className="landing min-h-screen font-display selection:bg-[var(--accent)] selection:text-black">
       {/* Noise Texture Overlay */}
@@ -280,6 +293,14 @@ export default async function ProfilePage({ params, searchParams }: Props) {
           isWinner={profile.isWinner}
           embed={embed}
         />
+
+        {!embed && profile.winnerWeek && (
+          <WinnerBanner
+            winnerWeek={profile.winnerWeek}
+            notaHref={bdlsNotaHref}
+            historyHref="/builders-de-la-semana"
+          />
+        )}
 
         {/* BDLS / authored blog posts featured for this builder */}
         <AuthoredPostsCard username={profile.username} accentColor={profile.accentColor} />

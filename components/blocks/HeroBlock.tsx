@@ -152,27 +152,8 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
 
         {/* ROW 2: Descripción (con un espacio según el diagrama) */}
         <div className="mt-6 flex-1 min-w-0">
-          {(everWonBdls || badges.length > 0) && (
+          {badges.filter((b) => b.key !== "builder_of_the_week").length > 0 && (
             <div className="mb-4 flex flex-wrap items-center gap-3">
-              {everWonBdls && (
-                <a
-                  href="/leaderboard"
-                  title={bdlsHover}
-                  className="flex items-center gap-2 rounded-full border border-[var(--accent)]/30 bg-[var(--accent)]/[0.06] px-3 py-1.5 transition-colors hover:border-[var(--accent)]/60"
-                >
-                  <img src="/badge/laurel-dark.png" alt="" className="h-6 w-auto" />
-                  <div className="flex flex-col leading-tight">
-                    <span className="whitespace-nowrap text-[10px] font-black uppercase tracking-wide text-[var(--accent)] sm:text-[11px]">
-                      {t('hero.builderOfWeek')}
-                    </span>
-                    {winnerWeek && (
-                      <span className="text-[9px] font-medium text-white/45">
-                        {weekLabel(winnerWeek, locale)} {winnerWeek.slice(0, 4)}
-                      </span>
-                    )}
-                  </div>
-                </a>
-              )}
               {badges
                 .filter((badge) => badge.key !== "builder_of_the_week")
                 .map((badge) => (
@@ -188,7 +169,17 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
         </div>
 
         {/* ROW 3: Estado y Lugar */}
-        <div className="mt-6 flex flex-wrap gap-2 pt-4 border-t border-white/5">
+        <div className="mt-6 flex flex-wrap items-center gap-2 pt-4 border-t border-white/5">
+          {everWonBdls && (
+            <a
+              href="/leaderboard"
+              title={bdlsHover}
+              className="flex items-center gap-1.5 bg-[var(--accent-dim)] border border-[var(--accent-mid)] text-[var(--accent)] text-[10px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap transition-colors hover:border-[var(--accent)]"
+            >
+              <img src="/badge/laurel-dark.png" alt="" className="h-3.5 w-auto" />
+              {t('hero.builderOfWeek')}
+            </a>
+          )}
           {status && (
             <span className="tag accent flex items-center gap-1.5 bg-[var(--accent-dim)] border border-[var(--accent-mid)] text-[var(--accent)] text-[10px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap">
               <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />

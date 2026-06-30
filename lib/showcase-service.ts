@@ -259,6 +259,7 @@ export interface WinnerHistoryItem {
   username: string;
   name: string;
   image: string | null;
+  tagline: string | null;
   builderScore: number;
 }
 
@@ -267,7 +268,7 @@ export async function getAllWinners(): Promise<WinnerHistoryItem[]> {
   const supabase = createServiceRoleClient();
   const { data, error } = await supabase
     .from("showcase_winners")
-    .select(`week, user:profiles!showcase_winners_user_id_fkey ( username, name, image, builder_score )`)
+    .select(`week, user:profiles!showcase_winners_user_id_fkey ( username, name, image, tagline, builder_score )`)
     .order("week", { ascending: false });
   if (error || !data) return [];
   return data
@@ -277,6 +278,7 @@ export async function getAllWinners(): Promise<WinnerHistoryItem[]> {
       username: w.user.username as string,
       name: (w.user.name || w.user.username) as string,
       image: (w.user.image || null) as string | null,
+      tagline: (w.user.tagline || null) as string | null,
       builderScore: (w.user.builder_score || 0) as number,
     }));
 }

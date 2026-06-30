@@ -42,6 +42,7 @@ import { ColorPicker } from "@/components/dashboard/ColorPicker";
 import { FeedbackModal } from "@/components/dashboard/FeedbackModal";
 import { OnboardingModal } from "@/components/dashboard/OnboardingModal";
 import Link from "next/link";
+import { DiscoveryHeader } from "@/components/discovery/DiscoveryHeader";
 import { createClient } from "@/lib/supabase/client";
 import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
 import { BadgeSnippetCard } from "@/components/dashboard/BadgeSnippetCard";
@@ -1398,12 +1399,17 @@ export default function DashboardPage() {
   if (!profile) return null;
 
   return (
-    <div className="h-screen flex flex-col md:flex-row bg-[var(--bg)] font-display overflow-hidden">
-      {/* MOBILE HEADER */}
-      <div className="md:hidden flex items-center justify-between p-4 bg-[var(--surface)] border-b border-[var(--border)] sticky top-0 z-[200] backdrop-blur-md">
-        <Link href="/" className="logo block text-lg font-extrabold tracking-tight">huev<span>site</span>.io</Link>
-        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-[var(--accent)]"><Settings size={20} /></button>
+    <div className="h-screen flex flex-col bg-[var(--bg)] font-display overflow-hidden">
+      {/* Unified product top nav (same bar as the discovery pages) */}
+      <DiscoveryHeader currentUserId={profile?.id} username={profile?.username} maxWidthClass="max-w-none" />
+
+      {/* MOBILE: open the editing sidebar */}
+      <div className="md:hidden flex items-center justify-end px-4 py-2 bg-[var(--surface)] border-b border-[var(--border)]">
+        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} aria-label="Editar" className="p-2 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-[var(--accent)]"><Settings size={20} /></button>
       </div>
+
+      {/* Editor row: editing sidebar + board canvas */}
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
 
       <AnimatePresence>
         {isSidebarOpen && (
@@ -2031,6 +2037,7 @@ export default function DashboardPage() {
           </AnimatePresence>
         </div>
       </main>
+      </div>
 
       {editingBlock && (
         <BlockEditorModal 

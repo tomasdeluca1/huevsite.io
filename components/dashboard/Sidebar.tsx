@@ -4,9 +4,9 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Trophy, Check, Globe, Activity,
-  Compass, Save, LogOut, MessageSquare,
-  Sparkles, Lock, ChevronRight, User, PlusCircle, Trash2, Link2, Mail, Share2, Medal
+  Trophy, Check, Globe,
+  Save, LogOut, MessageSquare,
+  Sparkles, Lock, ChevronRight, User, PlusCircle, Trash2, Link2, Mail, Share2
 } from "lucide-react";
 import Link from "next/link";
 import { ProfileData, BlockType, PRESET_BORDER_RADIUS } from "@/lib/profile-types";
@@ -381,18 +381,11 @@ export function DashboardSidebar({
             </div>
           </div>
 
-          {/* === NETWORK === */}
-          <div className="space-y-1">
-            <SectionLabel className="mb-2">{t("sidebar.communitySection")}</SectionLabel>
-            <SidebarLink href="/feed" icon={<Activity size={18} />} label={t("sidebar.navFeed")} />
-            <SidebarLink href="/explore" icon={<Compass size={18} />} label={t("sidebar.navExplore")} />
-            <SidebarLink href="/leaderboard" icon={<Medal size={18} />} label={t("sidebar.navLeaderboard")} />
-            <SidebarLink href="/testimonio" icon={<MessageSquare size={18} />} label={t("sidebar.navTestimonial")} />
-          </div>
-
           {/* === ACCOUNT / SETTINGS === */}
           <div className="space-y-1 pb-2">
             <SectionLabel className="mb-2">{t("sidebar.platformSection")}</SectionLabel>
+
+            <SidebarLink href="/testimonio" icon={<MessageSquare size={18} />} label={t("sidebar.navTestimonial")} />
 
             <div className="flex items-center justify-between p-2.5 rounded-2xl hover:bg-white/5 transition-all group">
               <div className="flex items-center gap-3">

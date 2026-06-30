@@ -21,14 +21,25 @@ const TABS = [
  */
 export function DiscoveryHeader({
   currentUserId,
+  username,
   maxWidthClass = "max-w-6xl",
 }: {
   currentUserId?: string | null;
+  username?: string | null;
   maxWidthClass?: string;
 }) {
   const t = useTranslations("discovery");
   const tn = useTranslations("nav");
   const pathname = usePathname() || "";
+
+  // Context-aware right CTA: logged-out → build; on dashboard → view profile;
+  // elsewhere (logged-in) → dashboard.
+  const onDashboard = pathname.startsWith("/dashboard");
+  const cta = !currentUserId
+    ? { href: "/login", label: tn("buildCta") }
+    : onDashboard && username
+    ? { href: `/${username}`, label: tn("myProfile") }
+    : { href: "/dashboard", label: tn("dashboard") };
 
   const tabs = (mobile: boolean) => (
     <nav
@@ -63,10 +74,10 @@ export function DiscoveryHeader({
         <div className="flex items-center gap-2 shrink-0">
           <LocaleToggle />
           <Link
-            href={currentUserId ? "/dashboard" : "/login"}
+            href={cta.href}
             className="btn btn-accent !text-[10px] !py-2 !px-4 !rounded-xl"
           >
-            {currentUserId ? tn("myHuevsite") : tn("buildCta")}
+            {cta.label}
           </Link>
         </div>
       </div>

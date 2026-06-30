@@ -89,50 +89,54 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      className="huevsite-block block-hero h-full flex flex-col group overflow-hidden p-6 md:p-8"
+      className="huevsite-block block-hero relative h-full flex flex-col group overflow-hidden p-6 md:p-8"
       style={{
         '--accent': accentColor,
       } as any}
     >
-      <div className="flex flex-col h-full w-full">
-        {/* ROW 1: Imagen y Nombre */}
-        <div className="flex flex-col sm:flex-row items-start gap-4 md:gap-5">
-          <div
-            className={everWonBdls ? "group relative flex items-center gap-1" : "contents"}
-            title={everWonBdls ? bdlsHover : undefined}
-          >
-            {everWonBdls && (
-              <img src="/badge/laurel-dark-left.png" alt="" className="h-12 md:h-14 lg:h-[68px] w-auto shrink-0 self-center" />
-            )}
-            <div className="shrink-0 relative">
-              <div
-                className={`absolute inset-0 rounded-full blur-xl transition-opacity ${isWinner ? 'opacity-40 animate-pulse' : 'opacity-30 group-hover:opacity-50'}`}
-                style={{ backgroundColor: accentColor }}
-              />
-              <div
-                className={`hero-avatar w-14 h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 border-2 shadow-xl rounded-full flex items-center justify-center font-black overflow-hidden relative z-10 ${isWinner ? 'border-[var(--accent)]' : 'border-white/10'}`}
-                style={{
-                  background: avatarUrl ? 'transparent' : `linear-gradient(135deg, ${accentColor}, #00FF88)`,
-                  color: getContrastColor(accentColor)
-                }}
-              >
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-lg md:text-xl lg:text-2xl">{name.charAt(0).toUpperCase()}</span>
-                )}
-              </div>
-              {/* Status dot */}
-              <div className="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full border-2 border-[#121212] bg-[#00FF88] z-20 shadow-lg" />
-            </div>
-            {everWonBdls && (
-              <img src="/badge/laurel-dark-right.png" alt="" className="h-12 md:h-14 lg:h-[68px] w-auto shrink-0 self-center" />
-            )}
-            {everWonBdls && (
-              <span className="pointer-events-none absolute left-1/2 top-full z-30 mt-1 -translate-x-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-black/90 px-2.5 py-1 text-[10px] font-bold text-white opacity-0 shadow-xl transition-opacity duration-200 group-hover:opacity-100">
-                {bdlsHover}
+      {everWonBdls && (
+        <a
+          href="/leaderboard"
+          title={bdlsHover}
+          className="absolute right-4 top-4 z-20 flex items-center gap-2 rounded-full border border-[var(--accent)]/30 bg-black/40 px-2.5 py-1.5 backdrop-blur-sm transition-colors hover:border-[var(--accent)]/60"
+        >
+          <img src="/badge/laurel-dark.png" alt="" className="h-5 w-auto sm:h-6" />
+          <div className="flex flex-col leading-tight">
+            <span className="whitespace-nowrap text-[10px] font-black uppercase tracking-wide text-[var(--accent)] sm:text-[11px]">
+              {t('hero.builderOfWeek')}
+            </span>
+            {winnerWeek && (
+              <span className="text-[9px] font-medium text-white/45">
+                {weekLabel(winnerWeek, locale)} {winnerWeek.slice(0, 4)}
               </span>
             )}
+          </div>
+        </a>
+      )}
+
+      <div className="flex flex-col h-full w-full">
+        {/* ROW 1: Imagen y Nombre */}
+        <div className={`flex flex-col sm:flex-row items-start gap-4 md:gap-5 ${everWonBdls ? "sm:pr-44" : ""}`}>
+          <div className="shrink-0 relative">
+            <div
+              className={`absolute inset-0 rounded-full blur-xl transition-opacity ${isWinner ? 'opacity-40 animate-pulse' : 'opacity-30 group-hover:opacity-50'}`}
+              style={{ backgroundColor: accentColor }}
+            />
+            <div
+              className={`hero-avatar w-14 h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 border-2 shadow-xl rounded-full flex items-center justify-center font-black overflow-hidden relative z-10 ${isWinner ? 'border-[var(--accent)]' : 'border-white/10'}`}
+              style={{
+                background: avatarUrl ? 'transparent' : `linear-gradient(135deg, ${accentColor}, #00FF88)`,
+                color: getContrastColor(accentColor)
+              }}
+            >
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-lg md:text-xl lg:text-2xl">{name.charAt(0).toUpperCase()}</span>
+              )}
+            </div>
+            {/* Status dot */}
+            <div className="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full border-2 border-[#121212] bg-[#00FF88] z-20 shadow-lg" />
           </div>
 
           <div className="flex flex-col min-w-0 pt-0 px-1">

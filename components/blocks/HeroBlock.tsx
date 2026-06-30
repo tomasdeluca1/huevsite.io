@@ -89,34 +89,14 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      className="huevsite-block block-hero relative h-full flex flex-col group overflow-hidden p-6 md:p-8"
+      className="huevsite-block block-hero h-full flex flex-col group overflow-hidden p-6 md:p-8"
       style={{
         '--accent': accentColor,
       } as any}
     >
-      {everWonBdls && (
-        <a
-          href="/leaderboard"
-          title={bdlsHover}
-          className="absolute right-4 top-4 z-20 flex items-center gap-2 rounded-full border border-[var(--accent)]/30 bg-black/40 px-2.5 py-1.5 backdrop-blur-sm transition-colors hover:border-[var(--accent)]/60"
-        >
-          <img src="/badge/laurel-dark.png" alt="" className="h-5 w-auto sm:h-6" />
-          <div className="flex flex-col leading-tight">
-            <span className="whitespace-nowrap text-[10px] font-black uppercase tracking-wide text-[var(--accent)] sm:text-[11px]">
-              {t('hero.builderOfWeek')}
-            </span>
-            {winnerWeek && (
-              <span className="text-[9px] font-medium text-white/45">
-                {weekLabel(winnerWeek, locale)} {winnerWeek.slice(0, 4)}
-              </span>
-            )}
-          </div>
-        </a>
-      )}
-
       <div className="flex flex-col h-full w-full">
         {/* ROW 1: Imagen y Nombre */}
-        <div className={`flex flex-col sm:flex-row items-start gap-4 md:gap-5 ${everWonBdls ? "sm:pr-44" : ""}`}>
+        <div className="flex flex-col sm:flex-row items-start gap-4 md:gap-5">
           <div className="shrink-0 relative">
             <div
               className={`absolute inset-0 rounded-full blur-xl transition-opacity ${isWinner ? 'opacity-40 animate-pulse' : 'opacity-30 group-hover:opacity-50'}`}
@@ -172,11 +152,32 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
 
         {/* ROW 2: Descripción (con un espacio según el diagrama) */}
         <div className="mt-6 flex-1 min-w-0">
-          {badges.length > 0 && (
-            <div className="mb-4 flex items-end gap-3">
-              {badges.map((badge) => (
-                <BadgeItem key={badge.key} badge={badge} earned size="sm" />
-              ))}
+          {(everWonBdls || badges.length > 0) && (
+            <div className="mb-4 flex flex-wrap items-center gap-3">
+              {everWonBdls && (
+                <a
+                  href="/leaderboard"
+                  title={bdlsHover}
+                  className="flex items-center gap-2 rounded-full border border-[var(--accent)]/30 bg-[var(--accent)]/[0.06] px-3 py-1.5 transition-colors hover:border-[var(--accent)]/60"
+                >
+                  <img src="/badge/laurel-dark.png" alt="" className="h-6 w-auto" />
+                  <div className="flex flex-col leading-tight">
+                    <span className="whitespace-nowrap text-[10px] font-black uppercase tracking-wide text-[var(--accent)] sm:text-[11px]">
+                      {t('hero.builderOfWeek')}
+                    </span>
+                    {winnerWeek && (
+                      <span className="text-[9px] font-medium text-white/45">
+                        {weekLabel(winnerWeek, locale)} {winnerWeek.slice(0, 4)}
+                      </span>
+                    )}
+                  </div>
+                </a>
+              )}
+              {badges
+                .filter((badge) => badge.key !== "builder_of_the_week")
+                .map((badge) => (
+                  <BadgeItem key={badge.key} badge={badge} earned size="sm" />
+                ))}
             </div>
           )}
           {data.description && (

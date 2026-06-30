@@ -2134,6 +2134,8 @@
     "back": "Back",
     "profile": "View profile",
     "readPost": "Read the story",
+    "viewTimeline": "Timeline",
+    "viewList": "List",
     "empty": "No winners yet."
   }
 }

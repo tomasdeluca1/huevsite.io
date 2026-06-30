@@ -2134,6 +2134,8 @@
     "back": "Volver",
     "profile": "Ver perfil",
     "readPost": "Leer la nota",
+    "viewTimeline": "Timeline",
+    "viewList": "Lista",
     "empty": "Todavía no hay ganadores."
   }
 }

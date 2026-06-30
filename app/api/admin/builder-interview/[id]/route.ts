@@ -155,19 +155,49 @@ export async function DELETE(
     return NextResponse.json({ error: "No encontrada." }, { status: 404 });
   }
 
-  if (iv.blog_post_id) {
-    const { data: post } = await supabase
+  // Collect EVERY blog post tied to this interview: the back-reference
+  // (blog_posts.interview_id — the FK that blocks the interview delete) AND the
+  // forward pointer (interview.blog_post_id), which can point to a different row.
+  const postIds = new Set<string>();
+  let anyPublished = false;
+
+  const { data: backRefs } = await supabase
+    .from("blog_posts")
+    .select("id, is_published")
+    .eq("interview_id", id);
+  for (const p of backRefs || []) {
+    postIds.add(p.id);
+    if (p.is_published) anyPublished = true;
+  }
+
+  if (iv.blog_post_id && !postIds.has(iv.blog_post_id)) {
+    const { data: fwd } = await supabase
       .from("blog_posts")
       .select("is_published")
       .eq("id", iv.blog_post_id)
       .maybeSingle();
-    if (post?.is_published) {
-      return NextResponse.json(
-        { error: "El blog está publicado. Despublicalo antes de borrar." },
-        { status: 400 }
-      );
+    if (fwd) {
+      postIds.add(iv.blog_post_id);
+      if (fwd.is_published) anyPublished = true;
     }
-    await supabase.from("blog_posts").delete().eq("id", iv.blog_post_id);
+  }
+
+  // Never wipe a published (live) blog post — unpublish it first.
+  if (anyPublished) {
+    return NextResponse.json(
+      { error: "El blog está publicado. Despublicalo antes de borrar." },
+      { status: 400 }
+    );
+  }
+
+  if (postIds.size > 0) {
+    const { error: delPostsErr } = await supabase
+      .from("blog_posts")
+      .delete()
+      .in("id", Array.from(postIds));
+    if (delPostsErr) {
+      return NextResponse.json({ error: delPostsErr.message }, { status: 500 });
+    }
   }
 
   const { error } = await supabase.from("builder_interviews").delete().eq("id", id);

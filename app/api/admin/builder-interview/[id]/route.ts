@@ -129,3 +129,51 @@ export async function PATCH(
 
   return NextResponse.json(updated);
 }
+
+/**
+ * DELETE — remove a draft interview + its linked blog post. Guarded: refuses
+ * to delete a PUBLISHED blog post (unpublish it first), so live content can't
+ * be wiped by accident. Used by the "Eliminar borrador" button in the admin.
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const supabase = await getAdminClient(request);
+  if (!supabase) {
+    return NextResponse.json({ error: "No autorizado." }, { status: 401 });
+  }
+
+  const { id } = await params;
+
+  const { data: iv } = await supabase
+    .from("builder_interviews")
+    .select("id, blog_post_id")
+    .eq("id", id)
+    .single();
+  if (!iv) {
+    return NextResponse.json({ error: "No encontrada." }, { status: 404 });
+  }
+
+  if (iv.blog_post_id) {
+    const { data: post } = await supabase
+      .from("blog_posts")
+      .select("is_published")
+      .eq("id", iv.blog_post_id)
+      .maybeSingle();
+    if (post?.is_published) {
+      return NextResponse.json(
+        { error: "El blog está publicado. Despublicalo antes de borrar." },
+        { status: 400 }
+      );
+    }
+    await supabase.from("blog_posts").delete().eq("id", iv.blog_post_id);
+  }
+
+  const { error } = await supabase.from("builder_interviews").delete().eq("id", id);
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true });
+}

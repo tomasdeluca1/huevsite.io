@@ -42,6 +42,7 @@ export default async function LeaderboardPage({
       style={{ background: "radial-gradient(circle at 50% 0%, rgba(200,255,0,0.06), transparent 720px), var(--bg)" }}
     >
       <DiscoveryHeader currentUserId={user?.id ?? null} maxWidthClass="max-w-[1440px]" />
+      <HallOfFameButton />
 
       {/* HERO (full-width; gradient lives on the page wrapper so it never cuts) */}
       <header className="relative py-12 px-6 text-center">
@@ -57,7 +58,6 @@ export default async function LeaderboardPage({
           <p className="text-base md:text-lg text-[var(--text-dim)] max-w-xl mx-auto leading-relaxed">
             {t("subtitle")}
           </p>
-          <HallOfFameButton className="mt-7 flex justify-center" />
         </div>
       </header>
 

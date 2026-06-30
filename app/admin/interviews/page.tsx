@@ -9,6 +9,7 @@ import {
   Check,
   CheckCircle2,
   RotateCw,
+  Trash2,
 } from "lucide-react";
 
 interface InterviewRow {
@@ -49,6 +50,7 @@ export default function InterviewsPage() {
   );
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const fetchInterviews = async () => {
@@ -151,6 +153,34 @@ export default function InterviewsPage() {
       setMsg({ type: "err", text: "Error de conexión." });
     } finally {
       setRegeneratingId(null);
+    }
+  };
+
+  const handleDelete = async (id: string, username: string) => {
+    if (
+      !window.confirm(
+        `¿Eliminar el borrador de @${username}? Borra la entrevista y su blog draft (no publicado). No se puede deshacer.`
+      )
+    ) {
+      return;
+    }
+    setDeletingId(id);
+    setMsg(null);
+    try {
+      const res = await fetch(`/api/admin/builder-interview/${id}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (res.ok) {
+        setMsg({ type: "ok", text: `Borrador de @${username} eliminado 🗑️` });
+        setInterviews((prev) => prev.filter((iv) => iv.id !== id));
+      } else {
+        setMsg({ type: "err", text: json.error || "Error al eliminar." });
+      }
+    } catch {
+      setMsg({ type: "err", text: "Error de conexión." });
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -451,6 +481,24 @@ export default function InterviewsPage() {
                       >
                         <Eye size={12} /> Editar / Preview
                       </Link>
+                      {iv.status !== "published" && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(iv.id, iv.builder_username);
+                          }}
+                          disabled={deletingId === iv.id}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30 text-xs font-mono text-red-300 hover:bg-red-500/20 disabled:opacity-40 transition-colors"
+                          title="Eliminar la entrevista y su blog draft (no publicado)"
+                        >
+                          {deletingId === iv.id ? (
+                            <Loader2 size={12} className="animate-spin" />
+                          ) : (
+                            <Trash2 size={12} />
+                          )}
+                          Eliminar borrador
+                        </button>
+                      )}
                       {iv.status === "ready" && (
                         <button
                           onClick={(e) => {

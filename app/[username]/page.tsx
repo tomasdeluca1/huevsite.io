@@ -8,7 +8,6 @@ import { EndorsementsSection } from "@/components/social/EndorsementsSection";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { WinnerBanner } from "@/components/profile/WinnerBanner";
 import { getBdlsSlugsByUsername } from "@/lib/blog-data";
-import { AuthoredPostsCard } from "@/components/profile/AuthoredPostsCard";
 import { MobileBottomNav, MobileStickyHeader } from "@/components/profile/MobileProfileUI";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWeek } from "@/lib/showcase-service";
@@ -301,9 +300,6 @@ export default async function ProfilePage({ params, searchParams }: Props) {
             historyHref="/builders-de-la-semana"
           />
         )}
-
-        {/* BDLS / authored blog posts featured for this builder */}
-        <AuthoredPostsCard username={profile.username} accentColor={profile.accentColor} />
 
         {/* Huevsite Grid (Client Component for animations) */}
         <div className="relative z-10">

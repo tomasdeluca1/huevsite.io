@@ -2131,7 +2131,7 @@
   "winnerHistory": {
     "title": "Builders de la Semana",
     "subtitle": "El salón de la fama: cada builder que ganó la semana en Builders Hunt.",
-    "backToRanking": "Volver al ranking",
+    "back": "Volver",
     "profile": "Ver perfil",
     "readPost": "Leer la nota",
     "empty": "Todavía no hay ganadores."

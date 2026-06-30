@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
+import { BackButton } from "@/components/BackButton";
 import { getAllWinners } from "@/lib/showcase-service";
 import { getBdlsSlugsByUsername } from "@/lib/blog-data";
 import { weekLabel } from "@/lib/launch-week";
@@ -22,12 +23,11 @@ export default async function BuildersDeLaSemanaPage() {
   return (
     <main className="min-h-screen bg-[#070708] px-4 pb-24 pt-10 md:pt-16">
       <div className="mx-auto max-w-3xl">
-        <Link
-          href="/leaderboard"
+        <BackButton
+          label={t("back")}
+          fallbackHref="/leaderboard"
           className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] text-white/50 transition-colors hover:text-white"
-        >
-          ← {t("backToRanking")}
-        </Link>
+        />
 
         <header className="mb-10 mt-8 text-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}

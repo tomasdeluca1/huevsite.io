@@ -2131,7 +2131,7 @@
   "winnerHistory": {
     "title": "Builders of the Week",
     "subtitle": "The hall of fame: every builder who won the week on Builders Hunt.",
-    "backToRanking": "Back to the ranking",
+    "back": "Back",
     "profile": "View profile",
     "readPost": "Read the story",
     "empty": "No winners yet."

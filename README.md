@@ -6,6 +6,8 @@ metrics, and more — and get discovered in a network of builders.
 
 🔗 Live: [huevsite.io](https://huevsite.io)
 
+<a href="https://huevsite.io/feed?utm_source=launch-badge&utm_medium=badge" target="_blank" rel="noopener"><img src="https://huevsite.io/api/badge/launch/1947b422-e91f-4035-96e9-92edc10696c5" alt="Votá mi proyecto en Builders Hunt — huevsite.io" width="240" /></a>
+
 This is the open-source codebase that powers the live product. Contributions welcome.
 
 ---

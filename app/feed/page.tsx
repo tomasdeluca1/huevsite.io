@@ -315,7 +315,7 @@ function FeedContent() {
       className="min-h-screen font-display"
       style={{ background: "radial-gradient(circle at 50% 0%, rgba(200,255,0,0.06), transparent 720px), var(--bg)" }}
     >
-      <DiscoveryHeader currentUserId={currentUserId} maxWidthClass="max-w-[1440px]" />
+      <DiscoveryHeader currentUserId={currentUserId} />
       <div className="max-w-[1440px] mx-auto w-full px-6 lg:px-10 py-10 flex flex-col lg:flex-row gap-6 items-start">
       <div className="flex-1 min-w-0">
       <header className="mb-8 max-w-2xl">

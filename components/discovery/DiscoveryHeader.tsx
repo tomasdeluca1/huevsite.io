@@ -19,14 +19,16 @@ const TABS = [
  * `maxWidthClass` should match the page's content container so the bar and the
  * content share the same left gutter.
  */
+// Uniform side gutter for ALL product headers — matches the discovery content
+// container so every page's header lines up the same way.
+const SHELL = "max-w-[1440px] mx-auto w-full px-6 md:px-10";
+
 export function DiscoveryHeader({
   currentUserId,
   username,
-  maxWidthClass = "max-w-6xl",
 }: {
   currentUserId?: string | null;
   username?: string | null;
-  maxWidthClass?: string;
 }) {
   const t = useTranslations("discovery");
   const tn = useTranslations("nav");
@@ -66,7 +68,7 @@ export function DiscoveryHeader({
 
   return (
     <header className="border-b border-[var(--border)]">
-      <div className={`${maxWidthClass} mx-auto w-full px-6 flex items-center justify-between gap-4 py-5`}>
+      <div className={`${SHELL} flex items-center justify-between gap-4 py-5`}>
         <Link href="/" className="logo text-xl shrink-0">
           huev<span>site</span>.io
         </Link>
@@ -82,7 +84,7 @@ export function DiscoveryHeader({
         </div>
       </div>
       {/* Mobile: tabs on their own full-width row */}
-      <div className={`md:hidden ${maxWidthClass} mx-auto w-full px-6 pb-3`}>{tabs(true)}</div>
+      <div className={`md:hidden ${SHELL} pb-3`}>{tabs(true)}</div>
     </header>
   );
 }

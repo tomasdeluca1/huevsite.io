@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations, useLocale } from "next-intl";
 import LocaleToggle from "@/components/LocaleToggle";
+import { DiscoveryHeader } from "@/components/discovery/DiscoveryHeader";
 import { WinnerSection } from "@/components/landing/WinnerSection";
 import { BuilderSpotlightCard } from "@/components/landing/BuilderSpotlightCard";
 import { LatamFlags } from "@/components/landing/LatamFlags";
@@ -278,49 +279,8 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
 
   return (
     <div className="landing">
-      {/* NAV */}
-      <nav>
-        <Link href="/" className="logo">huev<span style={{ color: 'var(--accent)' }}>site</span>.io</Link>
-        <div className="nav-right hidden lg:flex">
-          {/* Content links */}
-          <Link href="/feed" className="btn btn-ghost">
-            <span>{tNav("launches")}</span>
-          </Link>
-          <Link href="/explore" className="btn btn-ghost">
-            <span>{tNav("explore")}</span>
-          </Link>
-          <Link href="/blog" className="btn btn-ghost">
-            <span>{tNav("blog")}</span>
-          </Link>
-          <a href="#precios" className="btn btn-ghost">
-            <span>{tNav("pricing")}</span>
-          </a>
-
-          {/* Utility cluster: language + primary CTA, split from content links */}
-          <div className="w-px h-5 bg-white/10 mx-1" aria-hidden />
-          <LocaleToggle />
-          <Link href={user ? "/dashboard" : "/login"} className="btn btn-accent !px-6">
-            {user ? (
-              <>
-                <Layout size={16} className="mr-2" />
-                <span>{tNav("myHuevsite")}</span>
-              </>
-            ) : (
-              <>
-                <span>{tNav("buildCta")}</span>
-              </>
-            )}
-          </Link>
-        </div>
-
-        {/* Mobile / tablet mini nav (just Login/Dashboard for space) */}
-        <div className="lg:hidden flex items-center gap-2">
-          <LocaleToggle />
-          <Link href={user ? "/dashboard" : "/login"} className="btn btn-accent !py-1.5 !px-4 !text-[11px] !font-bold">
-            {user ? tNav("dashboard") : tNav("enter")}
-          </Link>
-        </div>
-      </nav>
+      {/* NAV — unified product header (same component as the rest of the app) */}
+      <DiscoveryHeader currentUserId={user?.id ?? null} />
 
       {/* MOBILE FLOATING NAV */}
       <AnimatePresence>

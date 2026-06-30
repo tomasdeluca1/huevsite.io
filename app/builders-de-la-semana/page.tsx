@@ -36,7 +36,7 @@ export default async function BuildersDeLaSemanaPage() {
 
   return (
     <main className="min-h-screen bg-[#070708]">
-      <DiscoveryHeader currentUserId={user?.id ?? null} username={username} maxWidthClass="max-w-4xl" />
+      <DiscoveryHeader currentUserId={user?.id ?? null} username={username} />
 
       <div className="mx-auto max-w-4xl px-4 pb-24 pt-8">
         <BackButton

@@ -44,7 +44,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
       className="min-h-screen font-display flex flex-col"
       style={{ background: "radial-gradient(circle at 50% 0%, rgba(200,255,0,0.06), transparent 720px), var(--bg)" }}
     >
-      <DiscoveryHeader currentUserId={user?.id ?? null} maxWidthClass="max-w-[1440px]" />
+      <DiscoveryHeader currentUserId={user?.id ?? null} />
       <HallOfFameButton />
 
       {/* HERO (full-width; gradient lives on the page wrapper so it never cuts) */}

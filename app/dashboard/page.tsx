@@ -1401,7 +1401,7 @@ export default function DashboardPage() {
   return (
     <div className="h-screen flex flex-col bg-[var(--bg)] font-display overflow-hidden">
       {/* Unified product top nav (same bar as the discovery pages) */}
-      <DiscoveryHeader currentUserId={profile?.id} username={profile?.username} maxWidthClass="max-w-none" />
+      <DiscoveryHeader currentUserId={profile?.id} username={profile?.username} />
 
       {/* MOBILE: open the editing sidebar */}
       <div className="md:hidden flex items-center justify-end px-4 py-2 bg-[var(--surface)] border-b border-[var(--border)]">

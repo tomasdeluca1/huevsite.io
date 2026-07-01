@@ -2,7 +2,7 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Trash2, Sparkles, EyeOff, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
+import { GripVertical, Trash2, Pencil, EyeOff, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { BlockData } from "@/lib/profile-types";
 import { ReactNode } from "react";
@@ -51,7 +51,7 @@ export function SortableBlock({ id, block, children, onRemove, onEdit, onResize,
           className="p-2 rounded-lg bg-[var(--surface2)] border border-[var(--border-bright)] hover:border-[var(--accent)] transition-all text-[var(--accent)] backdrop-blur-md shadow-lg"
           title={t("sortableBlock.edit")}
         >
-          <Sparkles size={16} />
+          <Pencil size={16} />
         </button>
         {onHide && (
           <button

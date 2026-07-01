@@ -78,6 +78,17 @@ export function DiscoveryHeader({
         {!hideTabs && <div className="hidden md:block">{tabs(false)}</div>}
         <div className="flex items-center gap-2 shrink-0">
           <LocaleToggle />
+          {/* Logged-out: an explicit login affordance next to the build CTA, so
+              returning users can reach /login even before the session hydrates
+              (the CTA alone reads as "build", not "log in"). */}
+          {!currentUserId && (
+            <Link
+              href="/login"
+              className="hidden sm:inline-flex whitespace-nowrap text-[11px] font-black uppercase tracking-widest text-[var(--text-muted)] hover:text-white transition-colors px-1"
+            >
+              {tn("login")}
+            </Link>
+          )}
           <Link
             href={cta.href}
             className="btn btn-accent !text-[10px] !py-2 !px-4 !rounded-xl"

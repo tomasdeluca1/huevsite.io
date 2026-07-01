@@ -40,6 +40,12 @@ export function GitHubBlock({ data, accentColor }: Props) {
   const stats = data.stats || { stars: 0, repos: 0, followers: 0 };
   const username = data.username || "usuario";
 
+  // A 1-row-tall block can't fit the full layout (stats + month navigator + the
+  // 7-row aspect-square heatmap overflow ~2 tracks), so it would balloon past
+  // its declared height. When short, render the compact card instead so the
+  // block actually respects row_span = 1 (e.g. a 2×1 GitHub block).
+  const short = (data.row_span ?? 1) <= 1;
+
   const months = stats.commitsByMonth ?? [];
   const [monthIdx, setMonthIdx] = useState(Math.max(0, months.length - 1));
 
@@ -57,7 +63,7 @@ export function GitHubBlock({ data, accentColor }: Props) {
   const heatmapCells =
     realHeatmap.length > 0 ? realHeatmap.slice(-HEATMAP_VISIBLE) : new Array(HEATMAP_VISIBLE).fill(0);
 
-  if (isPreview) {
+  if (isPreview || short) {
     return (
       <motion.div
         initial={{ opacity: 0 }}

@@ -29,9 +29,19 @@ export function ShareModal({ isOpen, onClose, accentColor, username, onUnlocked 
     window.location.href = buildLemonCheckoutUrl(user?.id, user?.email);
   };
 
-  const tweetText = encodeURIComponent(
-    t("shareModal.tweetText", { username })
+  // 5 rotating share templates so shares feel organic across the network
+  // (each user posts a different message instead of the same canned one).
+  const templates = t.raw("shareModal.tweetTemplates") as string[] | undefined;
+  const [tplIdx] = useState(() =>
+    Array.isArray(templates) && templates.length > 0
+      ? Math.floor(Math.random() * templates.length)
+      : 0
   );
+  const tweetTemplate =
+    Array.isArray(templates) && templates.length > 0
+      ? templates[tplIdx]
+      : "huevsite.io/{username}";
+  const tweetText = encodeURIComponent(tweetTemplate.replaceAll("{username}", username));
   const tweetUrl = `https://twitter.com/intent/tweet?text=${tweetText}`;
 
   const handleTweet = async () => {

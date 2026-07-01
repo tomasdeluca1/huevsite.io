@@ -723,7 +723,7 @@
       "emailHelper": "This is where you'll get the newsletter and huevsite communications.",
       "errorSaveProfile": "Couldn't save the profile. Check your details and try again.",
       "errorNetworkSaveProfile": "Network error saving the profile.",
-      "shareMessage": "I built my huevsite — my builder portfolio 🚀",
+      "shareMessage": "I built my huevsite: my builder portfolio 🚀",
       "countryLabel": "Country",
       "countryPlaceholder": "Select your country"
     },
@@ -1035,7 +1035,13 @@
       "cardEarnDesc": "When 3 go PRO, you unlock your reward."
     },
     "shareModal": {
-      "tweetText": "I built my huevsite at huevsite.io — the portfolio for builders\n\n👉 huevsite.io/{username}",
+      "tweetTemplates": [
+        "Just built my huevsite: my builder portfolio in a single link 🚀\n\n👉 huevsite.io/{username}",
+        "My huevsite is live. Projects, stack and metrics on one page:\n\nhuevsite.io/{username}",
+        "Made myself a huevsite to show what I ship 👇\n\nhuevsite.io/{username}",
+        "Want to see what I'm building? It all lives here:\n\nhuevsite.io/{username}",
+        "New huevsite is up ✨ my builder profile, straight to the point:\n\nhuevsite.io/{username}"
+      ],
       "invalidLinkAlert": "Hmm, that link doesn't look like a Twitter/X one. Make sure you copy the link to your tweet.",
       "verifyErrorAlert": "Error verifying the tweet.",
       "connectionErrorAlert": "Connection error.",
@@ -1045,7 +1051,7 @@
       "promptIntroHighlight": "3 more free blocks",
       "promptIntroSuffix": "?",
       "promptIntroLine2": "Share your huevsite on Twitter and we'll unlock them for you.",
-      "previewQuote": "\"I built my huevsite — the portfolio for builders\"",
+      "previewQuote": "\"My builder portfolio, in a single link\"",
       "preparingTweet": "Preparing tweet...",
       "tweetAndRequest": "Tweet and request +3 blocks →",
       "goToPro": "Go to Pro — $9/month",
@@ -1749,7 +1755,7 @@
     "doneShare": "Share",
     "doneGoToDashboard": "go to my dashboard →",
     "doneFooter": "huevsite.me shut down • we didn't",
-    "doneTweetText": "I built my huevsite — my builder portfolio 🚀",
+    "doneTweetText": "I built my huevsite: my builder portfolio 🚀",
     "usernameReserved": "That username is reserved by the system. Try another one.",
     "countryLabel": "Where are you from? (optional)",
     "countryPlaceholder": "Select your country"

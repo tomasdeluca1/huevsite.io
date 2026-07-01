@@ -12,11 +12,12 @@ import { LatamFlags } from "@/components/landing/LatamFlags";
 import { supabase } from "@/lib/supabase";
 import { PricingTiers } from "@/components/landing/PricingTiers";
 import { User } from "@supabase/supabase-js";
-import { Activity, Compass, Users, PlusCircle, Layout, Check, BookOpen, Globe, BarChart3, Loader2, ArrowRight, Sparkles, Zap, Star, LayoutGrid, Eye, ChevronDown, X, Trophy, TrendingUp, HeartHandshake, Rocket, ArrowBigUp, CalendarDays, ThumbsUp } from "lucide-react";
+import { Activity, Compass, Users, PlusCircle, Layout, Check, BookOpen, Globe, BarChart3, Loader2, ArrowRight, Sparkles, Zap, Star, LayoutGrid, Eye, ChevronDown, ChevronUp, X, Trophy, TrendingUp, HeartHandshake, Rocket, ArrowBigUp, CalendarDays, ThumbsUp } from "lucide-react";
 import type { LandingTestimonial } from "@/lib/testimonial-service";
 import type { Faq } from "@/lib/faq-service";
 import type { NetworkPulse } from "@/lib/showcase-service";
 import { toEmbedUrl } from "@/lib/site-settings-service";
+import { trackEvent, HERO_VARIANT_KEY } from "@/lib/track";
 
 interface LandingPageClientProps {
   showcaseData: any;
@@ -26,19 +27,15 @@ interface LandingPageClientProps {
   founderQuote?: string;
   activeThisWeek?: number;
   networkPulse?: NetworkPulse;
+  /** A/B: sticky hero-headline variant, assigned server-side (app/page.tsx). */
+  heroAbVariant?: HeroAbVariant;
 }
 
 type HeroVariant = "claim" | "social" | "product";
+/** T1 experiment: identity-challenge H1 (control) vs outcome-focused H1. */
+export type HeroAbVariant = "identity" | "outcome";
 
-declare global {
-  interface Window {
-    umami?: {
-      track: (eventName: string, data?: Record<string, any>) => void;
-    };
-  }
-}
-
-export default function LandingPageClient({ showcaseData, testimonials = [], faqs = [], founderVideoUrl = "", founderQuote = "", activeThisWeek = 0, networkPulse }: LandingPageClientProps) {
+export default function LandingPageClient({ showcaseData, testimonials = [], faqs = [], founderVideoUrl = "", founderQuote = "", activeThisWeek = 0, networkPulse, heroAbVariant = "identity" }: LandingPageClientProps) {
   const t = useTranslations("landing");
   const tNav = useTranslations("nav");
   const tFooter = useTranslations("footer");
@@ -49,7 +46,6 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
   const fmtNum = (n: number) => n.toLocaleString(locale === "en" ? "en-US" : "es-AR");
   const founderVideo = founderVideoUrl ? toEmbedUrl(founderVideoUrl) : null;
   const [heatmap, setHeatmap] = useState<string[]>([]);
-  const [selectedRoles, setSelectedRoles] = useState<string[]>(['Developer', 'Founder']);
   const [user, setUser] = useState<User | null>(null);
   const [showMobileNav, setShowMobileNav] = useState(false);
   const [heroVariant] = useState<HeroVariant>("social");
@@ -99,7 +95,8 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
     },
     social: {
       eyebrow: t("heroSocialEyebrow"),
-      title: t.rich("heroSocialTitle", heroRich),
+      // T1: only the H1 changes between variants (isolate the variable).
+      title: t.rich(heroAbVariant === "outcome" ? "heroSocialTitleOutcome" : "heroSocialTitle", heroRich),
       description: t("heroSocialDescription"),
       primaryHref: user ? "/dashboard" : "/login",
       primaryLabel: user ? t("heroDashboardCta") : t("heroBuildCta"),
@@ -150,9 +147,10 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
   const normalizedClaim = claimInput.trim().toLowerCase();
   const claimPath = normalizedClaim ? `/onboarding?claim=${encodeURIComponent(normalizedClaim)}` : "/onboarding";
   const claimHref = user ? claimPath : `/login?next=${encodeURIComponent(claimPath)}`;
+  // Every landing event carries the A/B dimension so any funnel metric can be
+  // split by variant in umami without per-callsite plumbing.
   const trackLandingEvent = (eventName: string, payload: Record<string, any>) => {
-    if (typeof window === "undefined") return;
-    window.umami?.track(eventName, payload);
+    trackEvent(eventName, { ab: heroAbVariant, ...payload });
   };
 
   const submitClaim = () => {
@@ -160,14 +158,6 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
     window.localStorage.setItem("huevsite_pending_claim", normalizedClaim);
     trackLandingEvent("landing_claim_submit", { variant: heroVariant, username: normalizedClaim });
     window.location.href = claimHref;
-  };
-
-  const toggleRole = (role: string) => {
-    if (selectedRoles.includes(role)) {
-      setSelectedRoles(selectedRoles.filter(r => r !== role));
-    } else {
-      setSelectedRoles([...selectedRoles, role]);
-    }
   };
 
   useEffect(() => {
@@ -190,9 +180,13 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
         window.location.href = `/auth/callback?code=${code}`;
       }
 
-      // Single consolidated hero ("show, don't tell"). The previous 3-way split
-      // was dropped — at this traffic it couldn't reach significance. We ship the
-      // strongest variant and track conversion to inform a future test at scale.
+      // Persist the server-assigned A/B variant so every future visit (SSR reads
+      // the cookie) and downstream funnel event (localStorage) sees the same one.
+      document.cookie = `${HERO_VARIANT_KEY}=${heroAbVariant}; path=/; max-age=${60 * 60 * 24 * 180}; SameSite=Lax`;
+      try {
+        window.localStorage.setItem(HERO_VARIANT_KEY, heroAbVariant);
+      } catch { /* storage unavailable */ }
+
       trackLandingEvent("landing_hero_seen", { variant: "social" });
     }
 
@@ -261,6 +255,9 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
           setClaimStatus("taken");
           setClaimSuggestions(data.suggestions || []);
         }
+        // Availability rate of what visitors actually type — if "taken"
+        // dominates, the suggestion chips become the conversion-critical path.
+        trackLandingEvent("landing_claim_check", { result: data.available ? "available" : "taken" });
       } catch (error: any) {
         if (error?.name === "AbortError") return;
         setClaimStatus("error");
@@ -403,6 +400,10 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                     {t("claimButton")}
                   </button>
                 </div>
+                {/* Trust microcopy at the point of max intent (the claim bar IS the
+                    primary CTA) — the same reassurance was previously only visible
+                    on the preview card and the final CTA. */}
+                <div className="text-[11px] font-mono text-white/35">{t("claimTrustLine")}</div>
                 {claimStatus === "invalid" && (
                   <div className="text-[11px] font-mono text-red-300/80">{t("claimInvalid")}</div>
                 )}
@@ -578,17 +579,19 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                 })}
               </div>
 
+              {/* CTA hierarchy: the converting action (launch → signup) gets the
+                  accent button; browsing the feed is the ghost secondary. */}
               <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3">
                 <Link
-                  href="/feed"
-                  onClick={() => trackLandingEvent("landing_builders_hunt_primary_click", {})}
+                  href={user ? "/dashboard" : "/login"}
+                  onClick={() => trackLandingEvent("landing_builders_hunt_primary_click", { href: user ? "/dashboard" : "/login" })}
                   className="btn btn-accent !px-7 !py-3.5 text-base w-full sm:w-auto"
                 >
                   {t("bhPrimaryCta")}
                 </Link>
                 <Link
-                  href={user ? "/dashboard" : "/login"}
-                  onClick={() => trackLandingEvent("landing_builders_hunt_secondary_click", {})}
+                  href="/feed"
+                  onClick={() => trackLandingEvent("landing_builders_hunt_secondary_click", { href: "/feed" })}
                   className="btn btn-ghost !px-6 !py-3.5 text-sm w-full sm:w-auto"
                 >
                   {t("bhSecondaryCta")}
@@ -730,81 +733,10 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
 
       <WinnerSection initialData={showcaseData} user={user} />
 
-      {/* ONBOARDING SECTION */}
-      <section className="onboarding-section">
-        <div className="onboarding-inner">
-          <div>
-            <div className="section-label">{t("onboardingSectionLabel")}</div>
-            <h2 className="section-title">{t("onboardingTitleLine1")}<br /><span style={{ color: 'var(--accent)' }}>{t("onboardingTitleLine2")}</span></h2>
-            <p className="section-sub" style={{ marginBottom: '36px' }}>{t("onboardingSub")}</p>
-
-            <div className="steps">
-              <div className="step active">
-                <div className="step-num">1</div>
-                <div className="step-content">
-                  <div className="step-title">{t("onboardingStep1Title")}</div>
-                  <div className="step-desc">{t("onboardingStep1Desc")}</div>
-                </div>
-              </div>
-              <div className="step">
-                <div className="step-num">2</div>
-                <div className="step-content">
-                  <div className="step-title">{t("onboardingStep2Title")}</div>
-                  <div className="step-desc">{t("onboardingStep2Desc")}</div>
-                </div>
-              </div>
-              <div className="step">
-                <div className="step-num">3</div>
-                <div className="step-content">
-                  <div className="step-title">{t("onboardingStep3Title")}</div>
-                  <div className="step-desc">{t("onboardingStep3Desc")}</div>
-                </div>
-              </div>
-              <div className="step">
-                <div className="step-num">4</div>
-                <div className="step-content">
-                  <div className="step-title">{t("onboardingStep4Title")}</div>
-                  <div className="step-desc">{t("onboardingStep4Desc")}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="onboard-ui">
-            <div className="ou-q">{t("onboardingUiQuestion")}</div>
-            <div className="ou-sub">{t("onboardingUiSub")}</div>
-            <div className="ou-options">
-              <div className={`ou-option ${selectedRoles.includes('Developer') ? 'selected' : ''}`} onClick={() => toggleRole('Developer')}>
-                <div className="em" style={{ fontSize: '28px', marginBottom: '6px' }}>⌨️</div>
-                <div className="nm">Developer</div>
-                <div className="dc">{t("onboardingRoleDeveloperDesc")}</div>
-              </div>
-              <div className={`ou-option ${selectedRoles.includes('Designer') ? 'selected' : ''}`} onClick={() => toggleRole('Designer')}>
-                <div className="em" style={{ fontSize: '28px', marginBottom: '6px' }}>🎨</div>
-                <div className="nm">Designer</div>
-                <div className="dc">{t("onboardingRoleDesignerDesc")}</div>
-              </div>
-              <div className={`ou-option ${selectedRoles.includes('Founder') ? 'selected' : ''}`} onClick={() => toggleRole('Founder')}>
-                <div className="em" style={{ fontSize: '28px', marginBottom: '6px' }}>🚀</div>
-                <div className="nm">Founder</div>
-                <div className="dc">{t("onboardingRoleFounderDesc")}</div>
-              </div>
-              <div className={`ou-option ${selectedRoles.includes('Indie Hacker') ? 'selected' : ''}`} onClick={() => toggleRole('Indie Hacker')}>
-                <div className="em" style={{ fontSize: '28px', marginBottom: '6px' }}>🛠</div>
-                <div className="nm">Indie Hacker</div>
-                <div className="dc">{t("onboardingRoleIndieDesc")}</div>
-              </div>
-            </div>
-            <button className="ou-next">{t("onboardingUiNext")}</button>
-            <div className="ou-skip">{t("onboardingUiSkip")}</div>
-          </div>
-        </div>
-      </section>
-
       {/* COMMUNITIES — real communities that run on huevsite via the public API +
           embed mode (?embed=1). Live: nordelta.tech. Coming soon: mardeldev, nexa.
           The CTA points to the integration tutorial (/blog/api-publica-de-perfiles). */}
-      <section style={{ padding: 'var(--section-y) var(--section-x) 0' }}>
+      <section style={{ padding: 'var(--section-y) var(--section-x)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div className="section-label" style={{ justifyContent: 'center' }}>{t("communitiesSectionLabel")}</div>
           <h2 className="section-title text-center">{t("communitiesTitle")}</h2>
@@ -877,7 +809,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
 
       {/* TESTIMONIALS — social proof before the ask (Marc Lou #29). Hidden when empty. */}
       {testimonials.length > 0 && (
-        <section style={{ padding: 'var(--section-y) var(--section-x) 0' }}>
+        <section style={{ padding: 'var(--section-y) var(--section-x)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
           <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
             <div className="section-label" style={{ justifyContent: 'center' }}>{t("testimonialsSectionLabel")}</div>
             <h2 className="section-title text-center">{t("testimonialsTitle")}</h2>
@@ -923,38 +855,59 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
           <h2 className="section-title">{t("proTitlePrefix")} <span style={{ color: 'var(--accent)' }}>{t("proTitleAccent")}</span></h2>
           <p className="section-sub" style={{ marginBottom: '60px' }}>{t("proSub")}</p>
 
-          <div style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', display: 'grid', gap: '20px' }}>
+          <div className="pro-bento">
+            {/* HERO tile — the reach flagship: you get surfaced first */}
+            <div className="pro-bento-hero">
+              <div>
+                <div className="pro-bento-icon"><Zap size={20} /></div>
+                <h3 className="pro-bento-hero-title">{t("proFeatureVisibilityTitle")}</h3>
+                <p className="pro-bento-hero-desc">{t("proFeatureVisibilityDesc")}</p>
+                <div className="pro-bento-surfaces">{t("proBentoHeroSurfaces")}</div>
+              </div>
+              {/* Ranking motif: your card rising to #1 */}
+              <div className="pro-rank" aria-hidden="true">
+                <div className="pro-rank-row"><span className="pro-rank-n">03</span><span className="pro-rank-bar" /></div>
+                <div className="pro-rank-row"><span className="pro-rank-n">02</span><span className="pro-rank-bar" /></div>
+                <div className="pro-rank-row is-you">
+                  <span className="pro-rank-n">01</span>
+                  <span className="pro-rank-you">@{t("proBentoYou")}</span>
+                  <ChevronUp size={16} />
+                </div>
+              </div>
+            </div>
+
             {[
               { icon: Globe, title: t("proFeatureDomainTitle"), desc: t("proFeatureDomainDesc") },
               { icon: BarChart3, title: t("proFeatureInsightsTitle"), desc: t("proFeatureInsightsDesc") },
-              { icon: Zap, title: t("proFeatureVisibilityTitle"), desc: t("proFeatureVisibilityDesc") },
               { icon: LayoutGrid, title: t("proFeatureSubsitesTitle"), desc: t("proFeatureSubsitesDesc") },
               { icon: Layout, title: t("proFeatureGridTitle"), desc: t("proFeatureGridDesc") },
               { icon: Star, title: t("proFeatureEliteTitle"), desc: t("proFeatureEliteDesc") }
             ].map((f, i) => {
               const Icon = f.icon;
               return (
-                <div key={i} className="pro-feature-card group">
-                  <div className="pro-feature-icon">
-                    <Icon size={20} />
-                  </div>
-                  <h3 className="pro-feature-title">{f.title}</h3>
-                  <p className="pro-feature-desc">{f.desc}</p>
+                <div key={i} className="pro-bento-tile">
+                  <div className="pro-bento-icon"><Icon size={18} /></div>
+                  <h3 className="pro-bento-title">{f.title}</h3>
+                  <p className="pro-bento-desc">{f.desc}</p>
                 </div>
               );
             })}
           </div>
 
-          {/* Pricing — three choices: Free / Pro / Founder (popcorn pricing). */}
+          {/* Pricing — bridges from the value above into the ask, same section. */}
           {showPricing && (
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="mt-28 grid md:grid-cols-3 gap-5 max-w-5xl mx-auto items-stretch"
-            >
-              <PricingTiers user={user ? { id: user.id, email: user.email } : null} />
-            </motion.div>
+            <div className="mt-20">
+              <div className="section-label" style={{ color: 'var(--accent)' }}>{t("proPricingLabel")}</div>
+              <p className="section-sub" style={{ marginBottom: '40px' }}>{t("proPricingLead")}</p>
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto items-stretch"
+              >
+                <PricingTiers user={user ? { id: user.id, email: user.email } : null} />
+              </motion.div>
+            </div>
           )}
         </div>
       </section>
@@ -971,7 +924,10 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                 return (
                   <div key={f.id} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden transition-colors hover:border-white/10">
                     <button
-                      onClick={() => setOpenFaq(open ? null : f.id)}
+                      onClick={() => {
+                        if (!open) trackLandingEvent("landing_faq_open", { question: f.question });
+                        setOpenFaq(open ? null : f.id);
+                      }}
                       className="w-full flex items-center justify-between gap-4 p-5 text-left"
                     >
                       <span className="text-[15px] font-bold text-white">{f.question}</span>
@@ -1075,7 +1031,12 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
             {t("finalCtaSubLine1")}<br />{t("finalCtaSubLine2")}
           </p>
           <div className="final-cta-actions">
-            <Link href={user ? "/dashboard" : "/login"} className="btn btn-accent" style={{ fontSize: '17px', padding: '16px 40px' }}>
+            <Link
+              href={user ? "/dashboard" : "/login"}
+              onClick={() => trackLandingEvent("landing_final_cta_click", { href: user ? "/dashboard" : "/login" })}
+              className="btn btn-accent"
+              style={{ fontSize: '17px', padding: '16px 40px' }}
+            >
               {user ? (
                 <>
                   <Layout size={18} className="mr-2 inline" />

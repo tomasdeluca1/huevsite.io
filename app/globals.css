@@ -1696,95 +1696,9 @@ nav {
   line-height: 1.7;
 }
 
-/* Onboarding Flow */
-.onboarding-section {
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-}
-
-.onboarding-inner {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: var(--section-y) var(--section-x);
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(40px, 6vw, 72px);
-  align-items: center;
-}
-
-.steps {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.step {
-  display: flex;
-  gap: 20px;
-  position: relative;
-  padding-bottom: 32px;
-}
-
-.step::before {
-  content: '';
-  position: absolute;
-  left: 20px;
-  top: 44px;
-  bottom: 0;
-  width: 1px;
-  background: var(--border-bright);
-}
-
-.step:last-child {
-  padding-bottom: 0;
-}
-
-.step:last-child::before {
-  display: none;
-}
-
-.step-num {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--surface2);
-  border: 1px solid var(--border-bright) !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-mono);
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-muted);
-  flex-shrink: 0;
-  position: relative;
-  z-index: 1;
-  transition: all 0.3s;
-}
-
-.step.active .step-num {
-  background: var(--accent);
-  border-color: var(--accent) !important;
-  color: #000;
-  box-shadow: var(--glow);
-}
-
-.step-title {
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: -0.2px;
-  margin-bottom: 6px;
-  padding-top: 8px;
-}
-
-.step-desc {
-  font-size: 13px;
-  color: var(--text-muted);
-  line-height: 1.6;
-}
-
-/* Onboarding mock UI */
+/* Auth / onboarding card UI — shared by /login and the onboarding steps
+   (StepUsername, StepAccent, StepRole, StepLinktree, OnboardingDone).
+   NOT landing-only: do not remove with landing refactors. */
 .onboard-ui {
   background: var(--bg);
   border: 1px solid var(--border-bright) !important;
@@ -1813,13 +1727,6 @@ nav {
   font-size: 13px;
   color: var(--text-muted);
   margin-bottom: 24px;
-}
-
-.ou-options {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 20px;
 }
 
 .ou-option {
@@ -2325,7 +2232,6 @@ footer {
 
   .tokens-grid,
   .microcopy-grid,
-  .onboarding-inner,
   .linktree-cta-shell,
   .linktree-cta-compare {
     grid-template-columns: 1fr;
@@ -2333,8 +2239,7 @@ footer {
 
   .microcopy-inner,
   .linktree-cta-section,
-  .tokens-section,
-  .onboarding-section {
+  .tokens-section {
     padding: 60px 20px;
   }
 
@@ -2390,10 +2295,6 @@ footer {
 }
 
 @media (max-width: 480px) {
-  .ou-options {
-    grid-template-columns: 1fr;
-  }
-
   .hero h1 {
     font-size: 32px;
   }
@@ -2868,24 +2769,16 @@ footer {
 
 /* ─── Pro Feature Cards ──────────────────────────────────────────────── */
 
-.pro-feature-card {
-  padding: 28px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 24px;
-  transition: border-color 0.2s, background 0.2s, transform 0.2s;
-  cursor: default;
+/* ─── Pro bento (outcome-led) ────────────────────────────────────────── */
+.pro-bento {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
 }
 
-.pro-feature-card:hover {
-  border-color: rgba(200, 255, 0, 0.2);
-  background: rgba(200, 255, 0, 0.02);
-  transform: translateY(-2px);
-}
-
-.pro-feature-icon {
-  width: 44px;
-  height: 44px;
+.pro-bento-icon {
+  width: 42px;
+  height: 42px;
   border-radius: 12px;
   background: var(--accent-dim);
   border: 1px solid var(--accent-mid);
@@ -2893,20 +2786,139 @@ footer {
   align-items: center;
   justify-content: center;
   color: var(--accent);
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 
-.pro-feature-title {
-  font-size: 18px;
+/* Hero tile — reach flagship, spans 2×2 */
+.pro-bento-hero {
+  grid-column: span 2;
+  grid-row: span 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 32px;
+  border-radius: 24px;
+  border: 1px solid var(--accent-mid);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(200, 255, 0, 0.09), transparent 55%),
+    rgba(200, 255, 0, 0.03);
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.pro-bento-hero:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+
+.pro-bento-hero-title {
+  font-size: 26px;
   font-weight: 800;
-  letter-spacing: -0.4px;
+  letter-spacing: -0.6px;
   margin-bottom: 10px;
 }
 
-.pro-feature-desc {
-  font-size: 14px;
+.pro-bento-hero-desc {
+  font-size: 15px;
   color: var(--text-dim);
-  line-height: 1.65;
+  line-height: 1.6;
+  max-width: 44ch;
+}
+
+.pro-bento-surfaces {
+  margin-top: 14px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+
+/* Ranking motif: your card rising to #1 */
+.pro-rank {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.pro-rank-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pro-rank-n {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  width: 20px;
+  flex-shrink: 0;
+}
+
+.pro-rank-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.pro-rank-row:nth-child(1) .pro-rank-bar { width: 58%; }
+.pro-rank-row:nth-child(2) .pro-rank-bar { width: 76%; }
+
+.pro-rank-row.is-you {
+  color: var(--accent);
+}
+
+.pro-rank-row.is-you .pro-rank-n {
+  color: var(--accent);
+}
+
+.pro-rank-you {
+  flex: 1;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: -0.2px;
+}
+
+/* Small tiles */
+.pro-bento-tile {
+  padding: 24px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+
+.pro-bento-tile:hover {
+  transform: translateY(-2px);
+  border-color: rgba(200, 255, 0, 0.22);
+  background: rgba(200, 255, 0, 0.02);
+}
+
+.pro-bento-title {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  margin-bottom: 8px;
+}
+
+.pro-bento-desc {
+  font-size: 13.5px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+@media (max-width: 900px) {
+  .pro-bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pro-bento-hero { grid-column: span 2; grid-row: auto; }
+}
+
+@media (max-width: 560px) {
+  .pro-bento { grid-template-columns: 1fr; }
+  .pro-bento-hero { grid-column: span 1; padding: 26px; }
+  .pro-bento-hero-title { font-size: 23px; }
 }
 
 /* ─── Final CTA Section ──────────────────────────────────────────────── */

@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import Script from "next/script";
+import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import { getShowcaseData, getActiveBuildersThisWeek, getNetworkPulse } from "@/lib/showcase-service";
 import LandingPageClient from "@/components/landing/LandingPageClient";
@@ -147,6 +148,18 @@ const speakableSchema = {
 };
 
 export default async function LandingPage() {
+  // A/B T1 (hero H1): sticky 50/50 assignment. Returning visitors keep their
+  // cookie'd variant (no flash — the H1 is decided server-side); first visits
+  // get a random one that the client then persists (cookie + localStorage).
+  // The page is already force-dynamic, so reading cookies() costs nothing new.
+  const abCookie = cookies().get("hv_hero_variant")?.value;
+  const heroAbVariant: "identity" | "outcome" =
+    abCookie === "identity" || abCookie === "outcome"
+      ? abCookie
+      : Math.random() < 0.5
+      ? "identity"
+      : "outcome";
+
   const [data, testimonials, faqs, settings, activeThisWeek, networkPulse] = await Promise.all([
     getShowcaseData(),
     getFeaturedTestimonials(),
@@ -194,6 +207,7 @@ export default async function LandingPage() {
         founderQuote={settings.founder_quote || ""}
         activeThisWeek={activeThisWeek}
         networkPulse={networkPulse}
+        heroAbVariant={heroAbVariant}
       />
     </>
   );

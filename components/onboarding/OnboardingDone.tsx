@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { type OnboardingState } from "@/lib/onboarding-types";
 import Link from "next/link";
 import { Share2, Twitter, LineChart } from "lucide-react";
+import { trackEvent, getStoredHeroVariant } from "@/lib/track";
 
 interface OnboardingDoneProps {
   state: OnboardingState;
@@ -16,6 +17,12 @@ export function OnboardingDone({ state, onContinue }: OnboardingDoneProps) {
   const t = useTranslations("onboarding");
   const [copied, setCopied] = useState(false);
   const accent = state.accentColor;
+
+  // Funnel end-point: reaching this screen = huevsite published. The stored
+  // hero variant joins the whole funnel per A/B arm in umami.
+  useEffect(() => {
+    trackEvent("onboarding_published", { ab: getStoredHeroVariant() ?? "none" });
+  }, []);
   const displayName = state.linktreeData?.displayName || state.githubData?.name || state.username || "builder";
   const firstName = displayName.split(" ")[0] || "builder";
 

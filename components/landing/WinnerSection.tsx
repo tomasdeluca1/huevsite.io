@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, Trophy, Globe } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { ProfileGrid } from "@/components/profile/ProfileGrid";
+import { trackEvent } from "@/lib/track";
 
 interface ShowcaseData {
   week: string;
@@ -435,6 +436,7 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
 
             <Link
               href={user ? "/dashboard" : "/login"}
+              onClick={() => trackEvent("landing_winner_cta_click", { loggedIn: !!user })}
               className="w-full px-6 py-3 bg-[var(--surface2)] hover:bg-[var(--border-bright)] border border-[var(--border-bright)] rounded-lg text-[14px] font-bold transition-all text-white text-center whitespace-nowrap hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(200,255,0,0.1)]"
             >
               {user ? t("winnerCtaButtonUser") : t("winnerCtaButtonGuest")}

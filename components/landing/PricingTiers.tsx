@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { lemonLifetimeCheckoutUrl, buildLemonCheckoutUrl } from "@/lib/lemon-checkout-url";
+import { trackEvent } from "@/lib/track";
 
 interface PricingUser {
   id?: string | null;
@@ -44,6 +47,8 @@ export function PricingTiers({
   const founderHref = user
     ? appendQuery(buildLemonCheckoutUrl(user.id, user.email, lemonLifetimeCheckoutUrl), utm)
     : loginHref;
+  const trackTier = (tier: "free" | "pro" | "founder") =>
+    trackEvent("landing_pricing_click", { tier, loggedIn: !!user?.id });
 
   return (
     <>
@@ -64,6 +69,7 @@ export function PricingTiers({
         </ul>
         <Link
           href={user ? "/dashboard" : "/login"}
+          onClick={() => trackTier("free")}
           className="btn btn-ghost w-full !py-4 !rounded-2xl text-center justify-center"
         >
           {user ? t("freeCtaUser") : t("freeCtaGuest")}
@@ -93,6 +99,7 @@ export function PricingTiers({
           </ul>
           <Link
             href={proHref}
+            onClick={() => trackTier("pro")}
             className="btn btn-accent w-full !py-4 !text-base !font-bold !rounded-2xl text-center justify-center"
           >
             {user ? t("proCtaUser") : t("proCtaGuest")}
@@ -123,6 +130,7 @@ export function PricingTiers({
         {lemonLifetimeCheckoutUrl ? (
           <Link
             href={founderHref}
+            onClick={() => trackTier("founder")}
             className="btn btn-ghost w-full !py-4 !rounded-2xl text-center justify-center"
           >
             {t("founderCta")}

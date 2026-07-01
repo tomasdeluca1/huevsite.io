@@ -16,9 +16,21 @@ function LoginContent() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [pendingClaim, setPendingClaim] = useState<string | null>(null);
 
   const refParam = searchParams.get("ref");
   const nextParam = searchParams.get("next") ?? (refParam ? `/onboarding?ref=${refParam}` : null);
+
+  // Landing claim-bar handoff: the visitor already typed an available username
+  // (next=/onboarding?claim=X + localStorage). Showing it here keeps the thread
+  // alive through the auth step instead of dropping them on a generic login.
+  useEffect(() => {
+    let claim: string | null = null;
+    const match = nextParam?.match(/[?&]claim=([a-zA-Z0-9_]{3,20})/);
+    if (match) claim = match[1].toLowerCase();
+    if (!claim) claim = window.localStorage.getItem("huevsite_pending_claim");
+    if (claim && /^[a-z0-9_]{3,20}$/.test(claim)) setPendingClaim(claim);
+  }, [nextParam]);
 
   useEffect(() => {
     const error = searchParams.get("error");
@@ -94,6 +106,13 @@ function LoginContent() {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           className="onboard-ui w-full max-w-md relative z-10 !p-10 shadow-2xl"
         >
+          {pendingClaim && (
+            <div className="mb-6 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-2xl border border-[var(--accent)]/30 bg-[var(--accent)]/5 px-4 py-3 text-[13px] font-mono text-center">
+              <span className="text-[var(--text-dim)]">{t("claimBanner")}</span>
+              <span className="font-bold text-[var(--accent)]">huevsite.io/{pendingClaim}</span>
+            </div>
+          )}
+
           <div className="mb-10 text-center">
             <div className="section-label mb-2 mx-auto w-fit">{t("authGatewayLabel")}</div>
             <h1 className="ou-q !text-3xl tracking-tight">{t("title")}</h1>

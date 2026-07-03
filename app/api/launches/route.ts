@@ -62,7 +62,11 @@ export async function POST(req: NextRequest) {
     const result = await createLaunch(body.blockId, user.id, week, isPro);
     if (!result.ok) {
       const status =
-        result.error === "already_launched" ? 409 : result.error === "not_owner" ? 403 : 400;
+        result.error === "already_launched"
+          ? 409
+          : result.error === "not_owner" || result.error === "monthly_limit"
+            ? 403
+            : 400;
       return NextResponse.json({ error: result.error }, { status });
     }
     return NextResponse.json({ ok: true, launchId: result.launchId, week });

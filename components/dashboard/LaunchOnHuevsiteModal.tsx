@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { X, Rocket, Loader2 } from "lucide-react";
 import { currentLaunchWeek, addWeeks, weekLabel } from "@/lib/launch-week";
 
@@ -26,7 +27,7 @@ export function LaunchOnHuevsiteModal({
   const cur = currentLaunchWeek();
   const [week, setWeek] = useState(cur);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<"already" | "monthly" | "generic" | null>(null);
 
   if (!open || !blockId) return null;
 
@@ -52,26 +53,26 @@ export function LaunchOnHuevsiteModal({
       });
       const data = await res.json().catch(() => ({}));
       if (res.status === 409) {
-        setError(t("launchAlready"));
+        setError("already");
         setLoading(false);
         return;
       }
       if (!res.ok) {
-        setError(t("launchError"));
+        setError(data.error === "monthly_limit" ? "monthly" : "generic");
         setLoading(false);
         return;
       }
       onLaunched?.(data.week || week);
       reset();
     } catch {
-      setError(t("launchError"));
+      setError("generic");
       setLoading(false);
     }
   };
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
       onClick={() => !loading && reset()}
     >
       <div
@@ -108,7 +109,8 @@ export function LaunchOnHuevsiteModal({
           ) : (
             <div className="rounded-xl bg-white/5 border border-white/10 px-3 py-2.5 text-sm text-white/70">
               {t("launchThisWeek")}: <span className="text-white font-semibold">{weekLabel(cur)}</span>
-              <div className="text-[10px] text-white/30 mt-1">{t("launchProSchedule")}</div>
+              <div className="text-[10px] text-white/30 mt-1">{t("launchFreeMonthlyNote")}</div>
+              <div className="text-[10px] text-white/30 mt-0.5">{t("launchProSchedule")}</div>
             </div>
           )}
 
@@ -128,7 +130,22 @@ export function LaunchOnHuevsiteModal({
               </>
             )}
           </button>
-          {error && <p className="text-xs text-red-400">{error}</p>}
+          {error === "monthly" ? (
+            <div className="rounded-xl border border-[var(--accent)]/25 bg-[var(--accent)]/[0.06] px-3 py-2.5">
+              <p className="text-xs text-white/80">{t("launchMonthlyLimit")}</p>
+              <Link
+                href="/precios"
+                className="mt-2 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[10px] font-black uppercase tracking-wide text-black"
+                style={{ backgroundColor: accentColor }}
+              >
+                {t("launchMonthlyLimitCta")}
+              </Link>
+            </div>
+          ) : error ? (
+            <p className="text-xs text-red-400">
+              {t(error === "already" ? "launchAlready" : "launchError")}
+            </p>
+          ) : null}
         </div>
       </div>
     </div>

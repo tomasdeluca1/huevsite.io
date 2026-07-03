@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useState, Suspense, useMemo } from "react";
+import { useEffect, useState, useRef, Suspense, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import LocaleToggle from "@/components/LocaleToggle";
-import { BadgeCheck, Loader2, Activity as ActivityIcon, ArrowUpRight, Users, UserPlus, ChevronUp, ChevronLeft, ChevronRight, Rocket } from "lucide-react";
+import { BadgeCheck, Loader2, Activity as ActivityIcon, ArrowUpRight, Users, UserPlus, ChevronUp, ChevronLeft, ChevronRight, Rocket, Share2 } from "lucide-react";
 import { currentLaunchWeek, addWeeks, weekLabel, compareWeeks, daysUntilWeekClose } from "@/lib/launch-week";
+import { trackEvent } from "@/lib/track";
 import { withHuevsiteUtm } from "@/lib/utm";
 import { trackClick } from "@/components/analytics/AnalyticsTracker";
 import { DiscoveryRail } from "@/components/discovery/DiscoveryRail";
@@ -180,13 +181,19 @@ function FeedContent() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [launches, setLaunches] = useState<any[]>([]);
-  const [launchWeek, setLaunchWeek] = useState<string>("");
+  const searchParams = useSearchParams();
+  const fromDashboard = searchParams.get("from") === "dashboard";
+  // Shared launch deep-link: /feed?launch=<id>&week=<YYYY-Wxx> scrolls to the
+  // card and lights it up so shared links land on the product itself.
+  const sharedLaunchId = searchParams.get("launch");
+  const [launchWeek, setLaunchWeek] = useState<string>(searchParams.get("week") || "");
   const [votedIds, setVotedIds] = useState<string[]>([]);
   const [stackFilter, setStackFilter] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const searchParams = useSearchParams();
-  const fromDashboard = searchParams.get("from") === "dashboard";
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const [shareToast, setShareToast] = useState(false);
+  const highlightDone = useRef(false);
   const supabase = createClient();
 
   useEffect(() => {
@@ -295,6 +302,54 @@ function FeedContent() {
       }
     } catch {
       /* keep optimistic state */
+    }
+  };
+
+  // Scroll to + highlight the shared launch once its card is in the DOM.
+  useEffect(() => {
+    if (!sharedLaunchId || highlightDone.current || loading || tab !== "launches") return;
+    if (!launches.some((l: any) => l.id === sharedLaunchId)) return;
+    highlightDone.current = true;
+    const target = () => document.getElementById(`launch-${sharedLaunchId}`);
+    const isCentered = () => {
+      const el = target();
+      if (!el) return true;
+      const r = el.getBoundingClientRect();
+      return Math.abs(r.top + r.height / 2 - window.innerHeight / 2) < window.innerHeight * 0.25;
+    };
+    requestAnimationFrame(() => {
+      target()?.scrollIntoView({ behavior: "smooth", block: "center" });
+      setHighlightId(sharedLaunchId);
+      setTimeout(() => setHighlightId(null), 6000);
+    });
+    // The global `html { scroll-behavior: smooth }` turns every programmatic
+    // scroll into an animation, and late re-renders can cancel it mid-flight —
+    // re-assert with instant (uncancellable) jumps until the card is centered.
+    [900, 2000].forEach((ms) =>
+      setTimeout(() => {
+        if (!isCentered())
+          target()?.scrollIntoView({ behavior: "instant" as ScrollBehavior, block: "center" });
+      }, ms)
+    );
+  }, [sharedLaunchId, loading, tab, launches]);
+
+  const shareLaunch = async (launch: any) => {
+    const url = `${window.location.origin}/feed?launch=${launch.id}&week=${launchWeek || currentLaunchWeek()}`;
+    trackEvent("launch_share_click", { launchId: launch.id });
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({ title: launch.title, url });
+        return;
+      } catch {
+        /* user cancelled — fall through to copy */
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareToast(true);
+      setTimeout(() => setShareToast(false), 2500);
+    } catch {
+      /* clipboard unavailable */
     }
   };
 
@@ -486,11 +541,12 @@ function FeedContent() {
                 return (
                   <div
                     key={launch.id}
+                    id={`launch-${launch.id}`}
                     className={`flex gap-2.5 sm:gap-4 p-3 sm:p-4 rounded-3xl border transition-all ${
                       launch.featured
                         ? "border-[var(--accent)]/40 bg-[var(--accent)]/[0.04]"
                         : "border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border-bright)]"
-                    }`}
+                    }${highlightId === launch.id ? " launch-highlight" : ""}`}
                   >
                     <div className="flex flex-col items-center justify-center w-6 sm:w-7 shrink-0">
                       <span className="text-sm font-black text-[var(--text-muted)]">
@@ -557,18 +613,28 @@ function FeedContent() {
                       )}
                     </div>
 
-                    <button
-                      onClick={() => toggleUpvote(launch.id, voted)}
-                      className={`flex flex-col items-center justify-center w-11 sm:w-12 shrink-0 rounded-xl border transition-all ${
-                        voted
-                          ? "border-[var(--accent)] text-[var(--accent)] bg-[var(--accent)]/10"
-                          : "border-white/10 text-white/60 hover:text-white hover:border-white/30"
-                      }`}
-                      title={t("upvote")}
-                    >
-                      <ChevronUp size={16} />
-                      <span className="text-xs font-black">{launch.upvoteCount || 0}</span>
-                    </button>
+                    <div className="flex flex-col items-stretch gap-1.5 w-11 sm:w-12 shrink-0">
+                      <button
+                        onClick={() => toggleUpvote(launch.id, voted)}
+                        className={`flex flex-col items-center justify-center flex-1 min-h-[3rem] rounded-xl border transition-all ${
+                          voted
+                            ? "border-[var(--accent)] text-[var(--accent)] bg-[var(--accent)]/10"
+                            : "border-white/10 text-white/60 hover:text-white hover:border-white/30"
+                        }`}
+                        title={t("upvote")}
+                      >
+                        <ChevronUp size={16} />
+                        <span className="text-xs font-black">{launch.upvoteCount || 0}</span>
+                      </button>
+                      <button
+                        onClick={() => shareLaunch(launch)}
+                        className="flex items-center justify-center rounded-xl border border-white/10 py-1.5 text-white/40 transition-all hover:text-white hover:border-white/30"
+                        title={t("shareLaunch")}
+                        aria-label={t("shareLaunch")}
+                      >
+                        <Share2 size={13} />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -627,9 +693,15 @@ function FeedContent() {
       </div>
       <DiscoveryRail
         currentUserId={currentUserId}
-        weekLaunches={launches.map((l: any) => ({ id: l.id, userId: l.userId, upvoteCount: l.upvoteCount }))}
+        weekLaunches={launches.map((l: any) => ({ id: l.id, userId: l.userId, title: l.title, upvoteCount: l.upvoteCount, featured: !!l.featured }))}
+        week={launchWeek || undefined}
       />
       </div>
+      {shareToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-black text-black shadow-2xl">
+          {t("shareLaunchCopied")}
+        </div>
+      )}
     </div>
   );
 }

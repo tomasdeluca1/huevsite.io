@@ -119,7 +119,10 @@ export async function getWeekLaunches(
 
 export type CreateLaunchResult =
   | { ok: true; launchId: string }
-  | { ok: false; error: "not_owner" | "no_link" | "already_launched" | "missing_table" };
+  | {
+      ok: false;
+      error: "not_owner" | "no_link" | "already_launched" | "monthly_limit" | "missing_table";
+    };
 
 /** Create a launch row for a project block in a given week. */
 export async function createLaunch(
@@ -140,6 +143,18 @@ export async function createLaunch(
 
   const link = (block.data?.link || "").trim();
   if (!/^https?:\/\//i.test(link)) return { ok: false, error: "no_link" };
+
+  // Free tier: 1 launch per calendar month (any project). Pro is unlimited.
+  if (!isPro) {
+    const now = new Date();
+    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+    const { count, error: ce } = await db
+      .from("project_launches")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .gte("launched_at", monthStart);
+    if (!ce && (count || 0) >= 1) return { ok: false, error: "monthly_limit" };
+  }
 
   const scheduled = compareWeeks(week, currentLaunchWeek()) > 0;
 

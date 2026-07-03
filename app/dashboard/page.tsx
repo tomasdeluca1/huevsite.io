@@ -1566,6 +1566,7 @@ export default function DashboardPage() {
                activeTab === 'insights' ? <>{t("page.headingInsightsPrefix")} <span style={{ color: profile.accentColor }}>{t("page.headingInsightsWord")}</span>.</> :
                activeTab === 'domain' ? <>{t("page.headingDomainPrefix")} <span style={{ color: profile.accentColor }}>{t("page.headingDomainWord")}</span>.</> :
                activeTab === 'subsites' ? <>{t("page.headingSubsitesPrefix")} <span style={{ color: profile.accentColor }}>{t("page.headingSubsitesWord")}</span>.</> :
+               activeTab === 'projects' ? <>{t("page.headingProjectsPrefix")} <span style={{ color: profile.accentColor }}>{t("page.headingProjectsWord")}</span>.</> :
                <>{t("page.headingTransferPrefix")} <span style={{ color: profile.accentColor }}>{t("page.headingTransferWord")}</span>.</>}
             </h2>
           </div>

@@ -3823,3 +3823,56 @@ footer {
     text-align: center;
   }
 }
+
+/* ============================================================
+   Builders Hunt — shared-launch highlight
+   Applied to a launch card when landing via /feed?launch=<id>:
+   accent glow pulse + a diagonal shine sweep across the card.
+   ============================================================ */
+@keyframes hv-launch-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent),
+      0 0 24px color-mix(in srgb, var(--accent) 14%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px var(--accent),
+      0 0 56px color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+}
+
+@keyframes hv-launch-shine {
+  0% {
+    transform: translateX(-160%) skewX(-18deg);
+  }
+  100% {
+    transform: translateX(420%) skewX(-18deg);
+  }
+}
+
+.launch-highlight {
+  position: relative;
+  overflow: hidden;
+  border-color: var(--accent) !important;
+  animation: hv-launch-glow 1.6s ease-in-out 3;
+}
+
+.launch-highlight::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 38%;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent,
+    rgba(255, 255, 255, 0.12),
+    color-mix(in srgb, var(--accent) 28%, transparent),
+    transparent
+  );
+  animation: hv-launch-shine 1.3s ease-out 2 0.35s both;
+}

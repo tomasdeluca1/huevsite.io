@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Rocket, Trophy, Flame, Radio, Zap, Newspaper } from "lucide-react";
-import { daysUntilWeekClose } from "@/lib/launch-week";
+import { Rocket, Trophy, Flame, Radio, Zap, Newspaper, Share2 } from "lucide-react";
+import { currentLaunchWeek, daysUntilWeekClose } from "@/lib/launch-week";
+import { buildBoostCheckoutUrl } from "@/lib/lemon-checkout-url";
+import { trackEvent } from "@/lib/track";
 
 interface SidebarData {
   winner: { username: string; name: string; image: string | null } | null;
@@ -22,19 +24,25 @@ interface SidebarData {
 export interface RailWeekLaunch {
   id: string;
   userId: string;
+  title?: string;
   upvoteCount: number;
+  featured?: boolean;
 }
 
 export function DiscoveryRail({
   currentUserId,
   weekLaunches,
+  week,
 }: {
   currentUserId?: string | null;
   weekLaunches?: RailWeekLaunch[];
+  /** ISO week the launches belong to — used to build shareable deep links. */
+  week?: string;
 }) {
   const t = useTranslations("discovery");
   const [data, setData] = useState<SidebarData | null>(null);
   const [commitsRange, setCommitsRange] = useState<"year" | "month">("year");
+  const [shareToast, setShareToast] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -56,6 +64,27 @@ export function DiscoveryRail({
   const onFeed = pathname === "/feed";
   const closeDays = daysUntilWeekClose();
 
+  const shareMyLaunch = async () => {
+    if (!myLaunch) return;
+    const url = `${window.location.origin}/feed?launch=${myLaunch.id}&week=${week || currentLaunchWeek()}`;
+    trackEvent("launch_share_click", { launchId: myLaunch.id, source: "rail" });
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({ title: myLaunch.title || "Builders Hunt", url });
+        return;
+      } catch {
+        /* user cancelled — fall through to copy */
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareToast(true);
+      setTimeout(() => setShareToast(false), 2500);
+    } catch {
+      /* clipboard unavailable */
+    }
+  };
+
   const card = "rounded-2xl border border-white/10 bg-white/[0.02] p-4";
   const label =
     "text-[9px] font-black uppercase tracking-[0.18em] text-[var(--accent)] mb-2 flex items-center gap-1.5";
@@ -75,6 +104,30 @@ export function DiscoveryRail({
             <div className="mt-0.5 text-xs text-white/50">
               ▲ {myLaunch.upvoteCount} · {t("railShareNudge")}
             </div>
+            <button
+              onClick={shareMyLaunch}
+              className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[var(--accent)] py-2 text-xs font-black text-black transition-transform hover:scale-[1.02]"
+            >
+              <Share2 size={13} /> {t("railShareCta")}
+            </button>
+            {/* Launch boost: one-off $12 to pin the launch as featured for its
+                week. Pro launches are auto-featured, so this only shows for
+                non-featured ones — and only when the Lemon product is wired. */}
+            {myLaunch.featured ? (
+              <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-[var(--accent)]/30 bg-[var(--accent)]/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-[var(--accent)]">
+                <Zap size={11} /> {t("railBoosted")}
+              </div>
+            ) : (
+              buildBoostCheckoutUrl(myLaunch.id, currentUserId) && (
+                <a
+                  href={buildBoostCheckoutUrl(myLaunch.id, currentUserId)}
+                  onClick={() => trackEvent("launch_boost_click", { launchId: myLaunch.id })}
+                  className="mt-2.5 flex items-center justify-center gap-1.5 rounded-xl border border-[var(--accent)]/40 py-2 text-xs font-black text-[var(--accent)] transition-colors hover:bg-[var(--accent)] hover:text-black"
+                >
+                  <Zap size={13} /> {t("railBoostCta")}
+                </a>
+              )
+            )}
           </div>
         ) : currentUserId ? (
           <>
@@ -278,6 +331,12 @@ export function DiscoveryRail({
               <span className="font-black text-white">{data.pulse.endorsements}</span>
             </div>
           </div>
+        </div>
+      )}
+
+      {shareToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-black text-black shadow-2xl">
+          {t("railShareCopied")}
         </div>
       )}
     </aside>

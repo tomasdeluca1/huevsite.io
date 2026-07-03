@@ -17,6 +17,12 @@ export const lemonLifetimeCheckoutUrl =
   process.env.NEXT_PUBLIC_LEMON_LIFETIME_CHECKOUT_URL ||
   FALLBACK_LEMON_LIFETIME_CHECKOUT_URL;
 
+// One-time "Launch boost" checkout ($12: pins a Builders Hunt launch as
+// featured for its week). No hardcoded fallback — the feature stays hidden
+// until the env var points at the live Lemon product.
+export const lemonBoostCheckoutUrl =
+  process.env.NEXT_PUBLIC_LEMON_BOOST_CHECKOUT_URL || "";
+
 // Build a checkout URL that carries the buyer's identity so the Lemon Squeezy
 // webhook can map the purchase deterministically:
 //  - checkout[custom][user_id] → echoed back as meta.custom_data.user_id
@@ -31,4 +37,18 @@ export function buildLemonCheckoutUrl(
   if (email) parts.push(`checkout[email]=${encodeURIComponent(email)}`);
   if (userId) parts.push(`checkout[custom][user_id]=${encodeURIComponent(userId)}`);
   return parts.length ? `${baseUrl}?${parts.join("&")}` : baseUrl;
+}
+
+// Boost checkout: identity + the launch to feature. The webhook reads
+// custom_data.launch_id and flips project_launches.featured after payment.
+export function buildBoostCheckoutUrl(
+  launchId: string,
+  userId?: string | null,
+  email?: string | null
+): string {
+  if (!lemonBoostCheckoutUrl) return "";
+  const parts: string[] = [`checkout[custom][launch_id]=${encodeURIComponent(launchId)}`];
+  if (email) parts.push(`checkout[email]=${encodeURIComponent(email)}`);
+  if (userId) parts.push(`checkout[custom][user_id]=${encodeURIComponent(userId)}`);
+  return `${lemonBoostCheckoutUrl}?${parts.join("&")}`;
 }

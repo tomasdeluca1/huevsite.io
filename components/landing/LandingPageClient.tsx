@@ -29,13 +29,15 @@ interface LandingPageClientProps {
   networkPulse?: NetworkPulse;
   /** A/B: sticky hero-headline variant, assigned server-side (app/page.tsx). */
   heroAbVariant?: HeroAbVariant;
+  /** Founder batch: live remaining seats for the pricing scarcity counter. */
+  founderRemaining?: number | null;
 }
 
 type HeroVariant = "claim" | "social" | "product";
 /** T1 experiment: identity-challenge H1 (control) vs outcome-focused H1. */
 export type HeroAbVariant = "identity" | "outcome";
 
-export default function LandingPageClient({ showcaseData, testimonials = [], faqs = [], founderVideoUrl = "", founderQuote = "", activeThisWeek = 0, networkPulse, heroAbVariant = "identity" }: LandingPageClientProps) {
+export default function LandingPageClient({ showcaseData, testimonials = [], faqs = [], founderVideoUrl = "", founderQuote = "", activeThisWeek = 0, networkPulse, heroAbVariant = "identity", founderRemaining = null }: LandingPageClientProps) {
   const t = useTranslations("landing");
   const tNav = useTranslations("nav");
   const tFooter = useTranslations("footer");
@@ -905,7 +907,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                 viewport={{ once: true }}
                 className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto items-stretch"
               >
-                <PricingTiers user={user ? { id: user.id, email: user.email } : null} />
+                <PricingTiers user={user ? { id: user.id, email: user.email } : null} founderRemaining={founderRemaining} />
               </motion.div>
             </div>
           )}

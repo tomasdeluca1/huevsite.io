@@ -32,11 +32,14 @@ export function PricingTiers({
   user,
   loginNext = "/precios",
   utm,
+  founderRemaining,
 }: {
   user: PricingUser | null;
   loginNext?: string;
   /** Query string de UTMs (sin ? inicial), p.ej. "utm_source=email&utm_campaign=somos-200". */
   utm?: string;
+  /** Founder batch: asientos restantes (vivo, cap - is_lifetime). Omitir/negativo = sin contador. */
+  founderRemaining?: number | null;
 }) {
   const t = useTranslations("pricing");
   // Deslogueado: volvemos a la misma página CON los UTMs, así tras loguearse el
@@ -118,6 +121,13 @@ export function PricingTiers({
           <span className="text-5xl font-black text-white">$79</span>
           <span className="text-sm font-mono text-[var(--text-muted)]">{t("founderPriceUnit")}</span>
         </div>
+        {/* Founder batch: live scarcity (never renders a made-up number — the
+            count comes from profiles.is_lifetime via getFounderSeats). */}
+        {typeof founderRemaining === "number" && founderRemaining > 0 && (
+          <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-[var(--accent)]/30 bg-[var(--accent)]/5 px-2.5 py-1 text-[10px] font-mono uppercase tracking-widest text-[var(--accent)] w-fit">
+            {t("founderSeatsLeft", { n: founderRemaining })}
+          </div>
+        )}
         <p className="text-xs text-[var(--text-muted)] mb-8">{t("founderSubtitle")}</p>
         <ul className="space-y-3 text-left mb-8 flex-1">
           {[t("founderFeature1"), t("founderFeature2"), t("founderFeature3"), t("founderFeature4")].map(item => (

@@ -10,6 +10,7 @@ import { getFeaturedTestimonials } from "@/lib/testimonial-service";
 import { getPublishedFaqs } from "@/lib/faq-service";
 import { getSiteSettings } from "@/lib/site-settings-service";
 import { safeJsonLd } from "@/lib/json-ld";
+import { getFounderSeats } from "@/lib/founder-seats";
 
 export const dynamic = "force-dynamic";
 
@@ -160,13 +161,14 @@ export default async function LandingPage() {
       ? "identity"
       : "outcome";
 
-  const [data, testimonials, faqs, settings, activeThisWeek, networkPulse] = await Promise.all([
+  const [data, testimonials, faqs, settings, activeThisWeek, networkPulse, founderSeats] = await Promise.all([
     getShowcaseData(),
     getFeaturedTestimonials(),
     getPublishedFaqs(),
     getSiteSettings(),
     getActiveBuildersThisWeek(),
     getNetworkPulse(),
+    getFounderSeats(),
   ]);
 
   // FAQPage schema from the admin-managed FAQs; falls back to the static one
@@ -208,6 +210,7 @@ export default async function LandingPage() {
         activeThisWeek={activeThisWeek}
         networkPulse={networkPulse}
         heroAbVariant={heroAbVariant}
+        founderRemaining={founderSeats.remaining}
       />
     </>
   );

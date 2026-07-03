@@ -76,6 +76,10 @@ ADMIN_SECRET
 TWITTER_API_KEY / SECRET / ACCESS_TOKEN / ACCESS_SECRET
 GITHUB_TOKEN                   # app-level GitHub PAT (classic, no scopes needed for public data) used by lib/github-service.ts. Raises the API limit to 5000/h and unlocks GraphQL (real contribution heatmap + per-month commits). Without it, the GitHub block falls back to unauthenticated REST (rate-limited, no heatmap/commits).
 LAUNCHY_WEBHOOK_SECRET         # shared secret for the inbound Launchy webhook (app/api/webhooks/launchy). Must match HUEVSITE_WEBHOOK_SECRET in the launchy repo. Generate with: openssl rand -base64 32
+LEMON_BOOST_VARIANT_ID         # Lemon variant id of the one-time $12 "Launch boost" product — order_created with this variant flips project_launches.featured (webhook validates ownership via custom_data)
+NEXT_PUBLIC_LEMON_BOOST_CHECKOUT_URL  # checkout URL of the boost product; the "Destacar mi lanzamiento" button in DiscoveryRail stays hidden until this is set
+FOUNDER_SEATS_CAP              # Founder batch: total $79 lifetime seats (default 20). "Quedan N" is computed live as cap - count(profiles.is_lifetime)
+FOUNDER_NEXT_PRICE             # price communicated after the batch sells out (default "$129") — shown in the founder-batch email
 NEXT_PUBLIC_LAUNCHY_URL        # base URL of Launchy (default https://launchy.huevsite.com) — used to build the "Lanzar en Launchy" deep link
 ```
 

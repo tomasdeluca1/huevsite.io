@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { PricingTiers } from "@/components/landing/PricingTiers";
+import { getFounderSeats } from "@/lib/founder-seats";
 import LocaleToggle from "@/components/LocaleToggle";
 
 export const dynamic = "force-dynamic";
@@ -43,6 +44,7 @@ export default async function PreciosPage({
 
   const pricingUser = user ? { id: user.id, email: user.email } : null;
   const utm = buildUtmQuery(searchParams);
+  const founderSeats = await getFounderSeats();
 
   return (
     <main className="landing min-h-screen bg-[var(--bg)] font-display">
@@ -72,7 +74,7 @@ export default async function PreciosPage({
         </div>
 
         <div className="grid md:grid-cols-3 gap-5 items-stretch">
-          <PricingTiers user={pricingUser} loginNext="/precios" utm={utm} />
+          <PricingTiers user={pricingUser} loginNext="/precios" utm={utm} founderRemaining={founderSeats.remaining} />
         </div>
 
         <p className="text-center text-[11px] font-mono text-[var(--text-muted)] uppercase tracking-widest mt-12 opacity-50">

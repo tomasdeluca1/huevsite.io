@@ -247,10 +247,49 @@ export async function POST(req: NextRequest) {
       else if (eventName === "order_created") {
          const attrs = payload.data.attributes || {};
 
+         const lifetimeVariant = process.env.LEMON_LIFETIME_VARIANT_ID || "1769406";
+         const boostVariant = process.env.LEMON_BOOST_VARIANT_ID || "";
+         const orderVariant = attrs.first_order_item?.variant_id?.toString();
+
+         // One-time "Launch boost" ($12): flips featured on the buyer's launch.
+         // Ownership is enforced in the UPDATE (id + user_id) so a crafted
+         // custom_data can't feature someone else's launch.
+         if (boostVariant && orderVariant === boostVariant) {
+            if (attrs.status && attrs.status !== "paid") {
+               return NextResponse.json({ message: `Boost order status ${attrs.status} ignored` }, { status: 200 });
+            }
+            const launchId = customData?.launch_id;
+            let boostUserId = customData?.user_id;
+            if (!boostUserId) boostUserId = await findUserIdByEmail(supabase, attrs.user_email);
+            if (!launchId || !boostUserId) {
+               console.error("boost order_created: falta launch_id o comprador mapeable", { launchId, boostUserId });
+               return NextResponse.json({ error: "Missing launch or user for boost" }, { status: 400 });
+            }
+            const { data: boosted, error: boostErr } = await supabase
+               .from("project_launches")
+               .update({ featured: true })
+               .eq("id", launchId)
+               .eq("user_id", boostUserId)
+               .select("id");
+            if (boostErr || !boosted?.length) {
+               console.error("boost order_created: no se pudo destacar el launch", boostErr, { launchId, boostUserId });
+               return NextResponse.json({ error: "Boost update failed" }, { status: 500 });
+            }
+            try {
+               await supabase.from("activities").insert({
+                  user_id: boostUserId,
+                  type: "launch_boost",
+                  data: { launch_id: launchId, order_id: payload.data.id },
+               });
+            } catch (e) {
+               console.error("boost order_created: activity insert (non-fatal):", e);
+            }
+            console.log(`launch boost aplicado: launch ${launchId} destacado (user ${boostUserId})`);
+            return NextResponse.json({ message: "Launch boosted" }, { status: 200 });
+         }
+
          // Gate: only grant Pro for the lifetime variant, so any other one-time
          // product (now or later) won't grant Pro. Env var overrides the default.
-         const lifetimeVariant = process.env.LEMON_LIFETIME_VARIANT_ID || "1769406";
-         const orderVariant = attrs.first_order_item?.variant_id?.toString();
          if (lifetimeVariant && orderVariant && orderVariant !== lifetimeVariant) {
             console.log(`order_created ignorado: variant ${orderVariant} != lifetime ${lifetimeVariant}`);
             return NextResponse.json({ message: "Order ignored (not lifetime)" }, { status: 200 });

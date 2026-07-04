@@ -13,8 +13,8 @@
       "schedule": "0 15 * * 5"
     },
     {
-      "path": "/api/cron/builders-hunt-launch",
-      "schedule": "3 13 30 6 *"
+      "path": "/api/cron/founder-batch",
+      "schedule": "0 13 7 7 *"
     }
   ]
 }

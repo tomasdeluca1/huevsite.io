@@ -21,6 +21,7 @@
  */
 
 import { getContrastColor } from "@/lib/profile-types";
+import { hiResFaviconUrl } from "@/lib/favicon";
 
 export const OG_SIZE = { width: 1200, height: 630 };
 export const OG_CONTENT_TYPE = "image/png";
@@ -441,6 +442,66 @@ export async function fetchTopBuilders(n: number): Promise<TopBuilder[]> {
     return (await res.json()) as TopBuilder[];
   } catch {
     return [];
+  }
+}
+
+export type LaunchOg = {
+  title: string;
+  description: string;
+  imageUrl: string | null;
+  upvotes: number;
+  week: string;
+  username: string;
+  name: string;
+  avatar: string | null;
+};
+
+/** Data for the shared-launch OG (/feed?launch=<id>). UUID is validated before
+ *  it touches the PostgREST filter (same injection concern as sanitizeOrFilterValue). */
+export async function fetchLaunchOg(launchId: string): Promise<LaunchOg | null> {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(launchId)) return null;
+  const c = restCreds();
+  if (!c) return null;
+  try {
+    const lRes = await fetch(
+      `${c.baseUrl}/rest/v1/project_launches?id=eq.${launchId}&select=upvote_count,launch_week,user_id,block_id&limit=1`,
+      { headers: c.headers, cache: "no-store" }
+    );
+    if (!lRes.ok) return null;
+    const [launch] = (await lRes.json()) as any[];
+    if (!launch) return null;
+
+    const [bRes, pRes] = await Promise.all([
+      fetch(`${c.baseUrl}/rest/v1/blocks?id=eq.${launch.block_id}&select=data&limit=1`, {
+        headers: c.headers,
+        cache: "no-store",
+      }),
+      fetch(`${c.baseUrl}/rest/v1/profiles?id=eq.${launch.user_id}&select=username,name,image&limit=1`, {
+        headers: c.headers,
+        cache: "no-store",
+      }),
+    ]);
+    const [block] = bRes.ok ? ((await bRes.json()) as any[]) : [];
+    const [prof] = pRes.ok ? ((await pRes.json()) as any[]) : [];
+    if (!block || !prof) return null;
+    const d = block.data || {};
+
+    // Mirrors launch-service: favicon-mode projects use the hi-res favicon.
+    const imageUrl: string | null =
+      d.imageMode === "favicon" ? hiResFaviconUrl(d.link, d.faviconUrl) || null : d.imageUrl || null;
+
+    return {
+      title: d.title || "Proyecto",
+      description: d.description || "",
+      imageUrl,
+      upvotes: launch.upvote_count || 0,
+      week: launch.launch_week,
+      username: prof.username,
+      name: prof.name || prof.username,
+      avatar: prof.image || null,
+    };
+  } catch {
+    return null;
   }
 }
 

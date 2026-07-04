@@ -9,8 +9,9 @@ import { listAllAuthUsers } from "@/lib/list-auth-users";
 import { getFounderSeats, FOUNDER_NEXT_PRICE } from "@/lib/founder-seats";
 
 export const dynamic = "force-dynamic";
-// Full-base send (~250) at ~100ms/email needs more than the default timeout.
-export const maxDuration = 60;
+// Full-base send: ~240 eligible × (100ms throttle + Resend latency) ≈ 50s+,
+// so 60s risked a mid-send kill. 300s is within both Hobby and Pro limits.
+export const maxDuration = 300;
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const UNSUB_MARKER = "__UNSUB_URL__";

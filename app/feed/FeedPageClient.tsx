@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import LocaleToggle from "@/components/LocaleToggle";
 import { BadgeCheck, Loader2, Activity as ActivityIcon, ArrowUpRight, Users, UserPlus, ChevronUp, ChevronLeft, ChevronRight, Rocket, Share2 } from "lucide-react";
 import { currentLaunchWeek, addWeeks, weekLabel, compareWeeks, daysUntilWeekClose } from "@/lib/launch-week";
+import { parseLaunchShareParams } from "@/lib/launch-share";
 import { trackEvent } from "@/lib/track";
 import { withHuevsiteUtm } from "@/lib/utm";
 import { trackClick } from "@/components/analytics/AnalyticsTracker";
@@ -185,8 +186,12 @@ function FeedContent() {
   const fromDashboard = searchParams.get("from") === "dashboard";
   // Shared launch deep-link: /feed?launch=<id>&week=<YYYY-Wxx> scrolls to the
   // card and lights it up so shared links land on the product itself.
-  const sharedLaunchId = searchParams.get("launch");
-  const [launchWeek, setLaunchWeek] = useState<string>(searchParams.get("week") || "");
+  // Lenient parse: some apps percent-encode the `&`, gluing week into launch.
+  const { launchId: sharedLaunchId, week: sharedWeek } = parseLaunchShareParams(
+    searchParams.get("launch"),
+    searchParams.get("week")
+  );
+  const [launchWeek, setLaunchWeek] = useState<string>(sharedWeek || "");
   const [votedIds, setVotedIds] = useState<string[]>([]);
   const [stackFilter, setStackFilter] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { isEnabled } from "@/lib/feature-flags";
 import { EndorsementsSection } from "@/components/social/EndorsementsSection";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
+import { ProfileSocialBar } from "@/components/profile/ProfileSocialBar";
 import { WinnerBanner } from "@/components/profile/WinnerBanner";
 import { getBdlsSlugsByUsername } from "@/lib/blog-data";
 import { MobileBottomNav, MobileStickyHeader } from "@/components/profile/MobileProfileUI";
@@ -217,7 +218,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
       
       <AnalyticsTracker userId={profile.id!} visitorUserInfo={visitorUserInfo} />
 
-      <main className={`min-h-screen ${embed ? "pt-4" : "pt-8 md:pt-12"} pb-16 md:pb-24 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto relative`}>
+      <main className={`min-h-screen ${embed ? "pt-4" : "pt-5 md:pt-12"} pb-16 md:pb-24 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto relative`}>
         {!embed && <ExploreNavigation currentUsername={username} isCustomDomain={isCustomDomain} />}
         {/* Dynamic Cinematic Backgrounds */}
         <div
@@ -272,51 +273,67 @@ export default async function ProfilePage({ params, searchParams }: Props) {
           </div>
         )}
 
-        <ProfileHeader
-          profileId={profile.id}
-          isFollowing={isFollowing}
-          followersCount={followersCount}
-          followingCount={followingCount}
-          nominationsCount={nominationsCount}
-          builderScore={profile.builderScore || 0}
-          accentColor={profile.accentColor}
-          showFollowButton={showFollowButton}
-          currentUserId={currentUserId}
-          isEnabledSocialNetwork={isEnabled("socialNetwork")}
-          subscriptionTier={profile.subscriptionTier}
-          borderRadius={profile.borderRadius}
-          subSites={profile.subSites}
-          blocks={profile.blocks}
-          username={profile.username}
-          isCustomDomain={isCustomDomain}
-          isWinner={profile.isWinner}
-          embed={embed}
-        />
+        {/* Mobile-first ordering: the board (ProfileGrid) leads on phones so you
+            see the builder's content on entry; the social stats + follow/nominate
+            (ProfileSocialBar) drop below it. Desktop keeps the classic order
+            (header → stats → winner chip → board) via md:order-*. */}
+        <div className="flex flex-col">
+          <div className="order-1">
+            <ProfileHeader
+              accentColor={profile.accentColor}
+              currentUserId={currentUserId}
+              subscriptionTier={profile.subscriptionTier}
+              borderRadius={profile.borderRadius}
+              subSites={profile.subSites}
+              blocks={profile.blocks}
+              username={profile.username}
+              isCustomDomain={isCustomDomain}
+              embed={embed}
+            />
+          </div>
 
-        {!embed && profile.winnerWeek && (
-          <WinnerBanner
-            winnerWeek={profile.winnerWeek}
-            notaHref={bdlsNotaHref}
-            historyHref="/builders-de-la-semana"
-          />
-        )}
-
-        {/* Huevsite Grid (Client Component for animations) */}
-        <div className="relative z-10">
-          <ProfileGrid
-            blocks={profile.blocks}
+          <ProfileSocialBar
+            className="order-4 mt-8 md:order-2 md:mt-0 md:mb-8"
+            profileId={profile.id}
+            isFollowing={isFollowing}
+            followersCount={followersCount}
+            followingCount={followingCount}
+            nominationsCount={nominationsCount}
+            builderScore={profile.builderScore || 0}
             accentColor={profile.accentColor}
-            displayName={profile.displayName}
-            tagline={profile.tagline}
-            subscriptionTier={profile.subscriptionTier}
-            userId={profile.id}
-            isWinner={profile.isWinner}
-            winnerWeek={profile.winnerWeek}
-            badges={profile.badges}
-            subSites={profile.subSites}
-            username={username}
-            isCustomDomain={isCustomDomain}
+            showFollowButton={showFollowButton}
+            currentUserId={currentUserId}
+            isEnabledSocialNetwork={isEnabled("socialNetwork")}
+            embed={embed}
           />
+
+          {!embed && profile.winnerWeek && (
+            <div className="order-2 md:order-3">
+              <WinnerBanner
+                winnerWeek={profile.winnerWeek}
+                notaHref={bdlsNotaHref}
+                historyHref="/builders-de-la-semana"
+              />
+            </div>
+          )}
+
+          {/* Huevsite Grid (Client Component for animations) */}
+          <div className="order-3 relative z-10 md:order-4">
+            <ProfileGrid
+              blocks={profile.blocks}
+              accentColor={profile.accentColor}
+              displayName={profile.displayName}
+              tagline={profile.tagline}
+              subscriptionTier={profile.subscriptionTier}
+              userId={profile.id}
+              isWinner={profile.isWinner}
+              winnerWeek={profile.winnerWeek}
+              badges={profile.badges}
+              subSites={profile.subSites}
+              username={username}
+              isCustomDomain={isCustomDomain}
+            />
+          </div>
         </div>
 
         {/* Endorsements (feature flag: red social) */}

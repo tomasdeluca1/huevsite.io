@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/admin-auth";
 import { postBuilderOfTheWeek } from "@/lib/twitter";
+import { postBuilderOfTheWeekLinkedIn } from "@/lib/linkedin";
 import { resolveXHandles } from "@/lib/twitter-utils";
 
 export const dynamic = "force-dynamic";
@@ -82,11 +83,23 @@ export async function POST(request: NextRequest) {
 
           const winnerMention = mentionsMap[profile.username];
           const finalistsWithMentions = finalists.map(f => ({
-            mention: mentionsMap[f.username] || `@${f.username}`,
+            // Plain username fallback — @ is reserved for real X handles.
+            mention: mentionsMap[f.username] || f.username,
             count: f.count
           }));
 
           await postBuilderOfTheWeek(winnerMention, week, profile.name || undefined, finalistsWithMentions, profile.username);
+
+          // Mismo anuncio en la página de LinkedIn de huevsite.io (no-fatal).
+          try {
+            await postBuilderOfTheWeekLinkedIn(
+              { name: profile.name || profile.username, username: profile.username },
+              week,
+              finalists.map(f => ({ name: f.username, count: f.count }))
+            );
+          } catch (liErr) {
+            console.error("Error publicando en LinkedIn:", liErr);
+          }
         }
       } catch (twitterErr) {
         console.error("Error publicando en X:", twitterErr);

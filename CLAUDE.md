@@ -81,6 +81,8 @@ NEXT_PUBLIC_LEMON_BOOST_CHECKOUT_URL  # checkout URL of the boost product; the "
 FOUNDER_SEATS_CAP              # Founder batch: total $79 lifetime seats (default 20). "Quedan N" is computed live as cap - count(profiles.is_lifetime)
 FOUNDER_NEXT_PRICE             # price communicated after the batch sells out (default "$129") — shown in the founder-batch email
 NEXT_PUBLIC_LAUNCHY_URL        # base URL of Launchy (default https://launchy.huevsite.com) — used to build the "Lanzar en Launchy" deep link
+TYPEFULLY_API_KEY              # Typefully API key (Settings → API). Used by lib/linkedin.ts (v2 API) for LinkedIn auto-announcements and by lib/typefully.ts (legacy v1) for BDLS drafts
+TYPEFULLY_SOCIAL_SET_ID        # Typefully social set with the huevsite.io LinkedIn page connected. Without both vars, LinkedIn posts are skipped with a warning (announcements still tweet)
 ```
 
 ## Database: `profiles` table (key columns)

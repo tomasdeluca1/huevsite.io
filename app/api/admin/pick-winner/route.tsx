@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/admin-auth";
 import { getWeekString, getCurrentWeek } from "@/lib/showcase-service";
 import { postBuilderOfTheWeek } from "@/lib/twitter";
+import { postBuilderOfTheWeekLinkedIn } from "@/lib/linkedin";
 import { resolveXHandles } from "@/lib/twitter-utils";
 import {
   processWinnerForWeek,
@@ -193,12 +194,27 @@ async function handlePickWinner(request: NextRequest) {
         const otherFinalists = finalistsForTweet
           .filter(f => f.username !== winnerProfile.username)
           .map(f => ({
-            mention: mentionsMap[f.username] || `@${f.username}`,
+            // Plain username fallback — @ is reserved for real X handles.
+            mention: mentionsMap[f.username] || f.username,
             count: f.count
           }));
 
         await postBuilderOfTheWeek(winnerMention, week, winnerProfile.name || winnerProfile.username, otherFinalists, winnerProfile.username);
         console.log(`✅ Tweet enviado para ${winnerProfile.username}`);
+
+        // Mismo anuncio en la página de LinkedIn de huevsite.io (no-fatal).
+        try {
+          await postBuilderOfTheWeekLinkedIn(
+            { name: winnerProfile.name || winnerProfile.username, username: winnerProfile.username },
+            week,
+            finalistsForTweet
+              .filter(f => f.username !== winnerProfile.username)
+              .map(f => ({ name: f.username, count: f.count }))
+          );
+          console.log(`✅ LinkedIn post enviado para ${winnerProfile.username}`);
+        } catch (liErr) {
+          console.error("❌ Error publicando en LinkedIn:", liErr);
+        }
       }
     } catch (twitterErr: any) {
       console.error("❌ Error publicando en X:", twitterErr);

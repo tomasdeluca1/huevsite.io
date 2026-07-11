@@ -1,4 +1,5 @@
 import { TwitterApi } from 'twitter-api-v2';
+import { postCommunityMilestoneLinkedIn } from './linkedin';
 
 const client = new TwitterApi({
   appKey: process.env.TWITTER_API_KEY || '',
@@ -32,7 +33,7 @@ export async function sendTweet(text: string) {
  * Specifically formats and posts a "Builder of the Week" tweet with top nominees information
  */
 export async function postBuilderOfTheWeek(
-  mention: string,
+  mention: string | undefined,
   week: string,
   name?: string,
   finalists?: { mention: string, count: number }[],
@@ -44,11 +45,11 @@ export async function postBuilderOfTheWeek(
   // to the Twitter handle.
   const hasHandle = mention?.startsWith('@');
   const displayName =
-    name || username || (hasHandle ? mention.replace('@', '') : mention.split('/').pop() || 'builder');
+    name || username || (hasHandle ? mention!.replace('@', '') : mention?.split('/').pop() || 'builder');
 
   const profileUrl = username
     ? `${process.env.NEXT_PUBLIC_SITE_URL}/${username}`
-    : (mention.startsWith('http') ? mention : `${process.env.NEXT_PUBLIC_SITE_URL}/${mention.replace('@', '')}`);
+    : (mention?.startsWith('http') ? mention : `${process.env.NEXT_PUBLIC_SITE_URL}/${(mention || displayName).replace('@', '')}`);
 
   // Use the @handle as the mention; if there's no handle, just the name.
   const winnerLabel = hasHandle
@@ -211,6 +212,13 @@ export async function checkAndPostCommunityMilestone(supabase: any) {
     const text = `Milestones de comunidad — "¡Ya somos ${milestone} builders en huevsite! 🎉"`;
     await sendTweet(text);
 
+    // 3b. Same announcement on the huevsite.io LinkedIn page (non-fatal).
+    try {
+      await postCommunityMilestoneLinkedIn(milestone);
+    } catch (liErr) {
+      console.error("// Error posting community milestone to LinkedIn:", liErr);
+    }
+
     // 4. Record milestone
     await supabase
       .from('community_milestones')
@@ -223,14 +231,15 @@ export async function checkAndPostCommunityMilestone(supabase: any) {
 }
 
 /**
- * Posts a shout-out for a new PRO builder
+ * Posts a shout-out for a new PRO builder.
+ * `mention` comes from resolveXHandles: "@handle" when the user has X linked,
+ * otherwise a profile URL. Only a real X handle gets the @ — a huevsite
+ * username must never be rendered as a Twitter mention.
  */
-export async function postProUpgrade(username: string, twitterHandle?: string) {
-  const mention = twitterHandle
-    ? `@${twitterHandle.replace('@', '')}`
-    : `@${username}`;
+export async function postProUpgrade(username: string, mention?: string) {
+  const display = mention?.startsWith('@') ? mention : username;
 
-  const text = `💎 ¡Nuevo Builder PRO en la casa! \n\nFelicitaciones a ${mention} por sumarse al plan Pro de huevsite. ✨\n\nMirá su perfil: huevsite.io/${username}\n\n#probuilder #huevsite`;
+  const text = `💎 ¡Nuevo Builder PRO en la casa! \n\nFelicitaciones a ${display} por sumarse al plan Pro de huevsite. ✨\n\nMirá su perfil: huevsite.io/${username}\n\n#probuilder #huevsite`;
 
   return sendTweet(text);
 }
@@ -282,7 +291,7 @@ export async function postWeeklyStats(supabase: any, preview = false) {
  * Returns the composed text when preview=true, null when there is nothing to share.
  */
 export async function postWeeklyDigest(
-  movers: { username: string; delta: number }[],
+  movers: { username: string; mention?: string; delta: number }[],
   newProjectsCount: number,
   news: { title: string } | null,
   preview = false
@@ -295,7 +304,10 @@ export async function postWeeklyDigest(
     lines.push("🏆 Los que más subieron:");
     const medals = ["👑", "🥈", "🥉"];
     movers.slice(0, 3).forEach((m, i) => {
-      lines.push(`${medals[i] || "🔹"} @${m.username} (+${m.delta} pts)`);
+      // @ only for a real X handle (m.mention from resolveXHandles);
+      // huevsite usernames go plain — they're not Twitter accounts.
+      const who = m.mention?.startsWith("@") ? m.mention : m.username;
+      lines.push(`${medals[i] || "🔹"} ${who} (+${m.delta} pts)`);
     });
     lines.push("");
   }

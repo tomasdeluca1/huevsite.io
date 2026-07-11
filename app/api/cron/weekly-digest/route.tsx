@@ -5,6 +5,8 @@ import { render } from "@react-email/render";
 import React from "react";
 import { WeeklyDigestEmail } from "@/components/emails/WeeklyDigestEmail";
 import { postWeeklyDigest } from "@/lib/twitter";
+import { postWeeklyDigestLinkedIn } from "@/lib/linkedin";
+import { resolveXHandles } from "@/lib/twitter-utils";
 import { buildUnsubscribeUrl } from "@/lib/email-unsubscribe";
 import { listAllAuthUsers } from "@/lib/list-auth-users";
 import { getAllBlogPosts, getPostCategory } from "@/lib/blog-data";
@@ -149,24 +151,41 @@ export async function GET(request: NextRequest) {
     const news = latestNews ? { title: latestNews.title, slug: latestNews.slug } : null;
 
     // -- 6. Tweet. --------------------------------------------------------
-    const tweetText = await postWeeklyDigest(
-      movers.map((m) => ({ username: m.username, delta: m.delta })),
-      newProjectsCount || 0,
-      news,
-      true
-    );
+    // Resolve real X handles for the movers: @mention only when the user has
+    // X linked; otherwise their plain huevsite username (never @username).
+    let moverMentions: Record<string, string> = {};
+    try {
+      moverMentions = await resolveXHandles(movers.map((m) => m.username));
+    } catch (e) {
+      console.error("[weekly-digest] resolveXHandles failed:", e);
+    }
+    const tweetMovers = movers.map((m) => ({
+      username: m.username,
+      mention: moverMentions[m.username],
+      delta: m.delta,
+    }));
+
+    const tweetText = await postWeeklyDigest(tweetMovers, newProjectsCount || 0, news, true);
     let tweetPosted = false;
     if (!isDryRun && tweetText) {
       try {
-        await postWeeklyDigest(
-          movers.map((m) => ({ username: m.username, delta: m.delta })),
-          newProjectsCount || 0,
-          news,
-          false
-        );
+        await postWeeklyDigest(tweetMovers, newProjectsCount || 0, news, false);
         tweetPosted = true;
       } catch (e) {
         console.error("[weekly-digest] tweet failed:", e);
+      }
+    }
+
+    // -- 6b. LinkedIn (huevsite.io company page): names, never @handles. ----
+    const linkedInMovers = movers.map((m) => ({ name: m.name, delta: m.delta }));
+    const linkedInText = await postWeeklyDigestLinkedIn(linkedInMovers, newProjectsCount || 0, news, true);
+    let linkedInPosted = false;
+    if (!isDryRun && linkedInText) {
+      try {
+        await postWeeklyDigestLinkedIn(linkedInMovers, newProjectsCount || 0, news, false);
+        linkedInPosted = true;
+      } catch (e) {
+        console.error("[weekly-digest] linkedin failed:", e);
       }
     }
 
@@ -228,6 +247,7 @@ export async function GET(request: NextRequest) {
       test: isTest,
       weekLabel,
       tweet: { text: tweetText, posted: tweetPosted },
+      linkedin: { text: linkedInText, posted: linkedInPosted },
       movers,
       newProjectsCount: newProjectsCount || 0,
       featuredProjects,

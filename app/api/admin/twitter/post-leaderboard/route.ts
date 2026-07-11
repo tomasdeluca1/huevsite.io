@@ -64,7 +64,8 @@ export async function POST(request: NextRequest) {
     const mentionsMap = await resolveXHandles(usernames);
 
     const leaderboardData = filteredProfiles.map(p => ({
-      mention: mentionsMap[p.username] || `@${p.username}`,
+      // Plain username fallback — @ is reserved for real X handles.
+      mention: mentionsMap[p.username] || p.username,
       score: p.builder_score || 0
     }));
 

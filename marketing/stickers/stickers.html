@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet" />
+<style>
+  @page { size: A4; margin: 0; }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:210mm;height:297mm;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;
+    font-family:'Bricolage Grotesque',system-ui,sans-serif}
+  .sheet{width:210mm;height:297mm;display:flex;align-items:center;justify-content:center}
+  .grid{display:grid;grid-template-columns:repeat(3,55mm);grid-auto-rows:55mm;gap:.3mm;background:#9aa0a6;padding:.3mm}
+
+  .sticker{container-type:size;position:relative;width:55mm;height:55mm;overflow:hidden;
+    display:flex;flex-direction:column;justify-content:space-between;padding:7cqmin}
+  .sticker.light{background:#fff;color:#141414}
+  .sticker.dark{background:#0c0c0d;color:#fff}
+  .sticker.lime{background:#C8FF00;color:#141414}
+
+  .wm{font-family:'JetBrains Mono',monospace;font-weight:800;font-size:4.3cqmin;letter-spacing:-.03em;color:#141414}
+  .wm b{font-weight:800;color:#141414}
+  .dark .wm{color:#fff}
+  .dark .wm b{color:#C8FF00}
+
+  .kicker{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:3.1cqmin;letter-spacing:.16em;text-transform:uppercase}
+  h2{font-weight:800;line-height:.98;letter-spacing:-.03em}
+  .hl{background:#C8FF00;color:#141414;padding:0 .1em;border-radius:.08em;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+  .lime-t{color:#C8FF00}
+  .mono{font-family:'JetBrains Mono',monospace}
+
+  .row{display:flex;align-items:center;justify-content:space-between;gap:2cqmin}
+  .art{position:absolute;pointer-events:none}
+  svg{display:block;overflow:visible}
+</style>
+</head>
+<body>
+  <div class="sheet"><div class="grid" id="grid"></div></div>
+<script>
+/* ============ building blocks (SVG strings) ============ */
+var OUT="#141414", LIME="#C8FF00";
+
+function svg(vb, inner, w){ return '<svg viewBox="'+vb+'" width="'+(w||'100%')+'" xmlns="http://www.w3.org/2000/svg">'+inner+'</svg>'; }
+
+// The egg mascot. opts: face 'happy'|'wink', glasses, thumb (bool), think(bool)
+function egg(o){ return svg('0 0 220 250', eggInner(o)); }
+function eggInner(opts){
+  opts=opts||{};
+  var body='<path d="M100 14 C 131 14 168 72 170 133 C 172 194 139 238 100 238 C 61 238 28 194 30 133 C 32 72 69 14 100 14 Z" fill="#fff" stroke="'+OUT+'" stroke-width="9" stroke-linejoin="round"/>';
+  var gloss='<path d="M70 52 C 56 66 52 92 62 108 C 46 96 46 64 70 52 Z" fill="#000" opacity="0.045"/>';
+  var eyes = opts.face==='wink'
+    ? '<ellipse cx="80" cy="126" rx="7.5" ry="9.5" fill="'+OUT+'"/><path d="M110 128 q 11 -12 22 0" fill="none" stroke="'+OUT+'" stroke-width="6.5" stroke-linecap="round"/>'
+    : '<ellipse cx="80" cy="126" rx="7.5" ry="9.5" fill="'+OUT+'"/><ellipse cx="120" cy="126" rx="7.5" ry="9.5" fill="'+OUT+'"/>';
+  var cheeks='<ellipse cx="66" cy="150" rx="8" ry="5" fill="'+LIME+'" opacity="0.6"/><ellipse cx="134" cy="150" rx="8" ry="5" fill="'+LIME+'" opacity="0.6"/>';
+  var mouth='<path d="M84 150 q 16 20 32 0" fill="none" stroke="'+OUT+'" stroke-width="6.5" stroke-linecap="round"/>';
+  var glasses='';
+  if(opts.glasses){ cheeks='';
+    glasses='<g fill="'+OUT+'" stroke="'+OUT+'" stroke-width="5" stroke-linejoin="round"><rect x="56" y="112" width="34" height="24" rx="8"/><rect x="110" y="112" width="34" height="24" rx="8"/><path d="M90 120 q10 -7 20 0" fill="none" stroke-width="6"/></g>'; }
+  var hand='';
+  if(opts.thumb){ // clean thumbs-up, lime fill, at lower-right
+    hand='<g transform="translate(150,120) scale(2.1)"><path d="M2 10h4v11H2z M9 21h9.3c.8 0 1.5-.5 1.7-1.3l1.9-6.5c.4-1.3-.6-2.7-2-2.7H14l.7-4.2c.2-1.2-.7-2.3-1.9-2.3-.6 0-1.1.3-1.4.8L9 8.5V21z" fill="'+LIME+'" stroke="'+OUT+'" stroke-width="1.6" stroke-linejoin="round"/></g>'; }
+  var chin='';
+  return body+gloss+cheeks+eyes+glasses+mouth+hand+chin;
+}
+function sparkle(x,y,s,c){ c=c||LIME; return '<div class="art" style="left:'+x+'%;top:'+y+'%;width:'+s+'cqmin;height:'+s+'cqmin">'+
+  svg('0 0 24 24','<path d="M12 0 C13 8 16 11 24 12 C16 13 13 16 12 24 C11 16 8 13 0 12 C8 11 11 8 12 0 Z" fill="'+c+'"/>')+'</div>'; }
+
+/* ============ the 15 stickers ============ */
+var S=[];
+
+// 01 — hero, thumbs up
+S.push({cls:'light', html:
+  '<div class="wm">huev<b>site</b>.io</div>'+
+  '<div class="art" style="right:2%;bottom:20%;width:44cqmin">'+egg({face:'happy',thumb:true})+'</div>'+
+  '<div>'+
+    '<h2 style="font-size:11cqmin;max-width:70%">Build in public.</h2>'+
+    '<h2 style="font-size:11cqmin;margin-top:1cqmin"><span class="hl">Get recognized.</span></h2>'+
+  '</div>'+ sparkle(6,30,6)});
+
+// 02 — terminal (dark)
+S.push({cls:'dark', html:
+  '<div class="row"><div style="display:flex;gap:2cqmin">'+
+    '<span style="width:3.4cqmin;height:3.4cqmin;border-radius:50%;background:#ff5f56"></span>'+
+    '<span style="width:3.4cqmin;height:3.4cqmin;border-radius:50%;background:#ffbd2e"></span>'+
+    '<span style="width:3.4cqmin;height:3.4cqmin;border-radius:50%;background:#27c93f"></span></div></div>'+
+  '<div class="mono" style="font-weight:800;font-size:11cqmin;line-height:1.28;letter-spacing:-.02em">'+
+    '<div><span class="lime-t">&gt;</span> Build.</div>'+
+    '<div><span class="lime-t">&gt;</span> Ship.</div>'+
+    '<div><span class="lime-t">&gt;</span> Share.</div>'+
+    '<div><span class="lime-t">&gt;</span> Grow.</div></div>'+
+  '<div class="row"><div class="wm">huev<b>site</b>.io</div>'+
+    '<div style="width:20cqmin">'+egg({face:'happy'})+'</div></div>'});
+
+// 03 — ship it rocket (egg riding)
+S.push({cls:'light', html:
+  '<div><h2 style="font-size:19cqmin">Ship</h2><h2 style="font-size:19cqmin"><span class="hl">it.</span></h2></div>'+
+  '<div class="art" style="right:-1%;top:17%;width:50cqmin">'+
+    svg('0 0 170 250',
+      '<g transform="translate(39,-8) scale(0.42)">'+eggInner({face:'happy'})+'</g>'+
+      '<path d="M85 98 C 116 98 130 134 130 182 L 40 182 C 40 134 54 98 85 98 Z" fill="'+LIME+'" stroke="'+OUT+'" stroke-width="8" stroke-linejoin="round"/>'+
+      '<path d="M40 182 L 18 216 L 46 202 Z" fill="'+LIME+'" stroke="'+OUT+'" stroke-width="8" stroke-linejoin="round"/>'+
+      '<path d="M130 182 L 152 216 L 124 202 Z" fill="'+LIME+'" stroke="'+OUT+'" stroke-width="8" stroke-linejoin="round"/>'+
+      '<path d="M64 202 q21 34 42 0 q-21 52 -42 0 Z" fill="#ff8a1e" stroke="'+OUT+'" stroke-width="6" stroke-linejoin="round"/>'+
+      '')+'</div>'+
+  '<div class="wm">huev<b>site</b>.io</div>'+ sparkle(6,74,6)+sparkle(62,12,5)});
+
+// 04 — verified builder (dark)
+S.push({cls:'dark', html:
+  '<div></div>'+
+  '<div class="art" style="left:50%;top:48%;transform:translate(-50%,-50%);width:60cqmin">'+
+    svg('0 0 200 210',
+      '<path d="M100 8 L182 34 V104 C182 156 146 188 100 202 C54 188 18 156 18 104 V34 Z" fill="'+LIME+'" stroke="#0c0c0d" stroke-width="7" stroke-linejoin="round"/>'+
+      '<circle cx="100" cy="46" r="20" fill="#0c0c0d"/><path d="M91 46 l6 6 l12 -13" fill="none" stroke="'+LIME+'" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>')+'</div>'+
+  '<div class="art" style="left:50%;top:44%;transform:translateX(-50%);text-align:center;width:100%">'+
+    '<div class="mono" style="color:#0c0c0d;font-weight:800;font-size:4.4cqmin;letter-spacing:.18em">VERIFIED</div>'+
+    '<div style="color:#0c0c0d;font-weight:800;font-size:11cqmin;letter-spacing:-.02em;line-height:1">BUILDER</div></div>'+
+  '<div class="wm" style="text-align:center;width:100%">huev<b>site</b>.io</div>'});
+
+// 05 — mostrá lo que buildeás (sunglasses)
+S.push({cls:'light', html:
+  '<div class="art" style="right:1%;top:6%;width:40cqmin">'+egg({glasses:true,thumb:true})+'</div>'+
+  '<div style="margin-top:auto">'+
+    '<h2 style="font-size:12.5cqmin">Mostrá</h2>'+
+    '<h2 style="font-size:12.5cqmin">lo que</h2>'+
+    '<h2 style="font-size:12.5cqmin"><span class="hl">buildeás.</span></h2></div>'+
+  '<div class="wm" style="margin-top:3cqmin">huev<b>site</b>.io</div>'});
+
+// 06 — builder score card
+S.push({cls:'light', html:
+  '<div class="row"><div class="wm">huev<b>site</b>.io</div>'+
+    '<div style="width:11cqmin;height:11cqmin;background:'+LIME+';border-radius:22%;display:flex;align-items:center;justify-content:center">'+
+      '<div style="width:8.5cqmin">'+egg({face:'happy'})+'</div></div></div>'+
+  '<div>'+
+    '<div class="kicker" style="color:#7a7f85">Builder Score</div>'+
+    '<div style="font-weight:800;font-size:22cqmin;line-height:.9;letter-spacing:-.04em">8,742</div>'+
+    '<div style="display:inline-block;margin-top:2cqmin;background:'+LIME+';color:#141414;font-weight:800;font-size:4.4cqmin;padding:.3cqmin 2cqmin;border-radius:99px" class="mono">▲ +12% esta semana</div></div>'+
+  '<div class="art" style="right:6%;bottom:26%;width:40cqmin;opacity:.9">'+
+    svg('0 0 120 70','<path d="M4 60 L34 40 L54 50 L86 18 L116 8" fill="none" stroke="'+LIME+'" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="116" cy="8" r="6" fill="'+LIME+'"/>')+'</div>'});
+
+// 07 — building my future (sign)
+S.push({cls:'light', html:
+  '<div class="art" style="left:50%;top:2%;transform:translateX(-50%);width:82%;background:#141414;border-radius:3cqmin;padding:3cqmin 0;text-align:center">'+
+    '<div style="color:#fff;font-weight:800;font-size:8cqmin;line-height:1;letter-spacing:-.02em">BUILDING</div>'+
+    '<div style="color:'+LIME+';font-weight:800;font-size:8cqmin;line-height:1;letter-spacing:-.02em">MY FUTURE</div></div>'+
+  '<div class="art" style="left:50%;bottom:6%;transform:translateX(-50%);width:42cqmin">'+egg({face:'happy'})+'</div>'+
+  '<div class="wm" style="position:absolute;left:7cqmin;bottom:6cqmin">huev<b>site</b>.io</div>'+
+  sparkle(12,42,6)+sparkle(82,44,6)});
+
+// 08 — from idea to impact (bulb)
+S.push({cls:'light', html:
+  '<div class="art" style="right:5%;top:8%;width:30cqmin">'+
+    svg('0 0 100 130','<g stroke="'+OUT+'" stroke-width="7" stroke-linecap="round">'+
+      '<path d="M50 8 v-6 M84 22 l4 -4 M16 22 l-4 -4 M92 55 h6 M8 55 h-6" fill="none"/></g>'+
+      '<path d="M50 16 C74 16 90 34 90 56 C90 72 78 80 74 92 H26 C22 80 10 72 10 56 C10 34 26 16 50 16 Z" fill="'+LIME+'" stroke="'+OUT+'" stroke-width="7" stroke-linejoin="round"/>'+
+      '<rect x="30" y="94" width="40" height="10" rx="4" fill="#fff" stroke="'+OUT+'" stroke-width="6"/>'+
+      '<rect x="34" y="106" width="32" height="9" rx="4" fill="#fff" stroke="'+OUT+'" stroke-width="6"/>')+'</div>'+
+  '<div style="margin-top:auto"><h2 style="font-size:13cqmin">From</h2><h2 style="font-size:13cqmin">idea</h2><h2 style="font-size:13cqmin">to <span class="hl">impact.</span></h2></div>'+
+  '<div class="wm" style="margin-top:3cqmin">huev<b>site</b>.io</div>'});
+
+// 09 — build today, legacy (dark)
+S.push({cls:'dark', html:
+  '<div class="art" style="right:0%;top:8%;width:40cqmin">'+egg({face:'happy',think:true})+'</div>'+
+  '<div style="margin-top:auto">'+
+    '<h2 style="font-size:10cqmin">Build today.</h2>'+
+    '<h2 style="font-size:10cqmin">Inspire tomorrow.</h2>'+
+    '<h2 style="font-size:10cqmin">Leave a <span class="lime-t">legacy.</span></h2></div>'+
+  '<div class="wm" style="margin-top:3cqmin">huev<b>site</b>.io</div>'+ sparkle(8,30,6)});
+
+// 10 — less setup more building (laptop)
+S.push({cls:'light', html:
+  '<div class="art" style="right:3%;top:8%;width:26cqmin">'+
+    svg('0 0 120 90','<rect x="18" y="6" width="84" height="56" rx="7" fill="#141414"/>'+
+      '<rect x="26" y="14" width="68" height="40" rx="4" fill="#0c0c0d"/>'+
+      '<text x="60" y="42" text-anchor="middle" font-family="JetBrains Mono" font-weight="800" font-size="20" fill="'+LIME+'">&lt;/&gt;</text>'+
+      '<path d="M6 78 L114 78 L104 62 L16 62 Z" fill="#2a2a2c" stroke="#141414" stroke-width="4" stroke-linejoin="round"/>')+'</div>'+
+  '<div class="art" style="right:1%;top:40%;width:30cqmin">'+egg({face:'happy'})+'</div>'+
+  '<div style="margin-top:auto"><h2 style="font-size:13cqmin">Less setup.</h2><h2 style="font-size:13cqmin">More <span class="hl">building.</span></h2></div>'+
+  '<div class="wm" style="margin-top:3cqmin">huev<b>site</b>.io</div>'});
+
+// 11 — top builder of the week (laurel image)
+S.push({cls:'light', html:
+  '<div class="art" style="left:50%;top:46%;transform:translate(-50%,-50%);width:92%;display:flex;align-items:center;justify-content:center;opacity:.98">'+
+    '<img src="laurel.png" style="width:100%;filter:none" />'+'</div>'+
+  '<div class="art" style="left:50%;top:32%;transform:translateX(-50%);text-align:center;width:100%">'+
+    '<h2 style="font-size:11cqmin;line-height:.95">Top<br>Builder</h2>'+
+    '<div style="display:inline-block;margin-top:2cqmin;background:'+LIME+';color:#141414;font-weight:800;font-size:4.2cqmin;letter-spacing:.14em;padding:.6cqmin 2.4cqmin;border-radius:99px" class="mono">OF THE WEEK</div></div>'+
+  '<div class="wm" style="position:absolute;left:0;bottom:6cqmin;width:100%;text-align:center">huev<b>site</b>.io</div>'});
+
+// 12 — keep building keep growing (round lime seal)
+S.push({cls:'lime', html:
+  '<div class="art" style="left:50%;top:50%;transform:translate(-50%,-50%);width:100%;height:100%">'+
+    svg('0 0 200 200',
+      '<defs><path id="t12" d="M28 104 A72 72 0 0 1 172 104"/><path id="b12" d="M32 100 a68 68 0 0 0 136 0"/></defs>'+
+      '<circle cx="100" cy="100" r="92" fill="none" stroke="#141414" stroke-width="5"/>'+
+      '<circle cx="100" cy="100" r="78" fill="none" stroke="#141414" stroke-width="3"/>'+
+      '<text font-family="JetBrains Mono" font-weight="800" font-size="14" letter-spacing="2" fill="#141414"><textPath href="#t12" startOffset="50%" text-anchor="middle">KEEP BUILDING</textPath></text>'+
+      '<text font-family="JetBrains Mono" font-weight="800" font-size="14" letter-spacing="2" fill="#141414"><textPath href="#b12" startOffset="50%" text-anchor="middle">KEEP GROWING</textPath></text>')+
+    '</div>'+
+  '<div class="art" style="left:50%;top:50%;transform:translate(-50%,-50%);width:36cqmin">'+egg({face:'wink'})+'</div>'});
+
+// 13 — me dicen huevo (wink)
+S.push({cls:'light', html:
+  '<div class="art" style="right:1%;top:8%;width:40cqmin">'+egg({face:'wink',thumb:true})+'</div>'+
+  '<div style="margin-top:auto"><h2 style="font-size:15cqmin">Me dicen</h2><h2 style="font-size:15cqmin"><span class="hl">huevo.</span></h2></div>'+
+  '<div class="wm" style="margin-top:3cqmin">huev<b>site</b>.io</div>'+ sparkle(8,34,6)});
+
+// 14 — build your world (lime bg, globe)
+S.push({cls:'lime', html:
+  '<div><h2 style="font-size:11cqmin;color:#141414">Build your world.</h2>'+
+    '<h2 style="font-size:11cqmin;color:#141414">Build in public.</h2></div>'+
+  '<div class="art" style="right:2%;bottom:20%;width:38cqmin">'+
+    svg('0 0 120 120','<circle cx="60" cy="66" r="46" fill="#fff" stroke="'+OUT+'" stroke-width="7"/>'+
+      '<path d="M22 52 q20 12 40 4 q22 -8 38 2 M18 74 q24 -6 42 4 q20 10 42 0" fill="none" stroke="'+OUT+'" stroke-width="6" stroke-linecap="round"/>'+
+      '<path d="M60 20 v-14 M60 6 l16 6 l-16 6 Z" fill="#141414" stroke="'+OUT+'" stroke-width="4" stroke-linejoin="round"/>')+'</div>'+
+  '<div class="art" style="left:4%;bottom:6%;width:30cqmin">'+egg({face:'wink'})+'</div>'+
+  '<div class="wm" style="position:absolute;right:7cqmin;bottom:6cqmin;color:#141414">huev<b>site</b>.io</div>'});
+
+// 15 — seguimos buildeando (speech bubble)
+S.push({cls:'light', html:
+  '<div class="art" style="left:2%;bottom:12%;width:36cqmin">'+egg({face:'happy',thumb:true})+'</div>'+
+  '<div class="art" style="right:4%;top:8%;width:60%;background:#141414;border-radius:5cqmin;padding:5cqmin 4cqmin">'+
+    '<div style="color:#fff;font-weight:800;font-size:9cqmin;line-height:1">Seguimos</div>'+
+    '<div style="color:'+LIME+';font-weight:800;font-size:9cqmin;line-height:1">buildeando.</div></div>'+
+  '<div class="wm" style="position:absolute;right:7cqmin;bottom:6cqmin">huev<b>site</b>.io</div>'+ sparkle(60,44,5)});
+
+/* ============ render into grid ============ */
+var grid=document.getElementById('grid');
+S.forEach(function(s){
+  var d=document.createElement('div');
+  d.className='sticker '+s.cls;
+  d.innerHTML=s.html;
+  grid.appendChild(d);
+});
+</script>
+</body>
+</html>

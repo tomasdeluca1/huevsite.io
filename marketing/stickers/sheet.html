@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<style>
+  @page { size: A4; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 210mm; height: 297mm; background: #fff;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  .sheet { width: 210mm; height: 297mm; display: flex; align-items: center; justify-content: center; }
+
+  /* 3 × 5 grid of 55mm squares. The 0.3mm gaps show the grey background as
+     straight cut lines for a guillotine / craft knife. */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 55mm);
+    grid-auto-rows: 55mm;
+    gap: 0.3mm;
+    background: #9aa0a6;      /* cut lines */
+    padding: 0.3mm;
+  }
+  .cell { position: relative; width: 55mm; height: 55mm; background: #fff; overflow: hidden; }
+  .cell img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  /* placeholder shown until sticker-NN.png exists (img removes itself on error) */
+  .ph {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: #c3c8cd; font-size: 11mm; font-weight: 700; letter-spacing: -0.03em;
+  }
+  .ph small { position: absolute; bottom: 6mm; font-size: 2.6mm; letter-spacing: 0.18em;
+    text-transform: uppercase; color: #ccd1d6; font-weight: 700; }
+</style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="grid" id="grid"></div>
+  </div>
+  <script>
+    var grid = document.getElementById('grid');
+    for (var i = 1; i <= 15; i++) {
+      var nn = (i < 10 ? '0' : '') + i;
+      var cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.innerHTML =
+        '<span class="ph">' + nn + '<small>calco ' + nn + '</small></span>' +
+        '<img src="sticker-' + nn + '.png" alt="" onerror="this.remove()">';
+      grid.appendChild(cell);
+    }
+  </script>
+</body>
+</html>

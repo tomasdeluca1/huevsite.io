@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+<style>
+  /* huevsite-tools family tokens (source of truth: huevsite-brand/brands/huevsite-tools.json) */
+  :root{
+    --bg:#080808;
+    --text:#F0F0F0;
+    --strong:#FFFFFF;
+    --muted:#888888;
+    --accent:#C8FF00;      /* lima protagonista — único acento, sin gradientes */
+    --border:rgba(255,255,255,0.10);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100vw;height:100vh;overflow:hidden;background:var(--bg);color:var(--text);
+    font-family:'JetBrains Mono',ui-monospace,monospace;-webkit-font-smoothing:antialiased}
+
+  .stage{position:relative;width:100vw;height:100vh;overflow:hidden}
+
+  /* dark-first: lima glows over black (same accent both, no secondary color) */
+  .glow{position:absolute;pointer-events:none;border-radius:50%;background:var(--accent)}
+  .glow--tr{top:-30%;right:-12%;width:58%;height:120%;opacity:.09;filter:blur(120px)}
+  .glow--bl{bottom:-42%;left:-10%;width:44%;height:110%;opacity:.05;filter:blur(120px)}
+
+  /* faint grid, masked toward the content */
+  .grid{position:absolute;inset:0;pointer-events:none;opacity:.5;
+    background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);
+    background-size:44px 44px;
+    -webkit-mask-image:radial-gradient(120% 120% at 68% 42%,#000 42%,transparent 80%);
+    mask-image:radial-gradient(120% 120% at 68% 42%,#000 42%,transparent 80%)}
+
+  /* subtle grain */
+  .noise{position:absolute;inset:0;pointer-events:none;opacity:.045;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+  /* thin lima brand hairline at the very top */
+  .stage::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);opacity:.85;z-index:5}
+
+  .frame{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;
+    justify-content:space-between;padding:7vh 6.2vh}
+
+  .row{display:flex;align-items:center;justify-content:space-between;gap:2vh}
+
+  /* wordmark — matches app/globals.css .logo (JetBrains Mono 700, -0.5px, "site" lima) */
+  .logo{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:3.4vh;letter-spacing:-0.03em;color:var(--strong)}
+  .logo b{color:var(--accent);font-weight:700}
+
+  /* live pill (core component: mono uppercase, radius 999px) */
+  .chip{display:inline-flex;align-items:center;gap:1.1vh;font-size:1.85vh;font-weight:700;
+    text-transform:uppercase;letter-spacing:.2em;color:var(--muted);
+    border:1px solid var(--border);border-radius:999px;padding:1.05vh 2.1vh;background:rgba(255,255,255,.02)}
+  .live{width:1.1vh;height:1.1vh;border-radius:50%;background:var(--accent)}
+
+  /* middle band: copy on the left, laurel emblem on the right */
+  .mid{display:flex;align-items:center;justify-content:space-between;gap:5vh;width:100%}
+  .copy{display:flex;flex-direction:column;gap:2.4vh;flex:1;min-width:0}
+  .laurel{height:44vh;width:auto;flex-shrink:0;filter:drop-shadow(0 0 5vh rgba(200,255,0,0.22))}
+
+  /* eyebrow: label mono + hairline que se extiende (core component) */
+  .eyebrow{display:flex;align-items:center;gap:1.8vh;color:var(--accent);
+    font-size:1.95vh;font-weight:700;text-transform:uppercase;letter-spacing:.24em}
+  .eyebrow::after{content:"";height:1px;flex:1;max-width:16vh;background:var(--accent);opacity:.4}
+
+  h1{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-weight:800;color:var(--strong);
+    font-size:13.2vh;line-height:.98;letter-spacing:-.028em}
+  h1 .hl{color:var(--accent)}   /* lima sólido, sin gradiente */
+
+  .sub{font-size:3vh;font-weight:500;color:var(--muted);letter-spacing:.01em}
+  .sub b{color:var(--strong);font-weight:700}
+
+  /* CTA — solid lima, radius 10px, NO shadow (shape.shadow: none) */
+  .cta{display:flex;flex-direction:column;align-items:flex-end;gap:1.7vh}
+  .pill{display:inline-flex;align-items:center;gap:1.1vh;background:var(--accent);color:#080808;
+    font-family:'JetBrains Mono',monospace;font-weight:700;font-size:2.4vh;letter-spacing:-.01em;
+    border-radius:10px;padding:1.7vh 2.8vh}
+  .url{font-size:2.15vh;font-weight:700;color:var(--strong)}
+  .url b{color:var(--accent)}
+
+  /* ---- per-format tuning ---- */
+  body.f-li-personal h1{font-size:12.4vh}
+  body.f-li-personal .frame{padding:8vh 6.5vh}
+  body.f-li-personal .laurel{height:52vh}
+  body.f-li-company .laurel{height:46vh}
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="glow glow--tr"></div>
+    <div class="glow glow--bl"></div>
+    <div class="grid"></div>
+    <div class="noise"></div>
+
+    <div class="frame">
+      <div class="row">
+        <div class="logo">huev<b>site</b>.io</div>
+        <div class="chip"><span class="live"></span>la red, en vivo</div>
+      </div>
+
+      <div class="mid">
+        <div class="copy">
+          <div class="eyebrow">para builders que shippean</div>
+          <h1>La red para builders<br>que <span class="hl">shippean.</span></h1>
+          <div class="sub"><b>Se rankean.</b> <b>Se descubren.</b> <b>Se nominan.</b></div>
+        </div>
+        <!-- Builder de la Semana laurel — brand award emblem -->
+        <img class="laurel" src="laurel.png" alt="" />
+      </div>
+
+      <!-- bottom-left kept clear (avatar / page logo overlaps there on X & LinkedIn) -->
+      <div class="row" style="justify-content:flex-end;align-items:flex-end">
+        <div class="cta">
+          <div class="url">huev<b>site</b>.io</div>
+          <span class="pill">Armá el tuyo gratis →</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var f = new URLSearchParams(location.search).get('f');
+    if (f) document.body.classList.add('f-' + f);
+    document.fonts && document.fonts.ready.then(function(){ document.documentElement.setAttribute('data-fonts','ready'); });
+  </script>
+</body>
+</html>

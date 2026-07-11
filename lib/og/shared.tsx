@@ -432,6 +432,23 @@ export async function fetchCurrentWinner(): Promise<Winner | null> {
   }
 }
 
+export type RecentWinner = { week: string; user: Winner };
+
+/** The last N Builders de la Semana (most recent first) — for the hall-of-fame OG. */
+export async function fetchRecentWinners(n: number): Promise<RecentWinner[]> {
+  const c = restCreds();
+  if (!c) return [];
+  const url = `${c.baseUrl}/rest/v1/showcase_winners?select=week,user:profiles!showcase_winners_user_id_fkey(username,name,image,tagline,accent_color)&order=week.desc&limit=${n}`;
+  try {
+    const res = await fetch(url, { headers: c.headers, cache: "no-store" });
+    if (!res.ok) return [];
+    const rows = (await res.json()) as Array<{ week: string; user: Winner | null }>;
+    return rows.filter((r) => r.user).map((r) => ({ week: r.week, user: r.user as Winner }));
+  } catch {
+    return [];
+  }
+}
+
 export async function fetchTopBuilders(n: number): Promise<TopBuilder[]> {
   const c = restCreds();
   if (!c) return [];

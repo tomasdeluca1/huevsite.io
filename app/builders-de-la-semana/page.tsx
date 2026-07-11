@@ -10,9 +10,16 @@ import { BuildersHistoryViews } from "@/components/discovery/BuildersHistoryView
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
+  const title = "Builders de la Semana — huevsite.io";
+  const description = "El salón de la fama: cada builder que ganó la semana en Builders Hunt.";
+  // openGraph WITHOUT images so the file-based opengraph-image.tsx / twitter-image.tsx
+  // provide the picture, while these give this page its own share title/description
+  // (otherwise the root OG text cascades in). Mirrors the leaderboard/explore convention.
   return {
-    title: "Builders de la Semana — huevsite.io",
-    description: "El salón de la fama: cada builder que ganó la semana en Builders Hunt.",
+    title,
+    description,
+    openGraph: { title, description },
+    twitter: { card: "summary_large_image", title, description },
   };
 }
 

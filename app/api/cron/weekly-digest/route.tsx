@@ -8,7 +8,6 @@ import { postWeeklyDigest } from "@/lib/twitter";
 import { postWeeklyDigestLinkedIn } from "@/lib/linkedin";
 import { resolveXHandles } from "@/lib/twitter-utils";
 import { buildUnsubscribeUrl } from "@/lib/email-unsubscribe";
-import { listAllAuthUsers } from "@/lib/list-auth-users";
 import { getAllBlogPosts, getPostCategory } from "@/lib/blog-data";
 import { getWeekLaunches } from "@/lib/launch-service";
 import { currentLaunchWeek } from "@/lib/launch-week";
@@ -22,10 +21,12 @@ const UNSUB_MARKER = "__UNSUB_URL__";
 
 /**
  * Weekly community digest cron (Fridays).
- *  - Posts a tweet: top point-gainers of the week + new projects + latest news.
- *  - Emails the same digest to all users with a published profile, minus those
- *    who unsubscribed (community_digest_unsubscribed).
+ *  - Posts a tweet + LinkedIn: top point-gainers of the week + new projects + latest news.
  *  - Writes a fresh score snapshot so next week can compute deltas.
+ *  - The mass email to all users is DISABLED (was too spammy — see
+ *    foundation/second-brain/learnings/cadencia-sin-spam.md). The weekly recap
+ *    now lives only on the public channels (X + LinkedIn), not in inboxes.
+ *    `test_email=` still renders + sends to a single address for previewing.
  *
  * Query params (admin/manual):
  *  - secret=<ADMIN_SECRET>   auth for manual trigger
@@ -189,45 +190,29 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // -- 7. Email. Render once with a marker, swap the per-user unsub link. -
-    const emailHtmlTemplate = await render(
-      React.createElement(WeeklyDigestEmail, {
-        weekLabel,
-        movers: movers.map((m) => ({ name: m.name, username: m.username, delta: m.delta })),
-        newProjectsCount: newProjectsCount || 0,
-        featuredProjects,
-        weekLaunches,
-        news,
-        unsubscribeUrl: UNSUB_MARKER,
-      })
-    );
-
+    // -- 7. Email. The weekly mass email was too spammy, so it's OFF: the cron
+    // never emails the user base anymore. Only a manual `test_email=` still
+    // renders + sends (single recipient) for previewing the template. The
+    // weekly recap now reaches people via X + LinkedIn above, not their inbox.
     const subject = `🥚 Resumen semanal de huevsite — ${weekLabel}`;
     let emailsSent = 0;
     const errors: string[] = [];
 
     if (isTest) {
-      const html = emailHtmlTemplate.replaceAll(UNSUB_MARKER, buildUnsubscribeUrl("test"));
+      const emailHtml = await render(
+        React.createElement(WeeklyDigestEmail, {
+          weekLabel,
+          movers: movers.map((m) => ({ name: m.name, username: m.username, delta: m.delta })),
+          newProjectsCount: newProjectsCount || 0,
+          featuredProjects,
+          weekLaunches,
+          news,
+          unsubscribeUrl: UNSUB_MARKER,
+        })
+      );
+      const html = emailHtml.replaceAll(UNSUB_MARKER, buildUnsubscribeUrl("test"));
       await resend.emails.send({ from: process.env.EMAIL_FROM || "hi@huevsite.studio", to: testEmail!, subject, html });
       emailsSent = 1;
-    } else if (!preview) {
-      const authUsers = await listAllAuthUsers(supabase);
-
-      for (const u of authUsers) {
-        if (!u.email) continue;
-        const prof = profileById.get(u.id);
-        if (!prof) continue; // no published profile
-        if (prof.community_digest_unsubscribed) continue; // opted out
-
-        const html = emailHtmlTemplate.replaceAll(UNSUB_MARKER, buildUnsubscribeUrl(u.id));
-        try {
-          await resend.emails.send({ from: process.env.EMAIL_FROM || "hi@huevsite.studio", to: u.email, subject, html });
-          emailsSent++;
-          await new Promise((r) => setTimeout(r, 100));
-        } catch (err: any) {
-          errors.push(`${u.email}: ${err?.message}`);
-        }
-      }
     }
 
     // -- 8. Write this week's snapshot (the baseline for next week). -------

@@ -233,7 +233,7 @@ export function ProfileEditModal({
                                         value={data.country}
                                         onChange={(c) => setData((p) => ({ ...p, country: c }))}
                                         placeholder={t("page.countryPlaceholder")}
-                                        className={`${INPUT} text-white/60 appearance-none cursor-pointer`}
+                                        className={`${INPUT} text-white/60 cursor-pointer`}
                                     />
                                 </div>
                             )}

@@ -1,6 +1,8 @@
 'use client';
 
-import { useLocale } from 'next-intl';
+import { useMemo } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
+import { Select, type SelectOption } from '@/components/ui/Select';
 import {
   CONTINENTS,
   CONTINENT_LABELS,
@@ -10,10 +12,14 @@ import {
 } from '@/lib/countries';
 
 /**
- * Native <select> for picking an ISO-3166-1 alpha-2 country, grouped by
- * continent (optgroups) and sorted by localized name. Used in the profile edit
- * modal and onboarding so builders can set the country that powers the Explore
- * country/continent filter. Empty value = not set.
+ * Picker for an ISO-3166-1 alpha-2 country, grouped by continent and sorted by
+ * localized name. Used in the profile edit modal and onboarding so builders can
+ * set the country that powers the Explore country/continent filter.
+ * Empty value = not set.
+ *
+ * Built on the design-system <Select> rather than a native <select> so the flags
+ * and the huevsite surface styling survive across browsers, and so the ~140
+ * options stay navigable via the search filter.
  */
 export default function CountrySelect({
   value,
@@ -27,24 +33,32 @@ export default function CountrySelect({
   className?: string;
 }) {
   const locale = useLocale();
-  const grouped = countriesByContinent(locale);
+  const t = useTranslations('shared.countrySelect');
+
+  const options = useMemo<SelectOption[]>(() => {
+    const grouped = countriesByContinent(locale);
+    const lang = locale === 'en' ? 'en' : 'es';
+    return CONTINENTS.flatMap((cont) =>
+      grouped[cont].map((c) => ({
+        value: c.code,
+        label: c.name,
+        icon: flagEmoji(c.code),
+        group: CONTINENT_LABELS[cont as Continent][lang],
+      }))
+    );
+  }, [locale]);
 
   return (
-    <select
-      value={value || ''}
-      onChange={(e) => onChange(e.target.value)}
+    <Select
+      options={options}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder ?? '—'}
+      ariaLabel={placeholder}
+      searchable
+      searchPlaceholder={t('searchPlaceholder')}
+      emptyLabel={t('noResults')}
       className={className}
-    >
-      <option value="">{placeholder ?? '—'}</option>
-      {CONTINENTS.map((cont) => (
-        <optgroup key={cont} label={CONTINENT_LABELS[cont as Continent][locale === 'en' ? 'en' : 'es']}>
-          {grouped[cont].map((c) => (
-            <option key={c.code} value={c.code}>
-              {flagEmoji(c.code)} {c.name}
-            </option>
-          ))}
-        </optgroup>
-      ))}
-    </select>
+    />
   );
 }

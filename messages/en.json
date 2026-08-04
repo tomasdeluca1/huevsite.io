@@ -214,7 +214,11 @@
     },
     "projects": {
       "empty": "No projects yet. Add a project block from the board.",
-      "status": { "idea": "Idea", "building": "Building", "launched": "Launched" },
+      "status": {
+        "idea": "Idea",
+        "building": "Building",
+        "launched": "Launched"
+      },
       "countdown": "Launches in {days} days",
       "dateOn": "Date: {date}",
       "noDate": "No launch date",
@@ -2064,6 +2068,10 @@
       "voteLater": "Vote later",
       "optionA": "Option A",
       "optionB": "Option B"
+    },
+    "countrySelect": {
+      "searchPlaceholder": "Search your country...",
+      "noResults": "No country matches that."
     }
   },
   "blocks": {

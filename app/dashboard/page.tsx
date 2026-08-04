@@ -26,7 +26,6 @@ import { useTranslations } from "next-intl";
 
 import { MOCK_PROFILE } from "@/lib/mock-profile";
 import { BlockData, BlockType, ProfileData, PRESET_COLORS, getContrastColor, isDarkColor, MAX_FREE_BLOCKS } from "@/lib/profile-types";
-import CountrySelect from "@/components/CountrySelect";
 import { HeroBlock } from "@/components/blocks/HeroBlock";
 import { BuildingBlock } from "@/components/blocks/BuildingBlock";
 import { GitHubBlock } from "@/components/blocks/GitHubBlock";

@@ -82,13 +82,13 @@ export function StepRole({ state, onChange, onCountryChange, onNext }: StepRoleP
         })}
       </div>
 
-      <div className="mt-6 space-y-2">
+      <div className="mt-6 mb-8 space-y-2">
         <div className="section-label !text-[9px] px-1">{t("countryLabel")}</div>
         <CountrySelect
           value={state.country}
           onChange={onCountryChange}
           placeholder={t("countryPlaceholder")}
-          className="w-full p-4 rounded-2xl bg-black/30 border border-white/10 outline-none text-sm text-white/80 focus:border-[var(--accent)] transition-all appearance-none cursor-pointer"
+          className="w-full p-4 rounded-2xl bg-black/30 border border-white/10 outline-none text-sm text-white/80 focus:border-[var(--accent)] transition-all cursor-pointer"
         />
       </div>
 

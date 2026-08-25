@@ -1,10 +1,32 @@
 import { getTranslations } from "next-intl/server";
 
-// Branded route loader: a mini browser window "building" a huevsite — its bento
-// blocks assemble in the accent color while the URL bar types the profile path.
-// Pure CSS animation (keyframes in globals.css), so it paints instantly with no
-// client JS. Ties the loading moment to the product: building your website.
-export default async function Loading() {
+/**
+ * Branded route loader: a mini browser window "building" a huevsite. Its bento
+ * blocks assemble in the accent color while the URL bar types the profile path.
+ * Pure CSS animation (keyframes in globals.css), so it paints instantly with no
+ * client JS.
+ *
+ * WHY THIS LIVES HERE INSTEAD OF app/loading.tsx
+ *
+ * A loading.tsx wraps its whole segment subtree in a Suspense boundary, and
+ * Next flushes that shell with a committed HTTP 200 before the page component
+ * resolves. Any route under it that later calls notFound() therefore swaps in
+ * the 404 UI but keeps the 200 status. With this file at app/loading.tsx, every
+ * unknown username, blog slug and sub-site answered 200 with the loader as its
+ * body: an unbounded space of soft-404s, since huevsite.io/<anything> matched
+ * the [username] route.
+ *
+ * Verified by removing app/loading.tsx: the three routes went back to 404.
+ * Putting the guard in generateMetadata does NOT help, the shell is already
+ * flushed by then.
+ *
+ * So the loader is opt-in per segment now. Mount it ONLY in segments whose
+ * whole subtree never calls notFound(). Before adding a loading.tsx anywhere,
+ * check the children too: app/blog/loading.tsx would also wrap blog/[slug],
+ * which does call notFound().
+ */
+
+export async function RouteLoader() {
   const t = await getTranslations("meta");
 
   // Bento tiles: [colSpan, rowSpan] mimicking the huevsite grid. Each fades in

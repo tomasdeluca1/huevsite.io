@@ -2180,8 +2180,6 @@
     "prev": "Previous",
     "next": "Next",
     "ctaSub": "Want to be in this directory?",
-    "ctaButton": "Build your huevsite",
-    "pastEnd": "No more builders on this page.",
-    "backToStart": "Back to the directory"
+    "ctaButton": "Build your huevsite"
   }
 }

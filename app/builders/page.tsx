@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { Compass } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getTranslations } from "next-intl/server";
@@ -107,18 +108,6 @@ export async function generateMetadata({
   const locale = await getLocale();
   const page = parsePage(searchParams.page);
 
-  // ?page=<n> past the end is an infinite supply of thin URLs. A real 404 is
-  // NOT reachable here: app/loading.tsx makes this route stream, so Next has
-  // already flushed a 200 before either generateMetadata's notFound() or the
-  // component's can take effect (verified — both still returned 200).
-  //
-  // So we neutralise the actual risk instead of the status code: a noindex page
-  // cannot enter the index whatever it returns, and the canonical points the
-  // strays back at the directory. Nothing links to these URLs anyway, so the
-  // crawl-budget cost is theoretical.
-  const outOfRange =
-    page > 1 && page > Math.max(1, Math.ceil((await countBuilders()) / PER_PAGE));
-
   const title = page > 1 ? t("metaTitlePaged", { page }) : t("metaTitle");
   const description = t("metaDescription");
 
@@ -126,12 +115,11 @@ export async function generateMetadata({
     title,
     description,
     keywords: keywordsFor("explore", locale),
-    ...(outOfRange ? { robots: { index: false, follow: true } } : {}),
-    // Self-referencing canonical on EVERY real page, including 2..n. Pointing
+    // Self-referencing canonical on EVERY page, including 2..n. Pointing
     // the paginated pages back at page 1 (a common reflex) would drop them from
     // the index — and with them the only internal links to the builders that
     // live past the first 60, which is the entire reason this page exists.
-    alternates: { canonical: canonical(outOfRange ? "/builders" : pageHref(page)) },
+    alternates: { canonical: canonical(pageHref(page)) },
     openGraph: {
       title,
       description,
@@ -153,9 +141,13 @@ export default async function BuildersDirectoryPage({
   const { builders, total } = await getBuilders(page);
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
 
-  // Past the last page: show the way back rather than a blank grid. The
-  // noindex from generateMetadata is what keeps this out of the index.
-  const pastEnd = page > totalPages;
+  // Past the last page is a real 404. This segment deliberately has NO
+  // loading.tsx: one would wrap it in a Suspense boundary, Next would flush the
+  // shell with a committed 200, and notFound() could then only swap the UI.
+  // See components/RouteLoader for the whole story.
+  if (page > totalPages) {
+    notFound();
+  }
 
   const supabase = await createClient();
   const {
@@ -216,12 +208,7 @@ export default async function BuildersDirectoryPage({
       <main className="flex-1 px-6 md:px-10 pb-24 max-w-[1440px] mx-auto w-full">
         {builders.length === 0 ? (
           <div className="py-20 text-center">
-            <p className="text-[var(--text-dim)]">{pastEnd ? t("pastEnd") : t("empty")}</p>
-            {pastEnd && (
-              <Link href="/builders" className="mt-4 inline-block text-sm text-[var(--accent)] hover:underline">
-                {t("backToStart")}
-              </Link>
-            )}
+            <p className="text-[var(--text-dim)]">{t("empty")}</p>
           </div>
         ) : (
           <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 list-none p-0">

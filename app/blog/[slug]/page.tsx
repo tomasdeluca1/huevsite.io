@@ -20,6 +20,7 @@ import "highlight.js/styles/github-dark.css";
 import Image from "next/image";
 import { SITE_URL } from "@/lib/site-url";
 import { safeJsonLd } from "@/lib/json-ld";
+import { breadcrumbLd, ORGANIZATION_ID } from "@/lib/structured-data";
 
 // DB-backed BDLS posts are published ad-hoc — avoid serving cached shells
 // from the previous build that don't know about them yet.
@@ -101,21 +102,39 @@ export default async function BlogPostPage({
 
   const postUrl = `${SITE_URL}/blog/${post.slug}`;
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    "headline": post.title,
-    "description": post.excerpt,
-    "author": {
-      "@type": post.author.username === PLATFORM_AUTHOR_USERNAME ? "Organization" : "Person",
-      "name": post.author.name,
-      "url":
-        post.author.username === PLATFORM_AUTHOR_USERNAME
-          ? SITE_URL
-          : `${SITE_URL}/${post.author.username}`,
+  // BlogPosting. `image`, `dateModified`, `publisher` and `mainEntityOfPage`
+  // are what Google actually requires for an article rich result — without
+  // them the markup parses but is ineligible.
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "@id": `${postUrl}#article`,
+      "mainEntityOfPage": { "@type": "WebPage", "@id": postUrl },
+      "url": postUrl,
+      "headline": post.title,
+      "description": post.excerpt,
+      "image": [`${SITE_URL}/blog/${post.slug}/opengraph-image`],
+      "inLanguage": locale,
+      "keywords": post.tags,
+      "author": {
+        "@type": post.author.username === PLATFORM_AUTHOR_USERNAME ? "Organization" : "Person",
+        "name": post.author.name,
+        "url":
+          post.author.username === PLATFORM_AUTHOR_USERNAME
+            ? SITE_URL
+            : `${SITE_URL}/${post.author.username}`,
+      },
+      "publisher": { "@id": ORGANIZATION_ID },
+      "datePublished": post.date,
+      "dateModified": post.date,
     },
-    "datePublished": post.date,
-  };
+    breadcrumbLd([
+      { name: "huevsite.io", path: "/" },
+      { name: "Blog", path: "/blog" },
+      { name: post.title, path: `/blog/${post.slug}` },
+    ]),
+  ];
 
   return (
     <>

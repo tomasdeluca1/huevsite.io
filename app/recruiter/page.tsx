@@ -1,6 +1,12 @@
+import type { Metadata } from 'next';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
+import { getLocale } from '@/lib/locale';
+import { SITE_URL } from '@/lib/site-url';
+import { canonical, keywordsFor } from '@/lib/seo';
+import { safeJsonLd } from '@/lib/json-ld';
+import { breadcrumbLd, collectionPageLd } from '@/lib/structured-data';
 import Link from 'next/link';
 import { Briefcase } from 'lucide-react';
 import LocaleToggle from '@/components/LocaleToggle';
@@ -65,12 +71,57 @@ async function getTalent(): Promise<RecruiterTalent[]> {
     });
 }
 
+// /recruiter targets a completely different query set than the rest of the
+// site ("contratar developers latam", "developers open to work") and had no
+// metadata, so it inherited the builder-facing root copy and competed for the
+// wrong intent.
+export async function generateMetadata(): Promise<Metadata> {
+    const t = await getTranslations('recruiter');
+    const locale = await getLocale();
+    const title = t('metaTitle');
+    const description = t('metaDescription');
+    return {
+        title,
+        description,
+        keywords: keywordsFor('recruiter', locale),
+        alternates: { canonical: canonical('/recruiter') },
+        openGraph: { title, description, url: canonical('/recruiter'), type: 'website', siteName: 'huevsite.io' },
+        twitter: { card: 'summary_large_image', title, description },
+    };
+}
+
 export default async function RecruiterDashboard() {
     const talentList = await getTalent();
     const t = await getTranslations('recruiter');
 
+    const jsonLd = [
+        collectionPageLd({
+            name: t('metaTitle'),
+            description: t('metaDescription'),
+            url: `${SITE_URL}/recruiter`,
+            items: talentList.slice(0, 50).map((talent) => ({
+                name: talent.name || `@${talent.username}`,
+                url: `${SITE_URL}/${talent.username}`,
+                description: [talent.tagline, talent.mainStack.join(', ')].filter(Boolean).join(' · ') || undefined,
+            })),
+        }),
+        breadcrumbLd([
+            { name: 'huevsite.io', path: '/' },
+            { name: t('breadcrumb'), path: '/recruiter' },
+        ]),
+    ];
+
     return (
         <div className="min-h-screen bg-[var(--bg)] font-display text-white selection:bg-[#C8FF00]/30 selection:text-[#C8FF00]">
+            {/* Plain <script>, NOT next/script: with strategy="beforeInteractive"
+                next/script only ships the tag inside the RSC flight payload and
+                injects it client-side, so the JSON-LD was absent from the server
+                HTML entirely — invisible to every crawler that doesn't run JS
+                (Bing, LinkedIn, and the AI bots robots.txt explicitly invites). */}
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
+            />
             {/* Navbar Premium */}
             <nav className="fixed top-0 inset-x-0 z-50 bg-black/60 backdrop-blur-xl border-b border-[var(--border)]">
                 <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">

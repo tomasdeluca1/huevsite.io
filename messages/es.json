@@ -1122,11 +1122,14 @@
     "noStackIndexed": "No stack indexado",
     "scoreLabel": "Score",
     "emptyNoTalent": "No se encontró talento rankeado aún.",
-    "emptyNoMatch": "Ningún builder matchea esos filtros. Probá aflojando alguno."
+    "emptyNoMatch": "Ningún builder matchea esos filtros. Probá aflojando alguno.",
+    "metaTitle": "Contratar developers y builders LATAM | huevsite.io",
+    "metaDescription": "Board de talento tech rankeado por Builder Score: developers y founders con proyectos reales, stack indexado y estado open to work. Sin CVs inflados.",
+    "breadcrumb": "Talento"
   },
   "leaderboard": {
-    "metaTitle": "Ranking de Builders — huevsite.io",
-    "metaDescription": "El ranking de los builders más activos. Subí tu builder score, sumá seguidores y escalá posiciones.",
+    "metaTitle": "Ranking de builders y developers | huevsite.io",
+    "metaDescription": "El ranking de los builders más activos de la red: Builder Score, proyectos lanzados y actividad real. Subí tu score y escalá posiciones.",
     "metaOgDescription": "Mirá quiénes lideran la comunidad de builders y competí por el primer puesto.",
     "navExplore": "Explorar",
     "myHuevsite": "Mi huevsite",
@@ -1190,7 +1193,10 @@
     "navPrev": "Anterior",
     "navNext": "Siguiente",
     "navExploreLabel": "Explorar",
-    "allPlaces": "Todo el mundo"
+    "allPlaces": "Todo el mundo",
+    "metaTitle": "Explorar builders — portfolios de developers | huevsite.io",
+    "metaDescription": "El directorio de builders: portfolios de developers, diseñadores y founders con proyectos, stack y métricas reales. Buscá inspiración y armá el tuyo.",
+    "breadcrumb": "Explorar builders"
   },
   "discovery": {
     "navBuildersHunt": "Builders Hunt",
@@ -1297,8 +1303,8 @@
     "emptyNominations": "Todavía no hay nominados esta semana. Explorá perfiles y nominá builders que te inspiran."
   },
   "landing": {
-    "metaTitle": "huevsite.io | Construí tu reputación como builder",
-    "metaDescription": "Proyectos, métricas reales y endorsements de otros builders. Que te vean shippeando, no diciendo. Acá vive la red de builders.",
+    "metaTitle": "Portfolio y link in bio para builders | huevsite.io",
+    "metaDescription": "Armá tu portfolio de developer en 3 minutos: proyectos, stack, GitHub y métricas reales en un solo link. Que te vean shippeando, no diciendo.",
     "heroActiveBuilders": "+{count} builders activos esta semana",
     "heroClaimEyebrow": "tu rincón en internet",
     "heroClaimTitle": "Tu <accent>nombre</accent>, tu trabajo, <br></br>tu rincón en <br></br>internet.",
@@ -1454,8 +1460,8 @@
     "finalCtaMetaByBuilders": "Hecho por y para builders"
   },
   "pricing": {
-    "pageMetaTitle": "Precios · huevsite.io",
-    "pageMetaDescription": "Free, Pro y Founder. Elegí cómo querés que te encuentren.",
+    "pageMetaTitle": "Precios — Portfolio para builders desde $0 | huevsite.io",
+    "pageMetaDescription": "Free para siempre y sin tarjeta, Pro a $9/mes con dominio propio e insights, y Founder de pago único. Elegí cómo querés que te encuentren.",
     "securePaymentNote": "Pagos seguros vía Lemon Squeezy · Cancelás cuando quieras",
     "freeLabel": "Free",
     "freeSubtitle": "Para empezar a mostrar lo que buildeás.",
@@ -1488,7 +1494,11 @@
     "founderFeature3": "Badge Founder exclusivo",
     "founderFeature4": "Apoyás a un proyecto indie",
     "founderCta": "Quiero el lifetime →",
-    "founderCtaSoon": "Pronto"
+    "founderCtaSoon": "Pronto",
+    "breadcrumb": "Precios",
+    "schemaFreeDescription": "Perfil público con bloques, sin tarjeta de crédito.",
+    "schemaProDescription": "Dominio propio, insights, badge verificado y más visibilidad en la red.",
+    "schemaFounderDescription": "Pago único de por vida: todo lo de Pro para siempre, cupos limitados."
   },
   "nav": {
     "launches": "Builders Hunt",
@@ -1857,8 +1867,8 @@
     "finalCtaSecondary": "Iniciar sesión"
   },
   "linktree": {
-    "metaTitle": "Migrá desde Linktree — huevsite.io",
-    "metaDescription": "Tu Linktree se quedó chico. Pegás tu URL, importamos todo, y en 3 minutos tenés un perfil que muestra quién sos de verdad.",
+    "metaTitle": "Alternativa a Linktree para developers | huevsite.io",
+    "metaDescription": "Migrá de Linktree en un click: pegás tu URL, importamos tus links y en 3 minutos tenés un portfolio con proyectos, stack y métricas. No una lista de links.",
     "navExamples": "Ver ejemplos",
     "navMyHuevsite": "Mi huevsite",
     "navLogin": "Entrar →",
@@ -1922,8 +1932,8 @@
     "footerLogin": "Entrar"
   },
   "meta": {
-    "rootTitle": "huevsite.io | Construí tu reputación como builder",
-    "rootDescription": "Proyectos, métricas reales y endorsements de otros builders. Que te vean shippeando, no diciendo. Acá vive la red de builders.",
+    "rootTitle": "Portfolio y link in bio para builders | huevsite.io",
+    "rootDescription": "Armá tu portfolio de developer en 3 minutos: proyectos, stack, GitHub y métricas reales en un solo link. Que te vean shippeando, no diciendo.",
     "loadingCaption": "armando tu huevsite…"
   },
   "shared": {

@@ -6,6 +6,11 @@ import { DiscoveryHeader } from "@/components/discovery/DiscoveryHeader";
 import { getAllWinners } from "@/lib/showcase-service";
 import { getBdlsSlugsByUsername } from "@/lib/blog-data";
 import { BuildersHistoryViews } from "@/components/discovery/BuildersHistoryViews";
+import { getLocale } from "@/lib/locale";
+import { canonical, keywordsFor } from "@/lib/seo";
+import { SITE_URL } from "@/lib/site-url";
+import { safeJsonLd } from "@/lib/json-ld";
+import { breadcrumbLd, collectionPageLd } from "@/lib/structured-data";
 
 export const dynamic = "force-dynamic";
 
@@ -15,10 +20,13 @@ export async function generateMetadata(): Promise<Metadata> {
   // openGraph WITHOUT images so the file-based opengraph-image.tsx / twitter-image.tsx
   // provide the picture, while these give this page its own share title/description
   // (otherwise the root OG text cascades in). Mirrors the leaderboard/explore convention.
+  const locale = await getLocale();
   return {
     title,
     description,
-    openGraph: { title, description },
+    keywords: keywordsFor("bdls", locale),
+    alternates: { canonical: canonical("/builders-de-la-semana") },
+    openGraph: { title, description, url: canonical("/builders-de-la-semana"), siteName: "huevsite.io" },
     twitter: { card: "summary_large_image", title, description },
   };
 }
@@ -41,8 +49,33 @@ export default async function BuildersDeLaSemanaPage() {
     username = prof?.username ?? null;
   }
 
+  const jsonLd = [
+    collectionPageLd({
+      name: "Builders de la Semana",
+      description: "El salón de la fama: cada builder que ganó la semana en Builders Hunt.",
+      url: `${SITE_URL}/builders-de-la-semana`,
+      items: winners.map((w) => ({
+        name: `${w.name} — semana ${w.week}`,
+        url: `${SITE_URL}/${w.username}`,
+        description: w.tagline || undefined,
+      })),
+    }),
+    breadcrumbLd([
+      { name: "huevsite.io", path: "/" },
+      { name: "Builders de la Semana", path: "/builders-de-la-semana" },
+    ]),
+  ];
+
   return (
     <main className="min-h-screen bg-[#070708]">
+      {/* Plain <script>, NOT next/script: next/script with
+          strategy="beforeInteractive" only ships the tag in the RSC flight
+          payload and injects it client-side, leaving the JSON-LD out of the
+          server HTML that non-JS crawlers read. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
+      />
       <DiscoveryHeader currentUserId={user?.id ?? null} username={username} />
 
       <div className="mx-auto max-w-4xl px-4 pb-24 pt-8">

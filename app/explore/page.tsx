@@ -1,13 +1,39 @@
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
+import { getLocale } from "@/lib/locale";
+import { SITE_URL } from "@/lib/site-url";
+import { canonical, keywordsFor } from "@/lib/seo";
+import { safeJsonLd } from "@/lib/json-ld";
+import { breadcrumbLd, collectionPageLd } from "@/lib/structured-data";
 import LocaleToggle from "@/components/LocaleToggle";
 import { ExploreClient } from "@/components/explore/ExploreClient";
 import { DiscoveryHeader } from "@/components/discovery/DiscoveryHeader";
 import { HallOfFameButton } from "@/components/discovery/HallOfFameButton";
 
 export const revalidate = 60; // Revalidate simple cache every 60s
+
+// /explore is the site's builder directory and one of its two strongest
+// organic entry points (the other is /[username]). It had no metadata at all,
+// so it inherited the root title/description and was indistinguishable from
+// the homepage — a self-inflicted duplicate.
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("explore");
+  const locale = await getLocale();
+  const title = t("metaTitle");
+  const description = t("metaDescription");
+  return {
+    title,
+    description,
+    keywords: keywordsFor("explore", locale),
+    // ?from=dashboard and utm_* variants must not fork into duplicate URLs.
+    alternates: { canonical: canonical("/explore") },
+    openGraph: { title, description, url: canonical("/explore"), type: "website", siteName: "huevsite.io" },
+    twitter: { card: "summary_large_image", title, description },
+  };
+}
 
 export default async function ExplorePage({ searchParams }: { searchParams: Promise<{ from?: string }> }) {
   const supabase = await createClient();
@@ -39,11 +65,40 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
     console.error("Error fetching explore profiles:", error);
   }
 
+  // CollectionPage + ItemList so crawlers read /explore as a directory of
+  // builder profiles (and can surface the individual profiles) instead of a
+  // generic page that happens to contain links.
+  const jsonLd = [
+    collectionPageLd({
+      name: t("metaTitle"),
+      description: t("metaDescription"),
+      url: `${SITE_URL}/explore`,
+      items: (profiles || []).slice(0, 50).map((p) => ({
+        name: p.name || `@${p.username}`,
+        url: `${SITE_URL}/${p.username}`,
+        description: p.tagline || undefined,
+      })),
+    }),
+    breadcrumbLd([
+      { name: "huevsite.io", path: "/" },
+      { name: t("breadcrumb"), path: "/explore" },
+    ]),
+  ];
+
   return (
     <div
       className="min-h-screen font-display flex flex-col"
       style={{ background: "radial-gradient(circle at 50% 0%, rgba(200,255,0,0.06), transparent 720px), var(--bg)" }}
     >
+      {/* Plain <script>, NOT next/script: with strategy="beforeInteractive"
+          next/script only ships the tag inside the RSC flight payload and
+          injects it client-side, so the JSON-LD was absent from the server
+          HTML entirely — invisible to every crawler that doesn't run JS
+          (Bing, LinkedIn, and the AI bots robots.txt explicitly invites). */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
+      />
       <DiscoveryHeader currentUserId={user?.id ?? null} />
       <HallOfFameButton />
 

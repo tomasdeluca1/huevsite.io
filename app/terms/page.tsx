@@ -2,12 +2,14 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
+import { canonical } from '@/lib/seo'
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('legal')
   return {
     title: t('terms.metaTitle'),
     description: t('terms.metaDescription'),
+    alternates: { canonical: canonical('/terms') },
   }
 }
 

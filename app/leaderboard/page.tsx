@@ -7,18 +7,31 @@ import { LeaderboardClient } from "@/components/leaderboard/LeaderboardClient";
 import { DiscoveryHeader } from "@/components/discovery/DiscoveryHeader";
 import { HallOfFameButton } from "@/components/discovery/HallOfFameButton";
 import type { Metadata } from "next";
+import { getLocale } from "@/lib/locale";
+import { canonical, keywordsFor } from "@/lib/seo";
+import { SITE_URL } from "@/lib/site-url";
+import { safeJsonLd } from "@/lib/json-ld";
+import { breadcrumbLd, collectionPageLd } from "@/lib/structured-data";
 
 export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("leaderboard");
+  const locale = await getLocale();
   return {
     title: t("metaTitle"),
     description: t("metaDescription"),
+    keywords: keywordsFor("leaderboard", locale),
+    // ?from=dashboard must not fork the URL.
+    alternates: { canonical: canonical("/leaderboard") },
     openGraph: {
       title: t("metaTitle"),
       description: t("metaOgDescription"),
+      url: canonical("/leaderboard"),
+      siteName: "huevsite.io",
+      type: "website",
     },
+    twitter: { card: "summary_large_image", title: t("metaTitle"), description: t("metaOgDescription") },
   };
 }
 
@@ -36,11 +49,35 @@ export default async function LeaderboardPage({
     data: { user },
   } = await supabase.auth.getUser();
 
+  // The ranking rows are fetched client-side by LeaderboardClient, so there's
+  // no ItemList to emit here — collectionPageLd omits mainEntity when empty
+  // rather than declaring a zero-item list.
+  const jsonLd = [
+    collectionPageLd({
+      name: t("metaTitle"),
+      description: t("metaDescription"),
+      url: `${SITE_URL}/leaderboard`,
+      items: [],
+    }),
+    breadcrumbLd([
+      { name: "huevsite.io", path: "/" },
+      { name: t("metaTitle"), path: "/leaderboard" },
+    ]),
+  ];
+
   return (
     <div
       className="min-h-screen font-display flex flex-col"
       style={{ background: "radial-gradient(circle at 50% 0%, rgba(200,255,0,0.06), transparent 720px), var(--bg)" }}
     >
+      {/* Plain <script>, NOT next/script: next/script with
+          strategy="beforeInteractive" only ships the tag in the RSC flight
+          payload and injects it client-side, leaving the JSON-LD out of the
+          server HTML that non-JS crawlers read. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
+      />
       <DiscoveryHeader currentUserId={user?.id ?? null} />
       <HallOfFameButton />
 

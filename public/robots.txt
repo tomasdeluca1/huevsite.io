@@ -7,13 +7,23 @@
 # Queremos indexación máxima en motores de búsqueda (Google, Bing, etc.)
 User-agent: *
 Allow: /
-# Rutas privadas/internas deshabilitadas
+# Rutas privadas/internas deshabilitadas.
+# Sin la barra final: "Disallow: /dashboard/" NO bloquea /dashboard (el match
+# de robots.txt es por prefijo literal), asi que la pagina principal de cada
+# seccion privada quedaba crawleable. El prefijo sin barra cubre ambas.
 Disallow: /api/
 Disallow: /_next/
-Disallow: /dashboard/
-Disallow: /onboarding/
-Disallow: /login/
-Disallow: /admin/
+Disallow: /dashboard
+Disallow: /onboarding
+Disallow: /admin
+Disallow: /welcome
+Disallow: /checkout
+Disallow: /auth/
+# NO se bloquean ?from= ni utm_*: esas URLs se comparten en redes y los
+# crawlers de preview (facebookexternalhit, LinkedInBot) caen bajo "*", asi
+# que bloquearlas romperia el OG de todo link con campaña. Los duplicados ya
+# los resuelve el <link rel="canonical"> de cada pagina.
+# /login queda crawleable a proposito: tiene OG propio y se comparte.
 Allow: /api/og/*
 
 # X / Twitter cards

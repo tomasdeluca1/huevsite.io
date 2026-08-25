@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import LocaleToggle from "@/components/LocaleToggle";
+import { getLocale } from "@/lib/locale";
+import { canonical, keywordsFor } from "@/lib/seo";
 import {
   ArrowRight,
   CheckCircle2,
@@ -13,9 +15,19 @@ import {
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("referrals");
+  const locale = await getLocale();
   return {
     title: t("metaTitle"),
     description: t("metaDescription"),
+    keywords: keywordsFor("referrals", locale),
+    alternates: { canonical: canonical("/referrals") },
+    openGraph: {
+      title: t("metaTitle"),
+      description: t("metaDescription"),
+      url: canonical("/referrals"),
+      type: "website",
+      siteName: "huevsite.io",
+    },
   };
 }
 

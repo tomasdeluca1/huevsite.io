@@ -1,5 +1,4 @@
 import { Metadata } from "next";
-import Script from "next/script";
 import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import { getShowcaseData, getActiveBuildersThisWeek, getNetworkPulse } from "@/lib/showcase-service";
@@ -10,6 +9,9 @@ import { getFeaturedTestimonials } from "@/lib/testimonial-service";
 import { getPublishedFaqs } from "@/lib/faq-service";
 import { getSiteSettings } from "@/lib/site-settings-service";
 import { safeJsonLd } from "@/lib/json-ld";
+import { canonical, keywordsFor } from "@/lib/seo";
+import { ORGANIZATION_ID, WEBSITE_ID } from "@/lib/structured-data";
+import { getLocale } from "@/lib/locale";
 import { getFounderSeats } from "@/lib/founder-seats";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +25,7 @@ export const dynamic = "force-dynamic";
 // now works FOR us — each winner's image stays frozen at its own stable URL.
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("landing");
+  const locale = await getLocale();
   const OG_TITLE = t("metaTitle");
   const OG_DESCRIPTION = t("metaDescription");
   const winner = await fetchCurrentWinner().catch(() => null);
@@ -30,13 +33,16 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: OG_TITLE,
     description: OG_DESCRIPTION,
+    keywords: keywordsFor("home", locale),
+    alternates: { canonical: canonical("/") },
     openGraph: {
       title: OG_TITLE,
       description: OG_DESCRIPTION,
       url: SITE_URL,
       type: "website",
       siteName: "huevsite.io",
-      locale: "es_AR",
+      locale: locale === "en" ? "en_US" : "es_AR",
+      alternateLocale: locale === "en" ? ["es_AR"] : ["en_US"],
       images: [
         { url: `${SITE_URL}/opengraph-image?v=${v}`, width: 1200, height: 630, alt: OG_TITLE },
       ],
@@ -55,14 +61,31 @@ export async function generateMetadata(): Promise<Metadata> {
 const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
+  "@id": ORGANIZATION_ID,
   name: "Huevsite.io",
+  alternateName: "huevsite",
   url: "https://huevsite.io",
-  logo: "https://huevsite.io/icons/icon-512.png",
+  logo: {
+    "@type": "ImageObject",
+    url: "https://huevsite.io/icons/icon-512.png",
+    width: 512,
+    height: 512,
+  },
+  image: "https://huevsite.io/opengraph-image.png",
   description:
     "Red social y plataforma de portfolios para builders, desarrolladores, diseñadores y founders de todo el mundo.",
+  slogan: "Mostrá lo que buildeás.",
+  knowsAbout: [
+    "portfolio para developers",
+    "link in bio",
+    "indie hacking",
+    "side projects",
+    "comunidad de builders",
+  ],
   sameAs: [
     "https://x.com/huevsite",
     "https://instagram.com/huevsite",
+    "https://www.linkedin.com/company/huevsite",
   ],
   contactPoint: {
     "@type": "ContactPoint",
@@ -75,8 +98,11 @@ const organizationSchema = {
 const websiteSchema = {
   "@context": "https://schema.org",
   "@type": "WebSite",
+  "@id": WEBSITE_ID,
   name: "Huevsite.io",
+  alternateName: "huevsite.io",
   url: "https://huevsite.io",
+  publisher: { "@id": ORGANIZATION_ID },
   description:
     "El portfolio que se arma solo y se ve como si lo hubiera hecho un diseñador caro. Red social y portfolio para builders de todo el mundo.",
   inLanguage: "es",
@@ -137,6 +163,52 @@ const faqSchema = {
   ],
 };
 
+// SoftwareApplication + offers: the machine-readable answer to "what is
+// huevsite and what does it cost". This is what AI Overviews / ChatGPT quote,
+// and it makes the free tier explicit so the product isn't assumed paid.
+const softwareSchema = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "@id": "https://huevsite.io/#software",
+  name: "huevsite.io",
+  applicationCategory: "BusinessApplication",
+  applicationSubCategory: "Portfolio & link-in-bio builder",
+  operatingSystem: "Web",
+  url: "https://huevsite.io",
+  inLanguage: ["es", "en"],
+  publisher: { "@id": ORGANIZATION_ID },
+  description:
+    "Constructor de portfolios y link in bio para builders: proyectos, stack, stats de GitHub, métricas reales y endorsements en un solo perfil público.",
+  featureList: [
+    "Editor visual drag & drop de bloques",
+    "Stats de GitHub automáticas (lenguajes, commits, repos)",
+    "Métricas reales de tus proyectos (MRR, usuarios)",
+    "Importación desde Linktree en un click",
+    "Dominio personalizado",
+    "Endorsements de otros builders",
+  ],
+  offers: [
+    {
+      "@type": "Offer",
+      name: "Free",
+      price: "0",
+      priceCurrency: "USD",
+      description: "Perfil público con bloques, sin tarjeta de crédito.",
+      availability: "https://schema.org/InStock",
+      url: "https://huevsite.io/precios",
+    },
+    {
+      "@type": "Offer",
+      name: "Pro",
+      price: "9",
+      priceCurrency: "USD",
+      description: "Dominio propio, insights, badge verificado y más visibilidad.",
+      availability: "https://schema.org/InStock",
+      url: "https://huevsite.io/precios",
+    },
+  ],
+};
+
 const speakableSchema = {
   "@context": "https://schema.org",
   "@type": "WebPage",
@@ -189,17 +261,21 @@ export default async function LandingPage() {
   const jsonLd = [
     organizationSchema,
     websiteSchema,
+    softwareSchema,
     dynamicFaqSchema,
     speakableSchema,
   ];
 
   return (
     <>
-      <Script
-        id="jsonld-landing"
+      {/* Plain <script>, NOT next/script: with strategy="beforeInteractive"
+          next/script only ships the tag inside the RSC flight payload and
+          injects it client-side, so the JSON-LD was absent from the server
+          HTML entirely — invisible to every crawler that doesn't run JS
+          (Bing, LinkedIn, and the AI bots robots.txt explicitly invites). */}
+      <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
-        strategy="beforeInteractive"
       />
       <LandingPageClient
         showcaseData={data}

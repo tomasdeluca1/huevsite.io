@@ -16,6 +16,10 @@ import { ExploreNavigation } from "@/components/explore/ExploreNavigation";
 import { headers } from "next/headers";
 import { AnalyticsTracker } from "@/components/analytics/AnalyticsTracker";
 import { SITE_URL } from "@/lib/site-url";
+import { safeJsonLd } from "@/lib/json-ld";
+import { breadcrumbLd, profilePageLd } from "@/lib/structured-data";
+import { keywordsFor } from "@/lib/seo";
+import { getLocale } from "@/lib/locale";
 
 interface Props {
   params: { username: string };
@@ -66,9 +70,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     160
   );
 
+  const locale = await getLocale();
+  // Keywords blend the generic profile set with what this builder actually
+  // does (roles + stack), so the page carries its own long-tail terms instead
+  // of repeating the site-wide list on every profile.
+  const stackItems: string[] = profile.blocks
+    .filter((b) => b.type === "stack")
+    .flatMap((b) => ((b as any)?.items ?? (b as any)?.data?.items ?? []) as string[])
+    .filter((item): item is string => typeof item === "string" && item.length > 0);
+
   return {
     title: ogTitle,
     description: ogDescription,
+    keywords: [
+      ...keywordsFor("profile", locale),
+      displayName,
+      profile.username,
+      ...roles.slice(0, 4),
+      ...Array.from(new Set(stackItems)).slice(0, 10),
+    ].filter(Boolean),
     alternates: {
       canonical: `${SITE_URL}/${profile.username}`,
     },
@@ -211,10 +231,70 @@ export default async function ProfilePage({ params, searchParams }: Props) {
     } catch {}
   }
 
+  // ProfilePage + Person. Google has a dedicated treatment for creator/profile
+  // pages, and this is what makes a query for the builder's own name resolve
+  // to their huevsite profile instead of a random social account. Everything
+  // here is user-authored, so it MUST go through safeJsonLd.
+  const heroData: any = profile.blocks.find((b) => b.type === "hero") ?? {};
+  const profileRoles: string[] = Array.isArray(heroData.roles) ? heroData.roles.filter(Boolean) : [];
+  const profileSkills: string[] = Array.from(
+    new Set(
+      profile.blocks
+        .filter((b) => b.type === "stack")
+        .flatMap((b: any) => (b.items ?? b.data?.items ?? []) as string[])
+        .filter((item: unknown): item is string => typeof item === "string" && item.length > 0)
+    )
+  );
+  const profileSameAs: string[] = Array.from(
+    new Set(
+      [
+        profile.githubHandle ? `https://github.com/${profile.githubHandle}` : null,
+        ...profile.blocks
+          .filter((b) => b.type === "social")
+          .flatMap((b: any) => ((b.links ?? b.data?.links ?? []) as any[]).map((l) => l?.url)),
+      ].filter((url): url is string => typeof url === "string" && /^https?:\/\//.test(url))
+    )
+  );
+
+  const profileUrl = `${SITE_URL}/${profile.username}`;
+  const profileJsonLd = [
+    profilePageLd({
+      username: profile.username,
+      displayName: profile.displayName || profile.username,
+      description: heroData.tagline || profile.tagline || `Builder en huevsite.io`,
+      url: profileUrl,
+      image: profile.avatarUrl || null,
+      location: heroData.location || null,
+      roles: profileRoles,
+      skills: profileSkills,
+      sameAs: profileSameAs,
+    }),
+    breadcrumbLd([
+      { name: "huevsite.io", path: "/" },
+      { name: "Builders", path: "/explore" },
+      { name: `@${profile.username}`, path: `/${profile.username}` },
+    ]),
+  ];
+
   return (
     <div className="landing min-h-screen font-display selection:bg-[var(--accent)] selection:text-black">
       {/* Noise Texture Overlay */}
       <div className="noise" />
+
+      {/* Skipped in embed mode: the iframed copy on a third-party page would
+          duplicate the host page's structured data.
+
+          Plain <script>, NOT next/script: with strategy="beforeInteractive"
+          next/script only ships the tag inside the RSC flight payload and
+          injects it client-side, so the JSON-LD was absent from the server
+          HTML entirely — invisible to every crawler that doesn't run JS
+          (Bing, LinkedIn, and the AI bots robots.txt explicitly invites). */}
+      {!embed && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(profileJsonLd) }}
+        />
+      )}
       
       <AnalyticsTracker userId={profile.id!} visitorUserInfo={visitorUserInfo} />
 

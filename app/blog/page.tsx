@@ -13,6 +13,9 @@ import {
   PLATFORM_AUTHOR_USERNAME,
 } from "@/lib/blog-data";
 import { SITE_URL } from "@/lib/site-url";
+import { keywordsFor } from "@/lib/seo";
+import { safeJsonLd } from "@/lib/json-ld";
+import { breadcrumbLd, ORGANIZATION_ID, WEBSITE_ID } from "@/lib/structured-data";
 
 // Always render fresh: the listing combines static MDX + DB rows (new Builder
 // de la Semana posts get published frequently) and uses searchParams for tag
@@ -22,10 +25,15 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("blogUi");
+  const locale = await getLocale();
   return {
     title: t("metaTitle"),
     description: t("metaDescription"),
+    keywords: keywordsFor("blog", locale),
     alternates: {
+      // ?tag= and ?page= variants collapse onto /blog. Paginated listings are
+      // thin duplicates of each other; the posts themselves are what should
+      // rank, and they're all in the sitemap.
       canonical: `${SITE_URL}/blog`,
     },
     openGraph: {
@@ -85,8 +93,46 @@ export default async function BlogIndexPage({
         : "bg-white/5 text-[var(--text-muted)] hover:bg-white/10 hover:text-white border border-white/10"
     }`;
 
+  // Blog + ItemList: marks /blog as a real content hub and exposes the posts
+  // on this page as list items, so crawlers reach them without depending on
+  // the pagination/filter links.
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Blog",
+      "@id": `${SITE_URL}/blog#blog`,
+      url: `${SITE_URL}/blog`,
+      name: t("metaTitle"),
+      description: t("metaDescription"),
+      inLanguage: locale,
+      isPartOf: { "@id": WEBSITE_ID },
+      publisher: { "@id": ORGANIZATION_ID },
+      blogPost: posts.map((post) => ({
+        "@type": "BlogPosting",
+        "@id": `${SITE_URL}/blog/${post.slug}#article`,
+        url: `${SITE_URL}/blog/${post.slug}`,
+        headline: post.title,
+        description: post.excerpt,
+        datePublished: post.date,
+        author: { "@type": "Person", name: post.author.name },
+      })),
+    },
+    breadcrumbLd([
+      { name: "huevsite.io", path: "/" },
+      { name: "Blog", path: "/blog" },
+    ]),
+  ];
+
   return (
     <main className="min-h-screen bg-[var(--bg)] font-display py-12 px-4 max-w-4xl mx-auto">
+      {/* Plain <script>, NOT next/script: next/script with
+          strategy="beforeInteractive" only ships the tag in the RSC flight
+          payload and injects it client-side, leaving the JSON-LD out of the
+          server HTML that non-JS crawlers read. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
+      />
       <header className="mb-12">
         <div className="flex items-center justify-between mb-8">
           <Link href="/" className="logo">huev<span>site</span>.io</Link>

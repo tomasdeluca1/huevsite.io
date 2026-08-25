@@ -25,6 +25,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   //    generan tráfico orgánico, 0.6-0.7 el long tail, 0.3 lo legal.
   const staticRoutes: MetadataRoute.Sitemap = ([
     { url: SITE_URL, changeFrequency: 'daily', priority: 1 },
+    { url: `${SITE_URL}/builders`, changeFrequency: 'daily', priority: 0.9 },
     { url: `${SITE_URL}/explore`, changeFrequency: 'daily', priority: 0.9 },
     { url: `${SITE_URL}/blog`, changeFrequency: 'daily', priority: 0.9 },
     { url: `${SITE_URL}/linktree`, changeFrequency: 'monthly', priority: 0.9 },
@@ -38,6 +39,32 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/terms`, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${SITE_URL}/privacy`, changeFrequency: 'yearly', priority: 0.3 },
   ] as const).map((route) => ({ ...route, lastModified: now }))
+
+  // Páginas paginadas de /builders. El directorio lista 60 builders por página;
+  // sin estas entradas, los perfiles que caen después de la primera página solo
+  // se alcanzan caminando la paginación. Se derivan del mismo count que usa la
+  // página, así nunca quedan desincronizadas.
+  const BUILDERS_PER_PAGE = 60
+  let buildersPageRoutes: MetadataRoute.Sitemap = []
+  try {
+    const { count: buildersCount } = await supabase
+      .from('profiles_explore')
+      .select('id', { count: 'exact', head: true })
+      .not('username', 'is', null)
+      .or('builder_score.gt.0,tagline.not.is.null')
+
+    const totalBuilderPages = Math.ceil((buildersCount || 0) / BUILDERS_PER_PAGE)
+    for (let page = 2; page <= totalBuilderPages; page++) {
+      buildersPageRoutes.push({
+        url: `${SITE_URL}/builders?page=${page}`,
+        lastModified: now,
+        changeFrequency: 'daily',
+        priority: 0.6,
+      })
+    }
+  } catch {
+    // El sitemap sigue siendo válido sin las páginas 2..n.
+  }
 
   // Rutas Dinámicas del Blog
   const blogRoutes: MetadataRoute.Sitemap = BLOG_POSTS.map((post) => ({
@@ -92,5 +119,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // sin los sub-sites — nunca romper el sitemap entero por esto.
   }
 
-  return [...staticRoutes, ...blogRoutes, ...profileRoutes, ...subSiteRoutes]
+  return [...staticRoutes, ...buildersPageRoutes, ...blogRoutes, ...profileRoutes, ...subSiteRoutes]
 }

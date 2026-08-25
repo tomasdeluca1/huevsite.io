@@ -1196,7 +1196,8 @@
     "allPlaces": "Everywhere",
     "metaTitle": "Explore builders — developer portfolios | huevsite.io",
     "metaDescription": "The builder directory: portfolios from developers, designers and founders with their projects, stack and real metrics. Get inspired and build your own.",
-    "breadcrumb": "Explore builders"
+    "breadcrumb": "Explore builders",
+    "directoryLink": "Full directory"
   },
   "discovery": {
     "navBuildersHunt": "Builders Hunt",
@@ -2161,5 +2162,26 @@
     "viewTimeline": "Timeline",
     "viewList": "List",
     "empty": "No winners yet."
+  },
+  "builders": {
+    "metaTitle": "Builder and developer directory | huevsite.io",
+    "metaTitlePaged": "Builder directory · page {page} | huevsite.io",
+    "metaDescription": "Every builder on huevsite in one place: developers, designers and founders with their projects, stack and real metrics. Open any profile.",
+    "breadcrumb": "Builders",
+    "badge": "{count, plural, one {# builder} other {# builders}} in the network",
+    "titleLine1": "The builder",
+    "titleLine2": "directory.",
+    "subtitle": "Every profile in the network, ranked by Builder Score. Open any of them and see what they're shipping.",
+    "noTagline": "Builder on huevsite.io",
+    "scoreLabel": "Score",
+    "winnerLabel": "Builder of the week",
+    "empty": "No builders to show here yet.",
+    "paginationLabel": "Directory pagination",
+    "prev": "Previous",
+    "next": "Next",
+    "ctaSub": "Want to be in this directory?",
+    "ctaButton": "Build your huevsite",
+    "pastEnd": "No more builders on this page.",
+    "backToStart": "Back to the directory"
   }
 }

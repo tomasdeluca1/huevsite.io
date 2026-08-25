@@ -1196,7 +1196,8 @@
     "allPlaces": "Todo el mundo",
     "metaTitle": "Explorar builders — portfolios de developers | huevsite.io",
     "metaDescription": "El directorio de builders: portfolios de developers, diseñadores y founders con proyectos, stack y métricas reales. Buscá inspiración y armá el tuyo.",
-    "breadcrumb": "Explorar builders"
+    "breadcrumb": "Explorar builders",
+    "directoryLink": "Directorio completo"
   },
   "discovery": {
     "navBuildersHunt": "Builders Hunt",
@@ -2161,5 +2162,26 @@
     "viewTimeline": "Timeline",
     "viewList": "Lista",
     "empty": "Todavía no hay ganadores."
+  },
+  "builders": {
+    "metaTitle": "Directorio de builders y developers | huevsite.io",
+    "metaTitlePaged": "Directorio de builders · página {page} | huevsite.io",
+    "metaDescription": "Todos los builders de huevsite en un solo lugar: developers, diseñadores y founders con sus proyectos, stack y métricas reales. Entrá a cualquier perfil.",
+    "breadcrumb": "Builders",
+    "badge": "{count, plural, one {# builder} other {# builders}} en la red",
+    "titleLine1": "El directorio de",
+    "titleLine2": "builders.",
+    "subtitle": "Todos los perfiles de la red, ordenados por Builder Score. Entrá a cualquiera y mirá qué está shippeando.",
+    "noTagline": "Builder en huevsite.io",
+    "scoreLabel": "Score",
+    "winnerLabel": "Builder de la semana",
+    "empty": "Todavía no hay builders para mostrar acá.",
+    "paginationLabel": "Paginación del directorio",
+    "prev": "Anterior",
+    "next": "Siguiente",
+    "ctaSub": "¿Querés estar en este directorio?",
+    "ctaButton": "Armá tu huevsite",
+    "pastEnd": "No hay más builders en esta página.",
+    "backToStart": "Volver al directorio"
   }
 }

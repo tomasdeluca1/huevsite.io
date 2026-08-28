@@ -66,8 +66,16 @@ import { BadgeItem } from "@/components/profile/BadgeItem";
 import { ProFeatureTour } from "@/components/dashboard/ProFeatureTour";
 import { TrialExpiredBlockChooser } from "@/components/dashboard/TrialExpiredBlockChooser";
 
-const DASHBOARD_TABS = ["board", "projects", "insights", "subsites", "domain", "transfer"] as const;
-const PRO_ONLY_TABS = ["insights", "subsites", "domain", "transfer"] as const;
+// "transfer" NO va en estas listas a propósito. La pestaña era Pro-only, o sea
+// que la veía el que acababa de pagar, y al tocarla saltaba un alert() diciendo
+// "Función inhabilitada temporalmente" (handleTransferProject más abajo, con el
+// fetch comentado). Un tab muerto es lo peor que se puede encontrar justo
+// después del checkout. El panel y el endpoint /api/profile/transfer quedan en
+// el repo: para reactivarlo, agregá "transfer" a las dos listas y descomentá el
+// fetch. Antes de eso hay que resolver que la transferencia pisa el perfil del
+// destinatario (name/tagline/image/accent) y no valida sus límites de bloques.
+const DASHBOARD_TABS = ["board", "projects", "insights", "subsites", "domain"] as const;
+const PRO_ONLY_TABS = ["insights", "subsites", "domain"] as const;
 
 export default function DashboardPage() {
   const t = useTranslations("dashboard");

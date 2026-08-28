@@ -93,7 +93,10 @@ export function PricingTiers({
           </div>
           <p className="text-xs text-[var(--text-muted)] mb-8">{t("proSubtitle")}</p>
           <ul className="space-y-3 text-left mb-8 flex-1">
-            {[t("proFeature1"), t("proFeature2"), t("proFeature3"), t("proFeature4"), t("proFeature5"), t("proFeature6")].map(item => (
+            {[
+              t("proFeature1"), t("proFeature2"), t("proFeature3"), t("proFeature4"),
+              t("proFeature5"), t("proFeature6"), t("proFeature7"), t("proFeature8"),
+            ].map(item => (
               <li key={item} className="flex items-start gap-3 text-sm text-[var(--text-dim)]">
                 <Check size={14} className="text-[var(--accent)] shrink-0 mt-0.5" />
                 <span>{item}</span>

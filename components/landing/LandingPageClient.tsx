@@ -12,7 +12,7 @@ import { LatamFlags } from "@/components/landing/LatamFlags";
 import { supabase } from "@/lib/supabase";
 import { PricingTiers } from "@/components/landing/PricingTiers";
 import { User } from "@supabase/supabase-js";
-import { Activity, Compass, Users, PlusCircle, Layout, Check, BookOpen, Globe, BarChart3, Loader2, ArrowRight, Sparkles, Zap, Star, LayoutGrid, Eye, ChevronDown, ChevronUp, X, Trophy, TrendingUp, HeartHandshake, Rocket, ArrowBigUp, CalendarDays, ThumbsUp } from "lucide-react";
+import { Activity, Compass, Users, PlusCircle, Layout, Check, BookOpen, Globe, BarChart3, Loader2, ArrowRight, Sparkles, Zap, LayoutGrid, Eye, ChevronDown, ChevronUp, X, Trophy, TrendingUp, HeartHandshake, Rocket, ArrowBigUp, CalendarDays, ThumbsUp } from "lucide-react";
 import type { LandingTestimonial } from "@/lib/testimonial-service";
 import type { Faq } from "@/lib/faq-service";
 import type { NetworkPulse } from "@/lib/showcase-service";
@@ -883,7 +883,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
               { icon: BarChart3, title: t("proFeatureInsightsTitle"), desc: t("proFeatureInsightsDesc") },
               { icon: LayoutGrid, title: t("proFeatureSubsitesTitle"), desc: t("proFeatureSubsitesDesc") },
               { icon: Layout, title: t("proFeatureGridTitle"), desc: t("proFeatureGridDesc") },
-              { icon: Star, title: t("proFeatureEliteTitle"), desc: t("proFeatureEliteDesc") }
+              { icon: Rocket, title: t("proFeatureLaunchTitle"), desc: t("proFeatureLaunchDesc") }
             ].map((f, i) => {
               const Icon = f.icon;
               return (

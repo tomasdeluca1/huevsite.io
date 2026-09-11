@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { ProfileData, BlockData, getAdjustedAccentColor, MAX_FREE_BLOCKS } from './profile-types';
 import { scoreService } from './score-service';
 import { getProfileBadges } from './profile-badges';
@@ -22,8 +23,20 @@ function getServerClient() {
   return createServiceRoleClient();
 }
 
+// Las dos lecturas públicas van envueltas en React cache().
+//
+// Tanto /[username] como /[username]/[slug] llaman al service DOS veces por
+// request: una desde generateMetadata y otra desde el componente de página.
+// Como el cliente de service-role fuerza `cache: "no-store"` (necesario: sin
+// eso Next se quedaba con el badge del ganador BDLS pegado entre requests),
+// Next no deduplica nada y cada vista de perfil costaba ~12 SELECT en lugar
+// de ~6.
+//
+// cache() memoriza por request, no entre requests: elimina la query duplicada
+// sin reintroducir el bug de datos viejos que motivó el no-store.
+
 export const profileService = {
-  async getProfile(username: string): Promise<ProfileData | null> {
+  getProfile: cache(async (username: string): Promise<ProfileData | null> => {
     const supabase = getServerClient();
 
     const PROFILE_COLS = 'id, username, name, tagline, image, github_handle, accent_color, border_radius, subscription_tier, pro_since, extra_blocks_from_share, twitter_share_unlocked, builder_score, ai_credits, custom_domain, referral_code, referred_by, pro_referrals_count, referral_reward_expires_at, is_onboarding_test_user, is_profile_verified, has_good_reputation, is_top_matchmaker, free_trial_claimed_at, free_trial_started_at, free_trial_ends_at, free_trial_last_insights_viewed_at, newsletter_subscribed, updated_at';
@@ -126,7 +139,7 @@ export const profileService = {
       }
     }
 
-    const transformed = this._transformProfile(profile, blocks || []);
+    const transformed = profileService._transformProfile(profile, blocks || []);
     transformed.blocks = transformed.blocks.map((block: any) =>
       block.type === 'hero'
         ? { ...block, avatarUrl: profile.image || "" }
@@ -162,9 +175,9 @@ export const profileService = {
     }
 
     return transformed;
-  },
+  }),
 
-  async getSubSiteProfile(username: string, slug: string): Promise<ProfileData | null> {
+  getSubSiteProfile: cache(async (username: string, slug: string): Promise<ProfileData | null> => {
     const supabase = getServerClient();
 
     const { data: profile, error: profileError } = await supabase
@@ -205,7 +218,7 @@ export const profileService = {
 
     if (blocksError) return null;
 
-    const transformed = this._transformProfile(profile, blocks || []);
+    const transformed = profileService._transformProfile(profile, blocks || []);
     transformed.badges = getProfileBadges(profile, {
       blockCount: transformed.blocks.length,
       hasWonBuilderOfTheWeek: false,
@@ -258,7 +271,7 @@ export const profileService = {
         tagline: (profile as any).tagline || null,
       }
     };
-  },
+  }),
 
   _transformProfile(profile: any, blocks: any[]): ProfileData {
     return {

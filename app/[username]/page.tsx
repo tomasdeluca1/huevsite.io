@@ -296,7 +296,15 @@ export default async function ProfilePage({ params, searchParams }: Props) {
         />
       )}
       
-      <AnalyticsTracker userId={profile.id!} visitorUserInfo={visitorUserInfo} />
+      {/* Embed mode is NOT tracked: external sites (nordelta.tech and friends)
+          rotate profile iframes every few seconds, and each mount used to fire
+          a page_view + a profile_visitor INSERT. That was 98.5% of all the
+          analytics writes in the last 30 days — it burned the project's Supabase
+          Disk IO budget and inflated every builder's insights with views no
+          human ever made. */}
+      {!embed && (
+        <AnalyticsTracker userId={profile.id!} visitorUserInfo={visitorUserInfo} />
+      )}
 
       <main className={`min-h-screen ${embed ? "pt-4" : "pt-5 md:pt-12"} pb-16 md:pb-24 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto relative`}>
         {!embed && <ExploreNavigation currentUsername={username} isCustomDomain={isCustomDomain} />}

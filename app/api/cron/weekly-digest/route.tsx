@@ -11,6 +11,7 @@ import { buildUnsubscribeUrl } from "@/lib/email-unsubscribe";
 import { getAllBlogPosts, getPostCategory } from "@/lib/blog-data";
 import { getWeekLaunches } from "@/lib/launch-service";
 import { currentLaunchWeek } from "@/lib/launch-week";
+import { pruneAnalytics, RETENTION_DAYS } from "@/lib/analytics-retention";
 
 export const dynamic = "force-dynamic";
 
@@ -226,6 +227,19 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Barrido de retención de telemetría. Va enganchado acá porque es el único
+    // cron semanal que ya corre con service role y sin usuarios esperando:
+    // analytics_events y profile_visitors no tienen techo propio y fueron lo
+    // que agotó el Disk IO Budget del proyecto en 2026-09.
+    let analyticsPruned: Record<string, number> | null = null;
+    if (!isDryRun) {
+      try {
+        analyticsPruned = await pruneAnalytics();
+      } catch (e: any) {
+        console.error("[weekly-digest] analytics retention error:", e?.message || e);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       preview,
@@ -239,6 +253,8 @@ export async function GET(request: NextRequest) {
       news,
       emailsSent,
       snapshotsWritten,
+      analyticsPruned,
+      retentionDays: RETENTION_DAYS,
       errors,
     });
   } catch (error: any) {

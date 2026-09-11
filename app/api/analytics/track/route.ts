@@ -1,6 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { analyticsService, AnalyticsEvent } from '@/lib/analytics-service';
 
+// Crawlers, previewers, uptime monitors and headless agents. These never see
+// the page, but they used to cost two INSERTs each (analytics_events +
+// profile_visitors) and showed up in builders' insights as fake visitors.
+const BOT_UA =
+  /bot|crawler|spider|crawling|slurp|headless|phantom|puppeteer|playwright|selenium|curl\/|wget|python-requests|axios|node-fetch|go-http-client|java\/|okhttp|lighthouse|pagespeed|gtmetrix|pingdom|uptime|monitor|preview|scraper|facebookexternalhit|whatsapp|telegram|slackbot|discordbot|embedly|quora link preview|vercelbot|ahrefs|semrush|mj12|dotbot|petalbot|dataforseo|gptbot|claudebot|anthropic|perplexity|ccbot|bytespider|amazonbot|applebot|google-extended/i;
+
+function isBot(ua: string) {
+  // An empty UA is not a real browser hitting this endpoint either.
+  return !ua || BOT_UA.test(ua);
+}
+
+// Embedded profiles (?embed=1) are iframed by third-party sites that rotate
+// through builders every few seconds. Each rotation remounts the page and used
+// to write two rows. That single pattern produced 98.5% of the analytics rows
+// written in the last 30 days and exhausted the project's Disk IO budget.
+function isEmbeddedView(referrer: string) {
+  if (!referrer) return false;
+  try {
+    return new URL(referrer).searchParams.get('embed') === '1';
+  } catch {
+    return referrer.includes('embed=1');
+  }
+}
+
 function normalizeGeoHeader(value: string | null) {
   if (!value) return null;
   const normalized = value.trim();
@@ -31,6 +55,14 @@ export async function POST(req: NextRequest) {
     const visitor_id = forwardedFor ? forwardedFor.split(',')[0].trim() : 'anonymous';
     const user_agent = req.headers.get('user-agent') || '';
     const referrer = req.headers.get('referer') || '';
+
+    // Drop the two write sources that generate traffic no human produced. The
+    // profile page already skips the tracker in embed mode; this is the
+    // server-side guarantee, and it also covers any other site that iframes us.
+    if (isEmbeddedView(referrer) || isBot(user_agent)) {
+      return NextResponse.json({ success: true, ignored: true });
+    }
+
     const country =
       normalizeGeoHeader(req.headers.get('x-vercel-ip-country')) ||
       normalizeGeoHeader(req.headers.get('cf-ipcountry'));

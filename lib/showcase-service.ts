@@ -49,17 +49,6 @@ export async function getShowcaseData(requestedWeek?: string | null) {
       targetWeek = recentWinner?.week || currentWeek;
     }
 
-    // Diagnostic: raw count of all winners in DB
-    const { count: totalWinners } = await supabase
-      .from("showcase_winners")
-      .select("*", { count: "exact", head: true });
-    const { data: rawRows } = await supabase
-      .from("showcase_winners")
-      .select("user_id, week")
-      .order("week", { ascending: false })
-      .limit(5);
-    console.log(`[showcase-data] currentWeek=${currentWeek} targetWeek=${targetWeek} totalWinnersInDB=${totalWinners} recentRows=${JSON.stringify(rawRows)}`);
-
     let winners: any[] = [];
     if (targetWeek) {
       const { data: winnerData, error: winnerError } = await supabase
@@ -73,8 +62,6 @@ export async function getShowcaseData(requestedWeek?: string | null) {
           )
         `)
         .eq("week", targetWeek);
-
-      console.log(`[showcase-data] winners join query for ${targetWeek}: ${winnerData?.length ?? 0} rows, error=${winnerError?.message ?? 'none'}`);
 
       if (winnerError) {
         console.error("Winner query error:", winnerError);

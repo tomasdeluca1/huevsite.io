@@ -28,6 +28,15 @@ const nextConfig = {
         return [
             // The testimonial page is /testimonio; accept the plural too.
             { source: '/testimonios', destination: '/testimonio', permanent: false },
+            // Launch de Product Hunt (2026-09-22). Va en el campo "website" de
+            // la página de PH y en todo el copy, para que también el tráfico
+            // directo desde PH llegue atribuido. El ?lang=en lo consume el
+            // middleware, que fija la cookie y limpia la URL conservando el UTM.
+            {
+                source: '/r/ph',
+                destination: '/?lang=en&utm_source=product_hunt&utm_medium=launch',
+                permanent: false,
+            },
         ];
     },
 }

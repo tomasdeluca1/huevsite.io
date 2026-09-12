@@ -6,6 +6,26 @@ export async function middleware(request: NextRequest) {
   const url = request.nextUrl
   const hostname = request.headers.get('host') || ''
 
+  // ?lang=en fija la cookie y se saca de la URL. Es la URL que linkeamos desde
+  // Product Hunt: garantiza inglés sin depender del Accept-Language del
+  // visitante y sin agregar rutas con prefijo de locale (el modo cookie de
+  // next-intl se eligió para no tocar el catch-all /[username]).
+  //
+  // Los valores van literales y no importados de lib/locale.ts: ese módulo
+  // arrastra next/headers, que no corre en el edge runtime del middleware.
+  const requestedLang = url.searchParams.get('lang')
+  if (requestedLang && ['es', 'en'].includes(requestedLang)) {
+    const clean = new URL(url)
+    clean.searchParams.delete('lang')
+    const redirect = NextResponse.redirect(clean)
+    redirect.cookies.set('NEXT_LOCALE', requestedLang, {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: 'lax',
+    })
+    return redirect
+  }
+
   // 1. Definir hosts reservados (la plataforma principal)
   const reservedHosts = [
     'huevsite.io',

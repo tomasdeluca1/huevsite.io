@@ -2109,7 +2109,8 @@
     },
     "social": {
       "connect": "Conectemos",
-      "noCoords": "// sin coordenadas"
+      "noCoords": "// sin coordenadas",
+      "openInApp": "Tocá una red y se abre en la app."
     },
     "cv": {
       "download": "Descargar CV",

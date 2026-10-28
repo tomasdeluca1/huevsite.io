@@ -4,8 +4,9 @@ import React from "react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { MetricBlockData, SocialBlockData, CVBlockData, getContrastColor } from "@/lib/profile-types";
-import { SOCIAL_PLATFORMS, SocialPlatformKey } from "@/lib/social-platforms";
-import { Download, Instagram, Youtube, Github, Linkedin, Twitter, MessageSquare, Send, Globe, Mail } from "lucide-react";
+import { SOCIAL_PLATFORMS, SocialPlatformKey, resolveSquareLabel, resolveFollowUrl, compactUrl } from "@/lib/social-platforms";
+import { SOCIAL_ICONS, FallbackIcon } from "@/components/icons/SocialIcons";
+import { Download } from "lucide-react";
 import { useBlockPreview } from "@/lib/block-preview-context";
 
 interface MetricProps {
@@ -46,41 +47,26 @@ interface SocialProps {
 export function SocialBlock({ data, accentColor }: SocialProps) {
   const isPreview = useBlockPreview();
   const t = useTranslations('blocks');
-  const links = data.links || [];
+  const links = (data.links || []).filter(l => l.url);
+  const visibleLinks = isPreview ? links.slice(0, 3) : links;
 
-  const getIcon = (platform: string, color: string, favicon?: string) => {
-    const size = 20;
-    switch (platform) {
-      case "instagram": return <Instagram size={size} style={{ color }} />;
-      case "youtube": return <Youtube size={size} style={{ color }} />;
-      case "github": return <Github size={size} style={{ color }} />;
-      case "linkedin": return <Linkedin size={size} style={{ color }} />;
-      case "twitter": return <span className="ml-1 text-xl">𝕏</span>
-      case "discord": return <MessageSquare size={size} style={{ color }} />;
-      case "telegram": return <Send size={size} style={{ color }} />;
-      case "website": return favicon
-        ? <img src={favicon} alt="" width={size} height={size} className="rounded-sm" />
-        : <Globe size={size} style={{ color }} />;
-      default: return <span className="text-lg md:text-xl">{SOCIAL_PLATFORMS[platform as SocialPlatformKey]?.icon || "🔗"}</span>;
+  const renderIcon = (l: { platform: string; favicon?: string }, size: number, className?: string) => {
+    if (l.platform === "website" && l.favicon) {
+      // eslint-disable-next-line @next/next/no-img-element
+      return <img src={l.favicon} alt="" width={size} height={size} className={`rounded-sm ${className || ""}`} />;
     }
-  };
-
-  const getPlatformData = (platform: string) => {
-    return SOCIAL_PLATFORMS[platform as SocialPlatformKey];
+    const Icon = SOCIAL_ICONS[l.platform as SocialPlatformKey] ?? FallbackIcon;
+    return <Icon size={size} className={className} />;
   };
 
   const getLabel = (link: { platform: string; url: string; label?: string }) => {
     if (link.label) return link.label;
-    const p = getPlatformData(link.platform);
+    const p = SOCIAL_PLATFORMS[link.platform as SocialPlatformKey];
     return p?.label ?? link.platform;
   };
 
-  const formatUrl = (url: string) => {
-    if (!url.startsWith('http') && !url.startsWith('mailto:')) {
-      return `https://${url}`;
-    }
-    return url;
-  };
+  const brandOf = (platform: string) =>
+    (SOCIAL_PLATFORMS[platform as SocialPlatformKey] as { brandColor?: string } | undefined)?.brandColor || "#ffffff";
 
   return (
     <motion.div
@@ -90,45 +76,78 @@ export function SocialBlock({ data, accentColor }: SocialProps) {
       style={{ "--accent": accentColor } as React.CSSProperties}
     >
       <div className="block-label opacity-40 uppercase tracking-[0.2em] text-[10px] text-left mb-3">{t('social.connect')}</div>
-      <div className="flex flex-col gap-1.5">
-        {links.filter(l => l.url).slice(0, isPreview ? 3 : undefined).map((l, i) => {
-          const pData = getPlatformData(l.platform);
-          const brandColor = (pData as any)?.brandColor || "#ffffff";
 
-          return (
-            <a
-              key={i}
-              href={formatUrl(l.url)}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-3 md:gap-4 p-3 md:p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-white/20 hover:bg-white/[0.06] transition-all group/item overflow-hidden relative"
-            >
-              <div
-                className="absolute inset-0 opacity-0 group-hover/item:opacity-[0.03] transition-opacity pointer-events-none"
-                style={{ backgroundColor: brandColor }}
-              />
-              <span className="shrink-0 transition-transform group-hover/item:scale-110 duration-300">
-                {getIcon(l.platform, brandColor, l.favicon)}
-              </span>
-              <div className="flex flex-col min-w-0 text-left">
-                <span className="font-bold text-white line-clamp-1 text-xs md:text-sm">
-                  {getLabel(l)}
-                </span>
-                {!isPreview && (
-                  <span className="text-[9px] md:text-[10px] text-[var(--text-muted)] truncate opacity-50 font-mono">
-                    {l.url.replace('https://', '').replace('http://', '').split('?')[0]}
+      {visibleLinks.length > 0 && (
+        <>
+          {/* Celular: grilla de 4 columnas de cuadrados tocables (el <a> es el cuadrado entero) */}
+          <div className="grid grid-cols-4 gap-2 md:hidden">
+            {visibleLinks.map((l, i) => {
+              const name = getLabel(l);
+              return (
+                <a
+                  key={i}
+                  href={resolveFollowUrl(l)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={name}
+                  title={name}
+                  className="aspect-square min-w-0 flex flex-col items-center justify-center gap-[7px] px-2 py-3 rounded-2xl bg-white/[0.03] border border-white/5 active:bg-white/[0.08] hover:border-white/20 transition-colors"
+                  style={{ color: brandOf(l.platform) }}
+                >
+                  {renderIcon(l, 20, "w-[19px] h-[19px] min-[390px]:w-[21px] min-[390px]:h-[21px] shrink-0")}
+                  <span className="max-w-full whitespace-nowrap text-[6px] min-[390px]:text-[6.8px] font-black uppercase leading-none tracking-wider text-white">
+                    {resolveSquareLabel(l)}
                   </span>
-                )}
-              </div>
-            </a>
-          );
-        })}
-        {links.filter(l => l.url).length === 0 && (
-          <p className="text-xs text-[var(--text-dim)] font-mono py-8 text-center opacity-40">
-            {t('social.noCoords')}
-          </p>
-        )}
-      </div>
+                </a>
+              );
+            })}
+          </div>
+          {!isPreview && (
+            <p className="md:hidden mt-3 text-[10px] text-[var(--text-dim)] font-mono opacity-50 text-left">
+              {t('social.openInApp')}
+            </p>
+          )}
+
+          {/* Escritorio: lista con nombre largo y URL compacta */}
+          <div className="hidden md:flex flex-col gap-1.5">
+            {visibleLinks.map((l, i) => {
+              const brandColor = brandOf(l.platform);
+              return (
+                <a
+                  key={i}
+                  href={resolveFollowUrl(l)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-white/20 hover:bg-white/[0.06] transition-all group/item overflow-hidden relative"
+                >
+                  <div
+                    className="absolute inset-0 opacity-0 group-hover/item:opacity-[0.03] transition-opacity pointer-events-none"
+                    style={{ backgroundColor: brandColor }}
+                  />
+                  <span className="shrink-0 transition-transform group-hover/item:scale-110 duration-300" style={{ color: brandColor }}>
+                    {renderIcon(l, 20)}
+                  </span>
+                  <div className="flex flex-col min-w-0 text-left">
+                    <span className="font-bold text-white break-words text-sm">
+                      {getLabel(l)}
+                    </span>
+                    {!isPreview && (
+                      <span className="text-[10px] text-[var(--text-muted)] break-all opacity-50 font-mono">
+                        {compactUrl(l.url)}
+                      </span>
+                    )}
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        </>
+      )}
+      {links.length === 0 && (
+        <p className="text-xs text-[var(--text-dim)] font-mono py-8 text-center opacity-40">
+          {t('social.noCoords')}
+        </p>
+      )}
     </motion.div>
   );
 }

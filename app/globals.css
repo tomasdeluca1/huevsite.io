@@ -1206,6 +1206,7 @@ nav {
   position: absolute;
   inset: 0;
   background: radial-gradient(circle at 80% 20%, rgba(200, 255, 0, 0.05), transparent 60%);
+  pointer-events: none; /* si no, tapa el contenido y el botón "ver más" no recibe toques */
 }
 
 .hero-avatar {
@@ -1222,6 +1223,19 @@ nav {
   margin-bottom: 16px;
   position: relative;
   flex-shrink: 0;
+}
+
+/* Hero compacto en celular (Tarea 8): avatar de ~40px en la misma fila que el nombre. md+ no cambia. */
+@media (max-width: 767px) {
+  .block-hero {
+    padding: 16px;
+  }
+  .hero-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+    margin-bottom: 0;
+  }
 }
 
 .hero-status {

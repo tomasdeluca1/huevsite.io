@@ -467,6 +467,8 @@
         "statusLabel": "// status",
         "statusPlaceholder": "disponible para proyectos",
         "locationLabel": "// ubicación",
+        "showBioLabel": "Mostrar la bio en el perfil",
+        "showBioHint": "Recomendamos dejarla prendida: en pocos segundos, es lo que le dice a quien te escanea qué hacés.",
         "locationPlaceholder": "Buenos Aires"
       },
       "project": {
@@ -2100,6 +2102,8 @@
       "nextMonth": "Mes siguiente"
     },
     "hero": {
+      "bioMore": "ver más",
+      "bioLess": "ver menos",
       "builderOfWeek": "Builder de la Semana",
       "builderPro": "Builder PRO",
       "fallbackName": "Usuario",

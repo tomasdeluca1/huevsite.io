@@ -232,6 +232,20 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                 className="w-full p-4 h-24 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all resize-none leading-relaxed"
                 placeholder={t("blockEditor.hero.bioPlaceholder")}
               />
+              <label className="flex items-start gap-2 px-1 text-sm text-white/70">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={formData.showBio !== false}
+                  onChange={(e) => handleChange("showBio", e.target.checked)}
+                />
+                <span className="flex flex-col gap-0.5">
+                  <span>{t("blockEditor.hero.showBioLabel")}</span>
+                  <span className="text-[11px] text-[var(--text-muted)] leading-snug">
+                    {t("blockEditor.hero.showBioHint")}
+                  </span>
+                </span>
+              </label>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

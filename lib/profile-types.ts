@@ -160,6 +160,7 @@ export interface HeroBlockData extends BaseBlock {
   roles?: Role[];
   status: string;
   location: string;
+  showBio?: boolean; // default true: show the bio (description) on the public profile
 }
 
 export interface BuildingBlockData extends BaseBlock {

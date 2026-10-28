@@ -140,6 +140,13 @@ export interface BaseBlock {
   col_span: number;
   row_span: number;
   visible: boolean;
+  // Orden propio en la vista mobile (null = sigue el orden de escritorio).
+  // Opcional en el tipo porque los bloques se construyen en muchos sitios
+  // (templates, IA, dashboard); lo lee/escribe la DB y _transformProfile
+  // siempre lo completa (null / 'both').
+  mobileOrder?: number | null;
+  // Dónde se muestra el bloque.
+  visibleOn?: 'both' | 'desktop' | 'mobile';
   // Board preset al que pertenece el bloque del perfil principal (0-2).
   board_index?: number;
 }
@@ -368,6 +375,8 @@ export interface ProfileData {
   freeTrial?: FreeTrialState;
   badges?: ProfileBadge[];
   borderRadius?: string;
+  // Mostrar la sección de ecosistema (sub-sitios) en el header. Default true.
+  showEcosystem: boolean;
   parentProfile?: {
     username: string;
     displayName: string;

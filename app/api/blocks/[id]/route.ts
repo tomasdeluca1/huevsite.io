@@ -75,7 +75,7 @@ export async function PATCH(
 
     // Separar campos de PostgreSQL vs campos del payload JSON de 'data'
     // Los campos que van directamente a columnas PostgreSQL
-    const pgColumns = ['type', 'order', 'col_span', 'row_span', 'visible']
+    const pgColumns = ['type', 'order', 'col_span', 'row_span', 'visible', 'mobile_order', 'visible_on']
     // Los campos que NO deben guardarse (son metadata o auto-generados)
     const excludeFields = ['id', 'user_id', 'created_at', 'updated_at']
 

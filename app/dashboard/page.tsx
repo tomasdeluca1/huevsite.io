@@ -309,6 +309,7 @@ export default function DashboardPage() {
         email: data.profile.email || "",
         accentColor: data.profile.accent_color,
         borderRadius: data.profile.border_radius || "1.5rem",
+        showEcosystem: data.profile.show_ecosystem !== false,
         roles: data.profile.roles || [],
         layout: data.profile.layout || null,
         subscriptionTier: (data.profile.subscription_tier === 'pro' || !!data.profile.pro_since) ? 'pro' : 'free',

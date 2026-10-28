@@ -32,6 +32,7 @@ const profilePatchSchema = z.object({
   border_radius: z.string().regex(/^(0|\d+(\.\d+)?(rem|px|em))$/, 'border_radius debe ser un valor CSS válido (ej: 1.5rem, 12px, 0)').optional(),
   is_onboarding_test_user: z.boolean().optional(),
   newsletter_subscribed: z.boolean().optional(),
+  show_ecosystem: z.boolean().optional(),
   // Board presets (Pro): qué board está publicado (0-2) y sus nombres.
   published_board: z.number().int().min(0).max(2).optional(),
   board_names: z.record(z.string().max(40)).optional(),
@@ -201,6 +202,7 @@ export async function PATCH(request: NextRequest) {
 
     // Campos actualizables
     const allowedFields = [
+      'show_ecosystem',
       'name',
       'username',
       'email',

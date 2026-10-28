@@ -49,6 +49,7 @@ export function SocialBlock({ data, accentColor }: SocialProps) {
   const t = useTranslations('blocks');
   const links = (data.links || []).filter(l => l.url);
   const visibleLinks = isPreview ? links.slice(0, 3) : links;
+  const severalWebsites = links.filter(l => l.platform === "website").length > 1;
 
   const renderIcon = (l: { platform: string; favicon?: string }, size: number, className?: string) => {
     if (l.platform === "website" && l.favicon) {
@@ -96,7 +97,7 @@ export function SocialBlock({ data, accentColor }: SocialProps) {
                 >
                   {renderIcon(l, 20, "w-[19px] h-[19px] min-[390px]:w-[21px] min-[390px]:h-[21px] shrink-0")}
                   <span className="max-w-full whitespace-nowrap text-[6px] min-[390px]:text-[6.8px] font-black uppercase leading-none tracking-wider text-white">
-                    {resolveSquareLabel(l)}
+                    {resolveSquareLabel(l, { severalWebsites })}
                   </span>
                 </a>
               );

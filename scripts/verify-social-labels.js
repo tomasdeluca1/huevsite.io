@@ -20,10 +20,14 @@ for (const [key, p] of Object.entries(SOCIAL_PLATFORMS)) {
 eq('label propio no gana en el cuadrado', resolveSquareLabel({ platform: 'instagram', url: 'https://instagram.com/t', label: 'Mi newsletter' }), 'INSTA');
 eq('twitter -> X', resolveSquareLabel({ platform: 'twitter', url: 'https://x.com/t' }), 'X');
 eq('desconocida -> hostname', resolveSquareLabel({ platform: 'tiktok', url: 'https://tiktok.com/@x' }), 'TIKTOK');
-eq('website www.acme.com', resolveSquareLabel({ platform: 'website', url: 'https://www.acme.com' }), 'ACME');
-eq('website 9 caracteres se corta en 8', resolveSquareLabel({ platform: 'website', url: 'https://midominio.com' }), 'MIDOMINI');
-eq('website sin esquema', resolveSquareLabel({ platform: 'website', url: 'acme.io/blog' }), 'ACME');
-eq('website acme.co.uk', resolveSquareLabel({ platform: 'website', url: 'https://acme.co.uk' }), 'ACME');
+const M = { severalWebsites: true };
+eq('un solo website -> WEB', resolveSquareLabel({ platform: 'website', url: 'https://www.acme.com' }), 'WEB');
+eq('un solo website (ctx false) -> WEB', resolveSquareLabel({ platform: 'website', url: 'https://acme.com' }, { severalWebsites: false }), 'WEB');
+eq('varios website con favicon -> WEB', resolveSquareLabel({ platform: 'website', url: 'https://acme.com', favicon: 'https://acme.com/f.ico' }, M), 'WEB');
+eq('varios website sin favicon: www.acme.com', resolveSquareLabel({ platform: 'website', url: 'https://www.acme.com' }, M), 'ACME');
+eq('varios website sin favicon: 9 caracteres corta en 8', resolveSquareLabel({ platform: 'website', url: 'https://midominio.com' }, M), 'MIDOMINI');
+eq('website sin esquema', resolveSquareLabel({ platform: 'website', url: 'acme.io/blog' }, M), 'ACME');
+eq('website acme.co.uk', resolveSquareLabel({ platform: 'website', url: 'https://acme.co.uk' }, M), 'ACME');
 eq('desconocida sin url usa la plataforma', resolveSquareLabel({ platform: 'mastodon', url: '' }), 'MASTODON');
 eq('nunca vacío ni undefined', resolveSquareLabel({ platform: '', url: '' }), 'WEB');
 

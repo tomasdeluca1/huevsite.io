@@ -122,12 +122,19 @@ function bareHostname(u: URL): string {
 /**
  * Etiqueta del cuadrado de la grilla de celular. Siempre una abreviación fija:
  * el `label` del usuario NO gana acá (el import de Linktree lo llena con el
- * texto del botón). Plataformas desconocidas y `website` usan el hostname sin
+ * texto del botón). Plataformas desconocidas (y `website` con varios websites sin
+ * favicon) usan el hostname sin
  * `www.` ni TLD, en mayúsculas, cortado a 8 caracteres (sin elipsis).
  */
-export function resolveSquareLabel(link: SocialLinkLike): string {
+export function resolveSquareLabel(
+  link: SocialLinkLike & { favicon?: string },
+  ctx?: { severalWebsites?: boolean }
+): string {
   const known = SOCIAL_PLATFORMS[link.platform as SocialPlatformKey];
   if (known && link.platform !== "website") return known.short;
+  // §6.3: un website es "WEB"; solo si hay varios Y este no tiene favicon
+  // (cae al Globe) el hostname lo desambigua.
+  if (link.platform === "website" && !(ctx?.severalWebsites && !link.favicon)) return known.short;
 
   const u = parseUrl(link.url);
   if (u) {

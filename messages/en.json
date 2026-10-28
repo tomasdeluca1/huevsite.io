@@ -2183,5 +2183,8 @@
     "next": "Next",
     "ctaSub": "Want to be in this directory?",
     "ctaButton": "Build your huevsite"
+  },
+  "profile": {
+    "stickyCreateMine": "Create mine"
   }
 }

@@ -9,7 +9,7 @@ import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileSocialBar } from "@/components/profile/ProfileSocialBar";
 import { WinnerBanner } from "@/components/profile/WinnerBanner";
 import { getBdlsSlugsByUsername } from "@/lib/blog-data";
-import { MobileBottomNav, MobileStickyHeader } from "@/components/profile/MobileProfileUI";
+import { MobileStickyHeader } from "@/components/profile/MobileProfileUI";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWeek } from "@/lib/showcase-service";
 import { ExploreNavigation } from "@/components/explore/ExploreNavigation";
@@ -344,8 +344,8 @@ export default async function ProfilePage({ params, searchParams }: Props) {
               username={profile.username}
               isCustomDomain={isCustomDomain}
               isWinner={profile.isWinner}
+              currentUserId={currentUserId}
             />
-            <MobileBottomNav accentColor={profile.accentColor} currentUserId={currentUserId} isCustomDomain={isCustomDomain} />
           </>
         )}
 

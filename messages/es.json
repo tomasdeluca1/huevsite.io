@@ -2183,5 +2183,8 @@
     "next": "Siguiente",
     "ctaSub": "¿Querés estar en este directorio?",
     "ctaButton": "Armá tu huevsite"
+  },
+  "profile": {
+    "stickyCreateMine": "Creá el mío"
   }
 }

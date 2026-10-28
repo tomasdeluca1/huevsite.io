@@ -248,7 +248,8 @@
       "launchMonthlyLimit": "You already launched your product this month. With Pro you launch as many as you want.",
       "launchMonthlyLimitCta": "Upgrade to Pro",
       "launchError": "Couldn't launch. Make sure the project has a link.",
-      "launchedToast": "🚀 Launched! It's in this week's feed."
+      "launchedToast": "🚀 Launched! It's in this week's feed.",
+      "addContinue": "Create anyway"
     },
     "colorPicker": {
       "label": "profile vibes",
@@ -484,7 +485,11 @@
         "statusBuilding": "Building",
         "statusLaunched": "Launched",
         "launchDateLabel": "// launch date",
-        "archivedLabel": "Archive (hide from profile)"
+        "archivedLabel": "Archive (hide from profile)",
+        "fetchFromSite": "Fetch from site",
+        "fetching": "Checking the site...",
+        "noImageFound": "We couldn't find an image on that site. You can upload one by hand.",
+        "fetchError": "We couldn't open the site. Check the link and try again."
       },
       "metric": {
         "labelLabel": "// label",

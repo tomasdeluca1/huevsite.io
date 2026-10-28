@@ -248,7 +248,8 @@
       "launchMonthlyLimit": "Ya lanzaste tu producto de este mes. Con Pro lanzás todos los que quieras.",
       "launchMonthlyLimitCta": "Pasarme a Pro",
       "launchError": "No se pudo lanzar. Revisá que el proyecto tenga un link.",
-      "launchedToast": "🚀 ¡Lanzado! Ya está en el feed de la semana."
+      "launchedToast": "🚀 ¡Lanzado! Ya está en el feed de la semana.",
+      "addContinue": "Crear igual"
     },
     "colorPicker": {
       "label": "vibras de perfil",
@@ -484,7 +485,11 @@
         "statusBuilding": "En construcción",
         "statusLaunched": "Lanzado",
         "launchDateLabel": "// fecha de lanzamiento",
-        "archivedLabel": "Archivar (ocultar del perfil)"
+        "archivedLabel": "Archivar (ocultar del perfil)",
+        "fetchFromSite": "Traer del sitio",
+        "fetching": "Buscando en el sitio...",
+        "noImageFound": "No encontramos imagen en ese sitio. Podés subir una a mano.",
+        "fetchError": "No pudimos abrir el sitio. Revisá el link y probá de nuevo."
       },
       "metric": {
         "labelLabel": "// etiqueta",

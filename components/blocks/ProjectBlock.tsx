@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { ProjectBlockData, ProjectStatus } from "@/lib/profile-types";
@@ -19,8 +20,26 @@ export function ProjectBlock({ data, accentColor }: Props) {
   const description = data.description || t('project.fallbackDescription');
   const link = data.link || "#";
   const metrics = data.metrics || "";
-  const useFavicon = data.imageMode === "favicon" && !!(data.faviconUrl || data.link);
-  const imageUrl = useFavicon ? hiResFaviconUrl(data.link, data.faviconUrl) : data.imageUrl;
+  // --- Cascada de la imagen de preview -------------------------------------
+  // Escalones, en orden. Se usa el primero que no haya fallado al cargar:
+  //   1. "og":      la imagen del proyecto (data.imageUrl). Solo si imageMode no es "favicon".
+  //   2. "favicon": el favicon en alta (hiResFaviconUrl). Es el escalón inicial si
+  //                 imageMode es "favicon", y el respaldo si la og falla.
+  //   3. (nada):    sin ninguna imagen válida se renderiza el preview de código.
+  // Un escalón "falla" cuando su <img> dispara onError; lo anotamos por URL en
+  // failedSrcs, así que si el usuario cambia la imagen, ese escalón vuelve a intentarse.
+  // Una og vacía NO cae al favicon: sin imagen cargada sigue valiendo el preview de código.
+  const [failedSrcs, setFailedSrcs] = useState<string[]>([]);
+  const faviconSrc =
+    data.link || data.faviconUrl ? hiResFaviconUrl(data.link, data.faviconUrl) : "";
+  const wantsFavicon = data.imageMode === "favicon";
+  const steps: { kind: "og" | "favicon"; src: string }[] = [];
+  if (!wantsFavicon && data.imageUrl) steps.push({ kind: "og", src: data.imageUrl });
+  if ((wantsFavicon || data.imageUrl) && faviconSrc) steps.push({ kind: "favicon", src: faviconSrc });
+  const active = steps.find((st) => !failedSrcs.includes(st.src));
+  const imageUrl = active?.src;
+  const markFailed = (src: string) => setFailedSrcs((prev) => (prev.includes(src) ? prev : [...prev, src]));
+  const useFavicon = active?.kind === "favicon";
   const stack = data.stack || [];
   const status: ProjectStatus = data.status || "idea";
   const statusLabel = status === "launched" ? "LIVE" : status === "building" ? "WIP" : "IDEA";
@@ -35,6 +54,7 @@ export function ProjectBlock({ data, accentColor }: Props) {
       <div className="project-preview relative aspect-video w-full">
         {imageUrl ? (
           <img
+            key={imageUrl}
             src={imageUrl}
             className={`w-full h-full opacity-80 transition-all duration-500 group-hover:opacity-100 ${
               useFavicon
@@ -42,6 +62,12 @@ export function ProjectBlock({ data, accentColor }: Props) {
                 : "object-cover group-hover:scale-110"
             }`}
             alt={title}
+            // La página llega renderizada desde el server: si la imagen ya falló antes de
+            // hidratar, onError no se dispara nunca. El ref lo detecta (complete sin pixeles).
+            ref={(el) => {
+              if (el && el.complete && el.naturalWidth === 0) markFailed(imageUrl);
+            }}
+            onError={() => markFailed(imageUrl)}
           />
         ) : (
           <div

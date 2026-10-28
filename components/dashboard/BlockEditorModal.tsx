@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence, Reorder } from "framer-motion";
 import { BlockData, EcosystemBlockData, getContrastColor } from "@/lib/profile-types";
-import { X, Save, Sparkles, Search, Github, GripVertical, Globe, RefreshCw } from "lucide-react";
+import { X, Save, Sparkles, Search, Github, GripVertical, Globe, RefreshCw, Loader2, ImageDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { ImageUpload } from "@/components/dashboard/ImageUpload";
@@ -34,6 +34,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
 
   // Actualizar formData cuando cambia el bloque
   useEffect(() => {
+    setSiteFetch("idle");
     let initialData = { ...block };
 
     // Añadir IDs temporales para drag & drop estable
@@ -75,6 +76,37 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
 
   const handleChange = (key: string, value: any) => {
     setFormData((prev: any) => ({ ...prev, [key]: value }));
+  };
+
+  // "Traer del sitio": scrapea el link del proyecto y completa imagen y favicon
+  // siempre; título y descripción solo si están vacíos (nunca pisa lo escrito).
+  const [siteFetch, setSiteFetch] = useState<"idle" | "loading" | "noImage" | "error">("idle");
+  const fetchFromSite = async () => {
+    const link = (formData.link || "").trim();
+    if (!link || siteFetch === "loading") return;
+    setSiteFetch("loading");
+    try {
+      const res = await fetch("/api/projects/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: link }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setSiteFetch("error");
+        return;
+      }
+      setFormData((prev: any) => ({
+        ...prev,
+        ...(data.imageUrl ? { imageUrl: data.imageUrl, imageMode: "og" } : {}),
+        ...(data.faviconUrl ? { faviconUrl: data.faviconUrl } : {}),
+        ...(!(prev.title || "").trim() && data.title ? { title: data.title } : {}),
+        ...(!(prev.description || "").trim() && data.description ? { description: data.description } : {}),
+      }));
+      setSiteFetch(data.imageUrl ? "idle" : "noImage");
+    } catch {
+      setSiteFetch("error");
+    }
   };
 
   // Pull fresh, real stats from the GitHub API (stars, repos, followers,
@@ -323,6 +355,25 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                 className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-mono text-xs"
                 placeholder="https://..."
               />
+              {block.type === "project" && (
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={fetchFromSite}
+                    disabled={!(formData.link || "").trim() || siteFetch === "loading"}
+                    className="inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-[10px] font-black uppercase tracking-wide text-white/70 hover:text-white disabled:opacity-40 transition-colors"
+                  >
+                    {siteFetch === "loading" ? <Loader2 size={12} className="animate-spin" /> : <ImageDown size={12} />}
+                    {siteFetch === "loading" ? t("blockEditor.project.fetching") : t("blockEditor.project.fetchFromSite")}
+                  </button>
+                  {siteFetch === "noImage" && (
+                    <p className="text-xs text-amber-300/90">{t("blockEditor.project.noImageFound")}</p>
+                  )}
+                  {siteFetch === "error" && (
+                    <p className="text-xs text-red-400">{t("blockEditor.project.fetchError")}</p>
+                  )}
+                </div>
+              )}
             </div>
             {block.type === "project" && (
               <div className="grid grid-cols-2 gap-4">

@@ -19,9 +19,13 @@ export function AddProjectModal({
   accentColor?: string;
 }) {
   const t = useTranslations("dashboard.projects");
+  const tEditor = useTranslations("dashboard.blockEditor.project");
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Prefill ya scrapeado pero sin imagen: se frena acá para avisar, en vez de
+  // crear el bloque sin decir nada. El usuario decide con "Crear igual".
+  const [imagelessPrefill, setImagelessPrefill] = useState<Prefill | null>(null);
 
   if (!open) return null;
 
@@ -29,6 +33,7 @@ export function AddProjectModal({
     if (loading) return;
     setUrl("");
     setError(null);
+    setImagelessPrefill(null);
     onClose();
   };
 
@@ -50,17 +55,22 @@ export function AddProjectModal({
         return;
       }
       // Even if scraping found nothing, create the project with the link set.
-      onCreate({
+      const prefill: Prefill = {
         title: data.title || "",
         description: data.description || "",
         imageUrl: data.imageUrl || "",
         faviconUrl: data.faviconUrl || "",
         imageMode: data.imageUrl ? "og" : data.faviconUrl ? "favicon" : "og",
         link: data.url || value,
-      });
+      };
+      setLoading(false);
+      if (!data.imageUrl) {
+        setImagelessPrefill(prefill);
+        return;
+      }
+      onCreate(prefill);
       setUrl("");
       setError(null);
-      setLoading(false);
     } catch {
       setError(t("addError"));
       setLoading(false);
@@ -97,7 +107,10 @@ export function AddProjectModal({
             <input
               type="text"
               value={url}
-              onChange={(e) => setUrl(e.target.value)}
+              onChange={(e) => {
+                setUrl(e.target.value);
+                setImagelessPrefill(null);
+              }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") analyze();
               }}
@@ -126,6 +139,23 @@ export function AddProjectModal({
           </button>
 
           {error && <p className="text-xs text-red-400">{error}</p>}
+
+          {imagelessPrefill && (
+            <div className="space-y-2">
+              <p className="text-xs text-amber-300/90">{tEditor("noImageFound")}</p>
+              <button
+                onClick={() => {
+                  onCreate(imagelessPrefill);
+                  setImagelessPrefill(null);
+                  setUrl("");
+                  setError(null);
+                }}
+                className="w-full rounded-xl border border-white/10 py-2.5 text-xs font-bold uppercase tracking-wide text-white hover:bg-white/5 transition-all"
+              >
+                {t("addContinue")}
+              </button>
+            </div>
+          )}
 
           <button
             onClick={manual}

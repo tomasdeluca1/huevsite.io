@@ -1,6 +1,7 @@
 export const SOCIAL_PLATFORMS = {
   twitter: {
     label: "Twitter / X",
+    short: "X",
     placeholder: "@usuario",
     buildUrl: (h: string) => `https://x.com/${h.replace("@", "")}`,
     icon: "𝕏",
@@ -8,6 +9,7 @@ export const SOCIAL_PLATFORMS = {
   },
   github: {
     label: "GitHub",
+    short: "GITHUB",
     placeholder: "usuario",
     buildUrl: (h: string) => `https://github.com/${h}`,
     icon: "⬡",
@@ -15,6 +17,7 @@ export const SOCIAL_PLATFORMS = {
   },
   linkedin: {
     label: "LinkedIn",
+    short: "LINKEDIN",
     placeholder: "in/usuario",
     buildUrl: (h: string) => `https://linkedin.com/in/${h.replace(/^in\//, "")}`,
     icon: "in",
@@ -22,6 +25,7 @@ export const SOCIAL_PLATFORMS = {
   },
   discord: {
     label: "Discord",
+    short: "DISCORD",
     placeholder: "usuario",
     buildUrl: (h: string) => `https://discord.com/users/${h}`,
     icon: "💬",
@@ -29,6 +33,7 @@ export const SOCIAL_PLATFORMS = {
   },
   farcaster: {
     label: "Farcaster",
+    short: "FARCAST",
     placeholder: "@usuario",
     buildUrl: (h: string) => `https://warpcast.com/${h.replace("@", "")}`,
     icon: "f",
@@ -36,6 +41,7 @@ export const SOCIAL_PLATFORMS = {
   },
   telegram: {
     label: "Telegram",
+    short: "TELEGRAM",
     placeholder: "@usuario",
     buildUrl: (h: string) => `https://t.me/${h.replace("@", "")}`,
     icon: "✈",
@@ -43,6 +49,7 @@ export const SOCIAL_PLATFORMS = {
   },
   youtube: {
     label: "YouTube",
+    short: "YOUTUBE",
     placeholder: "@canal",
     buildUrl: (h: string) => `https://youtube.com/@${h.replace("@", "")}`,
     icon: "▶",
@@ -50,6 +57,7 @@ export const SOCIAL_PLATFORMS = {
   },
   twitch: {
     label: "Twitch",
+    short: "TWITCH",
     placeholder: "usuario",
     buildUrl: (h: string) => `https://twitch.tv/${h}`,
     icon: "🎮",
@@ -57,6 +65,7 @@ export const SOCIAL_PLATFORMS = {
   },
   website: {
     label: "Web propia",
+    short: "WEB",
     placeholder: "https://...",
     buildUrl: (h: string) => h,
     icon: "🔗",
@@ -64,6 +73,7 @@ export const SOCIAL_PLATFORMS = {
   },
   instagram: {
     label: "Instagram",
+    short: "INSTA",
     placeholder: "usuario",
     buildUrl: (h: string) => `https://instagram.com/${h.replace("@", "")}`,
     icon: "📸",

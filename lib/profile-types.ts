@@ -211,6 +211,7 @@ export interface ProjectBlockData extends BaseBlock {
   link: string;
   stack: string[];
   status?: ProjectStatus; // default "idea" when absent
+  showStatus?: boolean; // default true: show the status pill on the public profile (status is kept either way)
   launchDate?: string; // ISO date (yyyy-mm-dd)
   archived?: boolean; // hidden from public profile when true
   launch?: ProjectLaunchSnapshot; // populated by the Launchy pull webhook (Phase 3)

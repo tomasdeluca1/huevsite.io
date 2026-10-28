@@ -42,6 +42,7 @@ export function ProjectBlock({ data, accentColor }: Props) {
   const useFavicon = active?.kind === "favicon";
   const stack = data.stack || [];
   const status: ProjectStatus = data.status || "idea";
+  const showStatus = data.showStatus !== false;
   const statusLabel = status === "launched" ? "LIVE" : status === "building" ? "WIP" : "IDEA";
 
   return (
@@ -51,14 +52,17 @@ export function ProjectBlock({ data, accentColor }: Props) {
       viewport={{ once: true }}
       className="huevsite-block block-project h-full !p-0 flex flex-col group overflow-hidden"
     >
-      <div className="project-preview relative aspect-video w-full">
+      <div
+        className="project-preview relative aspect-video w-full"
+        style={useFavicon ? { backgroundColor: `${accentColor}14` } : undefined}
+      >
         {imageUrl ? (
           <img
             key={imageUrl}
             src={imageUrl}
             className={`w-full h-full opacity-80 transition-all duration-500 group-hover:opacity-100 ${
               useFavicon
-                ? "object-contain p-10 group-hover:scale-105"
+                ? "object-contain p-6 md:p-10 group-hover:scale-105"
                 : "object-cover group-hover:scale-110"
             }`}
             alt={title}
@@ -96,7 +100,7 @@ export function ProjectBlock({ data, accentColor }: Props) {
         <div className="flex items-start justify-between gap-4 mb-2">
           <div className="flex flex-col gap-1.5">
             <h3 className="project-name text-xl md:text-2xl font-black text-white title-tracking leading-tight">{title}</h3>
-            <ProjectStatusPill status={status} launchDate={data.launchDate} accentColor={accentColor} />
+            {showStatus && <ProjectStatusPill status={status} launchDate={data.launchDate} accentColor={accentColor} />}
           </div>
           {link !== "#" && status === "launched" && (
             <div

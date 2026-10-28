@@ -485,6 +485,7 @@
         "statusBuilding": "Building",
         "statusLaunched": "Launched",
         "launchDateLabel": "// launch date",
+        "showStatusLabel": "Show the status on the profile",
         "archivedLabel": "Archive (hide from profile)",
         "fetchFromSite": "Fetch from site",
         "fetching": "Checking the site...",

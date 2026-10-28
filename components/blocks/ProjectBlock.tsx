@@ -82,7 +82,7 @@ export function ProjectBlock({ data, accentColor }: Props) {
               <div className="text-sm"><span className="kw" style={{ color: accentColor }}>import</span> {'{ Project }'} <span className="kw" style={{ color: accentColor }}>from</span> <span className="str">&lsquo;huevsite&rsquo;</span></div>
               <div className="text-sm"><span className="kw" style={{ color: accentColor }}>const</span> <span className="fn" style={{ color: '#4D9FFF' }}>{title.replace(/\s+/g, '')}</span> = () <span className="kw" style={{ color: accentColor }}>=&gt;</span> {'{'}</div>
               <div className="text-sm">&nbsp; <span className="kw" style={{ color: accentColor }}>return</span> (</div>
-              <div className="text-sm">&nbsp; &nbsp; &lt;<span className="fn" style={{ color: '#4D9FFF' }}>Showcase</span> <span className="str">status</span>=<span className="str">&quot;{statusLabel}&quot;</span> /&gt;</div>
+              <div className="text-sm">&nbsp; &nbsp; &lt;<span className="fn" style={{ color: '#4D9FFF' }}>Showcase</span> {showStatus && (<><span className="str">status</span>=<span className="str">&quot;{statusLabel}&quot;</span> </>)}/&gt;</div>
               <div className="text-sm">&nbsp; )</div>
               <div className="text-sm">{'}'}</div>
             </div>
@@ -102,7 +102,7 @@ export function ProjectBlock({ data, accentColor }: Props) {
             <h3 className="project-name text-xl md:text-2xl font-black text-white title-tracking leading-tight">{title}</h3>
             {showStatus && <ProjectStatusPill status={status} launchDate={data.launchDate} accentColor={accentColor} />}
           </div>
-          {link !== "#" && status === "launched" && (
+          {showStatus && link !== "#" && status === "launched" && (
             <div
               className="w-2 h-2 rounded-full animate-pulse shadow-[0_0_10px_rgba(200,255,0,0.5)]"
               style={{ backgroundColor: accentColor }}

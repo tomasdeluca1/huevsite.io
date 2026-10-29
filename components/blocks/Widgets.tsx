@@ -91,7 +91,7 @@ export function SocialBlock({ data, accentColor }: SocialProps) {
                   rel="noopener noreferrer"
                   aria-label={name}
                   title={name}
-                  className="aspect-square min-w-0 flex flex-col items-center justify-center gap-[7px] px-2 py-3 rounded-2xl bg-white/[0.03] border border-white/5 active:bg-white/[0.08] hover:border-white/20 transition-colors"
+                  className="aspect-square min-w-0 flex flex-col items-center justify-center gap-[7px] px-2 max-[340px]:px-1 py-3 rounded-2xl bg-white/[0.03] border border-white/5 active:bg-white/[0.08] hover:border-white/20 transition-colors"
                   style={{ color: brandOf(l.platform) }}
                 >
                   {renderIcon(l, 20, "w-[19px] h-[19px] min-[390px]:w-[21px] min-[390px]:h-[21px] shrink-0")}

@@ -95,3 +95,38 @@ export function parseReorderBody(raw: unknown): ReorderPlan {
   }
   return { ok: true, view, updates }
 }
+
+export type BlockViewFields =
+  | { ok: true; fields: { visible_on?: "both" | "desktop" | "mobile"; mobile_order?: number | null } }
+  | { ok: false }
+
+const VIEWS = ["both", "desktop", "mobile"]
+
+/**
+ * Normaliza y valida los campos de vista de PATCH /api/blocks/[id]. Pura.
+ * Acepta snake (`visible_on`, `mobile_order`) o camel (`visibleOn`, `mobileOrder`),
+ * pero NUNCA las dos grafías a la vez del mismo campo (ambigüedad => rechazo, así el
+ * resultado no depende del orden de las claves). Lo que devuelve en `fields` es lo
+ * ÚNICO que la ruta puede escribir en esas columnas: ni el gate Pro ni la escritura
+ * miran el body crudo.
+ */
+export function parseBlockViewFields(body: unknown): BlockViewFields {
+  if (body === null || typeof body !== "object" || Array.isArray(body)) return { ok: true, fields: {} }
+  const b = body as Record<string, unknown>
+  const fields: { visible_on?: "both" | "desktop" | "mobile"; mobile_order?: number | null } = {}
+
+  if ("visible_on" in b && "visibleOn" in b) return { ok: false }
+  const v = "visible_on" in b ? b.visible_on : b.visibleOn
+  if ("visible_on" in b || "visibleOn" in b) {
+    if (typeof v !== "string" || !VIEWS.includes(v)) return { ok: false }
+    fields.visible_on = v as "both" | "desktop" | "mobile"
+  }
+
+  if ("mobile_order" in b && "mobileOrder" in b) return { ok: false }
+  const m = "mobile_order" in b ? b.mobile_order : b.mobileOrder
+  if ("mobile_order" in b || "mobileOrder" in b) {
+    if (m !== null && !(typeof m === "number" && Number.isInteger(m) && m >= 0)) return { ok: false }
+    fields.mobile_order = m as number | null
+  }
+  return { ok: true, fields }
+}

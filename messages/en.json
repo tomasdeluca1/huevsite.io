@@ -720,6 +720,7 @@
       "visibleOnDesktop": "Desktop only",
       "visibleOnMobile": "Mobile only",
       "errorSaveVisibleOn": "We couldn't save where this block shows. Try again.",
+      "visibleOnNotInMobile": "Not shown on mobile",
       "boardHint": "Drag, resize, and click each block to edit it.",
       "blockCount": "{count} blocks",
       "hiddenCount": "{count} hidden",

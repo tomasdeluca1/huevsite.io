@@ -1,7 +1,7 @@
 // Comprobaciones de lib/mobile-order.ts (orden propio de celular).
 // Sin test runner: imprime y sale con código != 0 si algo falla.
 // Uso: npx tsx scripts/verify-mobile-order.js
-const { parseReorderBody, hasMobileOrder, materializeMobileOrder, nextMobileOrder, sortForMobile } = require('../lib/mobile-order');
+const { parseBlockViewFields, parseReorderBody, hasMobileOrder, materializeMobileOrder, nextMobileOrder, sortForMobile } = require('../lib/mobile-order');
 
 let failed = 0;
 function eq(name, actual, expected) {
@@ -69,6 +69,32 @@ const bad = [
   ['uno malo entre buenos (sin escritura parcial)', { view: 'mobile', blocks: [{ id: 'a', mobile_order: 0 }, { id: 'b', mobile_order: 'x' }] }],
 ];
 for (const [n, body] of bad) eq(`reorder: inválido rechazado (${n})`, P(body).ok, false);
+
+// parseBlockViewFields: la compuerta Pro y la escritura usan SOLO lo que devuelve.
+const V = parseBlockViewFields;
+eq('view: body sin campos => ok, fields vacío', V({ visible: false }), { ok: true, fields: {} });
+eq('view: solo snake', V({ visible_on: 'desktop' }), { ok: true, fields: { visible_on: 'desktop' } });
+eq('view: solo camel se normaliza a snake', V({ visibleOn: 'mobile' }), { ok: true, fields: { visible_on: 'mobile' } });
+eq('view: both válido', V({ visible_on: 'both' }), { ok: true, fields: { visible_on: 'both' } });
+eq('view: las dos grafías (both primero, desktop después) => rechazo', V({ visible_on: 'both', visibleOn: 'desktop' }).ok, false);
+eq('view: las dos grafías (orden inverso) => rechazo', V({ visibleOn: 'desktop', visible_on: 'both' }).ok, false);
+eq('view: las dos grafías iguales => rechazo', V({ visible_on: 'desktop', visibleOn: 'desktop' }).ok, false);
+eq('view: snake inválido', V({ visible_on: 'basura' }).ok, false);
+eq('view: camel inválido', V({ visibleOn: 'basura' }).ok, false);
+eq('view: visible_on no string', V({ visible_on: 1 }).ok, false);
+eq('view: visible_on null', V({ visible_on: null }).ok, false);
+eq('view: both válido + camel basura => rechazo', V({ visible_on: 'both', visibleOn: 'basura' }).ok, false);
+eq('view: mobile_order entero', V({ mobile_order: 3 }), { ok: true, fields: { mobile_order: 3 } });
+eq('view: mobile_order 0', V({ mobile_order: 0 }), { ok: true, fields: { mobile_order: 0 } });
+eq('view: mobileOrder camel entero', V({ mobileOrder: 2 }), { ok: true, fields: { mobile_order: 2 } });
+eq('view: mobile_order null (reset)', V({ mobile_order: null }), { ok: true, fields: { mobile_order: null } });
+eq('view: mobile_order basura', V({ mobile_order: 'x' }).ok, false);
+eq('view: mobile_order decimal', V({ mobile_order: 1.5 }).ok, false);
+eq('view: mobile_order negativo', V({ mobile_order: -1 }).ok, false);
+eq('view: mobileOrder basura', V({ mobileOrder: 'x' }).ok, false);
+eq('view: mobile_order + mobileOrder juntas, la 2da basura => rechazo', V({ mobile_order: 1, mobileOrder: 'x' }).ok, false);
+eq('view: ambos campos válidos juntos', V({ visible_on: 'mobile', mobile_order: 1 }), { ok: true, fields: { visible_on: 'mobile', mobile_order: 1 } });
+eq('view: body null / array / string => sin campos', [V(null), V([]), V('x')], [{ ok: true, fields: {} }, { ok: true, fields: {} }, { ok: true, fields: {} }]);
 
 if (failed) {
   console.error(`\n${failed} comprobación(es) fallaron`);

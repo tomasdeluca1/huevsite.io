@@ -4,14 +4,7 @@ import { createServiceRoleClient } from '@/lib/supabase/service-role'
 import { scoreService } from '@/lib/score-service'
 import { checkAndPostWelcomeTweet } from '@/lib/twitter'
 import { hasProAccess } from '@/lib/pro-access'
-import { z } from 'zod'
-
-// Único contrato válido de los campos de vista (el CHECK de la migración fija
-// visible_on a estos tres valores; fuera de ahí explotaba como 500 en la base).
-const viewFieldsSchema = z.object({
-  visible_on: z.enum(['both', 'desktop', 'mobile']).optional(),
-  mobile_order: z.number().int().nonnegative().nullable().optional(),
-})
+import { parseBlockViewFields } from '@/lib/mobile-order'
 
 export const dynamic = 'force-dynamic'
 
@@ -82,43 +75,42 @@ export async function PATCH(
       )
     }
 
-    // Validación de los campos de vista: 400 en vez de 500. Se aceptan las dos
-    // grafías (snake y camel), igual que el resto del handler.
-    if (body && typeof body === 'object') {
-      const viewParse = viewFieldsSchema.safeParse({
-        visible_on: body.visible_on !== undefined ? body.visible_on : body.visibleOn,
-        mobile_order: body.mobile_order !== undefined ? body.mobile_order : body.mobileOrder,
-      })
-      if (!viewParse.success) {
-        return NextResponse.json(
-          { error: 'visible_on o mobile_order inválido' },
-          { status: 400 }
-        )
-      }
+    // Campos de vista: se normalizan y validan en UN solo lugar (función pura,
+    // fijada en scripts/verify-mobile-order.js). 400 si son inválidos o si llegan
+    // las dos grafías; el gate Pro y la escritura usan SOLO `viewFields`, nunca el
+    // body crudo, así ninguna grafía sin validar llega a la columna.
+    const viewParse = parseBlockViewFields(body)
+    if (!viewParse.ok) {
+      return NextResponse.json(
+        { error: 'visible_on o mobile_order inválido' },
+        { status: 400 }
+      )
+    }
+    const viewFields = viewParse.fields
 
-      // Gate Pro: sin Pro (prueba incluida, mismo criterio que el perfil público)
-      // solo se acepta 'both', que además permite volver a la configuración base.
-      const requestedView = viewParse.data.visible_on
-      if (requestedView !== undefined && requestedView !== 'both') {
-        const { data: proProfile } = await supabase
-          .from('profiles')
-          .select('subscription_tier, pro_since, referral_reward_expires_at, free_trial_ends_at')
-          .eq('id', user.id)
-          .maybeSingle()
-        if (!proProfile || !hasProAccess(proProfile)) {
-          return NextResponse.json(
-            { error: 'La visibilidad por vista es una función Pro.' },
-            { status: 403 }
-          )
-        }
+    // Gate Pro: sin Pro (prueba incluida, mismo criterio que el perfil público)
+    // solo se acepta 'both', que además permite volver a la configuración base.
+    if (viewFields.visible_on !== undefined && viewFields.visible_on !== 'both') {
+      const { data: proProfile } = await supabase
+        .from('profiles')
+        .select('subscription_tier, pro_since, referral_reward_expires_at, free_trial_ends_at')
+        .eq('id', user.id)
+        .maybeSingle()
+      if (!proProfile || !hasProAccess(proProfile)) {
+        return NextResponse.json(
+          { error: 'La visibilidad por vista es una función Pro.' },
+          { status: 403 }
+        )
       }
     }
 
     // Separar campos de PostgreSQL vs campos del payload JSON de 'data'
     // Los campos que van directamente a columnas PostgreSQL
-    const pgColumns = ['type', 'order', 'col_span', 'row_span', 'visible', 'mobile_order', 'visible_on']
+    const pgColumns = ['type', 'order', 'col_span', 'row_span', 'visible']
     // Los campos que NO deben guardarse (son metadata o auto-generados)
-    const excludeFields = ['id', 'user_id', 'created_at', 'updated_at']
+    // Las cuatro grafías de los campos de vista se excluyen del bucle genérico: se
+    // escriben más abajo desde `viewFields`, ya validadas.
+    const excludeFields = ['id', 'user_id', 'created_at', 'updated_at', 'visible_on', 'visibleOn', 'mobile_order', 'mobileOrder']
 
     const updateData: any = {}
     const jsonData: any = {}
@@ -145,6 +137,8 @@ export async function PATCH(
         jsonData[key] = body[key]
       }
     })
+
+    Object.assign(updateData, viewFields)
 
     // Solo actualizar el JSONB si hay datos para él
     if (Object.keys(jsonData).length > 0) {

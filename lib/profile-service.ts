@@ -1,6 +1,5 @@
 import { cache } from 'react';
 import { ProfileData, BlockData, getAdjustedAccentColor, MAX_FREE_BLOCKS } from './profile-types';
-import { scoreService } from './score-service';
 import { getProfileBadges } from './profile-badges';
 import { getFreeTrialState, hasProAccess } from './pro-access';
 import { getCurrentWeek, getWeekString } from './showcase-service';
@@ -375,49 +374,4 @@ export const profileService = {
       }).filter((b: any) => !(b.type === "project" && b.archived === true)) as BlockData[]
     };
   },
-
-  async saveProfile(userId: string, profile: ProfileData) {
-    const supabase = getServerClient();
-
-    // 1. Actualizar perfil básico
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({
-        accent_color: profile.accentColor,
-      })
-      .eq('id', userId);
-
-    if (profileError) throw profileError;
-
-    // 2. Sincronizar bloques (versión simplificada: borrar + insertar)
-    const { error: deleteError } = await supabase
-      .from('blocks')
-      .delete()
-      .eq('user_id', userId);
-
-    if (deleteError) throw deleteError;
-
-    const blocksToInsert = profile.blocks.map((block, index) => {
-      const { id, type, order, col_span, row_span, visible, ...data } = block;
-
-      return {
-        user_id: userId,
-        type,
-        col_span,
-        row_span,
-        data,
-        order: index,
-        visible: visible !== undefined ? visible : true
-      };
-    });
-
-    const { error: insertError } = await supabase
-      .from('blocks')
-      .insert(blocksToInsert);
-
-    if (insertError) throw insertError;
-
-    // 3. Recalcular Builder Score
-    await scoreService.recomputeScore(userId);
-  }
 };

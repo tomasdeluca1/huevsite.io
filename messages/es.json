@@ -720,6 +720,7 @@
       "visibleOnDesktop": "Solo escritorio",
       "visibleOnMobile": "Solo celular",
       "errorSaveVisibleOn": "No pudimos guardar dónde se ve el bloque. Probá de nuevo.",
+      "visibleOnNotInMobile": "No se ve en celular",
       "boardHint": "Arrastrá, redimensioná y hacé click en cada bloque para editarlo.",
       "blockCount": "{count} bloques",
       "hiddenCount": "{count} ocultos",

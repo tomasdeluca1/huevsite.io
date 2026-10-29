@@ -13,7 +13,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical } from "lucide-react";
+import { GripVertical, EyeOff } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { BlockData } from "@/lib/profile-types";
 
@@ -45,6 +45,8 @@ function Row({ block, label, onViewChange }: { block: BlockData; label: string; 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: block.id });
   const title = blockTitle(block);
   const current: ViewOption = block.visibleOn || "both";
+  // Solo con selector (Pro): sin Pro el perfil trata todo como "both" y no hay nada que atenuar.
+  const hiddenOnMobile = !!onViewChange && current === "desktop";
   return (
     <li
       ref={setNodeRef}
@@ -60,9 +62,15 @@ function Row({ block, label, onViewChange }: { block: BlockData; label: string; 
       >
         <GripVertical size={16} />
       </button>
-      <div className="min-w-0 flex-1">
+      <div className={`min-w-0 flex-1 ${hiddenOnMobile ? "opacity-45" : ""}`}>
         <p className="text-[10px] font-black uppercase tracking-[0.15em] text-white/35">{label}</p>
-        {title && <p className="text-sm font-semibold text-white/80 break-words line-clamp-2">{title}</p>}
+        {title && <p className={`text-sm font-semibold text-white/80 break-words line-clamp-2 ${hiddenOnMobile ? "line-through" : ""}`}>{title}</p>}
+        {hiddenOnMobile && (
+          <p className="mt-1 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.12em] text-white/70">
+            <EyeOff size={12} aria-hidden="true" />
+            {t("page.visibleOnNotInMobile")}
+          </p>
+        )}
       </div>
       {onViewChange && (
         <div role="group" aria-label={t("page.visibleOnLabel")} className="basis-full flex gap-1 pl-7">

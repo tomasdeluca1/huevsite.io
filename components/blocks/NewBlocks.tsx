@@ -82,6 +82,11 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
           <img
             src={data.url}
             alt={data.title || "Media"}
+            // Imagen ya cargada antes de hidratar: React no dispara onLoad. El ref lee las
+            // dimensiones en el commit (antes de pintar), mismo idioma que ProjectBlock.
+            ref={(el) => {
+              if (el && el.complete && el.naturalWidth > 0) setIsPortrait(el.naturalHeight > el.naturalWidth);
+            }}
             onLoad={(e) => setIsPortrait(e.currentTarget.naturalHeight > e.currentTarget.naturalWidth)}
             className="w-full h-full object-cover absolute inset-0 transition-all duration-700 group-hover:scale-105"
           />

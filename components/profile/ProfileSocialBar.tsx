@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { FollowButton } from "@/components/social/FollowButton";
 import { NominateButton } from "@/components/social/NominateButton";
 import { FollowListModal } from "@/components/social/FollowListModal";
@@ -45,6 +45,9 @@ export function ProfileSocialBar({
   className = "",
 }: Props) {
   const t = useTranslations("profileSocial");
+  const locale = useLocale();
+  const compact = new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 1 });
+  const fmt = (n: number) => compact.format(n || 0);
   const [modalType, setModalType] = useState<"followers" | "following" | null>(null);
   const [localFollowersCount, setLocalFollowersCount] = useState(followersCount);
   const [localNominationsCount, setLocalNominationsCount] = useState(nominationsCount);
@@ -88,18 +91,18 @@ export function ProfileSocialBar({
         {isEnabledSocialNetwork && profileId && (
           <>
           {!embed && (
-            <div className="flex flex-nowrap items-center justify-center gap-x-2 whitespace-nowrap text-[10px] max-[340px]:text-[9px] text-[var(--text-muted)] sm:hidden">
-              <button onClick={() => setModalType("followers")} className="py-1.5 transition-colors hover:text-white">
-                <span className="font-mono font-bold text-white/80">{localFollowersCount || 0}</span> {t("followers")}
+            <div className="flex flex-wrap items-center justify-center gap-x-2 text-[10px] max-[340px]:text-[9px] text-[var(--text-muted)] sm:hidden">
+              <button onClick={() => setModalType("followers")} className="flex min-h-10 items-center transition-colors hover:text-white">
+                <span className="font-mono font-bold text-white/80">{fmt(localFollowersCount)}</span> {t("followers")}
               </button>
-              <button onClick={() => setModalType("following")} className="py-1.5 transition-colors hover:text-white">
-                <span className="font-mono font-bold text-white/80">{followingCount || 0}</span> {t("following")}
+              <button onClick={() => setModalType("following")} className="flex min-h-10 items-center transition-colors hover:text-white">
+                <span className="font-mono font-bold text-white/80">{fmt(followingCount)}</span> {t("following")}
               </button>
-              <span className="py-1.5">
-                <span className="font-mono font-bold text-white/80">{localNominationsCount || 0}</span> {t("nominations")}
+              <span className="flex min-h-10 items-center">
+                <span className="font-mono font-bold text-white/80">{fmt(localNominationsCount)}</span> {t("nominations")}
               </span>
-              <button onClick={() => setIsScoreOpen(true)} className="py-1.5 transition-colors hover:text-white">
-                <span className="font-mono font-bold text-[var(--accent)]">{builderScore || 0}</span> {t("score")}
+              <button onClick={() => setIsScoreOpen(true)} className="flex min-h-10 items-center transition-colors hover:text-white">
+                <span className="font-mono font-bold text-[var(--accent)]">{fmt(builderScore)}</span> {t("score")}
               </button>
             </div>
           )}
@@ -167,7 +170,7 @@ export function ProfileSocialBar({
         )}
 
         {!embed && (
-        <div className="flex items-center gap-2 sm:gap-3 w-full lg:w-auto lg:mt-0 max-sm:[&_button]:!bg-transparent max-sm:[&_button]:!text-white max-sm:[&_button]:!border-white/15 max-sm:[&_button]:!py-2 max-sm:[&_button]:!px-4 max-sm:[&_button]:!text-xs max-sm:[&_button]:w-full max-sm:[&_button]:justify-center max-sm:[&_svg]:stroke-current">
+        <div className="flex items-center gap-2 sm:gap-3 w-full lg:w-auto mt-2 lg:mt-0 max-sm:[&_button]:!bg-transparent max-sm:[&_button]:!text-white max-sm:[&_button]:!border-white/15 max-sm:[&_button]:!py-2 max-sm:[&_button]:!px-4 max-sm:[&_button]:!text-xs max-sm:[&_button]:w-full max-sm:[&_button]:justify-center max-sm:[&_svg]:stroke-current">
           {showFollowButton && profileId && (
             <div className="flex-1 lg:flex-none">
               <FollowButton

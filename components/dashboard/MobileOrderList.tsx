@@ -3,15 +3,12 @@
 import {
   DndContext,
   closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
   DragEndEvent,
+  SensorDescriptor,
+  SensorOptions,
 } from "@dnd-kit/core";
 import {
   SortableContext,
-  sortableKeyboardCoordinates,
   verticalListSortingStrategy,
   useSortable,
 } from "@dnd-kit/sortable";
@@ -25,6 +22,8 @@ interface Props {
   blocks: BlockData[];
   typeLabels: Record<string, string>;
   onDragEnd: (event: DragEndEvent) => void;
+  /** Los mismos sensores del tablero (useSensors del dashboard). */
+  sensors: SensorDescriptor<SensorOptions>[];
   /** Solo se pasa con acceso Pro (mismo criterio que onHide): sin esto no hay selector. */
   onViewChange?: (id: string, view: ViewOption) => void;
 }
@@ -85,12 +84,8 @@ function Row({ block, label, onViewChange }: { block: BlockData; label: string; 
 }
 
 /** Lista lateral reordenable (@dnd-kit) con el orden que ve un celular. */
-export function MobileOrderList({ blocks, typeLabels, onDragEnd, onViewChange }: Props) {
+export function MobileOrderList({ blocks, typeLabels, onDragEnd, sensors, onViewChange }: Props) {
   const t = useTranslations("dashboard");
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  );
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
       <SortableContext items={blocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>

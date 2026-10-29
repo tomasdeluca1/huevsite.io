@@ -7,6 +7,8 @@ interface Props {
   path: string;
   /** Cambia cuando se guarda: fuerza la recarga del iframe. */
   reloadKey: string | number;
+  /** El board que se edita no es el publicado: el iframe muestra el publicado. */
+  notPublished?: boolean;
 }
 
 /**
@@ -21,7 +23,7 @@ interface Props {
  * El reordenamiento no se hace acá adentro: el drag no cruza el borde del
  * iframe. Se hace en la lista lateral (MobileOrderList).
  */
-export function MobilePreviewFrame({ path, reloadKey }: Props) {
+export function MobilePreviewFrame({ path, reloadKey, notPublished = false }: Props) {
   const t = useTranslations("dashboard");
   return (
     <div className="flex flex-col items-center gap-2">
@@ -34,14 +36,14 @@ export function MobilePreviewFrame({ path, reloadKey }: Props) {
       >
         <iframe
           key={reloadKey}
-          src={`${path}?embed=1`}
+          src={path}
           title={t("page.mobilePreviewTitle")}
           className="block rounded-[1.75rem] bg-black"
           style={{ width: "100%", maxWidth: 390, height: 720, border: 0 }}
         />
       </div>
       <p className="text-[11px] text-white/30 font-medium text-center">
-        {t("page.mobilePreviewHint")}
+        {notPublished ? t("page.mobilePreviewNotPublished") : t("page.mobilePreviewHint")}
       </p>
     </div>
   );

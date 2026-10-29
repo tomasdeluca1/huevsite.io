@@ -713,6 +713,7 @@
       "mobileDragHandle": "Drag to reorder",
       "mobilePreviewTitle": "This is how it looks on a phone",
       "mobilePreviewHint": "Save to see your changes here.",
+      "mobilePreviewNotPublished": "This board isn't the published one: you're seeing the live board, not this one. Publish it to see it here.",
       "errorSaveMobileOrder": "We couldn't save the mobile order. Try again.",
       "visibleOnLabel": "Where this block shows",
       "visibleOnBoth": "Both",

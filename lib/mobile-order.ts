@@ -52,3 +52,46 @@ export function nextMobileOrder(blocks: OrderedBlock[]): number | null {
   }
   return max < 0 ? null : max + 1
 }
+
+export type ReorderPlan =
+  | {
+      ok: true
+      view: "desktop" | "mobile"
+      updates: Array<{ id: string; patch: { order: number } | { mobile_order: number | null } }>
+    }
+  | { ok: false }
+
+/**
+ * Interpreta el body de POST /api/blocks/reorder. Pura: decide TODO antes de que
+ * la ruta toque la base, así un body inválido nunca produce una escritura parcial.
+ *  - array pelado [{id, order}]                 -> escritorio, escribe solo `order`
+ *  - { view: 'desktop', blocks: [{id, order}] } -> igual
+ *  - { view: 'mobile', blocks: [...] }          -> escribe solo `mobile_order`
+ *    (de `mobile_order`, o de `order` si falta); `null` = seguir escritorio.
+ */
+export function parseReorderBody(raw: unknown): ReorderPlan {
+  const isArr = Array.isArray(raw)
+  const obj = (isArr ? null : raw) as { view?: unknown; blocks?: unknown } | null
+  if (!isArr && (obj === null || typeof obj !== "object")) return { ok: false }
+  if (!isArr && obj!.view !== undefined && obj!.view !== "desktop" && obj!.view !== "mobile") {
+    return { ok: false }
+  }
+  const view: "desktop" | "mobile" = !isArr && obj!.view === "mobile" ? "mobile" : "desktop"
+  const items = isArr ? (raw as unknown[]) : obj!.blocks
+  if (!Array.isArray(items) || items.length === 0) return { ok: false }
+
+  const updates: Array<{ id: string; patch: { order: number } | { mobile_order: number | null } }> = []
+  for (const it of items) {
+    if (!it || typeof it !== "object" || typeof (it as any).id !== "string") return { ok: false }
+    const i = it as { id: string; order?: unknown; mobile_order?: unknown }
+    if (view === "mobile") {
+      const v = i.mobile_order !== undefined ? i.mobile_order : i.order
+      if (v !== null && !Number.isInteger(v)) return { ok: false }
+      updates.push({ id: i.id, patch: { mobile_order: v as number | null } })
+    } else {
+      if (!Number.isInteger(i.order)) return { ok: false }
+      updates.push({ id: i.id, patch: { order: i.order as number } })
+    }
+  }
+  return { ok: true, view, updates }
+}

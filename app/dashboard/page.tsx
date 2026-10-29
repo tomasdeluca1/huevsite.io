@@ -1099,6 +1099,44 @@ export default function DashboardPage() {
     }
   };
 
+  // Guarda el orden de celular pendiente del board/sub-site que se está editando.
+  // El payload sale de boardBlocks (depende de selectedBoardIndex y del sub-site),
+  // por eso hay que descargarlo ANTES de cambiar de alcance (ver changeScope).
+  // Un NULL se manda explícito (vuelve a seguir escritorio). true = nada pendiente o guardado.
+  const flushMobileOrder = async (): Promise<boolean> => {
+    if (!mobileDirty) return true;
+    const mobileItems = boardBlocks
+      .filter(b => !b.id.startsWith('temp-'))
+      .map(b => ({ id: b.id, mobile_order: b.mobileOrder ?? null }));
+    if (mobileItems.length === 0) {
+      setMobileDirty(false);
+      return true;
+    }
+    try {
+      const res = await fetch('/api/blocks/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ view: 'mobile', blocks: mobileItems }),
+      });
+      if (res.ok) {
+        setMobileDirty(false);
+        return true;
+      }
+    } catch (e) {
+      console.error("Error guardando el orden de celular:", e);
+    }
+    alert(t("page.errorSaveMobileOrder"));
+    return false;
+  };
+
+  // Cambiar de board o de sub-site con un reordenamiento de celular sin guardar:
+  // primero se guarda lo pendiente del alcance actual; si no se pudo guardar, NO
+  // se cambia (así el orden nunca se descarta ni se escribe en el board equivocado).
+  const changeScope = async (apply: () => void) => {
+    if (mobileDirty && !(await flushMobileOrder())) return;
+    apply();
+  };
+
   const handleSave = async () => {
     if (!profile) return;
     setIsSaving(true);
@@ -1135,24 +1173,9 @@ export default function DashboardPage() {
       }
 
       // Orden de celular: solo si cambió. El guardado de escritorio de arriba no
-      // lo toca. Un NULL se manda explícito (vuelve a seguir escritorio).
-      if (mobileDirty) {
-        const mobileItems = boardBlocks
-          .filter(b => !b.id.startsWith('temp-'))
-          .map(b => ({ id: b.id, mobile_order: b.mobileOrder ?? null }));
-        if (mobileItems.length > 0) {
-          const res = await fetch('/api/blocks/reorder', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ view: 'mobile', blocks: mobileItems }),
-          });
-          if (res.ok) setMobileDirty(false);
-          else alert(t("page.errorSaveMobileOrder"));
-        } else {
-          setMobileDirty(false);
-        }
-      }
-      setLastSaved(new Date());
+      // lo toca. Si falla NO se marca como guardado (ni se recarga la vista previa).
+      const mobileSaved = await flushMobileOrder();
+      if (mobileSaved) setLastSaved(new Date());
     } catch (error) {
       console.error("Error al guardar:", error);
     } finally {
@@ -1541,7 +1564,7 @@ export default function DashboardPage() {
         <DashboardSidebar
           profile={profile}
           selectedSubSiteId={selectedSubSiteId}
-          setSelectedSubSiteId={setSelectedSubSiteId}
+          setSelectedSubSiteId={(id: string | null) => changeScope(() => setSelectedSubSiteId(id))}
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
         isSaving={isSaving}
@@ -1924,7 +1947,7 @@ export default function DashboardPage() {
                     return (
                       <button
                         key={i}
-                        onClick={() => locked ? setIsUpgradeModalOpen(true) : setSelectedBoardIndex(i)}
+                        onClick={() => locked ? setIsUpgradeModalOpen(true) : changeScope(() => setSelectedBoardIndex(i))}
                         className="group relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all border"
                         style={{
                           backgroundColor: isSelected ? "var(--accent)" : "rgba(255,255,255,0.03)",
@@ -2002,6 +2025,7 @@ export default function DashboardPage() {
                         blocks={sortForMobile(visibleBlocks)}
                         typeLabels={BLOCK_TYPE_LABELS}
                         onDragEnd={handleMobileDragEnd}
+                        sensors={sensors}
                         onViewChange={isPro ? handleViewChange : undefined}
                       />
                     </div>
@@ -2012,6 +2036,7 @@ export default function DashboardPage() {
                           return site?.slug ? `/${profile.username}/${site.slug}` : `/${profile.username}`;
                         })()}
                         reloadKey={lastSaved ? lastSaved.getTime() : 0}
+                        notPublished={!selectedSubSiteId && (profile.publishedBoard ?? 0) !== selectedBoardIndex}
                       />
                     </div>
                   </div>
@@ -2046,8 +2071,8 @@ export default function DashboardPage() {
                 </DndContext>
                 )}
 
-                {/* Hidden blocks panel — Pro only */}
-                {isPro && hiddenBlocks.length > 0 && (
+                {/* Hidden blocks panel — Pro only (solo con el tablero de escritorio a la vista) */}
+                {viewMode === 'desktop' && isPro && hiddenBlocks.length > 0 && (
                   <div className="mt-8 p-5 md:p-6 border border-dashed border-white/10 bg-white/[0.015]" style={{ borderRadius: "calc(var(--dashboard-radius) + 0.5rem)" }}>
                     <div className="flex items-center gap-2.5 mb-4">
                       <EyeOff size={14} className="text-white/30" />
@@ -2167,7 +2192,7 @@ export default function DashboardPage() {
                             </div>
                           </div>
                           <div className="flex gap-2 shrink-0">
-                             <button onClick={() => { setSelectedSubSiteId(site.id); setActiveTab('board'); }} className="p-2.5 md:p-3 rounded-xl bg-white/5 hover:bg-[var(--accent)] hover:text-black transition-all">
+                             <button onClick={() => { changeScope(() => setSelectedSubSiteId(site.id)); setActiveTab('board'); }} className="p-2.5 md:p-3 rounded-xl bg-white/5 hover:bg-[var(--accent)] hover:text-black transition-all">
                                <LayoutIcon size={16} />
                              </button>
                              <button onClick={() => handleDeleteSubSite(site.id)} className="p-2.5 md:p-3 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all">

@@ -925,13 +925,17 @@ nav {
   .huevsite-grid > * {
     grid-column: 1 / -1 !important;
     grid-row: auto !important;
+    /* Orden propio de celular: ProfileGrid emite --mo en cada envoltorio y el
+       HTML conserva el orden de escritorio. Solo acá: fuera de este media query
+       pelearía con grid-auto-flow: dense y con los col-span. */
+    order: var(--mo, 0);
   }
 
-  /* Orden propio de celular: ProfileGrid emite --mo en cada envoltorio y el HTML
-     conserva el orden de escritorio. Solo acá: fuera de este media query
-     pelearía con grid-auto-flow: dense y con los col-span. */
-  .huevsite-grid > * {
-    order: var(--mo, 0);
+  /* El orden de celular es del perfil público: las grillas de vitrina de la
+     landing no lo heredan aunque algún día reciban --mo. */
+  .hpp-preview-grid .huevsite-grid > *,
+  .winner-showcase-grid .huevsite-grid > * {
+    order: 0;
   }
 
   .huevsite-block {

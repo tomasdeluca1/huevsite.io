@@ -422,6 +422,7 @@
       "shareCtaTitle": "Share my huevsite",
       "shareCtaSubtitle": "Link, QR and social to spread your board",
       "editorSectionLabel": "Editor",
+      "showEcosystemLabel": "Show my sub-site ecosystem",
       "borderRadiusLabel": "Rounding",
       "builderImpact": "Builder Impact",
       "scoreHintLow": "Validate your profile to show up in the ranking.",
@@ -587,9 +588,6 @@
       "ecosystem": {
         "titleLabel": "// block title",
         "titlePlaceholder": "My Ecosystem",
-        "hideHeaderTitle": "Hide Top Bar",
-        "hideHeaderSubtitle": "Remove the sub-sites bar from the header",
-        "hideHeaderHint": "If this option is enabled, your sub-sites will only show inside this block on your board, preventing them from repeating at the top.",
         "noteLabel": "Note:",
         "noteBody": "This block will automatically show all the sub-sites you've created. There's no need to add them one by one."
       },
@@ -649,6 +647,7 @@
       "blockTypeEcosystem": "Ecosystem",
       "ghostBlock": "Ghost block",
       "errorSaveColor": "Couldn't save the color. Wait a few seconds and try again.",
+      "errorSaveShowEcosystem": "Couldn't save the ecosystem change. Wait a few seconds and try again.",
       "errorSaveBorderRadius": "Couldn't save the rounding. Wait a few seconds and try again.",
       "errorVerifyDomain": "We couldn't verify the domain right now.",
       "errorSaveDomain": "Error saving domain.",

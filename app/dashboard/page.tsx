@@ -849,7 +849,6 @@ export default function DashboardPage() {
         initialData = {
           ...initialData,
           title: "Mis productos :)",
-          hideHeaderEcosystem: true,
         };
         break;
     }
@@ -1002,6 +1001,23 @@ export default function DashboardPage() {
       console.error('Error saving border radius:', e);
       setProfile(prev => prev ? { ...prev, borderRadius: previousRadius } : prev);
       alert(t("page.errorSaveBorderRadius"));
+    }
+  };
+
+  const handleShowEcosystemChange = async (value: boolean) => {
+    const previous = profile?.showEcosystem !== false;
+    setProfile(prev => prev ? { ...prev, showEcosystem: value } : null);
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ show_ecosystem: value }),
+      });
+      if (!res.ok) throw new Error(`save failed (${res.status})`);
+    } catch (e) {
+      console.error('Error saving show_ecosystem:', e);
+      setProfile(prev => prev ? { ...prev, showEcosystem: previous } : prev);
+      alert(t("page.errorSaveShowEcosystem"));
     }
   };
 
@@ -1446,6 +1462,7 @@ export default function DashboardPage() {
           addBlock={addBlock}
         handleColorChange={handleColorChange}
         handleBorderRadiusChange={handleBorderRadiusChange}
+        handleShowEcosystemChange={handleShowEcosystemChange}
         toggleAutoSave={toggleAutoSave}
         autoSaveEnabled={autoSaveEnabled}
         toggleNewsletter={toggleNewsletter}

@@ -377,6 +377,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
               username={profile.username}
               isCustomDomain={isCustomDomain}
               embed={embed}
+              showEcosystem={profile.showEcosystem}
             />
           </div>
 

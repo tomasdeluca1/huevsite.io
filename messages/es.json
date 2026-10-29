@@ -422,6 +422,7 @@
       "shareCtaTitle": "Compartir mi huevsite",
       "shareCtaSubtitle": "Link, QR y redes para difundir tu board",
       "editorSectionLabel": "Editor",
+      "showEcosystemLabel": "Mostrar mi ecosistema de sub-sitios",
       "borderRadiusLabel": "Redondeo",
       "builderImpact": "Impacto Builder",
       "scoreHintLow": "Validá tu perfil para aparecer en el ranking.",
@@ -587,9 +588,6 @@
       "ecosystem": {
         "titleLabel": "// título del bloque",
         "titlePlaceholder": "Mi Ecosistema",
-        "hideHeaderTitle": "Ocultar Barra Superior",
-        "hideHeaderSubtitle": "Remover la barra de sub-sites del header",
-        "hideHeaderHint": "Si esta opción está activada, tus sub-sites solo se mostrarán dentro de este bloque en tu board, evitando que se repitan arriba.",
         "noteLabel": "Nota:",
         "noteBody": "Este bloque mostrará automáticamente todos los sub-sites que hayas creado. No hace falta agregarlos uno por uno."
       },
@@ -649,6 +647,7 @@
       "blockTypeEcosystem": "Ecosistema",
       "ghostBlock": "Bloque fantasma",
       "errorSaveColor": "No se pudo guardar el color. Esperá unos segundos y probá de nuevo.",
+      "errorSaveShowEcosystem": "No se pudo guardar el cambio del ecosistema. Esperá unos segundos y probá de nuevo.",
       "errorSaveBorderRadius": "No se pudo guardar el redondeo. Esperá unos segundos y probá de nuevo.",
       "errorVerifyDomain": "No pudimos verificar el dominio en este momento.",
       "errorSaveDomain": "Error guardando dominio.",

@@ -36,6 +36,7 @@ interface SidebarProps {
   addBlock: (type: BlockType) => void;
   handleColorChange: (color: string, confirmed: boolean) => void;
   handleBorderRadiusChange: (value: string) => void;
+  handleShowEcosystemChange: (value: boolean) => void;
   toggleAutoSave: () => void;
   autoSaveEnabled: boolean;
   toggleNewsletter: () => void;
@@ -68,6 +69,7 @@ export function DashboardSidebar({
   addBlock,
   handleColorChange,
   handleBorderRadiusChange,
+  handleShowEcosystemChange,
   toggleAutoSave,
   autoSaveEnabled,
   toggleNewsletter,
@@ -288,6 +290,23 @@ export function DashboardSidebar({
                 })}
               </div>
             </div>
+
+            {/* Ecosystem switch — Pro only (el panel solo existe para Pro) */}
+            {isPro && (
+              <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between gap-3">
+                <div className="text-[11px] font-bold text-white/80 leading-snug">{t("sidebar.showEcosystemLabel")}</div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={profile.showEcosystem !== false}
+                  aria-label={t("sidebar.showEcosystemLabel")}
+                  onClick={() => handleShowEcosystemChange(profile.showEcosystem === false)}
+                  className={`w-12 h-6 shrink-0 rounded-full transition-colors relative ${profile.showEcosystem !== false ? 'bg-[var(--accent)]' : 'bg-white/10'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${profile.showEcosystem !== false ? 'left-7' : 'left-1'}`} />
+                </button>
+              </div>
+            )}
 
             <BlockSelector
               onAdd={addBlock}

@@ -17,6 +17,8 @@ interface Props {
   borderRadius?: string;
   /** Embed chrome-less (iframe en nordelta.tech): oculta la barra superior. */
   embed?: boolean;
+  /** Interruptor del dueño (profiles.show_ecosystem). Default true. */
+  showEcosystem?: boolean;
 }
 
 /**
@@ -34,11 +36,9 @@ export function ProfileHeader({
   isCustomDomain = false,
   borderRadius = "1.5rem",
   embed = false,
+  showEcosystem = true,
 }: Props) {
   const [isShareOpen, setIsShareOpen] = useState(false);
-
-  const ecosystemBlock = blocks.find(b => b.type === 'ecosystem' && b.visible) as any;
-  const hideHeaderEcosystem = ecosystemBlock?.hideHeaderEcosystem;
 
   return (
     <header className={`relative z-[100] ${embed ? "mb-0" : "mb-6 md:mb-10"}`}>
@@ -104,7 +104,7 @@ export function ProfileHeader({
         </div>
       )}
 
-      {subscriptionTier === "pro" && subSites.length > 0 && !hideHeaderEcosystem && (
+      {subscriptionTier === "pro" && subSites.length > 0 && showEcosystem && (
         <div className="mt-8 md:mt-12 backdrop-blur-xl bg-white/[0.02] border border-white/[0.05] p-5 sm:p-6 overflow-hidden relative group" style={{ borderRadius: `calc(${borderRadius} + 0.5rem)` }}>
           <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent)]/10 via-transparent to-transparent opacity-0 group-hover:opacity-50 transition-opacity duration-700 pointer-events-none" />
 
@@ -139,8 +139,8 @@ export function ProfileHeader({
                 )}
 
                 <div className="flex-1 min-w-0 relative z-10">
-                  <div className="text-[13px] font-black text-white truncate group-hover/item:text-[var(--accent)] transition-colors tracking-tight">{site.title}</div>
-                  {site.description && <div className="text-[10px] text-[var(--text-muted)] truncate mt-1 max-w-[90%]">{site.description}</div>}
+                  <div className="text-[13px] font-black text-white break-words group-hover/item:text-[var(--accent)] transition-colors tracking-tight">{site.title}</div>
+                  {site.description && <div className="text-[10px] text-[var(--text-muted)] break-words mt-1">{site.description}</div>}
                 </div>
 
                 <div className="w-7 h-7 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/5 group-hover/item:bg-[var(--accent)] group-hover/item:border-[var(--accent)] group-hover/item:text-black transition-all duration-300 relative z-10">

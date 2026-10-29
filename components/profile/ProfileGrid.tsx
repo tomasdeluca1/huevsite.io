@@ -100,7 +100,11 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscri
   const getGridClasses = (block: BlockData) => {
     const col = block.col_span || 1;
     const row = block.row_span || 1;
-    return `col-span-${col} row-span-${row}`;
+    // Visibilidad por vista: se oculta con CSS, nunca se saca del DOM, así el HTML
+    // (buscadores, teclado) queda completo en las dos vistas. El `order` de un
+    // bloque con display:none es inerte, convive con --mo sin conflicto.
+    const view = block.visibleOn === 'desktop' ? ' hidden md:block' : block.visibleOn === 'mobile' ? ' md:hidden' : '';
+    return `col-span-${col} row-span-${row}${view}`;
   }
 
   return (

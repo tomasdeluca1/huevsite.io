@@ -25,22 +25,32 @@ interface Props {
   blocks: BlockData[];
   typeLabels: Record<string, string>;
   onDragEnd: (event: DragEndEvent) => void;
+  /** Solo se pasa con acceso Pro (mismo criterio que onHide): sin esto no hay selector. */
+  onViewChange?: (id: string, view: ViewOption) => void;
 }
+
+type ViewOption = "both" | "desktop" | "mobile";
+const VIEW_OPTIONS: Array<{ value: ViewOption; key: string }> = [
+  { value: "both", key: "page.visibleOnBoth" },
+  { value: "desktop", key: "page.visibleOnDesktop" },
+  { value: "mobile", key: "page.visibleOnMobile" },
+];
 
 function blockTitle(b: BlockData): string {
   const x = b as any;
   return String(x.title || x.name || x.project || x.label || x.username || "").trim();
 }
 
-function Row({ block, label }: { block: BlockData; label: string }) {
+function Row({ block, label, onViewChange }: { block: BlockData; label: string; onViewChange?: Props["onViewChange"] }) {
   const t = useTranslations("dashboard");
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: block.id });
   const title = blockTitle(block);
+  const current: ViewOption = block.visibleOn || "both";
   return (
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 }}
-      className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3 touch-none"
+      className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3 touch-none"
     >
       <button
         type="button"
@@ -55,12 +65,27 @@ function Row({ block, label }: { block: BlockData; label: string }) {
         <p className="text-[10px] font-black uppercase tracking-[0.15em] text-white/35">{label}</p>
         {title && <p className="text-sm font-semibold text-white/80 break-words line-clamp-2">{title}</p>}
       </div>
+      {onViewChange && (
+        <div role="group" aria-label={t("page.visibleOnLabel")} className="basis-full flex gap-1 pl-7">
+          {VIEW_OPTIONS.map((o) => (
+            <button
+              key={o.value}
+              type="button"
+              aria-pressed={current === o.value}
+              onClick={() => current !== o.value && onViewChange(block.id, o.value)}
+              className={`px-3 py-2 min-h-[40px] rounded-lg text-[10px] font-black uppercase tracking-wider border transition-all ${current === o.value ? "bg-white/15 border-white/30 text-white" : "border-white/10 text-white/45 hover:text-white hover:border-white/25"}`}
+            >
+              {t(o.key)}
+            </button>
+          ))}
+        </div>
+      )}
     </li>
   );
 }
 
 /** Lista lateral reordenable (@dnd-kit) con el orden que ve un celular. */
-export function MobileOrderList({ blocks, typeLabels, onDragEnd }: Props) {
+export function MobileOrderList({ blocks, typeLabels, onDragEnd, onViewChange }: Props) {
   const t = useTranslations("dashboard");
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -71,7 +96,7 @@ export function MobileOrderList({ blocks, typeLabels, onDragEnd }: Props) {
       <SortableContext items={blocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
         <ol aria-label={t("page.mobileOrderListLabel")} className="flex flex-col gap-2">
           {blocks.map((b) => (
-            <Row key={b.id} block={b} label={typeLabels[b.type] || b.type} />
+            <Row key={b.id} block={b} label={typeLabels[b.type] || b.type} onViewChange={onViewChange} />
           ))}
         </ol>
       </SortableContext>

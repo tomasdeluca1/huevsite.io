@@ -314,6 +314,7 @@ export const profileService = {
   }),
 
   _transformProfile(profile: any, blocks: any[]): ProfileData {
+    const proAccess = hasProAccess(profile);
     return {
       id: profile.id,
       username: profile.username,
@@ -330,7 +331,7 @@ export const profileService = {
         }
         return 'free';
       })(),
-      hasProAccess: hasProAccess(profile),
+      hasProAccess: proAccess,
       extraBlocksFromShare: profile.extra_blocks_from_share || 0,
       twitterShareUnlocked: profile.twitter_share_unlocked || false,
       builderScore: profile.builder_score || 0,
@@ -357,6 +358,7 @@ export const profileService = {
       blocks: (blocks || []).map(b => {
         const { id, type, order, col_span, row_span, visible, ...data } = b.data || {};
         return {
+          ...data,
           id: b.id,
           type: b.type,
           order: b.order,
@@ -364,8 +366,9 @@ export const profileService = {
           row_span: b.row_span,
           visible: b.visible,
           mobileOrder: b.mobile_order ?? null,
-          visibleOn: b.visible_on || 'both',
-          ...data
+          // Sin acceso Pro (mismo criterio que hasProAccess, prueba incluida) se
+          // renderiza como 'both' SIN tocar el valor guardado en la base.
+          visibleOn: proAccess ? (b.visible_on || 'both') : 'both',
         };
       // Hide archived projects from the public profile (the dashboard loads
       // blocks via /api/profile, which is unaffected, so they stay editable).

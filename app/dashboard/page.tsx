@@ -358,6 +358,7 @@ export default function DashboardPage() {
             row_span: block.row_span,
             visible: block.visible,
             mobileOrder: block.mobile_order ?? null,
+            visibleOn: block.visible_on || 'both',
             board_index: block.board_index ?? 0,
             ...cleanData
           };
@@ -491,6 +492,7 @@ export default function DashboardPage() {
             row_span: block.row_span,
             visible: block.visible,
             mobileOrder: block.mobile_order ?? null,
+            visibleOn: block.visible_on || 'both',
             ...cleanData
           };
         });
@@ -660,6 +662,29 @@ export default function DashboardPage() {
           body: JSON.stringify({ visible: false }),
         });
       } catch (e) { console.error("Error hiding block:", e); }
+    }
+  };
+
+  // Visibilidad por vista (Pro). Optimista; si el servidor la rechaza (o la
+  // columna aún no existe) se vuelve al valor anterior y se avisa.
+  const handleViewChange = async (id: string, view: 'both' | 'desktop' | 'mobile') => {
+    const previous = profile?.blocks.find(b => b.id === id)?.visibleOn || 'both';
+    const apply = (v: 'both' | 'desktop' | 'mobile') =>
+      setProfile(prev => prev ? { ...prev, blocks: prev.blocks.map(b => b.id === id ? { ...b, visibleOn: v } : b) } : prev);
+    apply(view);
+    if (id.startsWith("temp-")) return;
+    try {
+      const res = await fetch(`/api/blocks/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ visible_on: view }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      setLastSaved(new Date());
+    } catch (e) {
+      console.error("Error saving visible_on:", e);
+      apply(previous);
+      alert(t("page.errorSaveVisibleOn"));
     }
   };
 
@@ -914,7 +939,7 @@ export default function DashboardPage() {
     setProfile((prev) => prev ? { ...prev, blocks: [...prev.blocks, initialData as BlockData] } : prev);
 
     try {
-      const { id, type: blockType, order, col_span, row_span, visible, board_index, mobileOrder, ...blockSpecificData } = initialData;
+      const { id, type: blockType, order, col_span, row_span, visible, board_index, mobileOrder, visibleOn: _visibleOn, ...blockSpecificData } = initialData;
       const response = await fetch('/api/blocks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -977,7 +1002,8 @@ export default function DashboardPage() {
       try {
         // mobileOrder solo se escribe por /api/blocks/reorder (handleSave); editar un
         // bloque no debe tocarlo (y evita depender de la columna en cada edición).
-        const { id, mobileOrder: _mo, ...updatePayload } = updatedBlock;
+        // Lo mismo vale para visibleOn: solo lo escribe handleViewChange (gate Pro).
+        const { id, mobileOrder: _mo, visibleOn: _vo, ...updatePayload } = updatedBlock;
         await fetch(`/api/blocks/${updatedBlock.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -1976,6 +2002,7 @@ export default function DashboardPage() {
                         blocks={sortForMobile(visibleBlocks)}
                         typeLabels={BLOCK_TYPE_LABELS}
                         onDragEnd={handleMobileDragEnd}
+                        onViewChange={isPro ? handleViewChange : undefined}
                       />
                     </div>
                     <div className="w-full lg:w-auto lg:shrink-0 flex justify-center">

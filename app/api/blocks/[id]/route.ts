@@ -3,6 +3,15 @@ import { createClient } from '@/lib/supabase/server'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
 import { scoreService } from '@/lib/score-service'
 import { checkAndPostWelcomeTweet } from '@/lib/twitter'
+import { hasProAccess } from '@/lib/pro-access'
+import { z } from 'zod'
+
+// Único contrato válido de los campos de vista (el CHECK de la migración fija
+// visible_on a estos tres valores; fuera de ahí explotaba como 500 en la base).
+const viewFieldsSchema = z.object({
+  visible_on: z.enum(['both', 'desktop', 'mobile']).optional(),
+  mobile_order: z.number().int().nonnegative().nullable().optional(),
+})
 
 export const dynamic = 'force-dynamic'
 
@@ -71,6 +80,38 @@ export async function PATCH(
         { error: 'Bloque no encontrado' },
         { status: 404 }
       )
+    }
+
+    // Validación de los campos de vista: 400 en vez de 500. Se aceptan las dos
+    // grafías (snake y camel), igual que el resto del handler.
+    if (body && typeof body === 'object') {
+      const viewParse = viewFieldsSchema.safeParse({
+        visible_on: body.visible_on !== undefined ? body.visible_on : body.visibleOn,
+        mobile_order: body.mobile_order !== undefined ? body.mobile_order : body.mobileOrder,
+      })
+      if (!viewParse.success) {
+        return NextResponse.json(
+          { error: 'visible_on o mobile_order inválido' },
+          { status: 400 }
+        )
+      }
+
+      // Gate Pro: sin Pro (prueba incluida, mismo criterio que el perfil público)
+      // solo se acepta 'both', que además permite volver a la configuración base.
+      const requestedView = viewParse.data.visible_on
+      if (requestedView !== undefined && requestedView !== 'both') {
+        const { data: proProfile } = await supabase
+          .from('profiles')
+          .select('subscription_tier, pro_since, referral_reward_expires_at, free_trial_ends_at')
+          .eq('id', user.id)
+          .maybeSingle()
+        if (!proProfile || !hasProAccess(proProfile)) {
+          return NextResponse.json(
+            { error: 'La visibilidad por vista es una función Pro.' },
+            { status: 403 }
+          )
+        }
+      }
     }
 
     // Separar campos de PostgreSQL vs campos del payload JSON de 'data'

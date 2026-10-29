@@ -50,6 +50,9 @@ export async function POST(req: Request) {
   // Best-effort fetch. On any failure we still return the URL so the caller can
   // create the project with the link and let the user fill the rest manually.
   let html = "";
+  // false si no pudimos abrir el sitio (red, timeout o status no-2xx): el cliente
+  // distingue "sitio caído" de "abrió pero sin imagen".
+  let reachable = false;
   // URL final tras los redirects: las rutas relativas (og:image, favicon) se
   // resuelven contra ella, no contra la URL que escribió el usuario.
   let finalUrl = parsed.toString();
@@ -64,6 +67,7 @@ export async function POST(req: Request) {
       signal: AbortSignal.timeout(8000),
     });
     if (res.ok) {
+      reachable = true;
       finalUrl = res.url || finalUrl;
       html = (await res.text()).slice(0, 500_000);
     }
@@ -85,5 +89,5 @@ export async function POST(req: Request) {
     resolveAssetUrl(pickLinkHref(html, ["apple-touch-icon", "icon"]), finalUrl) ||
     resolveAssetUrl("/favicon.ico", finalUrl);
 
-  return NextResponse.json({ url: parsed.toString(), title, description, imageUrl, faviconUrl });
+  return NextResponse.json({ url: parsed.toString(), title, description, imageUrl, faviconUrl, reachable });
 }

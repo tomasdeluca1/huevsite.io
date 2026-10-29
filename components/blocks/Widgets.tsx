@@ -53,7 +53,6 @@ export function SocialBlock({ data, accentColor }: SocialProps) {
 
   const renderIcon = (l: { platform: string; favicon?: string }, size: number, className?: string) => {
     if (l.platform === "website" && l.favicon) {
-      // eslint-disable-next-line @next/next/no-img-element
       return <img src={l.favicon} alt="" width={size} height={size} className={`rounded-sm ${className || ""}`} />;
     }
     const Icon = SOCIAL_ICONS[l.platform as SocialPlatformKey] ?? FallbackIcon;

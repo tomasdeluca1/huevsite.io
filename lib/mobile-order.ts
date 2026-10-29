@@ -61,6 +61,12 @@ export type ReorderPlan =
     }
   | { ok: false }
 
+/** Máximo de un INTEGER de Postgres: pasarse da 500 en vez de 400. */
+const PG_INT_MAX = 2147483647
+function isPgInt(n: unknown): n is number {
+  return typeof n === "number" && Number.isInteger(n) && Math.abs(n) <= PG_INT_MAX
+}
+
 /**
  * Interpreta el body de POST /api/blocks/reorder. Pura: decide TODO antes de que
  * la ruta toque la base, así un body inválido nunca produce una escritura parcial.
@@ -86,10 +92,10 @@ export function parseReorderBody(raw: unknown): ReorderPlan {
     const i = it as { id: string; order?: unknown; mobile_order?: unknown }
     if (view === "mobile") {
       const v = i.mobile_order !== undefined ? i.mobile_order : i.order
-      if (v !== null && !Number.isInteger(v)) return { ok: false }
+      if (v !== null && !isPgInt(v)) return { ok: false }
       updates.push({ id: i.id, patch: { mobile_order: v as number | null } })
     } else {
-      if (!Number.isInteger(i.order)) return { ok: false }
+      if (!isPgInt(i.order)) return { ok: false }
       updates.push({ id: i.id, patch: { order: i.order as number } })
     }
   }
@@ -125,7 +131,7 @@ export function parseBlockViewFields(body: unknown): BlockViewFields {
   if ("mobile_order" in b && "mobileOrder" in b) return { ok: false }
   const m = "mobile_order" in b ? b.mobile_order : b.mobileOrder
   if ("mobile_order" in b || "mobileOrder" in b) {
-    if (m !== null && !(typeof m === "number" && Number.isInteger(m) && m >= 0)) return { ok: false }
+    if (m !== null && !(typeof m === "number" && isPgInt(m) && m >= 0)) return { ok: false }
     fields.mobile_order = m as number | null
   }
   return { ok: true, fields }

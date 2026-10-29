@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { BadgeCheck, Trophy } from "lucide-react";
@@ -35,13 +35,26 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
   const [bioExpanded, setBioExpanded] = useState(false);
   const [bioOverflows, setBioOverflows] = useState(false);
   const bioRef = useRef<HTMLParagraphElement>(null);
+  const bioId = useId();
   useEffect(() => {
     const el = bioRef.current;
     if (!el || bioExpanded) return;
-    const measure = () => setBioOverflows(el.scrollHeight > el.clientHeight + 1);
+    let cancelled = false;
+    const measure = () => {
+      if (!cancelled) setBioOverflows(el.scrollHeight > el.clientHeight + 1);
+    };
     measure();
     window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+    // La fuente web puede cambiar el wrap después del primer render: sin esto el
+    // botón "ver más" no aparece y la bio queda recortada sin forma de expandirla.
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
+    ro?.observe(el);
+    document.fonts?.ready.then(measure).catch(() => {});
+    return () => {
+      cancelled = true;
+      window.removeEventListener("resize", measure);
+      ro?.disconnect();
+    };
   }, [data.description, bioExpanded, showBio]);
 
   if (isPreview) {
@@ -114,7 +127,7 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
               style={{ backgroundColor: accentColor }}
             />
             <div
-              className={`hero-avatar w-10 h-10 md:w-16 md:h-16 lg:w-20 lg:h-20 border-2 shadow-xl rounded-full flex items-center justify-center font-black overflow-hidden relative z-10 ${isWinner ? 'border-[var(--accent)]' : 'border-white/10'}`}
+              className={`hero-avatar w-10 h-10 border-2 shadow-xl rounded-full flex items-center justify-center font-black overflow-hidden relative z-10 ${isWinner ? 'border-[var(--accent)]' : 'border-white/10'}`}
               style={{
                 background: avatarUrl ? 'transparent' : `linear-gradient(135deg, ${accentColor}, #00FF88)`,
                 color: getContrastColor(accentColor)
@@ -174,6 +187,7 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
             <>
               <p
                 ref={bioRef}
+                id={bioId}
                 className={`text-sm md:text-base text-[var(--text-dim)] leading-relaxed break-words font-medium ${
                   bioExpanded ? "" : "line-clamp-2 md:line-clamp-none"
                 }`}
@@ -185,6 +199,7 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
                   type="button"
                   onClick={() => setBioExpanded((v) => !v)}
                   aria-expanded={bioExpanded}
+                  aria-controls={bioId}
                   className="md:hidden mt-1 text-xs font-bold text-[var(--accent)]"
                 >
                   {bioExpanded ? t("hero.bioLess") : t("hero.bioMore")}

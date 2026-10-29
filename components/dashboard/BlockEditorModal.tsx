@@ -92,7 +92,8 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
         body: JSON.stringify({ url: link }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
+      // El endpoint responde 200 con html vacío cuando no pudo abrir el sitio.
+      if (!res.ok || data.reachable === false) {
         setSiteFetch("error");
         return;
       }

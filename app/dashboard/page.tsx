@@ -139,6 +139,8 @@ export default function DashboardPage() {
   const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
   // true si el orden de celular cambió y todavía no se guardó (handleSave lo manda).
   const [mobileDirty, setMobileDirty] = useState(false);
+  // Orden de celular tal como estaba al empezar a editarlo (por id), para poder descartar.
+  const mobileSnapshotRef = useRef<Map<string, number | null> | null>(null);
   const supabase = createClient();
   const referralsSectionRef = useRef<HTMLDivElement | null>(null);
   const isPro = profile?.hasProAccess === true;
@@ -555,12 +557,33 @@ export default function DashboardPage() {
     }
   };
 
+  // Foto del orden de celular guardado, tomada antes del primer cambio pendiente.
+  const captureMobileSnapshot = () => {
+    if (mobileDirty || mobileSnapshotRef.current) return;
+    mobileSnapshotRef.current = new Map(boardBlocks.map(b => [b.id, b.mobileOrder ?? null]));
+  };
+
+  // Descarta los cambios pendientes del orden de celular y vuelve al último estado guardado.
+  // Es la salida cuando el guardado falla y el cambio de board queda frenado.
+  const discardMobileOrder = () => {
+    const snap = mobileSnapshotRef.current;
+    if (snap) {
+      setProfile((prev) => prev ? {
+        ...prev,
+        blocks: prev.blocks.map(b => snap.has(b.id) ? { ...b, mobileOrder: snap.get(b.id) ?? null } : b),
+      } : prev);
+    }
+    mobileSnapshotRef.current = null;
+    setMobileDirty(false);
+  };
+
   // Reordenamiento de CELULAR (lista lateral). El primer arrastre fija el orden
   // de TODO el board (materializeMobileOrder), no solo del bloque movido; si no,
   // los NULL se irían al final y el resto saltaría de lugar.
   const handleMobileDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
+    captureMobileSnapshot();
     setProfile((prev) => {
       if (!prev) return prev;
       const board = prev.blocks.filter(b => (b.board_index ?? 0) === selectedBoardIndex);
@@ -586,6 +609,7 @@ export default function DashboardPage() {
 
   // "Volver a seguir el orden de escritorio": mobile_order = NULL en todo el board.
   const resetMobileOrder = () => {
+    captureMobileSnapshot();
     setProfile((prev) => prev ? {
       ...prev,
       blocks: prev.blocks.map(b => (b.board_index ?? 0) === selectedBoardIndex ? { ...b, mobileOrder: null } : b),
@@ -1109,6 +1133,7 @@ export default function DashboardPage() {
       .filter(b => !b.id.startsWith('temp-'))
       .map(b => ({ id: b.id, mobile_order: b.mobileOrder ?? null }));
     if (mobileItems.length === 0) {
+      mobileSnapshotRef.current = null;
       setMobileDirty(false);
       return true;
     }
@@ -1119,6 +1144,7 @@ export default function DashboardPage() {
         body: JSON.stringify({ view: 'mobile', blocks: mobileItems }),
       });
       if (res.ok) {
+        mobileSnapshotRef.current = null;
         setMobileDirty(false);
         return true;
       }
@@ -1132,9 +1158,10 @@ export default function DashboardPage() {
   // Cambiar de board o de sub-site con un reordenamiento de celular sin guardar:
   // primero se guarda lo pendiente del alcance actual; si no se pudo guardar, NO
   // se cambia (así el orden nunca se descarta ni se escribe en el board equivocado).
-  const changeScope = async (apply: () => void) => {
-    if (mobileDirty && !(await flushMobileOrder())) return;
+  const changeScope = async (apply: () => void): Promise<boolean> => {
+    if (mobileDirty && !(await flushMobileOrder())) return false;
     apply();
+    return true;
   };
 
   const handleSave = async () => {
@@ -2007,6 +2034,19 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
+                {mobileDirty && (
+                  <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-amber-300/20 bg-amber-300/[0.06] px-3 py-2">
+                    <p className="text-[11px] text-amber-200/90 font-medium">{t("page.mobileUnsaved")}</p>
+                    <button
+                      type="button"
+                      onClick={discardMobileOrder}
+                      className="px-3 py-2 min-h-[40px] rounded-lg text-[11px] font-black uppercase tracking-wider border border-white/15 text-white/70 hover:text-white hover:border-white/30 transition-all"
+                    >
+                      {t("page.mobileDiscard")}
+                    </button>
+                  </div>
+                )}
+
                 {viewMode === 'mobile' && (
                   <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
                     <div className="w-full lg:flex-1 min-w-0">
@@ -2069,6 +2109,13 @@ export default function DashboardPage() {
                     </div>
                   </SortableContext>
                 </DndContext>
+                )}
+
+                {/* En celular no hay panel de ocultos: avisamos dónde se restauran */}
+                {viewMode === 'mobile' && isPro && hiddenBlocks.length > 0 && (
+                  <p className="mt-4 text-[11px] text-white/40 font-medium">
+                    {t("page.hiddenBlocksMobileNote", { count: hiddenBlocks.length })}
+                  </p>
                 )}
 
                 {/* Hidden blocks panel — Pro only (solo con el tablero de escritorio a la vista) */}
@@ -2192,7 +2239,7 @@ export default function DashboardPage() {
                             </div>
                           </div>
                           <div className="flex gap-2 shrink-0">
-                             <button onClick={() => { changeScope(() => setSelectedSubSiteId(site.id)); setActiveTab('board'); }} className="p-2.5 md:p-3 rounded-xl bg-white/5 hover:bg-[var(--accent)] hover:text-black transition-all">
+                             <button onClick={async () => { if (await changeScope(() => setSelectedSubSiteId(site.id))) setActiveTab('board'); }} className="p-2.5 md:p-3 rounded-xl bg-white/5 hover:bg-[var(--accent)] hover:text-black transition-all">
                                <LayoutIcon size={16} />
                              </button>
                              <button onClick={() => handleDeleteSubSite(site.id)} className="p-2.5 md:p-3 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all">

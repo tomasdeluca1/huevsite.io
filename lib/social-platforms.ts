@@ -179,6 +179,8 @@ export function compactUrl(url: string): string {
   const u = parseUrl(url);
   if (!u) return (url || "").replace(/^https?:\/\//i, "").replace(/^www\./i, "").split(/[?#]/)[0];
   const host = bareHostname(u);
+  // mailto: y similares no tienen host: el pathname (la dirección) es lo que hay.
+  if (!host) return u.pathname.replace(/^\/+/, "");
   const last = u.pathname.split("/").filter(Boolean).pop();
   if (last) {
     const withPath = `${host}/${last}`;

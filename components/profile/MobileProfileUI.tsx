@@ -64,7 +64,7 @@ export function MobileStickyHeader({ displayName, avatarUrl, builderScore, accen
                         style={{ backgroundColor: accentColor, color: 'black' }}
                     >
                         {/* Sin sesión: invita a crear el propio; con sesión: vuelve al panel */}
-                        {currentUserId ? "Mi Perfil" : t("stickyCreateMine")}
+                        {currentUserId ? t("stickyMyProfile") : t("stickyCreateMine")}
                     </Link>
                 )}
             </div>

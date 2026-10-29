@@ -26,6 +26,8 @@ export function AddProjectModal({
   // Prefill ya scrapeado pero sin imagen: se frena acá para avisar, en vez de
   // crear el bloque sin decir nada. El usuario decide con "Crear igual".
   const [imagelessPrefill, setImagelessPrefill] = useState<Prefill | null>(null);
+  // true cuando el sitio no se pudo abrir (distinto de "abrió pero sin imagen").
+  const [unreachable, setUnreachable] = useState(false);
 
   if (!open) return null;
 
@@ -34,6 +36,7 @@ export function AddProjectModal({
     setUrl("");
     setError(null);
     setImagelessPrefill(null);
+    setUnreachable(false);
     onClose();
   };
 
@@ -65,6 +68,7 @@ export function AddProjectModal({
       };
       setLoading(false);
       if (!data.imageUrl) {
+        setUnreachable(data.reachable === false);
         setImagelessPrefill(prefill);
         return;
       }
@@ -110,6 +114,7 @@ export function AddProjectModal({
               onChange={(e) => {
                 setUrl(e.target.value);
                 setImagelessPrefill(null);
+                setUnreachable(false);
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") analyze();
@@ -142,7 +147,7 @@ export function AddProjectModal({
 
           {imagelessPrefill && (
             <div className="space-y-2">
-              <p className="text-xs text-amber-300/90">{tEditor("noImageFound")}</p>
+              <p className="text-xs text-amber-300/90">{unreachable ? tEditor("fetchError") : t("noImageAddLater")}</p>
               <button
                 onClick={() => {
                   onCreate(imagelessPrefill);

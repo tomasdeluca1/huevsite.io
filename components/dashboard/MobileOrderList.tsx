@@ -62,9 +62,11 @@ function Row({ block, label, onViewChange }: { block: BlockData; label: string; 
       >
         <GripVertical size={16} />
       </button>
-      <div className={`min-w-0 flex-1 ${hiddenOnMobile ? "opacity-45" : ""}`}>
-        <p className="text-[10px] font-black uppercase tracking-[0.15em] text-white/35">{label}</p>
-        {title && <p className={`text-sm font-semibold text-white/80 break-words line-clamp-2 ${hiddenOnMobile ? "line-through" : ""}`}>{title}</p>}
+      <div className="min-w-0 flex-1">
+        {/* La atenuación va solo en etiqueta y título; el cartel "No se ve en celular" queda
+            fuera para conservar contraste legible (es la señal que no depende del color). */}
+        <p className={`text-[10px] font-black uppercase tracking-[0.15em] text-white/35 ${hiddenOnMobile ? "opacity-65" : ""}`}>{label}</p>
+        {title && <p className={`text-sm font-semibold text-white/80 break-words line-clamp-2 ${hiddenOnMobile ? "line-through opacity-65" : ""}`}>{title}</p>}
         {hiddenOnMobile && (
           <p className="mt-1 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.12em] text-white/70">
             <EyeOff size={12} aria-hidden="true" />

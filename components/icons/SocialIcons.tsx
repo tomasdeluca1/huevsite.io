@@ -1,4 +1,5 @@
 // ARCHIVO GENERADO por scripts/gen-social-icons.js. No editar a mano.
+// Para regenerar hace falta `npm i -D simple-icons@13.21.0` (la 14.0.0 quitó LinkedIn) y, después, `npm uninstall simple-icons`.
 // Paths de simple-icons (CC0). "website" es un Globe geometrico escrito a mano.
 import * as React from "react";
 import type { SocialPlatformKey } from "@/lib/social-platforms";
@@ -75,7 +76,8 @@ export const WebsiteIcon = make(
 );
 
 /** Globe: icono de reserva para plataformas desconocidas. */
-export const FallbackIcon = WebsiteIcon;
+export const FallbackIcon: SocialIconComponent = (props) => <WebsiteIcon {...props} />;
+FallbackIcon.displayName = "FallbackIcon";
 
 export const SOCIAL_ICONS: Record<SocialPlatformKey, SocialIconComponent> = {
   twitter: TwitterIcon,

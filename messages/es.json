@@ -249,7 +249,8 @@
       "launchMonthlyLimitCta": "Pasarme a Pro",
       "launchError": "No se pudo lanzar. Revisá que el proyecto tenga un link.",
       "launchedToast": "🚀 ¡Lanzado! Ya está en el feed de la semana.",
-      "addContinue": "Crear igual"
+      "addContinue": "Crear igual",
+      "noImageAddLater": "No encontramos imagen en ese sitio. Podés crear el proyecto igual y agregarle una imagen después, desde el editor del bloque."
     },
     "colorPicker": {
       "label": "vibras de perfil",
@@ -714,7 +715,10 @@
       "mobilePreviewTitle": "Así se ve en un celular",
       "mobilePreviewHint": "Guardá para ver tus cambios acá.",
       "mobilePreviewNotPublished": "Este board no es el publicado: acá ves el que está en vivo, no este. Publicalo para verlo acá.",
-      "errorSaveMobileOrder": "No pudimos guardar el orden de celular. Probá de nuevo.",
+      "errorSaveMobileOrder": "No pudimos guardar el orden de celular, así que el board no cambió. Probá de nuevo o descartá los cambios pendientes.",
+      "mobileUnsaved": "Tenés cambios sin guardar en el orden de celular.",
+      "mobileDiscard": "Descartar cambios",
+      "hiddenBlocksMobileNote": "Tenés {count, plural, one {# bloque oculto} other {# bloques ocultos}}. Los restaurás desde la vista de escritorio.",
       "visibleOnLabel": "Dónde se ve este bloque",
       "visibleOnBoth": "Las dos",
       "visibleOnDesktop": "Solo escritorio",
@@ -2213,7 +2217,8 @@
     "ctaButton": "Armá tu huevsite"
   },
   "profile": {
-    "stickyCreateMine": "Creá el mío"
+    "stickyCreateMine": "Creá el mío",
+    "stickyMyProfile": "Mi perfil"
   },
   "profileSocial": {
     "followers": "seguidores",

@@ -14,6 +14,17 @@ interface Props {
   accentColor: string;
 }
 
+// Tinte suave (~8%) del accent. Hex de 3 o 6 dígitos: se normaliza y se le agrega alfa.
+// Cualquier otro formato (rgb(), hsl(), nombres): color-mix, que no asume hex.
+function accentTint(color: string): string {
+  const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec((color || "").trim());
+  if (m) {
+    const hex = m[1].length === 3 ? m[1].split("").map((c) => c + c).join("") : m[1];
+    return `#${hex}14`;
+  }
+  return `color-mix(in srgb, ${color} 8%, transparent)`;
+}
+
 export function ProjectBlock({ data, accentColor }: Props) {
   const t = useTranslations('blocks');
   const title = data.title || t('project.fallbackTitle');
@@ -54,7 +65,7 @@ export function ProjectBlock({ data, accentColor }: Props) {
     >
       <div
         className="project-preview relative aspect-video w-full"
-        style={useFavicon ? { backgroundColor: `${accentColor}14` } : undefined}
+        style={useFavicon ? { backgroundColor: accentTint(accentColor) } : undefined}
       >
         {imageUrl ? (
           <img

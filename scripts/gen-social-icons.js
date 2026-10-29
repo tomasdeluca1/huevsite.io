@@ -3,7 +3,15 @@
 // Version fijada: desde 14.0.0 simple-icons quito LinkedIn; 13.21.0 es la ultima con las nueve marcas.
 const fs = require("fs");
 const path = require("path");
-const icons = require("simple-icons");
+let icons;
+try {
+  icons = require("simple-icons");
+} catch (e) {
+  console.error("Falta simple-icons. Instalalo, corré el generador y desinstalalo:");
+  console.error("  npm i -D simple-icons@13.21.0 && node scripts/gen-social-icons.js && npm uninstall simple-icons");
+  console.error("(la 14.0.0 quitó LinkedIn; usá exactamente la 13.21.0)");
+  process.exit(1);
+}
 
 // clave de SOCIAL_PLATFORMS -> slug de simple-icons (no coinciden: twitter -> x).
 // website no sale de simple-icons: es el Globe geometrico de abajo.
@@ -68,7 +76,7 @@ function make(d: string, name: string): SocialIconComponent {
 for (const e of entries) {
   out += `export const ${exportName(e.key)} = make(\n  ${JSON.stringify(e.path)},\n  "${exportName(e.key)}"\n);\n\n`;
 }
-out += `/** Globe: icono de reserva para plataformas desconocidas. */\nexport const FallbackIcon = WebsiteIcon;\n\n`;
+out += `/** Globe: icono de reserva para plataformas desconocidas. */\nexport const FallbackIcon: SocialIconComponent = (props) => <WebsiteIcon {...props} />;\nFallbackIcon.displayName = \"FallbackIcon\";\n\n`;
 out += `export const SOCIAL_ICONS: Record<SocialPlatformKey, SocialIconComponent> = {\n`;
 for (const e of entries) out += `  ${e.key}: ${exportName(e.key)},\n`;
 out += `};\n`;

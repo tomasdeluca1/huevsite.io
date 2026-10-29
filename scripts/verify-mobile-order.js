@@ -91,6 +91,11 @@ eq('view: mobile_order null (reset)', V({ mobile_order: null }), { ok: true, fie
 eq('view: mobile_order basura', V({ mobile_order: 'x' }).ok, false);
 eq('view: mobile_order decimal', V({ mobile_order: 1.5 }).ok, false);
 eq('view: mobile_order negativo', V({ mobile_order: -1 }).ok, false);
+eq('view: mobile_order en el máximo de INTEGER', V({ mobile_order: 2147483647 }).ok, true);
+eq('view: mobile_order fuera de INTEGER', V({ mobile_order: 3000000000 }).ok, false);
+eq('view: mobile_order = INTEGER max + 1', V({ mobile_order: 2147483648 }).ok, false);
+eq('reorder: mobile fuera de INTEGER rechazado', P({ view: 'mobile', blocks: [{ id: 'a', mobile_order: 3000000000 }] }).ok, false);
+eq('reorder: desktop order fuera de INTEGER rechazado', P([{ id: 'a', order: 3000000000 }]).ok, false);
 eq('view: mobileOrder basura', V({ mobileOrder: 'x' }).ok, false);
 eq('view: mobile_order + mobileOrder juntas, la 2da basura => rechazo', V({ mobile_order: 1, mobileOrder: 'x' }).ok, false);
 eq('view: ambos campos válidos juntos', V({ visible_on: 'mobile', mobile_order: 1 }), { ok: true, fields: { visible_on: 'mobile', mobile_order: 1 } });

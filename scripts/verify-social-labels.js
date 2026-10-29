@@ -41,6 +41,7 @@ eq('nunca app://', /^https?:|^mailto:/.test(resolveFollowUrl({ platform: 'linked
 eq('compactUrl linkedin largo -> host', compactUrl('https://www.linkedin.com/in/santiago-rodriguez-cetran'), 'linkedin.com');
 eq('compactUrl github largo -> host', compactUrl('https://github.com/santiagocetran'), 'github.com');
 eq('compactUrl corto suma segmento', compactUrl('https://github.com/tomas?tab=x'), 'github.com/tomas');
+eq('compactUrl mailto sin barra inicial', compactUrl('mailto:a@b.com'), 'a@b.com');
 eq('compactUrl sin path', compactUrl('https://www.acme.com/'), 'acme.com');
 
 if (failed) { console.error(`\n${failed} comprobación(es) fallaron`); process.exit(1); }

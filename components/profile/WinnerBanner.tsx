@@ -45,18 +45,18 @@ export function WinnerBanner({
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2 max-[400px]:w-full max-[400px]:basis-full">
           {notaHref && (
             <a
               href={notaHref}
-              className="rounded-lg border border-white/15 px-3 py-1.5 text-[10px] font-bold text-white/80 transition-colors hover:border-white/30 hover:text-white md:text-[11px]"
+              className="max-[400px]:flex-1 max-[400px]:text-center rounded-lg border border-white/15 px-3 py-1.5 text-[10px] font-bold text-white/80 transition-colors hover:border-white/30 hover:text-white md:text-[11px]"
             >
               {t("readPost")}
             </a>
           )}
           <a
             href={historyHref}
-            className="rounded-lg bg-[var(--accent)] px-3 py-1.5 text-[10px] font-black text-black transition-transform hover:scale-[1.03] md:text-[11px]"
+            className="max-[400px]:flex-1 max-[400px]:text-center rounded-lg bg-[var(--accent)] px-3 py-1.5 text-[10px] font-black text-black transition-transform hover:scale-[1.03] md:text-[11px]"
           >
             {t("history")} →
           </a>

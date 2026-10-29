@@ -22,6 +22,8 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
   const isPreview = useBlockPreview();
   const [isZoomed, setIsZoomed] = useState(false);
   const [mounted, setMounted] = useState(false);
+  // Imagen vertical: en celular el bloque toma proporción cuadrada en vez de apaisada.
+  const [isPortrait, setIsPortrait] = useState(false);
   useEffect(() => { setMounted(true); }, []);
   const isDirectVideo = data.url.match(/\.(mp4|webm|ogg)$/i);
   const isYouTube = data.url.includes("youtube.com") || data.url.includes("youtu.be");
@@ -56,7 +58,7 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
   return (
     <>
       <motion.div
-        className="huevsite-block block-media h-full p-0 overflow-hidden relative group border"
+        className={`huevsite-block block-media h-auto md:h-full p-0 overflow-hidden relative group border ${isPortrait ? "aspect-square" : "aspect-video"} md:aspect-auto`}
         style={{ borderColor: isDarkColor(accentColor) ? 'rgba(255,255,255,0.1)' : 'var(--border)', cursor: isPreview ? 'default' : 'zoom-in' }}
         onClick={() => !isPreview && setIsZoomed(true)}
       >
@@ -80,18 +82,19 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
           <img
             src={data.url}
             alt={data.title || "Media"}
+            onLoad={(e) => setIsPortrait(e.currentTarget.naturalHeight > e.currentTarget.naturalWidth)}
             className="w-full h-full object-cover absolute inset-0 transition-all duration-700 group-hover:scale-105"
           />
         )}
 
         {/* Overlay gradient for text readability */}
         {(data.title || data.description) && (
-          <div className="absolute inset-x-0 bottom-0 p-8 bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end transform translate-y-2 group-hover:translate-y-0 transition-transform">
+          <div className="absolute inset-x-0 bottom-0 p-4 md:p-8 bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end transform translate-y-2 group-hover:translate-y-0 transition-transform">
             {data.title && (
-              <h3 className="text-white font-black text-xl mb-1 title-tracking">{data.title}</h3>
+              <h3 className="text-white font-black text-base md:text-xl mb-1 title-tracking">{data.title}</h3>
             )}
             {data.description && (
-              <p className="text-white/60 text-xs font-medium line-clamp-2 leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity">
+              <p className="text-white/60 text-xs font-medium line-clamp-2 leading-relaxed md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                 {data.description}
               </p>
             )}
@@ -99,7 +102,7 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
         )}
 
         {/* Zoom icon on hover */}
-        <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all pointer-events-none transform translate-y-2 group-hover:translate-y-0">
+        <div className="hidden md:block absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all pointer-events-none transform translate-y-2 group-hover:translate-y-0">
           <div className="w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-2xl">
             <ZoomIn size={16} />
           </div>

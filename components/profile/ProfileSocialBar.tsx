@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { FollowButton } from "@/components/social/FollowButton";
 import { NominateButton } from "@/components/social/NominateButton";
 import { FollowListModal } from "@/components/social/FollowListModal";
@@ -43,6 +44,7 @@ export function ProfileSocialBar({
   embed = false,
   className = "",
 }: Props) {
+  const t = useTranslations("profileSocial");
   const [modalType, setModalType] = useState<"followers" | "following" | null>(null);
   const [localFollowersCount, setLocalFollowersCount] = useState(followersCount);
   const [localNominationsCount, setLocalNominationsCount] = useState(nominationsCount);
@@ -82,9 +84,26 @@ export function ProfileSocialBar({
 
   return (
     <div className={`relative z-[90] ${className}`}>
-      <div className="overflow-visible px-3 sm:px-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6">
+      <div className="overflow-visible px-0 sm:px-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6">
         {isEnabledSocialNetwork && profileId && (
-          <div className={embed ? "flex items-center justify-center w-full lg:w-auto" : "grid grid-cols-4 sm:flex sm:items-center gap-1.5 sm:gap-2 w-full lg:w-auto"}>
+          <>
+          {!embed && (
+            <div className="flex flex-nowrap items-center justify-center gap-x-2 whitespace-nowrap text-[10px] max-[340px]:text-[9px] text-[var(--text-muted)] sm:hidden">
+              <button onClick={() => setModalType("followers")} className="py-1.5 transition-colors hover:text-white">
+                <span className="font-mono font-bold text-white/80">{localFollowersCount || 0}</span> {t("followers")}
+              </button>
+              <button onClick={() => setModalType("following")} className="py-1.5 transition-colors hover:text-white">
+                <span className="font-mono font-bold text-white/80">{followingCount || 0}</span> {t("following")}
+              </button>
+              <span className="py-1.5">
+                <span className="font-mono font-bold text-white/80">{localNominationsCount || 0}</span> {t("nominations")}
+              </span>
+              <button onClick={() => setIsScoreOpen(true)} className="py-1.5 transition-colors hover:text-white">
+                <span className="font-mono font-bold text-[var(--accent)]">{builderScore || 0}</span> {t("score")}
+              </button>
+            </div>
+          )}
+          <div className={embed ? "flex items-center justify-center w-full lg:w-auto" : "hidden sm:flex sm:items-center gap-1.5 sm:gap-2 w-full lg:w-auto"}>
             {!embed && (
             <>
             <button
@@ -95,7 +114,7 @@ export function ProfileSocialBar({
                 {localFollowersCount || 0}
               </span>
               <span className="text-[8px] sm:text-[10px] uppercase tracking-[0.08em] sm:tracking-[0.2em] text-[var(--text-muted)] font-black">
-                Seguidores
+                {t("followers")}
               </span>
             </button>
 
@@ -109,7 +128,7 @@ export function ProfileSocialBar({
                 {followingCount || 0}
               </span>
               <span className="text-[8px] sm:text-[10px] uppercase tracking-[0.08em] sm:tracking-[0.2em] text-[var(--text-muted)] font-black">
-                Siguiendo
+                {t("following")}
               </span>
             </button>
 
@@ -120,7 +139,7 @@ export function ProfileSocialBar({
                 {localNominationsCount || 0}
               </span>
               <span className="text-[8px] sm:text-[10px] uppercase tracking-[0.08em] sm:tracking-[0.2em] text-[var(--text-muted)] font-black">
-                Nominaciones
+                {t("nominations")}
               </span>
             </div>
 
@@ -136,18 +155,19 @@ export function ProfileSocialBar({
                 {builderScore || 0}
               </span>
               <span className="text-[8px] sm:text-[10px] uppercase tracking-[0.08em] sm:tracking-[0.2em] text-[var(--text-muted)] font-black">
-                Score 🔥
+                {t("score")} 🔥
               </span>
 
               <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-black border border-white/10 px-4 py-2 rounded-xl text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all transform translate-y-1 group-hover:translate-y-0 pointer-events-none z-50 shadow-2xl">
-                ¿Qué es esto?
+                {t("whatIsThis")}
               </div>
             </button>
           </div>
+          </>
         )}
 
         {!embed && (
-        <div className="flex items-center gap-2 sm:gap-3 w-full lg:w-auto mt-2 lg:mt-0">
+        <div className="flex items-center gap-2 sm:gap-3 w-full lg:w-auto lg:mt-0 max-sm:[&_button]:!bg-transparent max-sm:[&_button]:!text-white max-sm:[&_button]:!border-white/15 max-sm:[&_button]:!py-2 max-sm:[&_button]:!px-4 max-sm:[&_button]:!text-xs max-sm:[&_button]:w-full max-sm:[&_button]:justify-center max-sm:[&_svg]:stroke-current">
           {showFollowButton && profileId && (
             <div className="flex-1 lg:flex-none">
               <FollowButton

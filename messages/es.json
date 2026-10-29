@@ -2197,5 +2197,12 @@
   },
   "profile": {
     "stickyCreateMine": "Creá el mío"
+  },
+  "profileSocial": {
+    "followers": "seguidores",
+    "following": "siguiendo",
+    "nominations": "nominaciones",
+    "score": "score",
+    "whatIsThis": "¿Qué es esto?"
   }
 }

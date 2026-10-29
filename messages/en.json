@@ -248,7 +248,9 @@
       "launchMonthlyLimit": "You already launched your product this month. With Pro you launch as many as you want.",
       "launchMonthlyLimitCta": "Upgrade to Pro",
       "launchError": "Couldn't launch. Make sure the project has a link.",
-      "launchedToast": "🚀 Launched! It's in this week's feed."
+      "launchedToast": "🚀 Launched! It's in this week's feed.",
+      "addContinue": "Create anyway",
+      "noImageAddLater": "We couldn't find an image on that site. You can create the project anyway and add an image later from the block editor."
     },
     "colorPicker": {
       "label": "profile vibes",
@@ -421,6 +423,7 @@
       "shareCtaTitle": "Share my huevsite",
       "shareCtaSubtitle": "Link, QR and social to spread your board",
       "editorSectionLabel": "Editor",
+      "showEcosystemLabel": "Show my sub-site ecosystem",
       "borderRadiusLabel": "Rounding",
       "builderImpact": "Builder Impact",
       "scoreHintLow": "Validate your profile to show up in the ranking.",
@@ -466,6 +469,8 @@
         "statusLabel": "// status",
         "statusPlaceholder": "available for projects",
         "locationLabel": "// location",
+        "showBioLabel": "Show the bio on the profile",
+        "showBioHint": "We recommend leaving it on: in a few seconds, it's what tells whoever scans you what you do.",
         "locationPlaceholder": "Buenos Aires"
       },
       "project": {
@@ -484,7 +489,12 @@
         "statusBuilding": "Building",
         "statusLaunched": "Launched",
         "launchDateLabel": "// launch date",
-        "archivedLabel": "Archive (hide from profile)"
+        "showStatusLabel": "Show the status on the profile",
+        "archivedLabel": "Archive (hide from profile)",
+        "fetchFromSite": "Fetch from site",
+        "fetching": "Checking the site...",
+        "noImageFound": "We couldn't find an image on that site. You can upload one by hand.",
+        "fetchError": "We couldn't open the site. Check the link and try again."
       },
       "metric": {
         "labelLabel": "// label",
@@ -579,9 +589,6 @@
       "ecosystem": {
         "titleLabel": "// block title",
         "titlePlaceholder": "My Ecosystem",
-        "hideHeaderTitle": "Hide Top Bar",
-        "hideHeaderSubtitle": "Remove the sub-sites bar from the header",
-        "hideHeaderHint": "If this option is enabled, your sub-sites will only show inside this block on your board, preventing them from repeating at the top.",
         "noteLabel": "Note:",
         "noteBody": "This block will automatically show all the sub-sites you've created. There's no need to add them one by one."
       },
@@ -641,6 +648,7 @@
       "blockTypeEcosystem": "Ecosystem",
       "ghostBlock": "Ghost block",
       "errorSaveColor": "Couldn't save the color. Wait a few seconds and try again.",
+      "errorSaveShowEcosystem": "Couldn't save the ecosystem change. Wait a few seconds and try again.",
       "errorSaveBorderRadius": "Couldn't save the rounding. Wait a few seconds and try again.",
       "errorVerifyDomain": "We couldn't verify the domain right now.",
       "errorSaveDomain": "Error saving domain.",
@@ -696,6 +704,28 @@
       "publishing": "Publishing…",
       "publishThisBoard": "Publish this board",
       "live": "live",
+      "viewToggleLabel": "Profile view",
+      "viewDesktop": "Desktop",
+      "viewMobile": "Mobile",
+      "mobileHint": "Drag the blocks to choose the order they show in on a phone. The desktop order doesn't change.",
+      "mobileFollowsDesktop": "Right now mobile follows the desktop order. If you move a block, mobile gets its own order.",
+      "mobileReset": "Go back to following the desktop order",
+      "mobileOrderListLabel": "Mobile order",
+      "mobileDragHandle": "Drag to reorder",
+      "mobilePreviewTitle": "This is how it looks on a phone",
+      "mobilePreviewHint": "Save to see your changes here.",
+      "mobilePreviewNotPublished": "This board isn't the published one: you're seeing the live board, not this one. Publish it to see it here.",
+      "errorSaveMobileOrder": "We couldn't save the mobile order, so the board didn't change. Try again or discard the pending changes.",
+      "mobileUnsaved": "You have unsaved changes to the mobile order.",
+      "mobileDiscard": "Discard changes",
+      "warnNoMobileBlocks": "With this change, your profile on phones has no visible blocks. You can pick another view any time.",
+      "hiddenBlocksMobileNote": "You have {count, plural, one {# hidden block} other {# hidden blocks}}. Restore them from the desktop view.",
+      "visibleOnLabel": "Where this block shows",
+      "visibleOnBoth": "Both",
+      "visibleOnDesktop": "Desktop only",
+      "visibleOnMobile": "Mobile only",
+      "errorSaveVisibleOn": "We couldn't save where this block shows. Try again.",
+      "visibleOnNotInMobile": "Not shown on mobile",
       "boardHint": "Drag, resize, and click each block to edit it.",
       "blockCount": "{count} blocks",
       "hiddenCount": "{count} hidden",
@@ -2094,6 +2124,8 @@
       "nextMonth": "Next month"
     },
     "hero": {
+      "bioMore": "see more",
+      "bioLess": "see less",
       "builderOfWeek": "Builder of the Week",
       "builderPro": "PRO Builder",
       "fallbackName": "User",
@@ -2104,7 +2136,8 @@
     },
     "social": {
       "connect": "Let's connect",
-      "noCoords": "// no coordinates"
+      "noCoords": "// no coordinates",
+      "openInApp": "Tap a network to open it in the app."
     },
     "cv": {
       "download": "Download CV",
@@ -2183,5 +2216,16 @@
     "next": "Next",
     "ctaSub": "Want to be in this directory?",
     "ctaButton": "Build your huevsite"
+  },
+  "profile": {
+    "stickyCreateMine": "Create mine",
+    "stickyMyProfile": "My profile"
+  },
+  "profileSocial": {
+    "followers": "followers",
+    "following": "following",
+    "nominations": "nominations",
+    "score": "score",
+    "whatIsThis": "What is this?"
   }
 }

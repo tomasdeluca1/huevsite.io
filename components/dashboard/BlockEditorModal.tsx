@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence, Reorder } from "framer-motion";
 import { BlockData, EcosystemBlockData, getContrastColor } from "@/lib/profile-types";
-import { X, Save, Sparkles, Search, Github, GripVertical, Globe, RefreshCw } from "lucide-react";
+import { X, Save, Sparkles, Search, Github, GripVertical, RefreshCw, Loader2, ImageDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { ImageUpload } from "@/components/dashboard/ImageUpload";
@@ -34,6 +34,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
 
   // Actualizar formData cuando cambia el bloque
   useEffect(() => {
+    setSiteFetch("idle");
     let initialData = { ...block };
 
     // Añadir IDs temporales para drag & drop estable
@@ -75,6 +76,38 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
 
   const handleChange = (key: string, value: any) => {
     setFormData((prev: any) => ({ ...prev, [key]: value }));
+  };
+
+  // "Traer del sitio": scrapea el link del proyecto y completa imagen y favicon
+  // siempre; título y descripción solo si están vacíos (nunca pisa lo escrito).
+  const [siteFetch, setSiteFetch] = useState<"idle" | "loading" | "noImage" | "error">("idle");
+  const fetchFromSite = async () => {
+    const link = (formData.link || "").trim();
+    if (!link || siteFetch === "loading") return;
+    setSiteFetch("loading");
+    try {
+      const res = await fetch("/api/projects/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: link }),
+      });
+      const data = await res.json().catch(() => ({}));
+      // El endpoint responde 200 con html vacío cuando no pudo abrir el sitio.
+      if (!res.ok || data.reachable === false) {
+        setSiteFetch("error");
+        return;
+      }
+      setFormData((prev: any) => ({
+        ...prev,
+        ...(data.imageUrl ? { imageUrl: data.imageUrl, imageMode: "og" } : {}),
+        ...(data.faviconUrl ? { faviconUrl: data.faviconUrl } : {}),
+        ...(!(prev.title || "").trim() && data.title ? { title: data.title } : {}),
+        ...(!(prev.description || "").trim() && data.description ? { description: data.description } : {}),
+      }));
+      setSiteFetch(data.imageUrl ? "idle" : "noImage");
+    } catch {
+      setSiteFetch("error");
+    }
   };
 
   // Pull fresh, real stats from the GitHub API (stars, repos, followers,
@@ -200,6 +233,20 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                 className="w-full p-4 h-24 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all resize-none leading-relaxed"
                 placeholder={t("blockEditor.hero.bioPlaceholder")}
               />
+              <label className="flex items-start gap-2 px-1 text-sm text-white/70">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={formData.showBio !== false}
+                  onChange={(e) => handleChange("showBio", e.target.checked)}
+                />
+                <span className="flex flex-col gap-0.5">
+                  <span>{t("blockEditor.hero.showBioLabel")}</span>
+                  <span className="text-[11px] text-[var(--text-muted)] leading-snug">
+                    {t("blockEditor.hero.showBioHint")}
+                  </span>
+                </span>
+              </label>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -323,6 +370,25 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                 className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-mono text-xs"
                 placeholder="https://..."
               />
+              {block.type === "project" && (
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={fetchFromSite}
+                    disabled={!(formData.link || "").trim() || siteFetch === "loading"}
+                    className="inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-[10px] font-black uppercase tracking-wide text-white/70 hover:text-white disabled:opacity-40 transition-colors"
+                  >
+                    {siteFetch === "loading" ? <Loader2 size={12} className="animate-spin" /> : <ImageDown size={12} />}
+                    {siteFetch === "loading" ? t("blockEditor.project.fetching") : t("blockEditor.project.fetchFromSite")}
+                  </button>
+                  {siteFetch === "noImage" && (
+                    <p className="text-xs text-amber-300/90">{t("blockEditor.project.noImageFound")}</p>
+                  )}
+                  {siteFetch === "error" && (
+                    <p className="text-xs text-red-400">{t("blockEditor.project.fetchError")}</p>
+                  )}
+                </div>
+              )}
             </div>
             {block.type === "project" && (
               <div className="grid grid-cols-2 gap-4">
@@ -348,6 +414,16 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                   />
                 </div>
               </div>
+            )}
+            {block.type === "project" && (
+              <label className="flex items-center gap-2 text-sm text-white/70">
+                <input
+                  type="checkbox"
+                  checked={formData.showStatus !== false}
+                  onChange={(e) => handleChange("showStatus", e.target.checked)}
+                />
+                {t("blockEditor.project.showStatusLabel")}
+              </label>
             )}
             {block.type === "project" && (
               <label className="flex items-center gap-2 text-sm text-white/70">
@@ -1075,31 +1151,6 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                 className="w-full p-4 rounded-xl bg-[var(--surface2)] border border-[var(--border)] focus:border-[var(--accent)] outline-none transition-all font-bold"
                 placeholder={t("blockEditor.ecosystem.titlePlaceholder")}
               />
-            </div>
-
-            <div className="p-5 bg-black/20 rounded-2xl border border-white/5 space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm font-bold text-white">{t("blockEditor.ecosystem.hideHeaderTitle")}</div>
-                  <p className="text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-widest mt-0.5">
-                    {t("blockEditor.ecosystem.hideHeaderSubtitle")}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleChange("hideHeaderEcosystem", !formData.hideHeaderEcosystem)}
-                  className={`w-12 h-6 rounded-full transition-colors relative ${formData.hideHeaderEcosystem ? 'bg-[#C8FF00]' : 'bg-white/10'}`}
-                >
-                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${formData.hideHeaderEcosystem ? 'left-7' : 'left-1'}`} />
-                </button>
-              </div>
-              
-              <div className="flex gap-3 items-start p-3 bg-white/5 rounded-xl border border-white/5">
-                <Globe size={14} className="text-[var(--text-dim)] mt-0.5 shrink-0" />
-                <p className="text-[10px] text-[var(--text-dim)] leading-relaxed">
-                  {t("blockEditor.ecosystem.hideHeaderHint")}
-                 </p>
-              </div>
             </div>
 
             <div className="p-4 bg-[var(--accent)]/10 rounded-xl border border-[var(--accent)]/20">

@@ -1,6 +1,5 @@
 import { cache } from 'react';
 import { ProfileData, BlockData, getAdjustedAccentColor, MAX_FREE_BLOCKS } from './profile-types';
-import { scoreService } from './score-service';
 import { getProfileBadges } from './profile-badges';
 import { getFreeTrialState, hasProAccess } from './pro-access';
 import { getCurrentWeek, getWeekString } from './showcase-service';
@@ -35,22 +34,39 @@ function getServerClient() {
 // cache() memoriza por request, no entre requests: elimina la query duplicada
 // sin reintroducir el bug de datos viejos que motivó el no-store.
 
+// Columnas nuevas de la vista mobile (blocks) y del ecosistema (profiles).
+// Siempre se piden con intento optimista + reintento legacy: si la migración
+// 20261028000000 todavía no se aplicó, el SELECT falla y, sin fallback,
+// getProfile devolvería null y TODOS los perfiles darían 404.
+const BLOCK_COLS_LEGACY = 'id, type, order, col_span, row_span, visible, data';
+const BLOCK_COLS = BLOCK_COLS_LEGACY + ', mobile_order, visible_on';
+
 export const profileService = {
   getProfile: cache(async (username: string): Promise<ProfileData | null> => {
     const supabase = getServerClient();
 
     const PROFILE_COLS = 'id, username, name, tagline, image, github_handle, accent_color, border_radius, subscription_tier, pro_since, extra_blocks_from_share, twitter_share_unlocked, builder_score, ai_credits, custom_domain, referral_code, referred_by, pro_referrals_count, referral_reward_expires_at, is_onboarding_test_user, is_profile_verified, has_good_reputation, is_top_matchmaker, free_trial_claimed_at, free_trial_started_at, free_trial_ends_at, free_trial_last_insights_viewed_at, newsletter_subscribed, updated_at';
 
-    // Intentamos traer published_board (board presets). Si la columna no está
-    // migrada aún, el select falla y caemos al legacy (un solo board) — así el
-    // deploy nunca rompe las páginas públicas antes de aplicar la migración.
+    // Intentamos traer las columnas más nuevas (published_board para board
+    // presets, show_ecosystem para el interruptor de ecosistema). Si alguna no
+    // está migrada aún, el select falla y bajamos de a un escalón: primero solo
+    // published_board (para no perder el filtro de board si lo único pendiente
+    // es show_ecosystem), y por último el legacy sin ninguna. Así el deploy
+    // nunca rompe las páginas públicas antes de aplicar la migración.
     let profile: any = null;
     let profileError: any = null;
     ({ data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select(PROFILE_COLS + ', published_board')
+      .select(PROFILE_COLS + ', published_board, show_ecosystem')
       .eq('username', username)
       .single());
+    if (profileError) {
+      ({ data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select(PROFILE_COLS + ', published_board')
+        .eq('username', username)
+        .single());
+    }
     if (profileError) {
       ({ data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -66,14 +82,21 @@ export const profileService = {
     const publishedBoard = boardMigrated ? (profile as any).published_board : 0;
 
     // Bloques del board PUBLICADO (perfil principal). Pre-migración no filtra.
-    let mainBlocksQuery = supabase
-      .from('blocks')
-      .select('id, type, order, col_span, row_span, visible, data')
-      .eq('user_id', profile.id)
-      .is('sub_site_id', null)
-      .eq('visible', true);
-    if (boardMigrated) mainBlocksQuery = mainBlocksQuery.eq('board_index', publishedBoard);
-    mainBlocksQuery = mainBlocksQuery.order('order', { ascending: true });
+    // Se pide con mobile_order/visible_on; si no existen, reintenta legacy.
+    const fetchMainBlocks = async () => {
+      const build = (cols: string) => {
+        let q = supabase
+          .from('blocks')
+          .select(cols)
+          .eq('user_id', profile.id)
+          .is('sub_site_id', null)
+          .eq('visible', true);
+        if (boardMigrated) q = q.eq('board_index', publishedBoard);
+        return q.order('order', { ascending: true });
+      };
+      const res: any = await build(BLOCK_COLS);
+      return res.error ? ((await build(BLOCK_COLS_LEGACY)) as any) : res;
+    };
 
     // Run these in parallel for faster response
     const [
@@ -82,7 +105,7 @@ export const profileService = {
       { data: latestWinnerData },
       { data: subSites, error: subSitesError }
     ] = await Promise.all([
-      mainBlocksQuery,
+      fetchMainBlocks(),
       supabase
         .from('showcase_winners')
         .select('week')
@@ -180,11 +203,22 @@ export const profileService = {
   getSubSiteProfile: cache(async (username: string, slug: string): Promise<ProfileData | null> => {
     const supabase = getServerClient();
 
-    const { data: profile, error: profileError } = await supabase
+    // show_ecosystem con reintento legacy (ver nota en getProfile).
+    const SUB_PROFILE_COLS = 'id, username, name, tagline, image, github_handle, accent_color, border_radius, subscription_tier, pro_since, extra_blocks_from_share, twitter_share_unlocked, builder_score, ai_credits, custom_domain, referral_code, referred_by, pro_referrals_count, referral_reward_expires_at, is_onboarding_test_user, is_profile_verified, has_good_reputation, is_top_matchmaker, free_trial_claimed_at, free_trial_started_at, free_trial_ends_at, free_trial_last_insights_viewed_at, newsletter_subscribed, updated_at';
+    let profile: any = null;
+    let profileError: any = null;
+    ({ data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('id, username, name, tagline, image, github_handle, accent_color, border_radius, subscription_tier, pro_since, extra_blocks_from_share, twitter_share_unlocked, builder_score, ai_credits, custom_domain, referral_code, referred_by, pro_referrals_count, referral_reward_expires_at, is_onboarding_test_user, is_profile_verified, has_good_reputation, is_top_matchmaker, free_trial_claimed_at, free_trial_started_at, free_trial_ends_at, free_trial_last_insights_viewed_at, newsletter_subscribed, updated_at')
+      .select(SUB_PROFILE_COLS + ', show_ecosystem')
       .eq('username', username)
-      .single();
+      .single());
+    if (profileError) {
+      ({ data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select(SUB_PROFILE_COLS)
+        .eq('username', username)
+        .single());
+    }
 
     if (profileError || !profile) return null;
 
@@ -202,13 +236,18 @@ export const profileService = {
       { data: blocks, error: blocksError },
       { data: subSites }
     ] = await Promise.all([
-      supabase
-        .from('blocks')
-        .select('id, type, order, col_span, row_span, visible, data')
-        .eq('user_id', profile.id)
-        .eq('sub_site_id', subSite.id)
-        .eq('visible', true)
-        .order('order', { ascending: true }),
+      (async () => {
+        const build = (cols: string) =>
+          supabase
+            .from('blocks')
+            .select(cols)
+            .eq('user_id', profile.id)
+            .eq('sub_site_id', subSite.id)
+            .eq('visible', true)
+            .order('order', { ascending: true });
+        const res: any = await build(BLOCK_COLS);
+        return res.error ? ((await build(BLOCK_COLS_LEGACY)) as any) : res;
+      })(),
       supabase
         .from('sub_sites')
         .select('id, title, description, slug, avatar_url, source_url, created_at')
@@ -274,6 +313,7 @@ export const profileService = {
   }),
 
   _transformProfile(profile: any, blocks: any[]): ProfileData {
+    const proAccess = hasProAccess(profile);
     return {
       id: profile.id,
       username: profile.username,
@@ -290,7 +330,7 @@ export const profileService = {
         }
         return 'free';
       })(),
-      hasProAccess: hasProAccess(profile),
+      hasProAccess: proAccess,
       extraBlocksFromShare: profile.extra_blocks_from_share || 0,
       twitterShareUnlocked: profile.twitter_share_unlocked || false,
       builderScore: profile.builder_score || 0,
@@ -309,68 +349,29 @@ export const profileService = {
       freeTrialLastInsightsViewedAt: profile.free_trial_last_insights_viewed_at || null,
       freeTrial: getFreeTrialState(profile),
       borderRadius: profile.border_radius || '1.5rem',
+      // Pre-migración la columna no viene: undefined => true (comportamiento actual).
+      showEcosystem: profile.show_ecosystem !== false,
       isOnboardingTestUser: profile.is_onboarding_test_user || false,
       newsletterSubscribed: profile.newsletter_subscribed === true,
       subSites: [], // Initially empty, filled by API if needed
       blocks: (blocks || []).map(b => {
         const { id, type, order, col_span, row_span, visible, ...data } = b.data || {};
         return {
+          ...data,
           id: b.id,
           type: b.type,
           order: b.order,
           col_span: b.col_span,
           row_span: b.row_span,
           visible: b.visible,
-          ...data
+          mobileOrder: b.mobile_order ?? null,
+          // Sin acceso Pro (mismo criterio que hasProAccess, prueba incluida) se
+          // renderiza como 'both' SIN tocar el valor guardado en la base.
+          visibleOn: proAccess ? (b.visible_on || 'both') : 'both',
         };
       // Hide archived projects from the public profile (the dashboard loads
       // blocks via /api/profile, which is unaffected, so they stay editable).
       }).filter((b: any) => !(b.type === "project" && b.archived === true)) as BlockData[]
     };
   },
-
-  async saveProfile(userId: string, profile: ProfileData) {
-    const supabase = getServerClient();
-
-    // 1. Actualizar perfil básico
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({
-        accent_color: profile.accentColor,
-      })
-      .eq('id', userId);
-
-    if (profileError) throw profileError;
-
-    // 2. Sincronizar bloques (versión simplificada: borrar + insertar)
-    const { error: deleteError } = await supabase
-      .from('blocks')
-      .delete()
-      .eq('user_id', userId);
-
-    if (deleteError) throw deleteError;
-
-    const blocksToInsert = profile.blocks.map((block, index) => {
-      const { id, type, order, col_span, row_span, visible, ...data } = block;
-
-      return {
-        user_id: userId,
-        type,
-        col_span,
-        row_span,
-        data,
-        order: index,
-        visible: visible !== undefined ? visible : true
-      };
-    });
-
-    const { error: insertError } = await supabase
-      .from('blocks')
-      .insert(blocksToInsert);
-
-    if (insertError) throw insertError;
-
-    // 3. Recalcular Builder Score
-    await scoreService.recomputeScore(userId);
-  }
 };

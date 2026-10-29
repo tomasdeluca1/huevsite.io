@@ -18,6 +18,8 @@ const blockCreateSchema = z.object({
   sub_site_id: z.string().uuid().nullable().optional(),
   // Board preset (perfil principal): a qué board pertenece el bloque (0-2).
   board_index: z.number().int().min(0).max(2).optional(),
+  // Orden propio de celular (null/ausente = sigue el de escritorio).
+  mobile_order: z.number().int().nonnegative().nullable().optional(),
 })
 
 const blockCreateLimiter = rateLimit({ interval: 60_000, uniqueTokenPerInterval: 500 })
@@ -175,6 +177,13 @@ export async function POST(request: NextRequest) {
       board_index: boardIndex,
     }
 
+    // Orden propio de celular: solo se manda si el set ya lo tiene (si no, el
+    // bloque nace NULL y sigue el orden de escritorio). Nunca se incluye la
+    // clave en NULL para no depender de que la columna exista.
+    if (Number.isInteger(body.mobile_order)) {
+      insertData.mobile_order = body.mobile_order
+    }
+
     // Enrich GitHub blocks with real stats from the GitHub API (authenticated
     // via GITHUB_TOKEN: stars, repos, followers, languages, real contribution
     // heatmap, and per-month commits). Never overwrite with zeros — only write
@@ -201,6 +210,16 @@ export async function POST(request: NextRequest) {
     // esa columna para no romper la creación de bloques (degrada a un solo board).
     if (createError && /board_index/i.test(createError.message || '')) {
       const { board_index: _omit, ...legacyInsert } = insertData;
+      ({ data: block, error: createError } = await supabase
+        .from('blocks')
+        .insert(legacyInsert)
+        .select()
+        .single())
+    }
+
+    // Migración de mobile_order sin aplicar: reintentar sin la columna.
+    if (createError && /mobile_order/i.test(createError.message || '')) {
+      const { mobile_order: _omitMo, ...legacyInsert } = insertData;
       ({ data: block, error: createError } = await supabase
         .from('blocks')
         .insert(legacyInsert)

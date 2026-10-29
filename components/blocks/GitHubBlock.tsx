@@ -113,6 +113,7 @@ export function GitHubBlock({ data, accentColor }: Props) {
         rel="noopener noreferrer"
         className="absolute top-4 right-4 p-2 rounded-lg bg-black/40 text-[var(--text-muted)] hover:text-white hover:bg-black/60 transition-all opacity-0 group-hover:opacity-100 backdrop-blur-md z-10"
         title={t('github.viewOnGithub')}
+        aria-label={t('github.viewOnGithub')}
       >
         <ExternalLink size={14} />
       </a>

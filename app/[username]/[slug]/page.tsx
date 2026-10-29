@@ -3,7 +3,7 @@ import { profileService } from "@/lib/profile-service";
 import { ProfileGrid } from "@/components/profile/ProfileGrid";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import { MobileBottomNav, MobileStickyHeader } from "@/components/profile/MobileProfileUI";
+import { MobileStickyHeader } from "@/components/profile/MobileProfileUI";
 import { createClient } from "@/lib/supabase/server";
 
 import { headers } from "next/headers";
@@ -124,8 +124,8 @@ export default async function SubSitePage({ params }: Props) {
                     builderScore={profile.builderScore || 0}
                     accentColor={profile.accentColor}
                     username={profile.username}
+                    currentUserId={currentUserId}
                 />
-                <MobileBottomNav accentColor={profile.accentColor} currentUserId={currentUserId} />
 
                 {/* Perfil identity bar removed for a cleaner sub-site view as requested */}
 

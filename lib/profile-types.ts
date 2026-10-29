@@ -140,6 +140,13 @@ export interface BaseBlock {
   col_span: number;
   row_span: number;
   visible: boolean;
+  // Orden propio en la vista mobile (null = sigue el orden de escritorio).
+  // Opcional en el tipo porque los bloques se construyen en muchos sitios
+  // (templates, IA, dashboard); lo lee/escribe la DB y _transformProfile
+  // siempre lo completa (null / 'both').
+  mobileOrder?: number | null;
+  // Dónde se muestra el bloque.
+  visibleOn?: 'both' | 'desktop' | 'mobile';
   // Board preset al que pertenece el bloque del perfil principal (0-2).
   board_index?: number;
 }
@@ -153,6 +160,7 @@ export interface HeroBlockData extends BaseBlock {
   roles?: Role[];
   status: string;
   location: string;
+  showBio?: boolean; // default true: show the bio (description) on the public profile
 }
 
 export interface BuildingBlockData extends BaseBlock {
@@ -204,6 +212,7 @@ export interface ProjectBlockData extends BaseBlock {
   link: string;
   stack: string[];
   status?: ProjectStatus; // default "idea" when absent
+  showStatus?: boolean; // default true: show the status pill on the public profile (status is kept either way)
   launchDate?: string; // ISO date (yyyy-mm-dd)
   archived?: boolean; // hidden from public profile when true
   launch?: ProjectLaunchSnapshot; // populated by the Launchy pull webhook (Phase 3)
@@ -368,6 +377,10 @@ export interface ProfileData {
   freeTrial?: FreeTrialState;
   badges?: ProfileBadge[];
   borderRadius?: string;
+  // Mostrar la sección de ecosistema (sub-sitios) en el header. Default true.
+  showEcosystem: boolean;
+  /** Solo dashboard: espeja el criterio de `subscriptionTier` de la vista pública (incluye recompensa de referidos). */
+  publicEcosystemEligible?: boolean;
   parentProfile?: {
     username: string;
     displayName: string;

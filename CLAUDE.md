@@ -6,9 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 npm run dev     # localhost:3000
 npm run build   # production build
-npm run lint    # ESLint
+npx tsc --noEmit  # type check (the lint substitute)
+npm run verify    # chains the 4 repo check scripts: i18n keys, social labels, mobile order, og meta
 ```
-No test runner configured. Verify changes manually in the browser.
+`npm run lint` does NOT work: there is no ESLint config, `eslint` is not installed, and `next lint` opens an interactive wizard that hangs forever. Don't run it. No test runner configured. Verify changes manually in the browser.
 
 ## Architecture
 

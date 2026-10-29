@@ -34,6 +34,9 @@ import { MetricBlock, SocialBlock, CVBlock } from "@/components/blocks/Widgets";
 import { StackBlock, CommunityBlock, WritingBlock } from "@/components/blocks/ExtraBlocks";
 import { MediaBlock, CertificationBlock, AchievementBlock, CustomBlock, CollabBlock, EcosystemBlock } from "@/components/blocks/NewBlocks";
 import { SortableBlock } from "@/components/dashboard/SortableBlock";
+import { MobilePreviewFrame } from "@/components/dashboard/MobilePreviewFrame";
+import { MobileOrderList } from "@/components/dashboard/MobileOrderList";
+import { hasMobileOrder, materializeMobileOrder, nextMobileOrder, sortForMobile } from "@/lib/mobile-order";
 import { BlockSelector } from "@/components/dashboard/BlockSelector";
 import { BlockEditorModal } from "@/components/dashboard/BlockEditorModal";
 import { ProjectTracker } from "@/components/dashboard/ProjectTracker";
@@ -132,6 +135,12 @@ export default function DashboardPage() {
   const [verifying, setVerifying] = useState(false);
   const [verificationResult, setVerificationResult] = useState<{ isValid: boolean; message: string; needsTxtVerification?: boolean; txtRecord?: { host: string; value: string } } | null>(null);
   const [isTabMenuOpen, setIsTabMenuOpen] = useState(false);
+  // Vista del tablero: 'mobile' muestra la lista de orden de celular + iframe.
+  const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
+  // true si el orden de celular cambió y todavía no se guardó (handleSave lo manda).
+  const [mobileDirty, setMobileDirty] = useState(false);
+  // Orden de celular tal como estaba al empezar a editarlo (por id), para poder descartar.
+  const mobileSnapshotRef = useRef<Map<string, number | null> | null>(null);
   const supabase = createClient();
   const referralsSectionRef = useRef<HTMLDivElement | null>(null);
   const isPro = profile?.hasProAccess === true;
@@ -309,10 +318,18 @@ export default function DashboardPage() {
         email: data.profile.email || "",
         accentColor: data.profile.accent_color,
         borderRadius: data.profile.border_radius || "1.5rem",
+        showEcosystem: data.profile.show_ecosystem !== false,
         roles: data.profile.roles || [],
         layout: data.profile.layout || null,
         subscriptionTier: (data.profile.subscription_tier === 'pro' || !!data.profile.pro_since) ? 'pro' : 'free',
         hasProAccess: hasProAccess(data.profile),
+        // Debe seguir espejando `subscriptionTier` de lib/profile-service.ts (vista pública): incluye la recompensa de referidos vigente.
+        publicEcosystemEligible: (() => {
+          const p = data.profile;
+          if (p.subscription_tier === 'pro' || !!p.pro_since) return true;
+          if (p.referral_reward_expires_at) return new Date(p.referral_reward_expires_at) > new Date();
+          return false;
+        })(),
         extraBlocksFromShare: data.profile.extra_blocks_from_share || 0,
         twitterShareUnlocked: data.profile.twitter_share_unlocked || false,
         hasSeenUpdateFeb25: data.profile.has_seen_update_feb25 || false,
@@ -349,6 +366,8 @@ export default function DashboardPage() {
             col_span: block.col_span,
             row_span: block.row_span,
             visible: block.visible,
+            mobileOrder: block.mobile_order ?? null,
+            visibleOn: block.visible_on || 'both',
             board_index: block.board_index ?? 0,
             ...cleanData
           };
@@ -481,6 +500,8 @@ export default function DashboardPage() {
             col_span: block.col_span,
             row_span: block.row_span,
             visible: block.visible,
+            mobileOrder: block.mobile_order ?? null,
+            visibleOn: block.visible_on || 'both',
             ...cleanData
           };
         });
@@ -541,6 +562,66 @@ export default function DashboardPage() {
         };
       });
     }
+  };
+
+  // Foto del orden de celular guardado, tomada antes del primer cambio pendiente.
+  const captureMobileSnapshot = () => {
+    if (mobileDirty || mobileSnapshotRef.current) return;
+    mobileSnapshotRef.current = new Map(boardBlocks.map(b => [b.id, b.mobileOrder ?? null]));
+  };
+
+  // Descarta los cambios pendientes del orden de celular y vuelve al último estado guardado.
+  // Es la salida cuando el guardado falla y el cambio de board queda frenado.
+  const discardMobileOrder = () => {
+    const snap = mobileSnapshotRef.current;
+    if (snap) {
+      setProfile((prev) => prev ? {
+        ...prev,
+        blocks: prev.blocks.map(b => snap.has(b.id) ? { ...b, mobileOrder: snap.get(b.id) ?? null } : b),
+      } : prev);
+    }
+    mobileSnapshotRef.current = null;
+    setMobileDirty(false);
+  };
+
+  // Reordenamiento de CELULAR (lista lateral). El primer arrastre fija el orden
+  // de TODO el board (materializeMobileOrder), no solo del bloque movido; si no,
+  // los NULL se irían al final y el resto saltaría de lugar.
+  const handleMobileDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    captureMobileSnapshot();
+    setProfile((prev) => {
+      if (!prev) return prev;
+      const board = prev.blocks.filter(b => (b.board_index ?? 0) === selectedBoardIndex);
+      const materialized = hasMobileOrder(board)
+        ? null
+        : new Map(materializeMobileOrder(board).map(m => [m.id, m.mobile_order]));
+      const base = materialized
+        ? board.map(b => ({ ...b, mobileOrder: materialized.get(b.id)! }))
+        : board;
+      const sorted = sortForMobile(base);
+      const from = sorted.findIndex(b => b.id === active.id);
+      const to = sorted.findIndex(b => b.id === over.id);
+      if (from < 0 || to < 0) return prev;
+      const moved = arrayMove(sorted, from, to);
+      const index = new Map(moved.map((b, i) => [b.id, i]));
+      return {
+        ...prev,
+        blocks: prev.blocks.map(b => index.has(b.id) ? { ...b, mobileOrder: index.get(b.id)! } : b),
+      };
+    });
+    setMobileDirty(true);
+  };
+
+  // "Volver a seguir el orden de escritorio": mobile_order = NULL en todo el board.
+  const resetMobileOrder = () => {
+    captureMobileSnapshot();
+    setProfile((prev) => prev ? {
+      ...prev,
+      blocks: prev.blocks.map(b => (b.board_index ?? 0) === selectedBoardIndex ? { ...b, mobileOrder: null } : b),
+    } : prev);
+    setMobileDirty(true);
   };
 
   // Publica un board (lo hace el público). Pro-only en el server.
@@ -612,6 +693,36 @@ export default function DashboardPage() {
           body: JSON.stringify({ visible: false }),
         });
       } catch (e) { console.error("Error hiding block:", e); }
+    }
+  };
+
+  // Visibilidad por vista (Pro). Optimista; si el servidor la rechaza (o la
+  // columna aún no existe) se vuelve al valor anterior y se avisa.
+  const handleViewChange = async (id: string, view: 'both' | 'desktop' | 'mobile') => {
+    const previous = profile?.blocks.find(b => b.id === id)?.visibleOn || 'both';
+    const apply = (v: 'both' | 'desktop' | 'mobile') =>
+      setProfile(prev => prev ? { ...prev, blocks: prev.blocks.map(b => b.id === id ? { ...b, visibleOn: v } : b) } : prev);
+    apply(view);
+    // Avisar (sin prohibir) si el cambio deja el perfil de celular sin ningún bloque visible.
+    if (view === 'desktop') {
+      const othersOnMobile = boardBlocks.some(b => b.id !== id && b.visible !== false && (b.visibleOn || 'both') !== 'desktop');
+      if (!othersOnMobile) alert(t("page.warnNoMobileBlocks"));
+    }
+    if (id.startsWith("temp-")) return;
+    try {
+      const res = await fetch(`/api/blocks/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ visible_on: view }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      // Con orden de celular pendiente, recargar la vista previa la dejaría mostrando el
+      // orden publicado y no el de la lista que el usuario tiene delante.
+      if (!mobileDirty) setLastSaved(new Date());
+    } catch (e) {
+      console.error("Error saving visible_on:", e);
+      apply(previous);
+      alert(t("page.errorSaveVisibleOn"));
     }
   };
 
@@ -708,6 +819,8 @@ export default function DashboardPage() {
       id: newId,
       type: type,
       order: profile?.blocks.length || 0,
+      // null mientras el board no tenga orden propio de celular; si lo tiene, al final.
+      mobileOrder: nextMobileOrder(boardBlocks),
       col_span: colSpan,
       row_span: rowSpan,
       visible: true,
@@ -848,7 +961,6 @@ export default function DashboardPage() {
         initialData = {
           ...initialData,
           title: "Mis productos :)",
-          hideHeaderEcosystem: true,
         };
         break;
     }
@@ -865,7 +977,7 @@ export default function DashboardPage() {
     setProfile((prev) => prev ? { ...prev, blocks: [...prev.blocks, initialData as BlockData] } : prev);
 
     try {
-      const { id, type: blockType, order, col_span, row_span, visible, board_index, ...blockSpecificData } = initialData;
+      const { id, type: blockType, order, col_span, row_span, visible, board_index, mobileOrder, visibleOn: _visibleOn, ...blockSpecificData } = initialData;
       const response = await fetch('/api/blocks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -877,6 +989,7 @@ export default function DashboardPage() {
           visible: true,
           sub_site_id: selectedSubSiteId,
           board_index: selectedBoardIndex,
+          ...(typeof mobileOrder === "number" ? { mobile_order: mobileOrder } : {}),
         }),
       });
 
@@ -893,6 +1006,10 @@ export default function DashboardPage() {
         blocks: prev.blocks.map(b => b.id === newId ? { ...b, id: block.id } : b)
       } : prev);
       setEditingBlock({ ...initialData, id: block.id } as BlockData);
+      // El EcosystemBlock ya lista los sub-sitios: apagar el panel del header para que no se dupliquen.
+      if (type === "ecosystem" && profile?.showEcosystem !== false) {
+        handleShowEcosystemChange(false);
+      }
     } catch (error) {
       console.error('Error creating block:', error);
       setProfile((prev) => prev ? { ...prev, blocks: prev.blocks.filter(b => b.id !== newId) } : prev);
@@ -925,7 +1042,10 @@ export default function DashboardPage() {
 
     if (!updatedBlock.id.startsWith('temp-')) {
       try {
-        const { id, ...updatePayload } = updatedBlock;
+        // mobileOrder solo se escribe por /api/blocks/reorder (handleSave); editar un
+        // bloque no debe tocarlo (y evita depender de la columna en cada edición).
+        // Lo mismo vale para visibleOn: solo lo escribe handleViewChange (gate Pro).
+        const { id, mobileOrder: _mo, visibleOn: _vo, ...updatePayload } = updatedBlock;
         await fetch(`/api/blocks/${updatedBlock.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -1004,6 +1124,64 @@ export default function DashboardPage() {
     }
   };
 
+  const handleShowEcosystemChange = async (value: boolean) => {
+    const previous = profile?.showEcosystem !== false;
+    setProfile(prev => prev ? { ...prev, showEcosystem: value } : null);
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ show_ecosystem: value }),
+      });
+      if (!res.ok) throw new Error(`save failed (${res.status})`);
+    } catch (e) {
+      console.error('Error saving show_ecosystem:', e);
+      setProfile(prev => prev ? { ...prev, showEcosystem: previous } : prev);
+      alert(t("page.errorSaveShowEcosystem"));
+    }
+  };
+
+  // Guarda el orden de celular pendiente del board/sub-site que se está editando.
+  // El payload sale de boardBlocks (depende de selectedBoardIndex y del sub-site),
+  // por eso hay que descargarlo ANTES de cambiar de alcance (ver changeScope).
+  // Un NULL se manda explícito (vuelve a seguir escritorio). true = nada pendiente o guardado.
+  const flushMobileOrder = async (): Promise<boolean> => {
+    if (!mobileDirty) return true;
+    const mobileItems = boardBlocks
+      .filter(b => !b.id.startsWith('temp-'))
+      .map(b => ({ id: b.id, mobile_order: b.mobileOrder ?? null }));
+    if (mobileItems.length === 0) {
+      mobileSnapshotRef.current = null;
+      setMobileDirty(false);
+      return true;
+    }
+    try {
+      const res = await fetch('/api/blocks/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ view: 'mobile', blocks: mobileItems }),
+      });
+      if (res.ok) {
+        mobileSnapshotRef.current = null;
+        setMobileDirty(false);
+        return true;
+      }
+    } catch (e) {
+      console.error("Error guardando el orden de celular:", e);
+    }
+    alert(t("page.errorSaveMobileOrder"));
+    return false;
+  };
+
+  // Cambiar de board o de sub-site con un reordenamiento de celular sin guardar:
+  // primero se guarda lo pendiente del alcance actual; si no se pudo guardar, NO
+  // se cambia (así el orden nunca se descarta ni se escribe en el board equivocado).
+  const changeScope = async (apply: () => void): Promise<boolean> => {
+    if (mobileDirty && !(await flushMobileOrder())) return false;
+    apply();
+    return true;
+  };
+
   const handleSave = async () => {
     if (!profile) return;
     setIsSaving(true);
@@ -1038,7 +1216,11 @@ export default function DashboardPage() {
           body: JSON.stringify(blockOrders),
         });
       }
-      setLastSaved(new Date());
+
+      // Orden de celular: solo si cambió. El guardado de escritorio de arriba no
+      // lo toca. Si falla NO se marca como guardado (ni se recarga la vista previa).
+      const mobileSaved = await flushMobileOrder();
+      if (mobileSaved) setLastSaved(new Date());
     } catch (error) {
       console.error("Error al guardar:", error);
     } finally {
@@ -1427,7 +1609,7 @@ export default function DashboardPage() {
         <DashboardSidebar
           profile={profile}
           selectedSubSiteId={selectedSubSiteId}
-          setSelectedSubSiteId={setSelectedSubSiteId}
+          setSelectedSubSiteId={(id: string | null) => changeScope(() => setSelectedSubSiteId(id))}
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
         isSaving={isSaving}
@@ -1445,6 +1627,7 @@ export default function DashboardPage() {
           addBlock={addBlock}
         handleColorChange={handleColorChange}
         handleBorderRadiusChange={handleBorderRadiusChange}
+        handleShowEcosystemChange={handleShowEcosystemChange}
         toggleAutoSave={toggleAutoSave}
         autoSaveEnabled={autoSaveEnabled}
         toggleNewsletter={toggleNewsletter}
@@ -1809,7 +1992,7 @@ export default function DashboardPage() {
                     return (
                       <button
                         key={i}
-                        onClick={() => locked ? setIsUpgradeModalOpen(true) : setSelectedBoardIndex(i)}
+                        onClick={() => locked ? setIsUpgradeModalOpen(true) : changeScope(() => setSelectedBoardIndex(i))}
                         className="group relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all border"
                         style={{
                           backgroundColor: isSelected ? "var(--accent)" : "rgba(255,255,255,0.03)",
@@ -1845,9 +2028,23 @@ export default function DashboardPage() {
                     </span>
                   )}
                 </div>
+                <div className="mb-4 flex items-center gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/10 w-fit" role="group" aria-label={t("page.viewToggleLabel")}>
+                  {(['desktop', 'mobile'] as const).map((mode) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => setViewMode(mode)}
+                      aria-pressed={viewMode === mode}
+                      className={`px-4 py-2 min-h-[40px] rounded-lg text-[11px] font-black uppercase tracking-wider transition-all ${viewMode === mode ? "text-black" : "text-white/50 hover:text-white"}`}
+                      style={viewMode === mode ? { backgroundColor: profile.accentColor, color: getContrastColor(profile.accentColor) } : undefined}
+                    >
+                      {mode === 'desktop' ? t("page.viewDesktop") : t("page.viewMobile")}
+                    </button>
+                  ))}
+                </div>
                 <div className="mb-6 md:mb-8 flex items-center justify-between gap-4 px-1">
                   <p className="text-[11px] text-white/30 font-medium">
-                    {t("page.boardHint")}
+                    {viewMode === 'mobile' ? t("page.mobileHint") : t("page.boardHint")}
                   </p>
                   <div className="hidden md:flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/25 shrink-0">
                     <span className="inline-flex h-2 w-2 rounded-full" style={{ backgroundColor: profile.accentColor }} />
@@ -1855,6 +2052,55 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
+                {mobileDirty && (
+                  <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-amber-300/20 bg-amber-300/[0.06] px-3 py-2">
+                    <p className="text-[11px] text-amber-200/90 font-medium">{t("page.mobileUnsaved")}</p>
+                    <button
+                      type="button"
+                      onClick={discardMobileOrder}
+                      className="px-3 py-2 min-h-[40px] rounded-lg text-[11px] font-black uppercase tracking-wider border border-white/15 text-white/70 hover:text-white hover:border-white/30 transition-all"
+                    >
+                      {t("page.mobileDiscard")}
+                    </button>
+                  </div>
+                )}
+
+                {viewMode === 'mobile' && (
+                  <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
+                    <div className="w-full lg:flex-1 min-w-0">
+                      {!hasMobileOrder(boardBlocks) ? (
+                        <p className="mb-3 text-[11px] text-white/40 font-medium">{t("page.mobileFollowsDesktop")}</p>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={resetMobileOrder}
+                          className="mb-3 px-3 py-2 min-h-[40px] rounded-xl text-[11px] font-black uppercase tracking-wider border border-white/15 text-white/60 hover:text-white hover:border-white/30 transition-all"
+                        >
+                          {t("page.mobileReset")}
+                        </button>
+                      )}
+                      <MobileOrderList
+                        blocks={sortForMobile(visibleBlocks)}
+                        typeLabels={BLOCK_TYPE_LABELS}
+                        onDragEnd={handleMobileDragEnd}
+                        sensors={sensors}
+                        onViewChange={isPro ? handleViewChange : undefined}
+                      />
+                    </div>
+                    <div className="w-full lg:w-auto lg:shrink-0 flex justify-center">
+                      <MobilePreviewFrame
+                        path={(() => {
+                          const site = selectedSubSiteId ? profile.subSites.find((s: any) => s.id === selectedSubSiteId) : null;
+                          return site?.slug ? `/${profile.username}/${site.slug}` : `/${profile.username}`;
+                        })()}
+                        reloadKey={lastSaved ? lastSaved.getTime() : 0}
+                        notPublished={!selectedSubSiteId && (profile.publishedBoard ?? 0) !== selectedBoardIndex}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {viewMode === 'desktop' && (
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                   <SortableContext items={visibleBlocks.map(b => b.id)} strategy={rectSortingStrategy}>
                     <div className="dashboard-board-grid huevsite-grid min-h-[560px] md:min-h-[620px] p-3 sm:p-6 lg:p-8 xl:p-10 border border-dashed border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.008))] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]" style={{ borderRadius: "calc(var(--dashboard-radius) + 0.5rem)" }}>
@@ -1881,9 +2127,17 @@ export default function DashboardPage() {
                     </div>
                   </SortableContext>
                 </DndContext>
+                )}
 
-                {/* Hidden blocks panel — Pro only */}
-                {isPro && hiddenBlocks.length > 0 && (
+                {/* En celular no hay panel de ocultos: avisamos dónde se restauran */}
+                {viewMode === 'mobile' && isPro && hiddenBlocks.length > 0 && (
+                  <p className="mt-4 text-[11px] text-white/40 font-medium">
+                    {t("page.hiddenBlocksMobileNote", { count: hiddenBlocks.length })}
+                  </p>
+                )}
+
+                {/* Hidden blocks panel — Pro only (solo con el tablero de escritorio a la vista) */}
+                {viewMode === 'desktop' && isPro && hiddenBlocks.length > 0 && (
                   <div className="mt-8 p-5 md:p-6 border border-dashed border-white/10 bg-white/[0.015]" style={{ borderRadius: "calc(var(--dashboard-radius) + 0.5rem)" }}>
                     <div className="flex items-center gap-2.5 mb-4">
                       <EyeOff size={14} className="text-white/30" />
@@ -2003,7 +2257,7 @@ export default function DashboardPage() {
                             </div>
                           </div>
                           <div className="flex gap-2 shrink-0">
-                             <button onClick={() => { setSelectedSubSiteId(site.id); setActiveTab('board'); }} className="p-2.5 md:p-3 rounded-xl bg-white/5 hover:bg-[var(--accent)] hover:text-black transition-all">
+                             <button onClick={async () => { if (await changeScope(() => setSelectedSubSiteId(site.id))) setActiveTab('board'); }} className="p-2.5 md:p-3 rounded-xl bg-white/5 hover:bg-[var(--accent)] hover:text-black transition-all">
                                <LayoutIcon size={16} />
                              </button>
                              <button onClick={() => handleDeleteSubSite(site.id)} className="p-2.5 md:p-3 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all">

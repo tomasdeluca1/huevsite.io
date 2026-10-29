@@ -11,6 +11,8 @@ import { MediaBlock, CertificationBlock, AchievementBlock, CustomBlock, CollabBl
 import type { BlockData, ProfileBadge } from "@/lib/profile-types"
 import { trackClick } from "@/components/analytics/AnalyticsTracker"
 import { useBlockPreview } from "@/lib/block-preview-context"
+import { sortForMobile } from "@/lib/mobile-order"
+import type { CSSProperties } from "react"
 
 interface ProfileGridProps {
   blocks: BlockData[]
@@ -35,7 +37,19 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscri
     .filter(block => block.visible)
     .sort((a, b) => a.order - b.order)
 
-  const hasHero = visibleBlocks.some(b => b.type === 'hero');
+  // El hero puede ser solo-escritorio o solo-celular: la tarjeta de respaldo (nombre y
+  // tagline) se calcula por vista, así ninguna vista se queda sin identidad.
+  const hasHeroMobile = visibleBlocks.some(b => b.type === 'hero' && b.visibleOn !== 'desktop');
+  const hasHeroDesktop = visibleBlocks.some(b => b.type === 'hero' && b.visibleOn !== 'mobile');
+  const fallbackViewClass = hasHeroMobile ? ' hidden md:block' : hasHeroDesktop ? ' md:hidden' : '';
+  // Cero bloques visibles en celular (todos "solo escritorio"), aunque el DOM tenga bloques.
+  const emptyOnMobileOnly = visibleBlocks.length > 0 && visibleBlocks.every(b => b.visibleOn === 'desktop');
+
+  // Orden propio de celular. El HTML se queda en el orden de `order` (el que lee
+  // Google y recorre el teclado); en celular el CSS lo reordena con
+  // `order: var(--mo)`. El índice en sortForMobile ES el valor de --mo, así los
+  // bloques sin orden propio (mobileOrder null) quedan al final sin cálculo extra.
+  const mobileIndex = new Map(sortForMobile(visibleBlocks).map((b, i) => [b.id, i]))
   
   const handleBlockClick = (blockId: string) => {
     if (userId) {
@@ -92,7 +106,11 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscri
   const getGridClasses = (block: BlockData) => {
     const col = block.col_span || 1;
     const row = block.row_span || 1;
-    return `col-span-${col} row-span-${row}`;
+    // Visibilidad por vista: se oculta con CSS, nunca se saca del DOM, así el HTML
+    // (buscadores, teclado) queda completo en las dos vistas. El `order` de un
+    // bloque con display:none es inerte, convive con --mo sin conflicto.
+    const view = block.visibleOn === 'desktop' ? ' hidden md:block' : block.visibleOn === 'mobile' ? ' md:hidden' : '';
+    return `col-span-${col} row-span-${row}${view}`;
   }
 
   return (
@@ -103,11 +121,11 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscri
       className="huevsite-grid"
     >
       {/* Fallback Header if no Hero block exists */}
-      {!hasHero && displayName && (
+      {(!hasHeroMobile || !hasHeroDesktop) && displayName && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="col-2"
+          className={`col-2${fallbackViewClass}`}
         >
           <div className={`huevsite-block flex flex-col justify-center text-left bg-[var(--surface)] border border-[var(--border)] rounded-[2rem] ${isPreview ? 'p-3' : 'p-8'}`}>
             <h1 className={`font-extrabold text-white mb-1 truncate ${isPreview ? 'text-xs' : 'text-3xl'}`}>{displayName}</h1>
@@ -122,11 +140,21 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscri
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.05, duration: 0.4 }}
           className={getGridClasses(block)}
+          style={{ "--mo": mobileIndex.get(block.id) ?? 0 } as CSSProperties}
           onClickCapture={() => handleBlockClick(block.id)}
         >
           {renderBlock(block)}
         </motion.div>
       ))}
+
+      {/* Empty state (solo en celular cuando todos los bloques son solo-escritorio) */}
+      {emptyOnMobileOnly && (
+        <div className="col-span-4 huevsite-block text-center p-12 md:hidden">
+          <p className="text-muted-foreground">
+            Este bloque está más vacío que el INDEC.
+          </p>
+        </div>
+      )}
 
       {/* Empty state */}
       {visibleBlocks.length === 0 && (

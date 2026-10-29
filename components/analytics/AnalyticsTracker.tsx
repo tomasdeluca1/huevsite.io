@@ -88,6 +88,12 @@ export async function trackClick(userId: string, blockId: string, subSiteId?: st
     return;
   }
 
+  // Misma guarda que page_view: un perfil dentro de un iframe (la vista previa
+  // del dashboard, un embed de terceros) no cuenta como clic real.
+  if (typeof window !== 'undefined' && window.self !== window.top) {
+    return;
+  }
+
   try {
     await fetch('/api/analytics/track', {
       method: 'POST',

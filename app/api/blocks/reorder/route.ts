@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { parseReorderBody } from '@/lib/mobile-order'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,20 +18,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const body: Array<{ id: string; order: number }> = await request.json()
-
-    if (!Array.isArray(body) || body.length === 0) {
+    // Forma del body (array pelado de escritorio o { view, blocks }) y validación
+    // completa antes de escribir: ver parseReorderBody en lib/mobile-order.ts.
+    const plan = parseReorderBody(await request.json())
+    if (!plan.ok) {
       return NextResponse.json(
-        { error: 'Se requiere un array de bloques con id y order' },
+        { error: 'Se requiere un array de bloques con id y order (o { view, blocks })' },
         { status: 400 }
       )
     }
+    const items = plan.updates
 
-    // Actualizar cada bloque
-    const updates = body.map(async ({ id, order }) => {
+    const updates = items.map(async ({ id, patch }) => {
       return supabase
         .from('blocks')
-        .update({ order })
+        .update(patch)
         .eq('id', id)
         .eq('user_id', user.id)
     })
@@ -48,7 +50,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      updated: body.length,
+      updated: items.length,
     })
 
   } catch (error) {

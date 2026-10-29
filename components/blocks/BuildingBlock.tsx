@@ -21,14 +21,14 @@ export function BuildingBlock({ data, accentColor }: Props) {
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="huevsite-block block-building h-full"
+      className="huevsite-block block-building h-full min-w-0"
       style={{ '--accent': accentColor, borderColor: `${accentColor}40` } as any}
     >
       <div className={`block-label text-left ${isPreview ? 'text-xs mb-2' : ''}`}>
         <span className="blinker" style={{ backgroundColor: accentColor }}></span>
         Currently building
       </div>
-      <div className={`building-name text-left truncate ${isPreview ? '!text-base' : ''}`} style={{ color: accentColor }}>{project}</div>
+      <div className={`building-name text-left min-w-0 break-words ${isPreview ? '!text-base' : ''}`} style={{ color: accentColor }}>{project}</div>
       <div className={`building-desc text-left line-clamp-2 ${isPreview ? '!text-xs' : ''}`}>{description}</div>
       {stack.length > 0 && (
         <div className="building-stack justify-start">

@@ -1,9 +1,10 @@
 "use client";
 
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { useEffect, useState } from "react";
-import { Compass, Layout, Plus, Share2, Flame, Star, Trophy } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent } from "framer-motion";
+import { Flame, Trophy } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { getContrastColor } from "@/lib/profile-types";
 
 interface MobileHeaderProps {
@@ -14,21 +15,29 @@ interface MobileHeaderProps {
     username: string;
     isCustomDomain?: boolean;
     isWinner?: boolean;
+    currentUserId?: string | null;
 }
 
-export function MobileStickyHeader({ displayName, avatarUrl, builderScore, accentColor, username, isCustomDomain = false, isWinner = false }: MobileHeaderProps) {
+export function MobileStickyHeader({ displayName, avatarUrl, builderScore, accentColor, username, isCustomDomain = false, isWinner = false, currentUserId = null }: MobileHeaderProps) {
+    const t = useTranslations("profile");
     const { scrollY } = useScroll();
     // Aparece después de scroll significativo (después de pasar el header original)
     const headerOpacity = useTransform(scrollY, [150, 250], [0, 1]);
     const headerY = useTransform(scrollY, [150, 250], [-20, 0]);
+    // Un hijo con pointer-events:auto re-habilita lo que el padre apagó: la barra solo
+    // captura toques cuando es visible (mismo umbral de scroll que la opacidad).
+    const barPointerEvents = useTransform(scrollY, (v) => (v > 150 ? "auto" : "none"));
+    const [barVisible, setBarVisible] = useState(false);
+    useMotionValueEvent(scrollY, "change", (v) => setBarVisible(v > 150));
 
     return (
         <motion.div
             style={{ opacity: headerOpacity, y: headerY }}
             className="fixed top-0 left-0 right-0 z-[1000] p-3 md:hidden pointer-events-none"
         >
-            <div
-                className="mx-auto max-w-sm h-14 bg-black/60 backdrop-blur-xl border border-white/10 rounded-full flex items-center justify-between px-4 shadow-2xl pointer-events-auto"
+            <motion.div
+                style={{ pointerEvents: barPointerEvents }}
+                className="mx-auto max-w-sm h-14 bg-black/60 backdrop-blur-xl border border-white/10 rounded-full flex items-center justify-between px-4 shadow-2xl"
             >
                 <div className="flex items-center gap-3 min-w-0">
                     <div
@@ -57,71 +66,16 @@ export function MobileStickyHeader({ displayName, avatarUrl, builderScore, accen
 
                 {!isCustomDomain && (
                     <Link
-                        href="/dashboard"
+                        href={currentUserId ? "/dashboard" : "/login"}
+                        tabIndex={barVisible ? undefined : -1}
                         className="btn !py-2 !px-4 !rounded-full !text-[10px] uppercase font-black tracking-widest"
                         style={{ backgroundColor: accentColor, color: 'black' }}
                     >
-                        Mi Perfil
+                        {/* Sin sesión: invita a crear el propio; con sesión: vuelve al panel */}
+                        {currentUserId ? t("stickyMyProfile") : t("stickyCreateMine")}
                     </Link>
                 )}
-            </div>
+            </motion.div>
         </motion.div>
-    );
-}
-
-export function MobileBottomNav({ accentColor, currentUserId, isCustomDomain = false }: { accentColor: string; currentUserId?: string | null; isCustomDomain?: boolean }) {
-    const [shouldHide, setShouldHide] = useState(false);
-
-    useEffect(() => {
-        if (typeof window !== "undefined") {
-            const fromExplore = sessionStorage.getItem("huevsite_from_explore") === "true";
-            setShouldHide(fromExplore);
-        }
-    }, []);
-
-    if (shouldHide) return null;
-    return (
-        <div className="fixed bottom-6 left-0 right-0 z-[1000] md:hidden px-4">
-            <div className="mx-auto max-w-[280px] h-16 bg-black/40 backdrop-blur-2xl border border-white/10 rounded-[2rem] flex items-center justify-around px-2 shadow-2xl">
-                {!isCustomDomain && (
-                    <Link
-                        href="/explore"
-                        className="flex flex-col items-center gap-1 text-[var(--text-muted)] hover:text-white transition-colors group"
-                    >
-                        <div className="p-2 rounded-xl group-active:bg-white/5 transition-all">
-                            <Compass size={22} strokeWidth={2.5} />
-                        </div>
-                        <span className="text-[8px] font-black uppercase tracking-widest">Explorar</span>
-                    </Link>
-                )}
-
-                {!isCustomDomain && (
-                    <Link
-                        href="/dashboard"
-                        className="relative -top-3"
-                    >
-                        <div
-                            className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-[var(--accent)]/20 transition-transform active:scale-95"
-                            style={{ backgroundColor: accentColor, color: getContrastColor(accentColor) }}
-                        >
-                            <Plus size={28} strokeWidth={3} />
-                        </div>
-                        <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[8px] font-black uppercase tracking-widest text-[var(--accent)]" style={{ color: accentColor }}>Post</span>
-                    </Link>
-                )}
-
-                {!isCustomDomain && (
-                    <Link
-                        href={currentUserId ? "/dashboard" : "/login"}
-                        className="flex flex-col items-center gap-1 text-[var(--text-muted)] hover:text-white transition-colors group"
-                    >
-                        <div className="p-2 rounded-xl group-active:bg-white/5 transition-all">
-                            <Layout size={22} strokeWidth={2.5} />
-                        </div>
-                        <span className="text-[8px] font-black uppercase tracking-widest">{currentUserId ? "Mío" : "Entrar"}</span>
-                    </Link>
-                )}
-            </div>
-        </div>
     );
 }

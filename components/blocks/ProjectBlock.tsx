@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { ProjectBlockData, ProjectStatus } from "@/lib/profile-types";
@@ -13,16 +14,46 @@ interface Props {
   accentColor: string;
 }
 
+// Tinte suave (~8%) del accent. Hex de 3 o 6 dígitos: se normaliza y se le agrega alfa.
+// Cualquier otro formato (rgb(), hsl(), nombres): color-mix, que no asume hex.
+function accentTint(color: string): string {
+  const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec((color || "").trim());
+  if (m) {
+    const hex = m[1].length === 3 ? m[1].split("").map((c) => c + c).join("") : m[1];
+    return `#${hex}14`;
+  }
+  return `color-mix(in srgb, ${color} 8%, transparent)`;
+}
+
 export function ProjectBlock({ data, accentColor }: Props) {
   const t = useTranslations('blocks');
   const title = data.title || t('project.fallbackTitle');
   const description = data.description || t('project.fallbackDescription');
   const link = data.link || "#";
   const metrics = data.metrics || "";
-  const useFavicon = data.imageMode === "favicon" && !!(data.faviconUrl || data.link);
-  const imageUrl = useFavicon ? hiResFaviconUrl(data.link, data.faviconUrl) : data.imageUrl;
+  // --- Cascada de la imagen de preview -------------------------------------
+  // Escalones, en orden. Se usa el primero que no haya fallado al cargar:
+  //   1. "og":      la imagen del proyecto (data.imageUrl). Solo si imageMode no es "favicon".
+  //   2. "favicon": el favicon en alta (hiResFaviconUrl). Es el escalón inicial si
+  //                 imageMode es "favicon", y el respaldo si la og falla.
+  //   3. (nada):    sin ninguna imagen válida se renderiza el preview de código.
+  // Un escalón "falla" cuando su <img> dispara onError; lo anotamos por URL en
+  // failedSrcs, así que si el usuario cambia la imagen, ese escalón vuelve a intentarse.
+  // Una og vacía NO cae al favicon: sin imagen cargada sigue valiendo el preview de código.
+  const [failedSrcs, setFailedSrcs] = useState<string[]>([]);
+  const faviconSrc =
+    data.link || data.faviconUrl ? hiResFaviconUrl(data.link, data.faviconUrl) : "";
+  const wantsFavicon = data.imageMode === "favicon";
+  const steps: { kind: "og" | "favicon"; src: string }[] = [];
+  if (!wantsFavicon && data.imageUrl) steps.push({ kind: "og", src: data.imageUrl });
+  if ((wantsFavicon || data.imageUrl) && faviconSrc) steps.push({ kind: "favicon", src: faviconSrc });
+  const active = steps.find((st) => !failedSrcs.includes(st.src));
+  const imageUrl = active?.src;
+  const markFailed = (src: string) => setFailedSrcs((prev) => (prev.includes(src) ? prev : [...prev, src]));
+  const useFavicon = active?.kind === "favicon";
   const stack = data.stack || [];
   const status: ProjectStatus = data.status || "idea";
+  const showStatus = data.showStatus !== false;
   const statusLabel = status === "launched" ? "LIVE" : status === "building" ? "WIP" : "IDEA";
 
   return (
@@ -32,16 +63,26 @@ export function ProjectBlock({ data, accentColor }: Props) {
       viewport={{ once: true }}
       className="huevsite-block block-project h-full !p-0 flex flex-col group overflow-hidden"
     >
-      <div className="project-preview relative aspect-video w-full">
+      <div
+        className="project-preview relative aspect-video w-full"
+        style={useFavicon ? { backgroundColor: accentTint(accentColor) } : undefined}
+      >
         {imageUrl ? (
           <img
+            key={imageUrl}
             src={imageUrl}
             className={`w-full h-full opacity-80 transition-all duration-500 group-hover:opacity-100 ${
               useFavicon
-                ? "object-contain p-10 group-hover:scale-105"
+                ? "object-contain p-6 md:p-10 group-hover:scale-105"
                 : "object-cover group-hover:scale-110"
             }`}
             alt={title}
+            // La página llega renderizada desde el server: si la imagen ya falló antes de
+            // hidratar, onError no se dispara nunca. El ref lo detecta (complete sin pixeles).
+            ref={(el) => {
+              if (el && el.complete && el.naturalWidth === 0) markFailed(imageUrl);
+            }}
+            onError={() => markFailed(imageUrl)}
           />
         ) : (
           <div
@@ -52,7 +93,7 @@ export function ProjectBlock({ data, accentColor }: Props) {
               <div className="text-sm"><span className="kw" style={{ color: accentColor }}>import</span> {'{ Project }'} <span className="kw" style={{ color: accentColor }}>from</span> <span className="str">&lsquo;huevsite&rsquo;</span></div>
               <div className="text-sm"><span className="kw" style={{ color: accentColor }}>const</span> <span className="fn" style={{ color: '#4D9FFF' }}>{title.replace(/\s+/g, '')}</span> = () <span className="kw" style={{ color: accentColor }}>=&gt;</span> {'{'}</div>
               <div className="text-sm">&nbsp; <span className="kw" style={{ color: accentColor }}>return</span> (</div>
-              <div className="text-sm">&nbsp; &nbsp; &lt;<span className="fn" style={{ color: '#4D9FFF' }}>Showcase</span> <span className="str">status</span>=<span className="str">&quot;{statusLabel}&quot;</span> /&gt;</div>
+              <div className="text-sm">&nbsp; &nbsp; &lt;<span className="fn" style={{ color: '#4D9FFF' }}>Showcase</span> {showStatus && (<><span className="str">status</span>=<span className="str">&quot;{statusLabel}&quot;</span> </>)}/&gt;</div>
               <div className="text-sm">&nbsp; )</div>
               <div className="text-sm">{'}'}</div>
             </div>
@@ -70,9 +111,9 @@ export function ProjectBlock({ data, accentColor }: Props) {
         <div className="flex items-start justify-between gap-4 mb-2">
           <div className="flex flex-col gap-1.5">
             <h3 className="project-name text-xl md:text-2xl font-black text-white title-tracking leading-tight">{title}</h3>
-            <ProjectStatusPill status={status} launchDate={data.launchDate} accentColor={accentColor} />
+            {showStatus && <ProjectStatusPill status={status} launchDate={data.launchDate} accentColor={accentColor} />}
           </div>
-          {link !== "#" && status === "launched" && (
+          {showStatus && link !== "#" && status === "launched" && (
             <div
               className="w-2 h-2 rounded-full animate-pulse shadow-[0_0_10px_rgba(200,255,0,0.5)]"
               style={{ backgroundColor: accentColor }}

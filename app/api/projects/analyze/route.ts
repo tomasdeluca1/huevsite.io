@@ -1,28 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { pickMetaContent, pickLinkHref, pickTitleTag, resolveAssetUrl } from "@/lib/og-meta";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
-
-function decodeHtml(s: string): string {
-  return s
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#0?39;/g, "'")
-    .replace(/&#x27;/gi, "'")
-    .replace(/&#x2F;/gi, "/")
-    .trim();
-}
-
-function pickMeta(html: string, patterns: RegExp[]): string {
-  for (const re of patterns) {
-    const m = html.match(re);
-    if (m?.[1]) return decodeHtml(m[1]);
-  }
-  return "";
-}
 
 // Block obvious internal/loopback/link-local hosts to limit SSRF. Not airtight
 // (no DNS resolution), but rejects the easy cases for an authed convenience endpoint.
@@ -69,6 +50,12 @@ export async function POST(req: Request) {
   // Best-effort fetch. On any failure we still return the URL so the caller can
   // create the project with the link and let the user fill the rest manually.
   let html = "";
+  // false si no pudimos abrir el sitio (red, timeout o status no-2xx): el cliente
+  // distingue "sitio caído" de "abrió pero sin imagen".
+  let reachable = false;
+  // URL final tras los redirects: las rutas relativas (og:image, favicon) se
+  // resuelven contra ella, no contra la URL que escribió el usuario.
+  let finalUrl = parsed.toString();
   try {
     const res = await fetch(parsed.toString(), {
       headers: {
@@ -80,54 +67,27 @@ export async function POST(req: Request) {
       signal: AbortSignal.timeout(8000),
     });
     if (res.ok) {
+      reachable = true;
+      finalUrl = res.url || finalUrl;
       html = (await res.text()).slice(0, 500_000);
     }
   } catch {
     // ignore — fall through with empty html
   }
 
-  const title = pickMeta(html, [
-    /<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i,
-    /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i,
-    /<meta[^>]+name=["']twitter:title["'][^>]+content=["']([^"']+)["']/i,
-    /<title[^>]*>([^<]+)<\/title>/i,
-  ]);
-  const description = pickMeta(html, [
-    /<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i,
-    /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:description["']/i,
-    /<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i,
-  ]);
-  let imageUrl = pickMeta(html, [
-    /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i,
-    /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i,
-    /<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i,
-  ]);
-  // Resolve protocol-relative / root-relative og:image against the page origin.
-  if (imageUrl) {
-    try {
-      imageUrl = new URL(imageUrl, parsed.origin).toString();
-    } catch {
-      imageUrl = "";
-    }
-  }
+  const title =
+    pickMetaContent(html, ["og:title", "twitter:title"]) || pickTitleTag(html);
+  const description = pickMetaContent(html, ["og:description", "twitter:description", "description"]);
+  const imageUrl = resolveAssetUrl(
+    pickMetaContent(html, ["og:image", "og:image:url", "og:image:secure_url", "twitter:image", "twitter:image:src"]),
+    finalUrl,
+  );
 
-  // Favicon (any rel containing "icon"). Resolve against origin; fall back to
-  // the conventional /favicon.ico so we always offer a favicon option.
-  let faviconUrl = pickMeta(html, [
-    // Prefer the apple-touch-icon (usually 180×180) — crisper than favicon.ico.
-    /<link[^>]+rel=["'][^"']*apple-touch-icon[^"']*["'][^>]+href=["']([^"']+)["']/i,
-    /<link[^>]+href=["']([^"']+)["'][^>]+rel=["'][^"']*apple-touch-icon[^"']*["']/i,
-    /<link[^>]+rel=["'][^"']*icon[^"']*["'][^>]+href=["']([^"']+)["']/i,
-    /<link[^>]+href=["']([^"']+)["'][^>]+rel=["'][^"']*icon[^"']*["']/i,
-  ]);
-  if (faviconUrl) {
-    try {
-      faviconUrl = new URL(faviconUrl, parsed.origin).toString();
-    } catch {
-      faviconUrl = "";
-    }
-  }
-  if (!faviconUrl) faviconUrl = `${parsed.origin}/favicon.ico`;
+  // Prefer the apple-touch-icon (usually 180x180) over a generic icon. If the
+  // page declares none, offer the conventional /favicon.ico of the final host.
+  const faviconUrl =
+    resolveAssetUrl(pickLinkHref(html, ["apple-touch-icon", "icon"]), finalUrl) ||
+    resolveAssetUrl("/favicon.ico", finalUrl);
 
-  return NextResponse.json({ url: parsed.toString(), title, description, imageUrl, faviconUrl });
+  return NextResponse.json({ url: parsed.toString(), title, description, imageUrl, faviconUrl, reachable });
 }

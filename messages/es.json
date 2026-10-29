@@ -248,7 +248,9 @@
       "launchMonthlyLimit": "Ya lanzaste tu producto de este mes. Con Pro lanzás todos los que quieras.",
       "launchMonthlyLimitCta": "Pasarme a Pro",
       "launchError": "No se pudo lanzar. Revisá que el proyecto tenga un link.",
-      "launchedToast": "🚀 ¡Lanzado! Ya está en el feed de la semana."
+      "launchedToast": "🚀 ¡Lanzado! Ya está en el feed de la semana.",
+      "addContinue": "Crear igual",
+      "noImageAddLater": "No encontramos imagen en ese sitio. Podés crear el proyecto igual y agregarle una imagen después, desde el editor del bloque."
     },
     "colorPicker": {
       "label": "vibras de perfil",
@@ -421,6 +423,7 @@
       "shareCtaTitle": "Compartir mi huevsite",
       "shareCtaSubtitle": "Link, QR y redes para difundir tu board",
       "editorSectionLabel": "Editor",
+      "showEcosystemLabel": "Mostrar mi ecosistema de sub-sitios",
       "borderRadiusLabel": "Redondeo",
       "builderImpact": "Impacto Builder",
       "scoreHintLow": "Validá tu perfil para aparecer en el ranking.",
@@ -466,6 +469,8 @@
         "statusLabel": "// status",
         "statusPlaceholder": "disponible para proyectos",
         "locationLabel": "// ubicación",
+        "showBioLabel": "Mostrar la bio en el perfil",
+        "showBioHint": "Recomendamos dejarla prendida: en pocos segundos, es lo que le dice a quien te escanea qué hacés.",
         "locationPlaceholder": "Buenos Aires"
       },
       "project": {
@@ -484,7 +489,12 @@
         "statusBuilding": "En construcción",
         "statusLaunched": "Lanzado",
         "launchDateLabel": "// fecha de lanzamiento",
-        "archivedLabel": "Archivar (ocultar del perfil)"
+        "showStatusLabel": "Mostrar el estado en el perfil",
+        "archivedLabel": "Archivar (ocultar del perfil)",
+        "fetchFromSite": "Traer del sitio",
+        "fetching": "Buscando en el sitio...",
+        "noImageFound": "No encontramos imagen en ese sitio. Podés subir una a mano.",
+        "fetchError": "No pudimos abrir el sitio. Revisá el link y probá de nuevo."
       },
       "metric": {
         "labelLabel": "// etiqueta",
@@ -579,9 +589,6 @@
       "ecosystem": {
         "titleLabel": "// título del bloque",
         "titlePlaceholder": "Mi Ecosistema",
-        "hideHeaderTitle": "Ocultar Barra Superior",
-        "hideHeaderSubtitle": "Remover la barra de sub-sites del header",
-        "hideHeaderHint": "Si esta opción está activada, tus sub-sites solo se mostrarán dentro de este bloque en tu board, evitando que se repitan arriba.",
         "noteLabel": "Nota:",
         "noteBody": "Este bloque mostrará automáticamente todos los sub-sites que hayas creado. No hace falta agregarlos uno por uno."
       },
@@ -641,6 +648,7 @@
       "blockTypeEcosystem": "Ecosistema",
       "ghostBlock": "Bloque fantasma",
       "errorSaveColor": "No se pudo guardar el color. Esperá unos segundos y probá de nuevo.",
+      "errorSaveShowEcosystem": "No se pudo guardar el cambio del ecosistema. Esperá unos segundos y probá de nuevo.",
       "errorSaveBorderRadius": "No se pudo guardar el redondeo. Esperá unos segundos y probá de nuevo.",
       "errorVerifyDomain": "No pudimos verificar el dominio en este momento.",
       "errorSaveDomain": "Error guardando dominio.",
@@ -696,6 +704,28 @@
       "publishing": "Publicando…",
       "publishThisBoard": "Publicar este board",
       "live": "en vivo",
+      "viewToggleLabel": "Vista del perfil",
+      "viewDesktop": "Escritorio",
+      "viewMobile": "Celular",
+      "mobileHint": "Arrastrá los bloques para elegir en qué orden se ven en un celular. El orden de escritorio no cambia.",
+      "mobileFollowsDesktop": "Hoy el celular sigue el orden de escritorio. Si movés un bloque, el celular pasa a tener su propio orden.",
+      "mobileReset": "Volvé a seguir el orden de escritorio",
+      "mobileOrderListLabel": "Orden en celular",
+      "mobileDragHandle": "Arrastrá para reordenar",
+      "mobilePreviewTitle": "Así se ve en un celular",
+      "mobilePreviewHint": "Guardá para ver tus cambios acá.",
+      "mobilePreviewNotPublished": "Este board no es el publicado: acá ves el que está en vivo, no este. Publicalo para verlo acá.",
+      "errorSaveMobileOrder": "No pudimos guardar el orden de celular, así que el board no cambió. Probá de nuevo o descartá los cambios pendientes.",
+      "mobileUnsaved": "Tenés cambios sin guardar en el orden de celular.",
+      "mobileDiscard": "Descartar cambios",
+      "warnNoMobileBlocks": "Con este cambio, tu perfil en celular se queda sin ningún bloque visible. Podés volver a elegir otra vista cuando quieras.",
+      "hiddenBlocksMobileNote": "Tenés {count, plural, one {# bloque oculto} other {# bloques ocultos}}. Los restaurás desde la vista de escritorio.",
+      "visibleOnLabel": "Dónde se ve este bloque",
+      "visibleOnBoth": "Las dos",
+      "visibleOnDesktop": "Solo escritorio",
+      "visibleOnMobile": "Solo celular",
+      "errorSaveVisibleOn": "No pudimos guardar dónde se ve el bloque. Probá de nuevo.",
+      "visibleOnNotInMobile": "No se ve en celular",
       "boardHint": "Arrastrá, redimensioná y hacé click en cada bloque para editarlo.",
       "blockCount": "{count} bloques",
       "hiddenCount": "{count} ocultos",
@@ -2094,6 +2124,8 @@
       "nextMonth": "Mes siguiente"
     },
     "hero": {
+      "bioMore": "ver más",
+      "bioLess": "ver menos",
       "builderOfWeek": "Builder de la Semana",
       "builderPro": "Builder PRO",
       "fallbackName": "Usuario",
@@ -2104,7 +2136,8 @@
     },
     "social": {
       "connect": "Conectemos",
-      "noCoords": "// sin coordenadas"
+      "noCoords": "// sin coordenadas",
+      "openInApp": "Tocá una red y se abre en la app."
     },
     "cv": {
       "download": "Descargar CV",
@@ -2183,5 +2216,16 @@
     "next": "Siguiente",
     "ctaSub": "¿Querés estar en este directorio?",
     "ctaButton": "Armá tu huevsite"
+  },
+  "profile": {
+    "stickyCreateMine": "Creá el mío",
+    "stickyMyProfile": "Mi perfil"
+  },
+  "profileSocial": {
+    "followers": "seguidores",
+    "following": "siguiendo",
+    "nominations": "nominaciones",
+    "score": "score",
+    "whatIsThis": "¿Qué es esto?"
   }
 }

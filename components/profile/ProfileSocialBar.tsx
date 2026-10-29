@@ -92,17 +92,21 @@ export function ProfileSocialBar({
           <>
           {!embed && (
             <div className="flex flex-wrap items-center justify-center gap-x-2 text-[10px] max-[340px]:text-[9px] text-[var(--text-muted)] sm:hidden">
-              <button onClick={() => setModalType("followers")} className="flex min-h-10 items-center transition-colors hover:text-white">
-                <span className="font-mono font-bold text-white/80">{fmt(localFollowersCount)}</span> {t("followers")}
+              <button onClick={() => setModalType("followers")} className="flex min-h-10 items-center gap-1 transition-colors hover:text-white">
+                <span className="font-mono font-bold text-white/80">{fmt(localFollowersCount)}</span>
+                <span>{t("followers")}</span>
               </button>
-              <button onClick={() => setModalType("following")} className="flex min-h-10 items-center transition-colors hover:text-white">
-                <span className="font-mono font-bold text-white/80">{fmt(followingCount)}</span> {t("following")}
+              <button onClick={() => setModalType("following")} className="flex min-h-10 items-center gap-1 transition-colors hover:text-white">
+                <span className="font-mono font-bold text-white/80">{fmt(followingCount)}</span>
+                <span>{t("following")}</span>
               </button>
-              <span className="flex min-h-10 items-center">
-                <span className="font-mono font-bold text-white/80">{fmt(localNominationsCount)}</span> {t("nominations")}
+              <span className="flex min-h-10 items-center gap-1">
+                <span className="font-mono font-bold text-white/80">{fmt(localNominationsCount)}</span>
+                <span>{t("nominations")}</span>
               </span>
-              <button onClick={() => setIsScoreOpen(true)} className="flex min-h-10 items-center transition-colors hover:text-white">
-                <span className="font-mono font-bold text-[var(--accent)]">{fmt(builderScore)}</span> {t("score")}
+              <button onClick={() => setIsScoreOpen(true)} className="flex min-h-10 items-center gap-1 transition-colors hover:text-white">
+                <span className="font-mono font-bold text-[var(--accent)]">{fmt(builderScore)}</span>
+                <span>{t("score")}</span>
               </button>
             </div>
           )}

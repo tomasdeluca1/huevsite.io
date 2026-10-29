@@ -37,7 +37,13 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscri
     .filter(block => block.visible)
     .sort((a, b) => a.order - b.order)
 
-  const hasHero = visibleBlocks.some(b => b.type === 'hero');
+  // El hero puede ser solo-escritorio o solo-celular: la tarjeta de respaldo (nombre y
+  // tagline) se calcula por vista, así ninguna vista se queda sin identidad.
+  const hasHeroMobile = visibleBlocks.some(b => b.type === 'hero' && b.visibleOn !== 'desktop');
+  const hasHeroDesktop = visibleBlocks.some(b => b.type === 'hero' && b.visibleOn !== 'mobile');
+  const fallbackViewClass = hasHeroMobile ? ' hidden md:block' : hasHeroDesktop ? ' md:hidden' : '';
+  // Cero bloques visibles en celular (todos "solo escritorio"), aunque el DOM tenga bloques.
+  const emptyOnMobileOnly = visibleBlocks.length > 0 && visibleBlocks.every(b => b.visibleOn === 'desktop');
 
   // Orden propio de celular. El HTML se queda en el orden de `order` (el que lee
   // Google y recorre el teclado); en celular el CSS lo reordena con
@@ -115,11 +121,11 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscri
       className="huevsite-grid"
     >
       {/* Fallback Header if no Hero block exists */}
-      {!hasHero && displayName && (
+      {(!hasHeroMobile || !hasHeroDesktop) && displayName && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="col-2"
+          className={`col-2${fallbackViewClass}`}
         >
           <div className={`huevsite-block flex flex-col justify-center text-left bg-[var(--surface)] border border-[var(--border)] rounded-[2rem] ${isPreview ? 'p-3' : 'p-8'}`}>
             <h1 className={`font-extrabold text-white mb-1 truncate ${isPreview ? 'text-xs' : 'text-3xl'}`}>{displayName}</h1>
@@ -140,6 +146,15 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscri
           {renderBlock(block)}
         </motion.div>
       ))}
+
+      {/* Empty state (solo en celular cuando todos los bloques son solo-escritorio) */}
+      {emptyOnMobileOnly && (
+        <div className="col-span-4 huevsite-block text-center p-12 md:hidden">
+          <p className="text-muted-foreground">
+            Este bloque está más vacío que el INDEC.
+          </p>
+        </div>
+      )}
 
       {/* Empty state */}
       {visibleBlocks.length === 0 && (

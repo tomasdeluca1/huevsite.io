@@ -83,20 +83,23 @@ export function SocialBlock({ data, accentColor }: SocialProps) {
           <div className="grid grid-cols-4 gap-2 md:hidden">
             {visibleLinks.map((l, i) => {
               const name = getLabel(l);
+              const visibleLabel = resolveSquareLabel(l, { severalWebsites });
+              // WCAG 2.5.3: el nombre accesible empieza por el texto visible.
+              const accessibleName = name.toLowerCase().startsWith(visibleLabel.toLowerCase()) ? name : `${visibleLabel} ${name}`;
               return (
                 <a
                   key={i}
                   href={resolveFollowUrl(l)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={name}
+                  aria-label={accessibleName}
                   title={name}
                   className="aspect-square min-w-0 flex flex-col items-center justify-center gap-[7px] px-2 max-[340px]:px-1 py-3 rounded-2xl bg-white/[0.03] border border-white/5 active:bg-white/[0.08] hover:border-white/20 transition-colors"
                   style={{ color: brandOf(l.platform) }}
                 >
                   {renderIcon(l, 20, "w-[19px] h-[19px] min-[390px]:w-[21px] min-[390px]:h-[21px] shrink-0")}
                   <span className="max-w-full whitespace-nowrap text-[6px] min-[390px]:text-[6.8px] font-black uppercase leading-none tracking-wider text-white">
-                    {resolveSquareLabel(l, { severalWebsites })}
+                    {visibleLabel}
                   </span>
                 </a>
               );

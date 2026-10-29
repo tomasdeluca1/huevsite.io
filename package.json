@@ -7,7 +7,6 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
     "verify": "node scripts/verify-i18n-keys.js && npx tsx scripts/verify-social-labels.js && npx tsx scripts/verify-mobile-order.js && npx tsx scripts/verify-og-meta.js"
   },
   "dependencies": {

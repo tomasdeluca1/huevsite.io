@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent } from "framer-motion";
 import { Flame, Trophy } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -23,14 +24,20 @@ export function MobileStickyHeader({ displayName, avatarUrl, builderScore, accen
     // Aparece después de scroll significativo (después de pasar el header original)
     const headerOpacity = useTransform(scrollY, [150, 250], [0, 1]);
     const headerY = useTransform(scrollY, [150, 250], [-20, 0]);
+    // Un hijo con pointer-events:auto re-habilita lo que el padre apagó: la barra solo
+    // captura toques cuando es visible (mismo umbral de scroll que la opacidad).
+    const barPointerEvents = useTransform(scrollY, (v) => (v > 150 ? "auto" : "none"));
+    const [barVisible, setBarVisible] = useState(false);
+    useMotionValueEvent(scrollY, "change", (v) => setBarVisible(v > 150));
 
     return (
         <motion.div
             style={{ opacity: headerOpacity, y: headerY }}
             className="fixed top-0 left-0 right-0 z-[1000] p-3 md:hidden pointer-events-none"
         >
-            <div
-                className="mx-auto max-w-sm h-14 bg-black/60 backdrop-blur-xl border border-white/10 rounded-full flex items-center justify-between px-4 shadow-2xl pointer-events-auto"
+            <motion.div
+                style={{ pointerEvents: barPointerEvents }}
+                className="mx-auto max-w-sm h-14 bg-black/60 backdrop-blur-xl border border-white/10 rounded-full flex items-center justify-between px-4 shadow-2xl"
             >
                 <div className="flex items-center gap-3 min-w-0">
                     <div
@@ -60,6 +67,7 @@ export function MobileStickyHeader({ displayName, avatarUrl, builderScore, accen
                 {!isCustomDomain && (
                     <Link
                         href={currentUserId ? "/dashboard" : "/login"}
+                        tabIndex={barVisible ? undefined : -1}
                         className="btn !py-2 !px-4 !rounded-full !text-[10px] uppercase font-black tracking-widest"
                         style={{ backgroundColor: accentColor, color: 'black' }}
                     >
@@ -67,7 +75,7 @@ export function MobileStickyHeader({ displayName, avatarUrl, builderScore, accen
                         {currentUserId ? t("stickyMyProfile") : t("stickyCreateMine")}
                     </Link>
                 )}
-            </div>
+            </motion.div>
         </motion.div>
     );
 }

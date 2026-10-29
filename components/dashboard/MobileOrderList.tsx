@@ -51,14 +51,14 @@ function Row({ block, label, onViewChange }: { block: BlockData; label: string; 
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 }}
-      className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3 touch-none"
+      className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3"
     >
       <button
         type="button"
         {...attributes}
         {...listeners}
         aria-label={t("page.mobileDragHandle")}
-        className="shrink-0 cursor-grab active:cursor-grabbing text-white/40 hover:text-white p-1 -m-1"
+        className="shrink-0 touch-none cursor-grab active:cursor-grabbing text-white/40 hover:text-white p-1 -m-1"
       >
         <GripVertical size={16} />
       </button>

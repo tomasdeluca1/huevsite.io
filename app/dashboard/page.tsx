@@ -703,6 +703,11 @@ export default function DashboardPage() {
     const apply = (v: 'both' | 'desktop' | 'mobile') =>
       setProfile(prev => prev ? { ...prev, blocks: prev.blocks.map(b => b.id === id ? { ...b, visibleOn: v } : b) } : prev);
     apply(view);
+    // Avisar (sin prohibir) si el cambio deja el perfil de celular sin ningún bloque visible.
+    if (view === 'desktop') {
+      const othersOnMobile = boardBlocks.some(b => b.id !== id && b.visible !== false && (b.visibleOn || 'both') !== 'desktop');
+      if (!othersOnMobile) alert(t("page.warnNoMobileBlocks"));
+    }
     if (id.startsWith("temp-")) return;
     try {
       const res = await fetch(`/api/blocks/${id}`, {
@@ -711,7 +716,9 @@ export default function DashboardPage() {
         body: JSON.stringify({ visible_on: view }),
       });
       if (!res.ok) throw new Error(String(res.status));
-      setLastSaved(new Date());
+      // Con orden de celular pendiente, recargar la vista previa la dejaría mostrando el
+      // orden publicado y no el de la lista que el usuario tiene delante.
+      if (!mobileDirty) setLastSaved(new Date());
     } catch (e) {
       console.error("Error saving visible_on:", e);
       apply(previous);
@@ -999,6 +1006,10 @@ export default function DashboardPage() {
         blocks: prev.blocks.map(b => b.id === newId ? { ...b, id: block.id } : b)
       } : prev);
       setEditingBlock({ ...initialData, id: block.id } as BlockData);
+      // El EcosystemBlock ya lista los sub-sitios: apagar el panel del header para que no se dupliquen.
+      if (type === "ecosystem" && profile?.showEcosystem !== false) {
+        handleShowEcosystemChange(false);
+      }
     } catch (error) {
       console.error('Error creating block:', error);
       setProfile((prev) => prev ? { ...prev, blocks: prev.blocks.filter(b => b.id !== newId) } : prev);

@@ -718,6 +718,7 @@
       "errorSaveMobileOrder": "No pudimos guardar el orden de celular, así que el board no cambió. Probá de nuevo o descartá los cambios pendientes.",
       "mobileUnsaved": "Tenés cambios sin guardar en el orden de celular.",
       "mobileDiscard": "Descartar cambios",
+      "warnNoMobileBlocks": "Con este cambio, tu perfil en celular se queda sin ningún bloque visible. Podés volver a elegir otra vista cuando quieras.",
       "hiddenBlocksMobileNote": "Tenés {count, plural, one {# bloque oculto} other {# bloques ocultos}}. Los restaurás desde la vista de escritorio.",
       "visibleOnLabel": "Dónde se ve este bloque",
       "visibleOnBoth": "Las dos",

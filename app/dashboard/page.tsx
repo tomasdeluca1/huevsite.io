@@ -323,6 +323,13 @@ export default function DashboardPage() {
         layout: data.profile.layout || null,
         subscriptionTier: (data.profile.subscription_tier === 'pro' || !!data.profile.pro_since) ? 'pro' : 'free',
         hasProAccess: hasProAccess(data.profile),
+        // Debe seguir espejando `subscriptionTier` de lib/profile-service.ts (vista pública): incluye la recompensa de referidos vigente.
+        publicEcosystemEligible: (() => {
+          const p = data.profile;
+          if (p.subscription_tier === 'pro' || !!p.pro_since) return true;
+          if (p.referral_reward_expires_at) return new Date(p.referral_reward_expires_at) > new Date();
+          return false;
+        })(),
         extraBlocksFromShare: data.profile.extra_blocks_from_share || 0,
         twitterShareUnlocked: data.profile.twitter_share_unlocked || false,
         hasSeenUpdateFeb25: data.profile.has_seen_update_feb25 || false,

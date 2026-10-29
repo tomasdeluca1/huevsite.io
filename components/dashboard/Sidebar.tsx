@@ -291,9 +291,9 @@ export function DashboardSidebar({
               </div>
             </div>
 
-            {/* Ecosystem switch — mismo criterio que la vista pública (ProfileHeader): tier pago.
-                hasProAccess incluye la prueba gratuita, que NO activa el panel público. */}
-            {profile.subscriptionTier === "pro" && (
+            {/* Ecosystem switch — mismo criterio que la vista pública: Pro pago o recompensa de
+                referidos vigente (publicEcosystemEligible). La prueba gratuita NO activa el panel público. */}
+            {profile.publicEcosystemEligible === true && (
               <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between gap-3">
                 <div className="text-[11px] font-bold text-white/80 leading-snug">{t("sidebar.showEcosystemLabel")}</div>
                 <button

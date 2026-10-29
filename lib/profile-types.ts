@@ -379,6 +379,8 @@ export interface ProfileData {
   borderRadius?: string;
   // Mostrar la sección de ecosistema (sub-sitios) en el header. Default true.
   showEcosystem: boolean;
+  /** Solo dashboard: espeja el criterio de `subscriptionTier` de la vista pública (incluye recompensa de referidos). */
+  publicEcosystemEligible?: boolean;
   parentProfile?: {
     username: string;
     displayName: string;

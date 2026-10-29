@@ -136,3 +136,24 @@ export function parseBlockViewFields(body: unknown): BlockViewFields {
   }
   return { ok: true, fields }
 }
+
+/**
+ * Tipos que NO entran en la vista de celular, cualquiera sea su `visible_on`:
+ * el Ecosistema es una grilla de sub-sitios pensada para el ancho de escritorio
+ * (en celular los sub-sitios viven en el panel del header del perfil). Se decide
+ * por tipo y en un solo lugar: lo usan la vista pública (render + orden) y la
+ * lista de orden del dashboard, así nunca se ordena algo que no se ve.
+ * Si entra otro tipo acá, revisar `dashboard.page.desktopOnlyTypeNote`: la copia
+ * del aviso habla del interruptor del ecosistema.
+ */
+const DESKTOP_ONLY_TYPES = new Set(["ecosystem"])
+
+/** true si el tipo queda fuera de la vista de celular por diseño. */
+export function isDesktopOnlyType(type: string | undefined | null): boolean {
+  return !!type && DESKTOP_ONLY_TYPES.has(type)
+}
+
+/** true si el bloque llega a verse en celular: ni tipo solo-escritorio ni `visible_on: desktop`. */
+export function showsOnMobile(block: { type?: string | null; visibleOn?: "both" | "desktop" | "mobile" }): boolean {
+  return !isDesktopOnlyType(block.type) && block.visibleOn !== "desktop"
+}

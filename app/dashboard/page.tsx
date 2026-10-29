@@ -36,7 +36,7 @@ import { MediaBlock, CertificationBlock, AchievementBlock, CustomBlock, CollabBl
 import { SortableBlock } from "@/components/dashboard/SortableBlock";
 import { MobilePreviewFrame } from "@/components/dashboard/MobilePreviewFrame";
 import { MobileOrderList } from "@/components/dashboard/MobileOrderList";
-import { hasMobileOrder, materializeMobileOrder, nextMobileOrder, sortForMobile } from "@/lib/mobile-order";
+import { hasMobileOrder, isDesktopOnlyType, materializeMobileOrder, nextMobileOrder, showsOnMobile, sortForMobile } from "@/lib/mobile-order";
 import { BlockSelector } from "@/components/dashboard/BlockSelector";
 import { BlockEditorModal } from "@/components/dashboard/BlockEditorModal";
 import { ProjectTracker } from "@/components/dashboard/ProjectTracker";
@@ -705,7 +705,7 @@ export default function DashboardPage() {
     apply(view);
     // Avisar (sin prohibir) si el cambio deja el perfil de celular sin ningún bloque visible.
     if (view === 'desktop') {
-      const othersOnMobile = boardBlocks.some(b => b.id !== id && b.visible !== false && (b.visibleOn || 'both') !== 'desktop');
+      const othersOnMobile = boardBlocks.some(b => b.id !== id && b.visible !== false && showsOnMobile(b));
       if (!othersOnMobile) alert(t("page.warnNoMobileBlocks"));
     }
     if (id.startsWith("temp-")) return;
@@ -746,6 +746,10 @@ export default function DashboardPage() {
   const boardBlocks = (profile?.blocks || []).filter(b => (b.board_index ?? 0) === selectedBoardIndex);
   const visibleBlocks = boardBlocks.filter(b => b.visible !== false);
   const hiddenBlocks = boardBlocks.filter(b => b.visible === false);
+  // Lista de orden de celular: fuera los tipos que el celular no renderiza (ecosystem),
+  // así no se arrastra ni se le elige vista a algo que no se va a ver.
+  const mobileListBlocks = visibleBlocks.filter(b => !isDesktopOnlyType(b.type));
+  const desktopOnlyTypeBlocks = visibleBlocks.filter(b => isDesktopOnlyType(b.type));
 
   // One-time celebration: when a brand-new profile becomes "shareable" (complete
   // enough), open the share modal with confetti exactly once. Persisted in
@@ -2080,7 +2084,7 @@ export default function DashboardPage() {
                         </button>
                       )}
                       <MobileOrderList
-                        blocks={sortForMobile(visibleBlocks)}
+                        blocks={sortForMobile(mobileListBlocks)}
                         typeLabels={BLOCK_TYPE_LABELS}
                         onDragEnd={handleMobileDragEnd}
                         sensors={sensors}
@@ -2127,6 +2131,13 @@ export default function DashboardPage() {
                     </div>
                   </SortableContext>
                 </DndContext>
+                )}
+
+                {/* El bloque no aparece en la lista de celular: decimos por qué y dónde quedan los sub-sitios */}
+                {viewMode === 'mobile' && desktopOnlyTypeBlocks.length > 0 && (
+                  <p className="mt-4 text-[11px] text-white/40 font-medium">
+                    {t("page.desktopOnlyTypeNote", { types: desktopOnlyTypeBlocks.map(b => BLOCK_TYPE_LABELS[b.type] || b.type).join(", ") })}
+                  </p>
                 )}
 
                 {/* En celular no hay panel de ocultos: avisamos dónde se restauran */}

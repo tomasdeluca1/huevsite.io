@@ -1,7 +1,7 @@
 // Comprobaciones de lib/mobile-order.ts (orden propio de celular).
 // Sin test runner: imprime y sale con código != 0 si algo falla.
 // Uso: npx tsx scripts/verify-mobile-order.js
-const { parseBlockViewFields, parseReorderBody, hasMobileOrder, materializeMobileOrder, nextMobileOrder, sortForMobile } = require('../lib/mobile-order');
+const { parseBlockViewFields, parseReorderBody, hasMobileOrder, isDesktopOnlyType, materializeMobileOrder, nextMobileOrder, showsOnMobile, sortForMobile } = require('../lib/mobile-order');
 
 let failed = 0;
 function eq(name, actual, expected) {
@@ -100,6 +100,18 @@ eq('view: mobileOrder basura', V({ mobileOrder: 'x' }).ok, false);
 eq('view: mobile_order + mobileOrder juntas, la 2da basura => rechazo', V({ mobile_order: 1, mobileOrder: 'x' }).ok, false);
 eq('view: ambos campos válidos juntos', V({ visible_on: 'mobile', mobile_order: 1 }), { ok: true, fields: { visible_on: 'mobile', mobile_order: 1 } });
 eq('view: body null / array / string => sin campos', [V(null), V([]), V('x')], [{ ok: true, fields: {} }, { ok: true, fields: {} }, { ok: true, fields: {} }]);
+
+// --- tipos solo-escritorio (el ecosistema no entra en la vista de celular) ---
+eq('isDesktopOnlyType("ecosystem") === true', isDesktopOnlyType('ecosystem'), true);
+eq('isDesktopOnlyType("hero") === false', isDesktopOnlyType('hero'), false);
+eq('isDesktopOnlyType(undefined) === false', isDesktopOnlyType(undefined), false);
+eq('isDesktopOnlyType(null) === false', isDesktopOnlyType(null), false);
+eq('showsOnMobile(hero sin visible_on) === true', showsOnMobile({ type: 'hero' }), true);
+eq('showsOnMobile(hero both) === true', showsOnMobile({ type: 'hero', visibleOn: 'both' }), true);
+eq('showsOnMobile(hero solo escritorio) === false', showsOnMobile({ type: 'hero', visibleOn: 'desktop' }), false);
+eq('showsOnMobile(ecosystem sin visible_on) === false', showsOnMobile({ type: 'ecosystem' }), false);
+eq('showsOnMobile(ecosystem both) === false (el tipo manda)', showsOnMobile({ type: 'ecosystem', visibleOn: 'both' }), false);
+eq('showsOnMobile(ecosystem solo celular) === false (el tipo manda)', showsOnMobile({ type: 'ecosystem', visibleOn: 'mobile' }), false);
 
 if (failed) {
   console.error(`\n${failed} comprobación(es) fallaron`);

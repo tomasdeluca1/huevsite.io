@@ -11,7 +11,7 @@ import { MediaBlock, CertificationBlock, AchievementBlock, CustomBlock, CollabBl
 import type { BlockData, ProfileBadge } from "@/lib/profile-types"
 import { trackClick } from "@/components/analytics/AnalyticsTracker"
 import { useBlockPreview } from "@/lib/block-preview-context"
-import { sortForMobile } from "@/lib/mobile-order"
+import { isDesktopOnlyType, showsOnMobile, sortForMobile } from "@/lib/mobile-order"
 import type { CSSProperties } from "react"
 
 interface ProfileGridProps {
@@ -39,17 +39,22 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscri
 
   // El hero puede ser solo-escritorio o solo-celular: la tarjeta de respaldo (nombre y
   // tagline) se calcula por vista, así ninguna vista se queda sin identidad.
-  const hasHeroMobile = visibleBlocks.some(b => b.type === 'hero' && b.visibleOn !== 'desktop');
+  const hasHeroMobile = visibleBlocks.some(b => b.type === 'hero' && showsOnMobile(b));
   const hasHeroDesktop = visibleBlocks.some(b => b.type === 'hero' && b.visibleOn !== 'mobile');
   const fallbackViewClass = hasHeroMobile ? ' hidden md:block' : hasHeroDesktop ? ' md:hidden' : '';
-  // Cero bloques visibles en celular (todos "solo escritorio"), aunque el DOM tenga bloques.
-  const emptyOnMobileOnly = visibleBlocks.length > 0 && visibleBlocks.every(b => b.visibleOn === 'desktop');
+  // Cero bloques visibles en celular (todos "solo escritorio" por elección o por tipo),
+  // aunque el DOM tenga bloques.
+  const emptyOnMobileOnly = visibleBlocks.length > 0 && !visibleBlocks.some(showsOnMobile);
 
   // Orden propio de celular. El HTML se queda en el orden de `order` (el que lee
   // Google y recorre el teclado); en celular el CSS lo reordena con
   // `order: var(--mo)`. El índice en sortForMobile ES el valor de --mo, así los
   // bloques sin orden propio (mobileOrder null) quedan al final sin cálculo extra.
-  const mobileIndex = new Map(sortForMobile(visibleBlocks).map((b, i) => [b.id, i]))
+  // Los tipos solo-escritorio (ecosystem) quedan fuera del cálculo: su --mo es inerte
+  // porque en celular están en display:none, y así los demás no saltan un número.
+  const mobileIndex = new Map(
+    sortForMobile(visibleBlocks.filter(b => !isDesktopOnlyType(b.type))).map((b, i) => [b.id, i])
+  )
   
   const handleBlockClick = (blockId: string) => {
     if (userId) {
@@ -109,7 +114,10 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscri
     // Visibilidad por vista: se oculta con CSS, nunca se saca del DOM, así el HTML
     // (buscadores, teclado) queda completo en las dos vistas. El `order` de un
     // bloque con display:none es inerte, convive con --mo sin conflicto.
-    const view = block.visibleOn === 'desktop' ? ' hidden md:block' : block.visibleOn === 'mobile' ? ' md:hidden' : '';
+    // Un tipo solo-escritorio (ecosystem) se trata como 'desktop' aunque el bloque
+    // tenga otro visible_on guardado: la decisión por tipo manda.
+    const effectiveView = isDesktopOnlyType(block.type) ? 'desktop' : block.visibleOn;
+    const view = effectiveView === 'desktop' ? ' hidden md:block' : effectiveView === 'mobile' ? ' md:hidden' : '';
     return `col-span-${col} row-span-${row}${view}`;
   }
 

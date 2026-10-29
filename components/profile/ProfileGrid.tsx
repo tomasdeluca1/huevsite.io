@@ -11,6 +11,8 @@ import { MediaBlock, CertificationBlock, AchievementBlock, CustomBlock, CollabBl
 import type { BlockData, ProfileBadge } from "@/lib/profile-types"
 import { trackClick } from "@/components/analytics/AnalyticsTracker"
 import { useBlockPreview } from "@/lib/block-preview-context"
+import { sortForMobile } from "@/lib/mobile-order"
+import type { CSSProperties } from "react"
 
 interface ProfileGridProps {
   blocks: BlockData[]
@@ -36,6 +38,12 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscri
     .sort((a, b) => a.order - b.order)
 
   const hasHero = visibleBlocks.some(b => b.type === 'hero');
+
+  // Orden propio de celular. El HTML se queda en el orden de `order` (el que lee
+  // Google y recorre el teclado); en celular el CSS lo reordena con
+  // `order: var(--mo)`. El índice en sortForMobile ES el valor de --mo, así los
+  // bloques sin orden propio (mobileOrder null) quedan al final sin cálculo extra.
+  const mobileIndex = new Map(sortForMobile(visibleBlocks).map((b, i) => [b.id, i]))
   
   const handleBlockClick = (blockId: string) => {
     if (userId) {
@@ -122,6 +130,7 @@ export function ProfileGrid({ blocks, accentColor, displayName, tagline, subscri
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.05, duration: 0.4 }}
           className={getGridClasses(block)}
+          style={{ "--mo": mobileIndex.get(block.id) ?? 0 } as CSSProperties}
           onClickCapture={() => handleBlockClick(block.id)}
         >
           {renderBlock(block)}

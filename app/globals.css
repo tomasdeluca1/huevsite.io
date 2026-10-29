@@ -927,6 +927,13 @@ nav {
     grid-row: auto !important;
   }
 
+  /* Orden propio de celular: ProfileGrid emite --mo en cada envoltorio y el HTML
+     conserva el orden de escritorio. Solo acá: fuera de este media query
+     pelearía con grid-auto-flow: dense y con los col-span. */
+  .huevsite-grid > * {
+    order: var(--mo, 0);
+  }
+
   .huevsite-block {
     padding: 18px;
   }

@@ -30,33 +30,39 @@ export function WinnerBanner({
   const week = `${weekLabel(winnerWeek, locale)} ${winnerWeek.slice(0, 4)}`;
 
   return (
-    <div className="relative z-10 mb-4 md:mb-6">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-[var(--accent)]/30 bg-gradient-to-r from-[var(--accent)]/[0.12] via-[var(--accent)]/[0.04] to-transparent px-3 py-2.5 md:px-4 md:py-3">
+    <div className="relative z-10 mb-3 md:mb-6">
+      {/* En celular no es una tarjeta: sin recuadro, sin degradé y sin botones, una sola
+          línea (laurel + título + semana + un link de texto). En md+ vuelve a ser el
+          cartel de siempre. */}
+      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 rounded-none border-0 bg-none px-0 py-0 md:gap-x-3 md:gap-y-2 md:rounded-2xl md:border md:border-[var(--accent)]/30 md:bg-gradient-to-r md:from-[var(--accent)]/[0.12] md:via-[var(--accent)]/[0.04] md:to-transparent md:px-4 md:py-3">
         {/* Full laurel wreath */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/badge/laurel-dark.png" alt="" className="h-9 w-auto shrink-0 md:h-10" />
+        <img src="/badge/laurel-dark.png" alt="" className="h-7 w-auto shrink-0 md:h-10" />
 
         <div className="min-w-0 flex-1">
-          <div className="text-xs font-black uppercase tracking-wide text-[var(--accent)] leading-tight md:text-sm">
+          <div className="text-[11px] font-black uppercase tracking-wide text-[var(--accent)] leading-tight md:text-sm">
             {t("title")}
           </div>
-          <div className="font-mono text-[10px] leading-tight text-white/50 md:text-[11px]">
-            {t("wonWeek", { week })}
+          {/* La semana sola en celular: "Ganó la semana del …" no entra en una línea. */}
+          <div className="font-mono text-[10px] leading-tight text-white/45 md:text-[11px] md:text-white/50">
+            <span className="md:hidden">{week}</span>
+            <span className="hidden md:inline">{t("wonWeek", { week })}</span>
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2 max-[400px]:w-full max-[400px]:basis-full">
+        {/* Un solo link en celular: la nota si existe, si no el historial. */}
+        <div className="flex shrink-0 items-center gap-2">
           {notaHref && (
             <a
               href={notaHref}
-              className="max-[400px]:flex-1 max-[400px]:text-center rounded-lg border border-white/15 px-3 py-1.5 text-[10px] font-bold text-white/80 transition-colors hover:border-white/30 hover:text-white md:text-[11px]"
+              className="rounded-none border-0 px-0 py-2 text-[11px] font-bold text-[var(--accent)] transition-colors md:rounded-lg md:py-1.5 md:border md:border-white/15 md:px-3 md:text-white/80 md:hover:border-white/30 md:hover:text-white"
             >
-              {t("readPost")}
+              {t("readPost")} <span className="md:hidden" aria-hidden="true">→</span>
             </a>
           )}
           <a
             href={historyHref}
-            className="max-[400px]:flex-1 max-[400px]:text-center rounded-lg bg-[var(--accent)] px-3 py-1.5 text-[10px] font-black text-black transition-transform hover:scale-[1.03] md:text-[11px]"
+            className={`${notaHref ? "hidden md:inline-block" : ""} rounded-none bg-transparent px-0 py-2 text-[11px] font-bold text-[var(--accent)] transition-transform md:rounded-lg md:bg-[var(--accent)] md:px-3 md:py-1.5 md:font-black md:text-black md:hover:scale-[1.03]`}
           >
             {t("history")} →
           </a>

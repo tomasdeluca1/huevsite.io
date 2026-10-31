@@ -123,7 +123,7 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
         <div className="flex flex-row items-center md:items-start gap-3 md:gap-5">
           <div className="shrink-0 relative">
             <div
-              className={`absolute inset-0 rounded-full blur-xl transition-opacity ${isWinner ? 'opacity-40 animate-pulse' : 'opacity-30 group-hover:opacity-50'}`}
+              className={`hidden md:block absolute inset-0 rounded-full blur-xl transition-opacity ${isWinner ? 'opacity-40 animate-pulse' : 'opacity-30 group-hover:opacity-50'}`}
               style={{ backgroundColor: accentColor }}
             />
             <div
@@ -150,7 +150,7 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
                 <motion.div
                   animate={{ rotate: [0, 10, -10, 0] }}
                   transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                  className="shrink-0"
+                  className="hidden md:block shrink-0"
                   title={t('hero.builderOfWeek')}
                 >
                   <Trophy size={18} className="text-[var(--accent)] drop-shadow-[0_0_8px_rgba(200,255,0,0.5)] md:w-6 md:h-6" />
@@ -176,8 +176,11 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
 
         {/* ROW 2: Descripción (con un espacio según el diagrama) */}
         <div className="mt-3 md:mt-6 flex-1 min-w-0">
+          {/* Badges: solo en escritorio. En celular el hero muestra identidad y nada
+              más; los logros son una fila de círculos de colores que compite con el
+              nombre en una pantalla angosta. Se oculta con CSS, no se saca del DOM. */}
           {badges.length > 0 && (
-            <div className="mb-2 md:mb-4 flex items-end gap-3">
+            <div className="mb-2 md:mb-4 hidden md:flex items-end gap-3">
               {badges.map((badge) => (
                 <BadgeItem key={badge.key} badge={badge} earned size="sm" />
               ))}
@@ -209,16 +212,22 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
           )}
         </div>
 
-        {/* ROW 3: Estado y Lugar */}
-        <div className="mt-3 md:mt-6 flex flex-wrap gap-1.5 md:gap-2 pt-3 md:pt-4 border-t border-white/5">
+        {/* ROW 3: Estado y Lugar. En escritorio son dos pastillas debajo de una línea
+            divisoria; en celular es una sola línea de texto plano ("disponible · Buenos
+            Aires"): sin borde, sin fondo y sin el punto que late. Misma info, un cuarto
+            de la tinta. */}
+        <div className="mt-2 md:mt-6 flex flex-wrap items-center gap-x-1.5 gap-y-1 md:gap-2 pt-0 md:pt-4 border-t-0 md:border-t md:border-white/5">
           {status && (
-            <span className="tag accent flex items-center gap-1.5 bg-[var(--accent-dim)] border border-[var(--accent-mid)] text-[var(--accent)] text-[9px] md:text-[10px] font-bold px-2 py-1 md:px-3 md:py-1.5 rounded-full max-w-full md:whitespace-nowrap">
-              <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+            <span className="tag accent flex items-center gap-1.5 bg-transparent md:bg-[var(--accent-dim)] border-0 md:border md:border-[var(--accent-mid)] text-[var(--accent)] text-[11px] md:text-[10px] font-bold px-0 py-0 md:px-3 md:py-1.5 rounded-none md:rounded-full max-w-full md:whitespace-nowrap">
+              <div className="hidden md:block w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
               {status}
             </span>
           )}
+          {status && location && (
+            <span aria-hidden="true" className="md:hidden text-[11px] text-white/25">·</span>
+          )}
           {location && (
-            <span className="tag bg-white/5 border border-white/10 text-[var(--text-muted)] text-[9px] md:text-[10px] font-bold px-2 py-1 md:px-3 md:py-1.5 rounded-full max-w-full md:whitespace-nowrap">
+            <span className="tag bg-transparent md:bg-white/5 border-0 md:border md:border-white/10 text-[var(--text-muted)] text-[11px] md:text-[10px] font-bold px-0 py-0 md:px-3 md:py-1.5 rounded-none md:rounded-full max-w-full md:whitespace-nowrap">
               {location}
             </span>
           )}

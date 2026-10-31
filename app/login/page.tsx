@@ -7,6 +7,7 @@ import { Github, Loader2, Info, AlertTriangle, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Logo } from "@/components/brand/Logo";
 
 function LoginContent() {
   const t = useTranslations("login");
@@ -97,7 +98,7 @@ function LoginContent() {
           animate={{ opacity: 1, y: 0 }}
           className="relative z-10 mb-12"
         >
-          <Link href="/" className="logo !text-2xl">huev<span>site</span>.io</Link>
+          <Link href="/"><Logo className="h-8 w-auto" priority /></Link>
         </motion.div>
 
         {/* Login Card */}

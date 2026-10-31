@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Globe, ArrowUpRight, Share2 } from "lucide-react";
 import { BlockData } from "@/lib/profile-types";
 import { ShareProfileModal } from "@/components/share/ShareProfileModal";
+import { Logo } from "@/components/brand/Logo";
 
 interface Props {
   accentColor: string;
@@ -46,8 +47,8 @@ export function ProfileHeader({
       {!isCustomDomain && !embed && (
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Link href="/" className="logo shrink-0 text-xl md:text-2xl">
-              huev<span>site</span>.io
+            <Link href="/" className="shrink-0">
+              <Logo className="h-6 w-auto md:h-7" />
             </Link>
             <Link
               href="/explore"

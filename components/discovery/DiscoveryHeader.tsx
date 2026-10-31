@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Rocket, Compass, Trophy } from "lucide-react";
 import LocaleToggle from "@/components/LocaleToggle";
+import { Logo } from "@/components/brand/Logo";
 
 const TABS = [
   { href: "/feed", key: "navBuildersHunt", icon: Rocket },
@@ -72,8 +73,8 @@ export function DiscoveryHeader({
   return (
     <header className="border-b border-[var(--border)]">
       <div className={`${SHELL} flex items-center justify-between gap-4 py-5`}>
-        <Link href="/" className="logo text-xl shrink-0">
-          huev<span>site</span>.io
+        <Link href="/" className="shrink-0">
+          <Logo className="h-6 w-auto" />
         </Link>
         {!hideTabs && <div className="hidden md:block">{tabs(false)}</div>}
         <div className="flex items-center gap-2 shrink-0">

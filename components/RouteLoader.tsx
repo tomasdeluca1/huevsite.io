@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { Logo } from "@/components/brand/Logo";
 
 /**
  * Branded route loader: a mini browser window "building" a huevsite. Its bento
@@ -76,7 +77,7 @@ export async function RouteLoader() {
       </div>
 
       <div className="mt-6 flex items-center gap-2 text-[11px] font-mono text-[var(--text-muted)] tracking-wide">
-        <span className="logo !text-sm">huev<span style={{ color: "var(--accent)" }}>site</span>.io</span>
+        <Logo className="h-4 w-auto" />
         <span className="opacity-50">·</span>
         <span>{t("loadingCaption")}</span>
       </div>

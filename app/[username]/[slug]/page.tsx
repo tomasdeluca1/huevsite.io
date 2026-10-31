@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { headers } from "next/headers";
 import { AnalyticsTracker } from "@/components/analytics/AnalyticsTracker";
 import { SITE_URL } from "@/lib/site-url";
+import { Logo } from "@/components/brand/Logo";
 
 interface Props {
     params: { username: string; slug: string };
@@ -185,7 +186,7 @@ export default async function SubSitePage({ params }: Props) {
                     <Link href={isCustomDomain ? "/" : `/${username}`} className="text-[10px] font-mono text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors uppercase tracking-widest">
                         ← Volver al perfil de {username}
                     </Link>
-                    <div className="logo mt-8 scale-75 opacity-10 filter grayscale select-none">huev<span>site</span>.io</div>
+                    <Logo className="mt-8 h-5 w-auto opacity-10 grayscale select-none" />
                 </footer>
             </main>
         </div>

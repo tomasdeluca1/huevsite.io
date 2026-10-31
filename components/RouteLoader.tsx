@@ -43,7 +43,7 @@ export async function RouteLoader() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#080808] px-6">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--bg)] px-6">
       <div className="w-[280px] rounded-2xl border border-white/10 bg-[#0e0e0e] overflow-hidden shadow-2xl shadow-black/60">
         {/* Browser chrome */}
         <div className="flex items-center gap-2 px-3 py-2.5 border-b border-white/10 bg-white/[0.03]">

@@ -43,7 +43,7 @@ export function OnboardingShell({
         </div>
 
         {/* Nav */}
-        <div className="flex items-center justify-between px-8 py-4 bg-[rgba(8,8,8,0.7)] backdrop-blur-xl border-b border-[var(--border)]">
+        <div className="flex items-center justify-between px-8 py-4 bg-[rgba(5,5,5,0.7)] backdrop-blur-xl border-b border-[var(--border)]">
           <Link href="/">
             <Logo className="h-6 w-auto" />
           </Link>

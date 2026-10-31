@@ -57,6 +57,24 @@ const HOY = { bg: '#080808', surface: '#111111', surface2: '#1a1a1a', border: '#
 eq('ningún gris se mueve más de 3 puntos',
   RAMPA.filter((k) => Math.abs(lum(BRAND.color[k]) - lum(HOY[k])) > 3), []);
 
+// --- el negro viejo no sobrevive en ningún estilo ---
+// Se miran solo archivos de UI: un #080808 dentro de contenido (un post del
+// blog, datos de un usuario) sería legítimo y no es asunto de este script.
+function walk(dir, out = []) {
+  for (const e of fs.readdirSync(path.join(__dirname, '..', dir), { withFileTypes: true })) {
+    const rel = `${dir}/${e.name}`;
+    if (e.isDirectory()) walk(rel, out);
+    else if (/\.(tsx|ts|css)$/.test(e.name)) out.push(rel);
+  }
+  return out;
+}
+const ui = [...walk('app'), ...walk('components')];
+eq('sin #080808 en la UI', ui.filter((f) => /#080808/i.test(read(f))), []);
+eq('sin rgba(8, 8, 8, …) en la UI', ui.filter((f) => /rgba\(\s*8\s*,\s*8\s*,\s*8/i.test(read(f))), []);
+const manifest = read('app/manifest.ts');
+eq('el manifest no tiene el negro a mano', /#000000/.test(manifest), false);
+eq('el manifest sale de la tabla', /BRAND\.color\.bg/.test(manifest), true);
+
 // --- el acento del usuario sigue mandando adentro de su perfil ---
 for (const page of ['app/[username]/page.tsx', 'app/[username]/[slug]/page.tsx']) {
   eq(`${page} inyecta --accent por usuario`, /--accent:\s*\$\{/.test(read(page)), true);

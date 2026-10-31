@@ -1,3 +1,4 @@
+import { BRAND } from '@/lib/brand';
 import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
@@ -7,8 +8,8 @@ export default function manifest(): MetadataRoute.Manifest {
         description: 'Red social y portfolio para builders de Argentina y LATAM.',
         start_url: '/',
         display: 'standalone',
-        background_color: '#000000',
-        theme_color: '#000000',
+        background_color: BRAND.color.bg,
+        theme_color: BRAND.color.bg,
         icons: [
             {
                 src: '/icon.jpeg',

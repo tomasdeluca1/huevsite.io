@@ -1,0 +1,2799 @@
+{
+  "fetchedAt": "2026-11-01T16:26:32.199Z",
+  "sources": [
+    "https://huevsite.io/api/explore?sort=score",
+    "https://huevsite.io/{username}",
+    "https://huevsite.io/builders-de-la-semana",
+    "https://huevsite.io/api/launches"
+  ],
+  "directory": {
+    "total": 316,
+    "publicLabel": "+300 builders",
+    "fetchedProfiles": 314,
+    "byCountry": [
+      {
+        "code": "AR",
+        "name": "Argentina",
+        "count": 215
+      },
+      {
+        "code": "PE",
+        "name": "Perú",
+        "count": 5
+      },
+      {
+        "code": "UY",
+        "name": "Uruguay",
+        "count": 4
+      },
+      {
+        "code": "US",
+        "name": "Estados Unidos",
+        "count": 3
+      },
+      {
+        "code": "ES",
+        "name": "España",
+        "count": 3
+      },
+      {
+        "code": "NG",
+        "name": "Nigeria",
+        "count": 2
+      },
+      {
+        "code": "IN",
+        "name": "India",
+        "count": 2
+      },
+      {
+        "code": "EC",
+        "name": "Ecuador",
+        "count": 1
+      },
+      {
+        "code": "MX",
+        "name": "México",
+        "count": 1
+      },
+      {
+        "code": "CO",
+        "name": "Colombia",
+        "count": 1
+      },
+      {
+        "code": "VE",
+        "name": "Venezuela",
+        "count": 1
+      },
+      {
+        "code": "RU",
+        "name": "Rusia",
+        "count": 1
+      },
+      {
+        "code": "NI",
+        "name": "Nicaragua",
+        "count": 1
+      },
+      {
+        "code": "PT",
+        "name": "Portugal",
+        "count": 1
+      },
+      {
+        "code": "CN",
+        "name": "China",
+        "count": 1
+      },
+      {
+        "code": "TR",
+        "name": "Turquía",
+        "count": 1
+      },
+      {
+        "code": "BY",
+        "name": "Bielorrusia",
+        "count": 1
+      },
+      {
+        "code": "BD",
+        "name": "Bangladés",
+        "count": 1
+      },
+      {
+        "code": "BR",
+        "name": "Brasil",
+        "count": 1
+      }
+    ],
+    "withoutCountry": 70,
+    "countryCensus": "GET /api/explore?sort=created_at (316 ids únicos; el sort por score pierde 2 filas por paginación inestable)"
+  },
+  "sample": {
+    "builders": 72,
+    "withProjects": 50,
+    "withLocation": 46,
+    "withStack": 42,
+    "withAvatarFile": 67
+  },
+  "builders": [
+    {
+      "username": "giannidona",
+      "name": "Gianluca Donato",
+      "avatar": "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/8f9c4592-e064-4b77-be68-f836b2f8c625/avatars/phpj36kfl5-1771867510368.jpeg",
+      "avatarFile": "avatars/giannidona.jpg",
+      "tagline": "Desarrollador Web, Estudiante de la carrera Diseño y Programación Web en Da Vinci",
+      "role": null,
+      "stack": [
+        "TypeScript",
+        "Next.js",
+        "Node.js",
+        "PostgreSQL",
+        "Prisma",
+        "Supabase",
+        "Tailwind",
+        "Mercado Pago"
+      ],
+      "projects": [
+        {
+          "title": "Puffa Ecommerce",
+          "description": "Ecommerce con catálogo no convencional, checkout con Mercado Pago y admin de pedidos y productos.",
+          "status": "Idea",
+          "stack": [
+            "Next.js",
+            "Supabase",
+            "Tailwind",
+            "TypeScript",
+            "Mercado Pago"
+          ],
+          "link": "https://v0-puffa-ecommerce.vercel.app/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "Catalogy",
+          "description": "App para poder mostrar el catalago de tu marca de la mejor manera sin tantas vueltas.",
+          "status": "Idea",
+          "stack": [
+            "Next.js",
+            "Supabase"
+          ],
+          "link": "https://catalogy-ar.vercel.app/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "Giannluca's Boiler",
+          "description": "My own 24/7 boiler/radio where people can listen to my sets in loop or pick a specific one.",
+          "status": "Idea",
+          "stack": [
+            "Next.js"
+          ],
+          "link": "https://giannluca-boiler.vercel.app/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "Argentina 🇦🇷",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": true,
+      "profileUrl": "https://huevsite.io/giannidona",
+      "fetchError": null
+    },
+    {
+      "username": "tomaspozo",
+      "name": "Tomás Pozo",
+      "avatar": "https://avatars.githubusercontent.com/u/24812509?v=4",
+      "avatarFile": "avatars/tomaspozo.jpg",
+      "tagline": "Supabase Builder",
+      "role": "indie_hacker",
+      "stack": [
+        "Supabase",
+        "TanStack Start"
+      ],
+      "projects": [
+        {
+          "title": "AgentLink",
+          "description": "AgentLink es una herramienta que automatiza la creación y el desarrollo de aplicaciones en Supabase. Tiene dos componentes principales: una CLI que genera un proyecto Supabase listo para producción con un solo comando (npx agentlink-sh@latest), y un conjunto de reglas para agentes de IA que garantizan que cada funcionalidad se construya siguiendo los mismos patrones seguros, sesión tras sesión. El proyecto generado incluye aislamiento de esquemas, multi-tenancy, lógica de negocio en la base de datos, y tareas asíncronas con pg_cron y pgmq — todo preconfigurado. Está disponible como plugin para Cursor y Claude Code, y el despliegue a producción se realiza con solo tres comandos.",
+          "status": "Lanzado el Jun 22",
+          "stack": [
+            "Supabase",
+            "TanStack Start"
+          ],
+          "link": "https://agentlink.sh/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "Ecuador",
+      "country": "EC",
+      "countryName": "Ecuador",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/tomaspozo",
+      "fetchError": null
+    },
+    {
+      "username": "gonzalochale",
+      "name": "gonzalo chalé",
+      "avatar": "https://avatars.githubusercontent.com/u/80075049?v=4",
+      "avatarFile": "avatars/gonzalochale.jpg",
+      "tagline": "building for the web",
+      "role": null,
+      "stack": [],
+      "projects": [
+        {
+          "title": "Membresi",
+          "description": "helping businesses build loyalty",
+          "status": "Idea",
+          "stack": [],
+          "link": "https://www.membresi.com/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "México 🇲🇽",
+      "country": "MX",
+      "countryName": "México",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/gonzalochale",
+      "fetchError": null
+    },
+    {
+      "username": "enacrm",
+      "name": "Enac",
+      "avatar": "https://avatars.githubusercontent.com/u/96846797?v=4",
+      "avatarFile": "avatars/enacrm.jpg",
+      "tagline": "enac",
+      "role": "developer, indie_hacker",
+      "stack": [
+        "React",
+        "Js",
+        "PostgreSQL"
+      ],
+      "projects": [
+        {
+          "title": "Diario del Junior",
+          "description": "Una comunidad dedicada al encuentro de programadores, desde los mas nuevos que quieran aprender las bases a los mas expertos que busquen mantenerse actualizados o conseguir equipo para un nuevo proyecto.",
+          "status": "En construcción",
+          "stack": [
+            "React",
+            "Js",
+            "PostgreSQL"
+          ],
+          "link": "https://diariodeljunior.is-a.dev/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "Canarias",
+      "country": "ES",
+      "countryName": "España",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/enacrm",
+      "fetchError": null
+    },
+    {
+      "username": "vixclotet",
+      "name": "Vix Clotet",
+      "avatar": "https://avatars.githubusercontent.com/u/63135033?v=4",
+      "avatarFile": "avatars/vixclotet.jpg",
+      "tagline": "building stuff",
+      "role": null,
+      "stack": [],
+      "projects": [],
+      "location": "España 🇪🇸",
+      "country": "ES",
+      "countryName": "España",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/vixclotet",
+      "fetchError": null
+    },
+    {
+      "username": "torrober",
+      "name": "Roberto M. Rocha",
+      "avatar": "https://avatars.githubusercontent.com/u/15577163?v=4",
+      "avatarFile": "avatars/torrober.jpg",
+      "tagline": "Ingeniero de Sistemas Full Stack y móvil. Experto en JS, HTML y CSS; experiencia en Python y React. Freelance en WordPress y Shopify, con proyectos en scraping, automatización y tiempo real.",
+      "role": null,
+      "stack": [],
+      "projects": [],
+      "location": "Barranquilla, Colombia",
+      "country": "CO",
+      "countryName": "Colombia",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/torrober",
+      "fetchError": null
+    },
+    {
+      "username": "carlosb",
+      "name": "Carlos Bolívar",
+      "avatar": "https://avatars.githubusercontent.com/u/36908755?v=4",
+      "avatarFile": "avatars/carlosb.jpg",
+      "tagline": "Developer | JavaScript, TypeScript, C, Python & AI Integration | Automation Enthusiast.",
+      "role": "developer",
+      "stack": [
+        "Python",
+        "C",
+        "JavaScript",
+        "TypeScript",
+        "PHP",
+        "Assembly"
+      ],
+      "projects": [],
+      "location": "Venezuela 🇻🇪❤️",
+      "country": "VE",
+      "countryName": "Venezuela",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/carlosb",
+      "fetchError": null
+    },
+    {
+      "username": "thejenja",
+      "name": "Evgeniy Khramov",
+      "avatar": "https://avatars.githubusercontent.com/u/65224669?v=4",
+      "avatarFile": "avatars/thejenja.jpg",
+      "tagline": "thejenja",
+      "role": null,
+      "stack": [],
+      "projects": [],
+      "location": "Russia",
+      "country": "RU",
+      "countryName": "Rusia",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/thejenja",
+      "fetchError": null
+    },
+    {
+      "username": "jmartinez",
+      "name": "Juanma Martínez",
+      "avatar": "https://avatars.githubusercontent.com/u/135035103?v=4",
+      "avatarFile": "avatars/jmartinez.jpg",
+      "tagline": "Founder de SERVO",
+      "role": null,
+      "stack": [],
+      "projects": [],
+      "location": "Uruguay",
+      "country": "UY",
+      "countryName": "Uruguay",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/jmartinez",
+      "fetchError": null
+    },
+    {
+      "username": "fimparatta",
+      "name": "Federico Imparatta",
+      "avatar": "https://avatars.githubusercontent.com/u/51208224?v=4",
+      "avatarFile": "avatars/fimparatta.jpg",
+      "tagline": "opa",
+      "role": "founder, developer",
+      "stack": [],
+      "projects": [],
+      "location": null,
+      "country": "UY",
+      "countryName": "Uruguay",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/fimparatta",
+      "fetchError": null
+    },
+    {
+      "username": "cyberzilla",
+      "name": "Charis",
+      "avatar": "https://ugc.production.linktr.ee/8db605de-1e8e-491e-a05a-0437d7d087ae_1000009493.jpeg?io=true&size=avatar-v3_0",
+      "avatarFile": "avatars/cyberzilla.jpg",
+      "tagline": "View adizilla’s Linktree to discover and stream music from top platforms like Soundcloud here. Your next favorite track is just a click away!",
+      "role": "developer, founder, indie_hacker",
+      "stack": [],
+      "projects": [
+        {
+          "title": "My Beats at soundclick",
+          "description": "Proyecto destacado importado desde soundclick.com.",
+          "status": "Idea",
+          "stack": [],
+          "link": "https://www.soundclick.com/LilAdizilla?ltclid=f43fddfc-cb71-45ee-aec2-49de55ed5e24"
+        },
+        {
+          "title": "Reddit",
+          "description": "Proyecto destacado importado desde reddit.com.",
+          "status": "Idea",
+          "stack": [],
+          "link": "https://www.reddit.com/u/PineappleHead1706/s/psy8tLNssi?ltclid=d684eaa7-4ac4-4b90-8de0-f217e7b289c6"
+        }
+      ],
+      "location": null,
+      "country": "US",
+      "countryName": "Estados Unidos",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/cyberzilla",
+      "fetchError": null
+    },
+    {
+      "username": "sbarker",
+      "name": "Stephan Barker",
+      "avatar": "https://avatars.githubusercontent.com/u/3976256?v=4",
+      "avatarFile": "avatars/sbarker.jpg",
+      "tagline": "Digital Product Builder",
+      "role": "developer, founder, indie_hacker",
+      "stack": [],
+      "projects": [
+        {
+          "title": "Justo - Tu Asistente Laboral Inteligente",
+          "description": "Descripción breve",
+          "status": "Idea",
+          "stack": [],
+          "link": null
+        }
+      ],
+      "location": "Nicaragua",
+      "country": "NI",
+      "countryName": "Nicaragua",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/sbarker",
+      "fetchError": null
+    },
+    {
+      "username": "davidrivero",
+      "name": "David Rivero",
+      "avatar": "https://avatars.githubusercontent.com/u/7388489?v=4",
+      "avatarFile": "avatars/davidrivero.jpg",
+      "tagline": "Frontend Dev & Product | Uruguayo en Portugal",
+      "role": "developer, indie_hacker",
+      "stack": [
+        "React (TanStack)",
+        "Java (Spring Boot)",
+        "Postgres",
+        "MongoDB",
+        "Docker"
+      ],
+      "projects": [
+        {
+          "title": "MyCareerHunt",
+          "description": "MyCareerHunt gives you back the control of your career. It shows you which companies would fit with the path you're looking for, their profiles, your value in the job market, and the next steps once you onboard a new position.",
+          "status": "En construcción",
+          "stack": [
+            "React (TanStack)",
+            "Java (Spring Boot)",
+            "Postgres",
+            "MongoDB",
+            "Docker"
+          ],
+          "link": "https://x.com/intent/follow?screen_name=DavidRiveroMe"
+        }
+      ],
+      "location": "Lisboa, Portugal",
+      "country": "PT",
+      "countryName": "Portugal",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/davidrivero",
+      "fetchError": null
+    },
+    {
+      "username": "dala",
+      "name": "Josecarlos de Lima",
+      "avatar": "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/9ff73241-f284-4c35-8c15-685d3b2eccb9/avatars/iisu8tln7x9-1783136819205-Foto_Josecarlos_2025.webp",
+      "avatarFile": "avatars/dala.jpg",
+      "tagline": "Fundador",
+      "role": "founder",
+      "stack": [
+        "Replit"
+      ],
+      "projects": [
+        {
+          "title": "DALA",
+          "description": "Digitalizamos las importaciones grupales en una Suite todo en uno para Importadores y Agentes de carga.",
+          "status": "Lanzado el Jun 18",
+          "stack": [
+            "Replit"
+          ],
+          "link": "https://dala.lat/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "Perú",
+      "country": "PE",
+      "countryName": "Perú",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/dala",
+      "fetchError": null
+    },
+    {
+      "username": "abel",
+      "name": "abel",
+      "avatar": "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6870bca4-9b0d-4c36-921c-bf7f91286861/avatars/kbn4wqgxgp9-1783535539693-IMG-20221215-WA0006.webp",
+      "avatarFile": "avatars/abel.jpg",
+      "tagline": "ai",
+      "role": "developer",
+      "stack": [],
+      "projects": [],
+      "location": null,
+      "country": "PE",
+      "countryName": "Perú",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/abel",
+      "fetchError": null
+    },
+    {
+      "username": "lwj",
+      "name": "lwj",
+      "avatar": "https://avatars.githubusercontent.com/u/219941202?v=4",
+      "avatarFile": "avatars/lwj.jpg",
+      "tagline": "开发者",
+      "role": "developer, designer, founder",
+      "stack": [],
+      "projects": [],
+      "location": null,
+      "country": "CN",
+      "countryName": "China",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/lwj",
+      "fetchError": null
+    },
+    {
+      "username": "vivideow152",
+      "name": "Vivideo",
+      "avatar": null,
+      "avatarFile": null,
+      "tagline": "Free AI video generator",
+      "role": "founder",
+      "stack": [],
+      "projects": [
+        {
+          "title": "Vivideo",
+          "description": "Descripción del proyecto",
+          "status": "Idea",
+          "stack": [],
+          "link": "https://vivideo.ai/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": null,
+      "country": "TR",
+      "countryName": "Turquía",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/vivideow152",
+      "fetchError": null
+    },
+    {
+      "username": "luisafosco",
+      "name": "luisafosco",
+      "avatar": null,
+      "avatarFile": null,
+      "tagline": "hola",
+      "role": null,
+      "stack": [],
+      "projects": [],
+      "location": "Brasil 🇧🇷",
+      "country": "BR",
+      "countryName": "Brasil",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/luisafosco",
+      "fetchError": null
+    },
+    {
+      "username": "psiderman",
+      "name": "//\\^^/\\\\",
+      "avatar": "https://avatars.githubusercontent.com/u/20269983?v=4",
+      "avatarFile": "avatars/psiderman.jpg",
+      "tagline": null,
+      "role": "designer",
+      "stack": [],
+      "projects": [],
+      "location": null,
+      "country": "IN",
+      "countryName": "India",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/psiderman",
+      "fetchError": null
+    },
+    {
+      "username": "serabin1",
+      "name": "Abin Biju",
+      "avatar": "https://avatars.githubusercontent.com/u/87353351?v=4",
+      "avatarFile": "avatars/serabin1.jpg",
+      "tagline": null,
+      "role": "developer",
+      "stack": [],
+      "projects": [],
+      "location": null,
+      "country": "IN",
+      "countryName": "India",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/serabin1",
+      "fetchError": null
+    },
+    {
+      "username": "leonich",
+      "name": "Leonich",
+      "avatar": "https://avatars.githubusercontent.com/u/32384695?v=4",
+      "avatarFile": "avatars/leonich.jpg",
+      "tagline": null,
+      "role": "indie_hacker",
+      "stack": [],
+      "projects": [],
+      "location": null,
+      "country": "BY",
+      "countryName": "Bielorrusia",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/leonich",
+      "fetchError": null
+    },
+    {
+      "username": "alredowanahmed",
+      "name": "AL Redowan Ahamed Fahim",
+      "avatar": "https://avatars.githubusercontent.com/u/94780381?v=4",
+      "avatarFile": "avatars/alredowanahmed.jpg",
+      "tagline": null,
+      "role": null,
+      "stack": [],
+      "projects": [],
+      "location": null,
+      "country": "BD",
+      "countryName": "Bangladés",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/alredowanahmed",
+      "fetchError": null
+    },
+    {
+      "username": "deegiem",
+      "name": "deegiem",
+      "avatar": null,
+      "avatarFile": null,
+      "tagline": null,
+      "role": "developer, founder",
+      "stack": [],
+      "projects": [],
+      "location": null,
+      "country": "NG",
+      "countryName": "Nigeria",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/deegiem",
+      "fetchError": null
+    },
+    {
+      "username": "tomidelu",
+      "name": "Tomas Deluca",
+      "avatar": "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/n5qop2r7qo-1793288953176-b9d3431c-8b04-4450-8ea7-1bed70802bf2.webp",
+      "avatarFile": "avatars/tomidelu.jpg",
+      "tagline": "Creativo Tech",
+      "role": null,
+      "stack": [],
+      "projects": [
+        {
+          "title": "Social Reps",
+          "description": "Earn your scroll with push ups.",
+          "status": "Lanzado",
+          "stack": [],
+          "link": "https://socialreps.app/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "Norte Tech",
+          "description": "Descripción breve",
+          "status": "Idea",
+          "stack": [],
+          "link": "https://bsasnortetech.vercel.app/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "Buenos Aires 🇦🇷",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/tomidelu",
+      "fetchError": null
+    },
+    {
+      "username": "azanello",
+      "name": "Ale Zanello",
+      "avatar": "https://avatars.githubusercontent.com/u/22460023?v=4",
+      "avatarFile": "avatars/azanello.jpg",
+      "tagline": "Software Engineer | Agentic AI Specialist",
+      "role": null,
+      "stack": [
+        "React",
+        "TypeScript",
+        "NextJS",
+        "Supabase",
+        "Tailwind",
+        "ThreeJS & NodeJS"
+      ],
+      "projects": [
+        {
+          "title": "Portfolio",
+          "description": "Acceso completo a mi portfolio",
+          "status": "Idea",
+          "stack": [
+            "React",
+            "TypeScript",
+            "NextJS",
+            "Supabase",
+            "Tailwind"
+          ],
+          "link": "https://azanello.com/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "Declarado",
+          "description": "Declaraciones juradas de funcionarios publicos con facil acceso",
+          "status": "Idea",
+          "stack": [],
+          "link": "https://declarado.azanello.com/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "Cordoba Bondi Real-Time",
+          "description": "Mapa en tiempo real de los colectivos de la Ciudad de Cordoba",
+          "status": "Idea",
+          "stack": [
+            "React",
+            "TypeScript"
+          ],
+          "link": "https://calculadora.azanello.com/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "Cordoba Risk Map",
+          "description": "Mapa iterativo estilo Cyberpunk de la ciudad de cordoba con zonas peligrosas y marcadores por repartidores de asaltos, estafas, falsos pedidos, etc.",
+          "status": "Idea",
+          "stack": [
+            "ThreeJS & NodeJS"
+          ],
+          "link": "https://cordoba.azanello.com/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "Argentina 🇦🇷",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/azanello",
+      "fetchError": null
+    },
+    {
+      "username": "ponti",
+      "name": "ponti",
+      "avatar": "https://avatars.githubusercontent.com/u/71143849?v=4",
+      "avatarFile": "avatars/ponti.jpg",
+      "tagline": "i just ship things",
+      "role": null,
+      "stack": [],
+      "projects": [],
+      "location": null,
+      "country": null,
+      "countryName": null,
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/ponti",
+      "fetchError": null
+    },
+    {
+      "username": "galfrevn",
+      "name": "Valentín Galfré",
+      "avatar": "https://avatars.githubusercontent.com/u/89883616?v=4",
+      "avatarFile": "avatars/galfrevn.jpg",
+      "tagline": "Software Engineer",
+      "role": null,
+      "stack": [
+        "Next",
+        "Rust",
+        "AI",
+        "AWS",
+        "Typescript"
+      ],
+      "projects": [
+        {
+          "title": "Hawkeye Intelligence",
+          "description": "No pierdas de vista a tu competencia. Detectá cada movimiento, entendé por qué importa y obtené inteligencia estratégica y contenido accionable desde un solo lugar.",
+          "status": "Idea",
+          "stack": [
+            "Next",
+            "Rust",
+            "AI",
+            "AWS"
+          ],
+          "link": "https://joinhawkeye.com/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "Promptsmith",
+          "description": "Librería de TypeScript para construir system prompts estructurados con una API fluida y chianeable, tipado completo, ejemplos few-shot, guardrails contra prompt injection, herramientas con Zod y exportación al Vercel AI SDK.",
+          "status": "Idea",
+          "stack": [
+            "Typescript",
+            "AI"
+          ],
+          "link": "https://github.com/galfrevn/promptsmith?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "Santa Fe 🇦🇷",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/galfrevn",
+      "fetchError": null
+    },
+    {
+      "username": "aeterna",
+      "name": "Nahuel Sigismondi",
+      "avatar": "https://avatars.githubusercontent.com/u/21974481?v=4",
+      "avatarFile": "avatars/aeterna.jpg",
+      "tagline": "god",
+      "role": "founder",
+      "stack": [
+        "Next.js",
+        "PostgreSQL",
+        "TypeScript",
+        "Médula",
+        "Docker",
+        "Traefik",
+        "React",
+        "GSAP"
+      ],
+      "projects": [
+        {
+          "title": "NexoVet",
+          "description": "Software para veterinarias y laboratorios. PIMS gratis + sistema de laboratorio que une equipos de distintas marcas en un solo informe.",
+          "status": "Idea",
+          "stack": [
+            "Next.js",
+            "PostgreSQL",
+            "TypeScript",
+            "Médula",
+            "Docker",
+            "Traefik"
+          ],
+          "link": "https://nexovet.aeterna.red/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "Contacto",
+          "description": "Juego de cartas y estrategia en un universo propio. Máquinas, planetas y operadores, con arte y animaciones originales. Construido desde cero.",
+          "status": "Idea",
+          "stack": [
+            "React",
+            "TypeScript",
+            "GSAP",
+            "Zustand"
+          ],
+          "link": "https://aeterna.red/contacto?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "Spectra",
+          "description": "Motor de inteligencia semántica. Mide significado y comprensión real, no palabras clave. Núcleo de alto rendimiento en Rust + embeddings",
+          "status": "Idea",
+          "stack": [
+            "Rust",
+            "TypeScript",
+            "Redis",
+            "embeddings (BGE-M3)"
+          ],
+          "link": "https://spectralab.tech/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "Lab Clicker",
+          "description": "Incremental game con un modo Reactor estilo Factorio. Construí, automatizá y optimizá tu laboratorio. Un experimento de game design hecho a mano.",
+          "status": "Idea",
+          "stack": [
+            "React",
+            "TypeScript",
+            "Zustand"
+          ],
+          "link": "https://aeterna.red/lab-clicker?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "MAR DEL PLATA",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/aeterna",
+      "fetchError": null
+    },
+    {
+      "username": "artugrande",
+      "name": "artugrande",
+      "avatar": "https://avatars.githubusercontent.com/u/103325488?v=4",
+      "avatarFile": "avatars/artugrande.jpg",
+      "tagline": "Product Builder",
+      "role": null,
+      "stack": [],
+      "projects": [
+        {
+          "title": "Artu Grande Podcast 🎙️",
+          "description": "Charlas auténticas con las mentes que moldean el futuro de la tecnología, la IA, blockchain y la cultura digital. Desde Salta, Argentina, conversaciones profundas con fundadores, creadores e innovadores que construyen productos globales desde cualquier lugar.ve",
+          "status": "Lanzado el Oct 1",
+          "stack": [],
+          "link": "https://open.spotify.com/show/3nMj6xYsjwIvofrWg2IvIA?si=d1497f5c01694c11"
+        }
+      ],
+      "location": "Salta, Argentina 🇦🇷",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/artugrande",
+      "fetchError": null
+    },
+    {
+      "username": "nicoproducto",
+      "name": "Nico",
+      "avatar": "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6c21c425-a0f8-4a35-a1de-ee3a441ae301/avatars/g2oz7csi7m-1782244380978-8UKrUsrp.webp",
+      "avatarFile": "avatars/nicoproducto.jpg",
+      "tagline": "Lo importante es QUE construir",
+      "role": "founder",
+      "stack": [
+        "React",
+        "Typescrypt"
+      ],
+      "projects": [
+        {
+          "title": "ProductPrepa",
+          "description": "Plataforma para ayudarte a convertirte en un Product Builder",
+          "status": "Idea",
+          "stack": [
+            "React",
+            "Typescrypt"
+          ],
+          "link": "https://productprepa.com/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": null,
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/nicoproducto",
+      "fetchError": null
+    },
+    {
+      "username": "nerdemma",
+      "name": "nerdemma",
+      "avatar": "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/44965418-f5f4-412c-a403-e2caceda0a1a/avatars/xfexulki2q9-1782122751397-Gemini_Generated_Image_ci5oukci5oukci5o.webp",
+      "avatarFile": "avatars/nerdemma.jpg",
+      "tagline": "Python & JavaScript Developer focused on AI and Web3 solutions.",
+      "role": "developer",
+      "stack": [
+        "C",
+        "cmake",
+        "linux",
+        "blockchain",
+        "crypto"
+      ],
+      "projects": [
+        {
+          "title": "Blockchain",
+          "description": "Complete integration of blockchain, approval transactions, proof of work and p2p implementation.",
+          "status": "En construcción",
+          "stack": [
+            "C",
+            "cmake",
+            "linux",
+            "blockchain",
+            "crypto"
+          ],
+          "link": "https://github.com/nerdemma/blockchain?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "Garin, Buenos Aires",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/nerdemma",
+      "fetchError": null
+    },
+    {
+      "username": "kazdov",
+      "name": "Juan Dovzak",
+      "avatar": "https://avatars.githubusercontent.com/u/83375859?v=4",
+      "avatarFile": "avatars/kazdov.jpg",
+      "tagline": "Crear o morir.",
+      "role": null,
+      "stack": [
+        "Python",
+        "AWS",
+        "Linux",
+        "Cloud Computing",
+        "DevOps",
+        "Cybersecurity",
+        "Backend Development",
+        "Docker"
+      ],
+      "projects": [],
+      "location": "Argentina 🇦🇷",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/kazdov",
+      "fetchError": null
+    },
+    {
+      "username": "akdmiastudio",
+      "name": "Akdmia Studio",
+      "avatar": "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/49acaa29-be0f-4883-bd2b-93453f3cf48e/avatars/qgbbbppltk-1771973858740.png",
+      "avatarFile": "avatars/akdmiastudio.jpg",
+      "tagline": "Hi! I'm Mateo Pedace a Full-Stack Partner from Argentina transforming business problems into high-performance digital assets.",
+      "role": null,
+      "stack": [
+        "React",
+        "Next.js",
+        "MongoDB",
+        "Tailwind CSS",
+        "Lucide React",
+        "Framer Motion"
+      ],
+      "projects": [
+        {
+          "title": "Cobra Bar // Full-Stack Web App",
+          "description": "The challenge for Cobra Bar was to transition from a cumbersome, outdated PDF menu to a high-performance digital ecosystem that could handle real-time updates and high-traffic shifts.",
+          "status": "Idea",
+          "stack": [
+            "React",
+            "Next.js",
+            "MongoDB",
+            "Tailwind CSS"
+          ],
+          "link": "https://cobramenu.com/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "Blusein // UI/UX Frontend Engineering",
+          "description": "Blusein required a digital stage that could translate the dark, hypnotic atmosphere of his music into a web experience. The challenge was to move beyond standard layouts and build a bespoke 'Sonic Architecture' that resonates with club promoters and international labels.",
+          "status": "Idea",
+          "stack": [
+            "Next.js",
+            "Tailwind CSS",
+            "Lucide React",
+            "Framer Motion"
+          ],
+          "link": "https://blusein.vercel.app/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "Zurdo // Web Development & Workflow Automation",
+          "description": "Zurdo needed to professionalize its frozen meal business by moving away from manual Instagram DMs. The goal was to create a structured digital store that simplifies the ordering process for customers while organizing production for the kitchen.",
+          "status": "Idea",
+          "stack": [
+            "Next.js",
+            "React",
+            "Tailwind CSS"
+          ],
+          "link": "https://zurdo-2-0.vercel.app/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "Buenos Aires 🇦🇷",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/akdmiastudio",
+      "fetchError": null
+    },
+    {
+      "username": "beno",
+      "name": "Benito Dal Lago",
+      "avatar": "https://avatars.githubusercontent.com/u/102180144?v=4",
+      "avatarFile": "avatars/beno.jpg",
+      "tagline": "Just do it",
+      "role": "developer, founder, indie_hacker",
+      "stack": [
+        "Next.js",
+        "Typescript",
+        "Firebase",
+        "Tailwind CSS",
+        "React",
+        "Vite",
+        "Javascript"
+      ],
+      "projects": [
+        {
+          "title": "Proder",
+          "description": "La versión enterprise del prode. Plataforma paga que se vende a empresas para que sus colaboradores compitan entre sí como actividad de team building.",
+          "status": "Lanzado el May 12",
+          "stack": [
+            "Next.js",
+            "Typescript",
+            "Firebase",
+            "Tailwind CSS"
+          ],
+          "link": null
+        },
+        {
+          "title": "La Colmena",
+          "description": "Una app que me armé para estudiar. La uso yo, todos los días. Dos paths en paralelo, bases de Product y fundamentos de programación, aplicados sobre HRKit para que lo que estudio caiga siempre sobre algo real.",
+          "status": "Lanzado el Jul 13",
+          "stack": [
+            "React",
+            "Vite",
+            "Javascript"
+          ],
+          "link": "https://www.imbeno.dev/projects/la-colmena?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": null,
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/beno",
+      "fetchError": null
+    },
+    {
+      "username": "nachomazzoni",
+      "name": "Nacho Mazzoni",
+      "avatar": "https://avatars.githubusercontent.com/u/123500539?v=4",
+      "avatarFile": "avatars/nachomazzoni.jpg",
+      "tagline": "nacho-mazzoni",
+      "role": "indie_hacker",
+      "stack": [
+        "Next.js",
+        "TypeScript",
+        "Tailwind CSS",
+        "shadcn/ui",
+        "Wagmi",
+        "Viem",
+        "JavaScript",
+        "n8n"
+      ],
+      "projects": [
+        {
+          "title": "Apuntacelo",
+          "description": "Apuntacelo, es un marketplace descentralizado para que estudiantes puedan pedir apuntes a otros estudiantes mediante bounties basados en la red Celo.",
+          "status": "En construcción",
+          "stack": [
+            "Next.js",
+            "TypeScript",
+            "Tailwind CSS",
+            "shadcn/ui",
+            "Wagmi",
+            "Viem"
+          ],
+          "link": "https://apuntacelo.xyz/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "Diagrams-MCP",
+          "description": "Diagrams-MCP es una herramienta que se conecta a tu agente de IA y le da las herramientas necesarias para realizar diagramas de clases y diagramas de entidad-relacion mediante prompts directos o la generacion de json por medio del agente",
+          "status": "Lanzado el Apr 28",
+          "stack": [
+            "JavaScript"
+          ],
+          "link": "https://github.com/nacho-mazzoni/diagrams-mcp?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "n8n Automate email inbox workflow",
+          "description": "Descripción breveBot n8n para automatizar la bandeja de entrada de mi email, separando correo institucional de los demas",
+          "status": "Lanzado el Mar 1",
+          "stack": [
+            "n8n",
+            "ollama",
+            "Julio 2026"
+          ],
+          "link": null
+        }
+      ],
+      "location": null,
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/nachomazzoni",
+      "fetchError": null
+    },
+    {
+      "username": "repetto-a",
+      "name": "Alejandro Repetto",
+      "avatar": "https://avatars.githubusercontent.com/u/111931399?v=4",
+      "avatarFile": "avatars/repetto-a.jpg",
+      "tagline": "Systems engineering student. Competitive programming, hackathons & CTFs. SWE at RoxiumLabs.",
+      "role": null,
+      "stack": [
+        "Next.js",
+        "React",
+        "TypeScript",
+        "Tailwind CSS",
+        "Supabase",
+        "PostgreSQL"
+      ],
+      "projects": [
+        {
+          "title": "Detección Sísmica en la Luna y Marte",
+          "description": "Sistema de detección sísmica entrenado con datos reales de las misiones Apollo e InSight de la NASA. Utiliza redes neuronales LSTM para filtrar ruido y enviar únicamente señales sísmicas relevantes, optimizando el uso energético y el valor científico de cada byte transmitido desde el espacio profundo.",
+          "status": "Idea",
+          "stack": [],
+          "link": "https://github.com/Repetto-A/AI-Seismic-Detection?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "Zorrito Finance",
+          "description": "Plataforma DeFi que permite ahorrar y generar rendimiento sin riesgo de pérdida del capital principal. Los fondos se asignan automáticamente a protocolos generadores de yield mediante smart contracts, manteniendo liquidez total.",
+          "status": "Idea",
+          "stack": [],
+          "link": "https://zorrito.vercel.app/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "FarmHero",
+          "description": "Simulador educativo que utiliza datos satelitales reales de NASA y CONAE para enseñar gestión de recursos y agricultura sostenible. El jugador debe restaurar tierras degradadas administrando capital limitado y tomando decisiones estratégicas (irrigación, fertilización, plaguicidas), cuyos efectos se simulan a corto y largo plazo.",
+          "status": "Idea",
+          "stack": [],
+          "link": "https://nasa-farm-hero.vercel.app/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "NEXA",
+          "description": "NEXA nació porque las comunidades tech en Argentina crecen aisladas. Cada una organiza eventos, suma miembros y construye su propio espacio, pero rara vez se cruzan. Eso limita el alcance de todas. Construí NEXA para que dejen de crecer solas. Para que una comunidad no termine donde termina su propio alcance. Para que los organizadores tengan herramientas que realmente usen. Y para que cualquier persona del ecosistema tenga un solo lugar donde descubrir qué está pasando, dónde y con quién. Lo publiqué en un tweet. En horas se viralizó. El ecosistema estaba esperando esto. Hoy conectamos 28 comunidades en Argentina y Costa Rica, con más de 300 mil miembros activos. La mira está puesta en toda LATAM.",
+          "status": "Idea",
+          "stack": [
+            "Next.js",
+            "React",
+            "TypeScript",
+            "Tailwind CSS",
+            "Supabase",
+            "PostgreSQL"
+          ],
+          "link": "https://neca.builders/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "Argentina 🇦🇷",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/repetto-a",
+      "fetchError": null
+    },
+    {
+      "username": "bartolome",
+      "name": "Nickname",
+      "avatar": "https://avatars.githubusercontent.com/u/57513207?v=4",
+      "avatarFile": "avatars/bartolome.jpg",
+      "tagline": "bsudio",
+      "role": "founder, developer, designer",
+      "stack": [
+        "React Native",
+        "Typescript",
+        "Supabase",
+        "C++",
+        "Rust",
+        "Supabase. IA",
+        "Reac",
+        "Tailwind"
+      ],
+      "projects": [
+        {
+          "title": "Betless: Quit Gambling",
+          "description": "Aplicación para reducir y controlar las apuestas en general, con un exit de parte del founder.",
+          "status": "Idea",
+          "stack": [
+            "React Native",
+            "Typescript",
+            "Supabase"
+          ],
+          "link": "https://apps.apple.com/us/app/betless-quit-gambling/id6742162665?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "Construcciones Privadas SAS",
+          "description": "Software Vivo para empresa de construcción con operación que evoluciona día con día. Usado por mas de 20 personas diariamente y",
+          "status": "Idea",
+          "stack": [
+            "Typescript",
+            "C++",
+            "Rust",
+            "Supabase. IA"
+          ],
+          "link": "https://construcciones-privadas-sas-web.vercel.app/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "Punta Meetup 2026",
+          "description": "Aplicación para gestión, visualización e inscripción de eventos para el evento Uruguayo de 2026.",
+          "status": "Idea",
+          "stack": [
+            "Reac",
+            "Typescript",
+            "Tailwind",
+            "Supabase."
+          ],
+          "link": "https://punta-tech-meetup-web.vercel.app/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": null,
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/bartolome",
+      "fetchError": null
+    },
+    {
+      "username": "rober",
+      "name": "Robertino",
+      "avatar": "https://avatars.githubusercontent.com/u/100228886?v=4",
+      "avatarFile": "avatars/rober.jpg",
+      "tagline": "Full-stack builder",
+      "role": "developer, indie_hacker, founder",
+      "stack": [
+        "Typescript",
+        "Tailwind",
+        "Next.js",
+        "Solidity",
+        "Python"
+      ],
+      "projects": [
+        {
+          "title": "Mi portfolio",
+          "description": "Mi potfolio, donde tengo mis mas recientes proyectos, quien soy y como laburo.",
+          "status": "Idea",
+          "stack": [
+            "Typescript",
+            "Tailwind",
+            "Next.js"
+          ],
+          "link": "https://portfolio-rober.vercel.app/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "KNTX",
+          "description": "Convertí cualquier dispositivo en una PC gamer de alta gama alquilando el poder de las PCs que están sin usar y pagá solo por lo que jugás, liquidado en tiempo real sobre Monad.",
+          "status": "Idea",
+          "stack": [
+            "Solidity",
+            "Typescript",
+            "Python"
+          ],
+          "link": "https://monad-hackaton.vercel.app/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "Buenos Aires",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/rober",
+      "fetchError": null
+    },
+    {
+      "username": "aguscruiz",
+      "name": "Agustín Ruiz",
+      "avatar": "https://ugc.production.linktr.ee/2fb59f6f-8ceb-4735-939b-8ef8b9fb524b_avatarrosa.jpeg?io=true&size=avatar-v3_0",
+      "avatarFile": "avatars/aguscruiz.jpg",
+      "tagline": "🇦🇷 Design engineer & DesignOps @brave. Opinions are my own.",
+      "role": "designer, developer",
+      "stack": [],
+      "projects": [
+        {
+          "title": "Portfolio",
+          "description": "Mi sitio personal / Portfolio",
+          "status": "Idea",
+          "stack": [],
+          "link": "https://aguscruiz.com/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "Design engineer & DesignOps at Brave",
+          "description": "Proyecto destacado importado desde brave.com.",
+          "status": "Idea",
+          "stack": [],
+          "link": "http://brave.com/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": null,
+      "country": null,
+      "countryName": null,
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/aguscruiz",
+      "fetchError": null
+    },
+    {
+      "username": "mateolitrenta",
+      "name": "Mateo Litrenta",
+      "avatar": "https://avatars.githubusercontent.com/u/142949230?v=4",
+      "avatarFile": "avatars/mateolitrenta.jpg",
+      "tagline": "Q.E.P.D indio",
+      "role": "developer, founder",
+      "stack": [
+        "TypeScript",
+        "PLpgSQL",
+        "CSS"
+      ],
+      "projects": [
+        {
+          "title": "Zeilo",
+          "description": "Zéilo — una plataforma de mercados de predicciones para Argentina y LATAM. Los usuarios compran y venden posiciones sobre eventos reales: elecciones, deportes, economía, cripto. El MVP ya está live en zeilo.app con mercados activos, sistema de referidos, feed de actividad en tiempo real y resolución automática de mercados. Construido solo en 3 meses.",
+          "status": "Idea",
+          "stack": [
+            "TypeScript",
+            "PLpgSQL",
+            "CSS"
+          ],
+          "link": "https://zeilo.app/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "MSL",
+          "description": "Web personal para hacer proyectos",
+          "status": "Idea",
+          "stack": [],
+          "link": "https://mslfactory.com/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": null,
+      "country": null,
+      "countryName": null,
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/mateolitrenta",
+      "fetchError": null
+    },
+    {
+      "username": "facutom",
+      "name": "Facu Tom",
+      "avatar": "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/c5519bd9-e6f0-4a0e-b2c8-a3ad99741a12/avatars/qsh7ap8q4mr-1779053690320.webp",
+      "avatarFile": "avatars/facutom.jpg",
+      "tagline": "Tradingchango.com",
+      "role": null,
+      "stack": [
+        "React",
+        "Python",
+        "PostgreSQL",
+        "Supabase",
+        "Vercel",
+        "GitHub",
+        "TypeScript",
+        "SQL"
+      ],
+      "projects": [
+        {
+          "title": "Tradingchango",
+          "description": "TradingChango: Comparador inteligente de precios de supermercados argentinos. Armá tu lista, compará en tiempo real y descubrí dónde ahorrar hoy.",
+          "status": "Idea",
+          "stack": [
+            "React",
+            "Python",
+            "PostgreSQL",
+            "Supabase",
+            "Vercel",
+            "GitHub"
+          ],
+          "link": "https://www.tradingchango.com/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "EscalaFast",
+          "description": "Datasets comerciales optimizados para prospección y análisis de mercado. Información estratégica de negocios lista para descargar en CSV y Excel.",
+          "status": "Idea",
+          "stack": [
+            "React",
+            "TypeScript",
+            "Python",
+            "SQL"
+          ],
+          "link": "https://www.escalafast.com/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "Argentina 🇦🇷",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/facutom",
+      "fetchError": null
+    },
+    {
+      "username": "luigicanoro",
+      "name": "Luigi Raffaele Siano Canoro",
+      "avatar": "https://avatars.githubusercontent.com/u/38018740?v=4",
+      "avatarFile": "avatars/luigicanoro.jpg",
+      "tagline": "Founder",
+      "role": "founder",
+      "stack": [
+        "React",
+        "Next.js",
+        "Vercel",
+        "Supabase"
+      ],
+      "projects": [
+        {
+          "title": "MarDelPlata.dev.ar",
+          "description": "Comunidad marplatense de tecnología El Club tech de la Costa Atlántica Crece profesionalmente conectando con quien ya está trabajando en los desafíos que vos tenés",
+          "status": "Idea",
+          "stack": [
+            "React",
+            "Next.js",
+            "Vercel",
+            "Supabase"
+          ],
+          "link": "https://mardelplata.dev.ar/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "Mar del Plata 🇦🇷",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/luigicanoro",
+      "fetchError": null
+    },
+    {
+      "username": "maida",
+      "name": "Federico Maidana",
+      "avatar": "https://avatars.githubusercontent.com/u/69656102?v=4",
+      "avatarFile": "avatars/maida.jpg",
+      "tagline": "Rust Developer",
+      "role": "developer",
+      "stack": [
+        "Rust"
+      ],
+      "projects": [
+        {
+          "title": "Hyprlauncher",
+          "description": "A minimal app launcher for Hyprland/Wayland, built in Rust. Renders a fullscreen overlay using wlr-layer-shell + tiny-skia, reads .desktop entries, and themes itself from a hyprcolors palette.",
+          "status": "Idea",
+          "stack": [
+            "Rust"
+          ],
+          "link": "https://github.com/fedeMaidana/hyprlauncher?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": null,
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/maida",
+      "fetchError": null
+    },
+    {
+      "username": "emipanelli",
+      "name": "Emiliano Panelli",
+      "avatar": "https://avatars.githubusercontent.com/u/204524475?v=4",
+      "avatarFile": "avatars/emipanelli.jpg",
+      "tagline": "IA · Caos organizado - #buildinpublic",
+      "role": "founder",
+      "stack": [],
+      "projects": [
+        {
+          "title": "Cardia",
+          "description": "Dale una tarjeta a tu agente para que haga compras :)",
+          "status": "En construcción",
+          "stack": [],
+          "link": "https://cardia.digital/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "Mendoza",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/emipanelli",
+      "fetchError": null
+    },
+    {
+      "username": "francescoramirez",
+      "name": "francesco ramirez cabanillas",
+      "avatar": "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/81d1cacd-e5be-4448-8cfc-7226d6c4c455/avatars/308e48xwzph-1788701888168-218494A5-DCF1-4E32-AF6E-D00C1E35BC3D.webp",
+      "avatarFile": "avatars/francescoramirez.jpg",
+      "tagline": "codeo, luego existo",
+      "role": "developer, founder",
+      "stack": [
+        "HTML",
+        "CSS",
+        "JavaScript",
+        "React",
+        "Vite",
+        "Tailwind CSS"
+      ],
+      "projects": [
+        {
+          "title": "sCode Digital Solutions",
+          "description": "Scode es un estudio de desarrollo digital donde creamos sitios web, aplicaciones y soluciones a medida para convertir ideas en productos reales. Combinamos desarrollo, diseño y tecnología para construir experiencias digitales modernas, rápidas y funcionales.",
+          "status": "Lanzado el May 6",
+          "stack": [
+            "HTML",
+            "CSS",
+            "JavaScript",
+            "React",
+            "Vite",
+            "Tailwind CSS"
+          ],
+          "link": "https://scodedigital.com/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "Mar del Plata, Buenos Aires",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/francescoramirez",
+      "fetchError": null
+    },
+    {
+      "username": "santiagocetran",
+      "name": "santiagocetran",
+      "avatar": "https://avatars.githubusercontent.com/u/108505846?v=4",
+      "avatarFile": "avatars/santiagocetran.jpg",
+      "tagline": "Software Developer",
+      "role": "developer",
+      "stack": [
+        "Javascript"
+      ],
+      "projects": [
+        {
+          "title": "BitmapForge",
+          "description": "Open source web app to generate bitmap animations from 3D models",
+          "status": "Idea",
+          "stack": [
+            "Javascript"
+          ],
+          "link": "https://bitmap-forge.vercel.app/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": null,
+      "country": null,
+      "countryName": null,
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/santiagocetran",
+      "fetchError": null
+    },
+    {
+      "username": "tomyferra",
+      "name": "Tomas Ferrari",
+      "avatar": "https://avatars.githubusercontent.com/u/11900440?v=4",
+      "avatarFile": "avatars/tomyferra.jpg",
+      "tagline": "FullStack Developer",
+      "role": null,
+      "stack": [
+        "React",
+        "Node.Js",
+        "Supabase",
+        "Javascript",
+        "IA",
+        "Typescript"
+      ],
+      "projects": [
+        {
+          "title": "EntreVinos - Registra y Descubre El mundo del vino",
+          "description": "Conecta con una comunidad de amantes del vino. Registra tus catas, descubre bodegas y vinos únicos, y lleva tu conocimiento al siguiente nivel con recomendaciones personalizadas por IA.",
+          "status": "Idea",
+          "stack": [
+            "React",
+            "Node.Js",
+            "Supabase",
+            "Javascript",
+            "IA",
+            "Typescript"
+          ],
+          "link": "https://www.entrevinos.app/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "Argentina 🇦🇷",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/tomyferra",
+      "fetchError": null
+    },
+    {
+      "username": "domy",
+      "name": "domy",
+      "avatar": "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/f4d77995-3457-41ae-9334-1e2a8f8c4031/avatars/hip8ep905j4-1780878655545.webp",
+      "avatarFile": "avatars/domy.jpg",
+      "tagline": "Doer. I build with AI, ship fast, and chase freedom.",
+      "role": null,
+      "stack": [
+        "e-commerce",
+        "Agency",
+        "Development",
+        "AI"
+      ],
+      "projects": [
+        {
+          "title": "PayDomy.com",
+          "description": "One storefront for everything. paydomy consolidates all gaming digital products in a single checkout — built off the back of $250k+ in first-year revenue and 5k+ customers across 40+ countries.",
+          "status": "Idea",
+          "stack": [
+            "e-commerce"
+          ],
+          "link": "https://paydomy.com/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "Audens Solutions",
+          "description": "Co-founded a web development agency that ships fast using AI-assisted development. 20+ products built for clients across Argentina — from e-commerce and SaaS tools to full platforms. We build in days what used to take months.",
+          "status": "Idea",
+          "stack": [
+            "Agency",
+            "Development",
+            "AI"
+          ],
+          "link": "https://audens.ar/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "Rosario, Argentina",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/domy",
+      "fetchError": null
+    },
+    {
+      "username": "barreirot",
+      "name": "Tomás Barreiro",
+      "avatar": "https://avatars.githubusercontent.com/u/52393857?v=4",
+      "avatarFile": "avatars/barreirot.jpg",
+      "tagline": "barreirot",
+      "role": "developer",
+      "stack": [
+        "NextJs",
+        "Node (express)",
+        "TypeScript"
+      ],
+      "projects": [
+        {
+          "title": "Saptias",
+          "description": "Plataforma para preparar alumnos para la OMA (Olimpiada Matemática Argentina)",
+          "status": "Idea",
+          "stack": [
+            "NextJs",
+            "Node (express)",
+            "TypeScript"
+          ],
+          "link": "https://www.saptias.com/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": null,
+      "country": null,
+      "countryName": null,
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/barreirot",
+      "fetchError": null
+    },
+    {
+      "username": "pabliqe",
+      "name": "Pablo Armen",
+      "avatar": "https://avatars.githubusercontent.com/u/1827527?v=4",
+      "avatarFile": "avatars/pabliqe.jpg",
+      "tagline": "Making web since 2003",
+      "role": null,
+      "stack": [],
+      "projects": [],
+      "location": "Argentina 🇦🇷",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/pabliqe",
+      "fetchError": null
+    },
+    {
+      "username": "masanche",
+      "name": "Matias Sanchez",
+      "avatar": "https://avatars.githubusercontent.com/u/57120079?v=4",
+      "avatarFile": "avatars/masanche.jpg",
+      "tagline": "Frontend Dev",
+      "role": "developer, designer",
+      "stack": [],
+      "projects": [],
+      "location": null,
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/masanche",
+      "fetchError": null
+    },
+    {
+      "username": "konixdev",
+      "name": "Martin Coll",
+      "avatar": "https://avatars.githubusercontent.com/u/145708582?v=4",
+      "avatarFile": "avatars/konixdev.jpg",
+      "tagline": "Recién llegado a huevsite.io 👋",
+      "role": null,
+      "stack": [],
+      "projects": [
+        {
+          "title": "Commercy — Tienda online y punto de venta sin comisiones",
+          "description": "Tienda online propia, caja POS, ventas por WhatsApp y facturación AFIP automática. 0% comisión por venta. Probá gratis 14 días.",
+          "status": "Lanzado",
+          "stack": [],
+          "link": "https://commercy.com.ar/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "Argentina 🇦🇷",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/konixdev",
+      "fetchError": null
+    },
+    {
+      "username": "brianalexisacuna",
+      "name": "Brian Acuña",
+      "avatar": "https://avatars.githubusercontent.com/u/70819815?v=4",
+      "avatarFile": "avatars/brianalexisacuna.jpg",
+      "tagline": "Frontend developer for over 5 years. Self-taught. Lover of pixel-perfect design and web interactivity.",
+      "role": null,
+      "stack": [
+        "HTML",
+        "CSS",
+        "TailwindCSS",
+        "ChakraUI",
+        "Bootstrap5",
+        "Shadcn",
+        "Astro",
+        "JavaScript"
+      ],
+      "projects": [
+        {
+          "title": "CRUD",
+          "description": "I built a robust CRUD application using React, focused on efficient data flow management and persistence. The project demonstrates advanced skills in handling hooks and manipulating complex states.",
+          "status": "Idea",
+          "stack": [
+            "React",
+            "Typescript",
+            "TailwindCSS"
+          ],
+          "link": "https://crud-todo-reactt.netlify.app/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "HeroesAPP SPA",
+          "description": "I develop a high-performance Single Page Application (SPA) for exploring and managing characters from the Marvel/DC comic book universe. The project implements a modern architecture based on React and TypeScript, focused on efficient data filtering and state persistence across the URL.",
+          "status": "Idea",
+          "stack": [
+            "React",
+            "TypeScript",
+            "React Router",
+            "Tailwind CSS",
+            "Shadcn/UI."
+          ],
+          "link": "https://heroesappspa.netlify.app/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "Argentina 🇦🇷",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/brianalexisacuna",
+      "fetchError": null
+    },
+    {
+      "username": "fran-tomaino",
+      "name": "Franco Natanael Tomaino",
+      "avatar": "https://avatars.githubusercontent.com/u/91550023?v=4",
+      "avatarFile": "avatars/fran-tomaino.jpg",
+      "tagline": "dev builder",
+      "role": null,
+      "stack": [],
+      "projects": [],
+      "location": "Argentina 🇦🇷",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/fran-tomaino",
+      "fetchError": null
+    },
+    {
+      "username": "ivantsx",
+      "name": "Ivan Bongiovanni",
+      "avatar": "https://avatars.githubusercontent.com/u/104214911?s=400&u=1227a78232a6ab90c32116d22d19d8cd64150fb3&v=4",
+      "avatarFile": "avatars/ivantsx.jpg",
+      "tagline": "Full Stack developer",
+      "role": "developer, founder, indie_hacker",
+      "stack": [
+        "Next.js",
+        "Ultracite",
+        "AI SDK",
+        "TypeScript",
+        "React",
+        "Node.js",
+        "PostgreSQL",
+        "Prisma"
+      ],
+      "projects": [],
+      "location": "Tucuman, AR",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/ivantsx",
+      "fetchError": null
+    },
+    {
+      "username": "gonzaloramirez",
+      "name": "Gonzalo Ramirez",
+      "avatar": "https://avatars.githubusercontent.com/u/131042201?v=4",
+      "avatarFile": "avatars/gonzaloramirez.jpg",
+      "tagline": "Próximo a ser licenciado en sistemas. Busco soluciones simples a problemas complejos. FullStack. Correntino 🐊",
+      "role": null,
+      "stack": [
+        "Astro",
+        "React",
+        "NextJS",
+        "NestJS",
+        "Prisma",
+        "Dokploy",
+        "Cloudflare",
+        "Resend"
+      ],
+      "projects": [
+        {
+          "title": "Farmacia De Turno MC",
+          "description": "Un pueblo, información no centralizada. ¿Qué se me ocurrió? Web simple, realizada con Astro para rendimiento y SEO. Donde centralizo toda la información de las farmacias de turno para que al ciudadano le sea fácil obtener la información adecuada en el momento que sea.",
+          "status": "Idea",
+          "stack": [
+            "Astro",
+            "React"
+          ],
+          "link": "https://farmaciadeturnomc.site/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "LubEnergy",
+          "description": "Ecommerce de venta de suplmenetos deportivos. Creado con el objetivo de ofrecer una experiencia de usuario simple. Entras, miras tus productos, agregas al carrito, confirmas la compra. Notificaciones de confirmacion de compra y confirmacion de codigo de seguimiento mediante RESEND",
+          "status": "Idea",
+          "stack": [
+            "NextJS",
+            "NestJS",
+            "Prisma",
+            "Dokploy",
+            "Cloudflare",
+            "Resend"
+          ],
+          "link": "https://lubenergy.com.ar/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "Argentina 🇦🇷",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/gonzaloramirez",
+      "fetchError": null
+    },
+    {
+      "username": "javo",
+      "name": "Javier Rodriguez",
+      "avatar": "https://avatars.githubusercontent.com/u/68615684?v=4",
+      "avatarFile": "avatars/javo.jpg",
+      "tagline": "Frontend Engineer & Mates QA",
+      "role": null,
+      "stack": [],
+      "projects": [],
+      "location": "Argentina",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/javo",
+      "fetchError": null
+    },
+    {
+      "username": "francogalfre",
+      "name": "francogalfre",
+      "avatar": "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/313a6a7e-6720-4373-b766-ee119d09b7a7/avatars/95q0g4orc3v-1773632077900.webp",
+      "avatarFile": "avatars/francogalfre.jpg",
+      "tagline": "Full stack dev & AI engineering student",
+      "role": null,
+      "stack": [
+        "TypeScript",
+        "React",
+        "Next.js",
+        "Astro",
+        "PostgreSQL",
+        "Supabase",
+        "AWS",
+        "Express"
+      ],
+      "projects": [],
+      "location": "Santa Fe, Argentina",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/francogalfre",
+      "fetchError": null
+    },
+    {
+      "username": "chaky",
+      "name": "Chaky",
+      "avatar": "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/bdc773b4-a542-4a32-9fd7-8904c7c2187e/avatars/3zf6rb6igfg-1777743456458.webp",
+      "avatarFile": "avatars/chaky.jpg",
+      "tagline": "El buildeador",
+      "role": "founder",
+      "stack": [
+        "CLAUDE"
+      ],
+      "projects": [
+        {
+          "title": "Runia",
+          "description": "Runia es la plataforma para que cualquier empresa pueda tener su propio agente IA atendiendo clientes por whatsapp. Editor visual sin código, integraciones nativas con CRM, calendar y herramientas del negocio, y un inbox unificado donde los humanos toman el control cuando hace falta. Pensada para PyMEs que quieren empezar a usar IA en serio, y para partners que implementan IA en sus clientes sin reinventar la rueda.",
+          "status": "Idea",
+          "stack": [],
+          "link": "https://runia.ar/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "Rosario",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/chaky",
+      "fetchError": null
+    },
+    {
+      "username": "santi",
+      "name": "santichapes",
+      "avatar": "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/a90d372f-ff0a-40be-ab3d-11e12cb9c63f/avatars/w7a9q0kzmr-1780929778553.webp",
+      "avatarFile": "avatars/santi.jpg",
+      "tagline": "founder & builder",
+      "role": "founder, developer, designer",
+      "stack": [
+        "React",
+        "Typescript",
+        "Tailwind"
+      ],
+      "projects": [
+        {
+          "title": "Aliantic",
+          "description": "La primer plataforma de descubrimiento B2B para empresas en Argentina.",
+          "status": "Idea",
+          "stack": [
+            "React",
+            "Typescript",
+            "Tailwind"
+          ],
+          "link": "https://aliantic.ar/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "CABA, Argentina",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/santi",
+      "fetchError": null
+    },
+    {
+      "username": "pato-iturraspe",
+      "name": "pato-iturraspe",
+      "avatar": "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/c51ad127-d33d-451a-89aa-51b3f52cb5b1/avatars/67mgxam44dd-1785163816155-2H6A0075.webp",
+      "avatarFile": "avatars/pato-iturraspe.jpg",
+      "tagline": "Mate & Build",
+      "role": null,
+      "stack": [],
+      "projects": [
+        {
+          "title": "Mate & Build | Manu x Pedidos Ya",
+          "description": "El problema era concreto: crear un email de marketing para Braze le llevaba días por el dinamismo del día a día. Desde que nace la idea hasta que el HTML queda listo para cargar en Braze: idas y vueltas entre equipos, varios actores tocando el mismo archivo, varias versiones en circulación, coordinación y validación que se acumulaban.",
+          "status": "Lanzado el Apr 20",
+          "stack": [],
+          "link": "https://www.mateandbuild.com.ar/builds/pedidosya-emails-10-minutos?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "Mate & Build | Franco x Rufus",
+          "description": "Franco vino a con un número claro: 45 minutos por tanda de ads. Una rutina de alta demanda que le consumía tiempo al equipo en Rufus cada vez que arrancaba una campaña nueva. Vino a resolver eso. Armamos 4 skills separados + un orquestador en Claude Code. Uno investiga el contexto de marca, otro genera ideas y key messages, otro define la estrategia creativa, y el último baja todo a ejecución. El orquestador los corre en secuencia — cada skill recibe solo lo que necesita del anterior.",
+          "status": "Lanzado el Mar 30",
+          "stack": [],
+          "link": "https://www.mateandbuild.com.ar/builds/de-45-minutos-a-5-el-cuello-de-botella-que-nadie-veia-en-una-agencia-de-performance?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "Argentina 🇦🇷",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/pato-iturraspe",
+      "fetchError": null
+    },
+    {
+      "username": "icesarani",
+      "name": "Ignacio Cesarani",
+      "avatar": "https://ugc.production.linktr.ee/251876f9-f7f1-4ac6-a14a-bd424e32db3d_58425728-ad5a-485c-9d96-4ea086a79d72.jpeg?io=true&size=avatar-v3_0",
+      "avatarFile": "avatars/icesarani.jpg",
+      "tagline": "Co-Founder KeyKeeperz, Ingeniero Informático y Product Builder",
+      "role": "founder, developer",
+      "stack": [
+        "Running",
+        "Tenis",
+        "Pádel",
+        "Networking",
+        "etc."
+      ],
+      "projects": [
+        {
+          "title": "KeyKeeperz",
+          "description": "No gastes más tiempo en hacer checkin/checkout de tus inmuebles en alquiler temporal. En KeyKeeperz entregamos las llaves por vos sin que te muevas de tu casa!",
+          "status": "Idea",
+          "stack": [],
+          "link": "https://www.keykeeperz.com/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "Founders Fit Club",
+          "description": "​Founders Fit Club nace de las ganas de hacer networking con gente del ambiente y la necesidad de moverse un rato. Nuestro objetivo es traer eventos que combinen estas dos verticales y deje de ser algo separado. ​En esta primera edición la idea es simple, mover las patas un rato por el Rosedal (trotando o caminando, al ritmo de cada uno) y después bajar a un café cerca a seguir la charla y hacer networking. Sin pitch decks, sin agenda, sin tarjetas. Solo gente del mundo emprendedor/tech moviéndose y conociéndose en serio.",
+          "status": "Idea",
+          "stack": [
+            "Running",
+            "Tenis",
+            "Pádel",
+            "Networking",
+            "etc."
+          ],
+          "link": "https://luma.com/n72vxc3u?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "CABA",
+      "country": null,
+      "countryName": null,
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/icesarani",
+      "fetchError": null
+    },
+    {
+      "username": "jamesverlander",
+      "name": "James Verlander",
+      "avatar": "https://avatars.githubusercontent.com/u/324759680?v=4",
+      "avatarFile": "avatars/jamesverlander.jpg",
+      "tagline": "Fixed-price dev work, scoped and shipped",
+      "role": "developer",
+      "stack": [
+        "Next.js",
+        "Python",
+        "AI",
+        "Guides",
+        "Audits",
+        "FIRE",
+        "Investing",
+        "BIFL"
+      ],
+      "projects": [
+        {
+          "title": "Poket Dev",
+          "description": "Fixed-price dev work, scoped and shipped. Poket Dev LLC.",
+          "status": "Lanzado",
+          "stack": [
+            "Next.js",
+            "Python",
+            "AI"
+          ],
+          "link": "https://poketdev.com/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "PastAGI",
+          "description": "AI guides with the serving math shown. Poket Dev LLC.",
+          "status": "Lanzado",
+          "stack": [
+            "AI",
+            "Guides",
+            "Audits"
+          ],
+          "link": "https://pastagi.com/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "Firenomics",
+          "description": "Practical FIRE guides: savings rate, index funds, 4% rule. Poket Dev LLC.",
+          "status": "Lanzado",
+          "stack": [
+            "FIRE",
+            "Investing",
+            "Guides"
+          ],
+          "link": "https://firenomics.com/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "Durablepicks",
+          "description": "BIFL picks ranked by how they fail. Poket Dev LLC.",
+          "status": "Lanzado",
+          "stack": [
+            "BIFL",
+            "Reviews",
+            "Durability"
+          ],
+          "link": "https://durablepicks.com/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": null,
+      "country": null,
+      "countryName": null,
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/jamesverlander",
+      "fetchError": null
+    },
+    {
+      "username": "noname",
+      "name": "noname",
+      "avatar": "https://cdn.phototourl.com/free/2026-06-18-88f72155-320a-45f2-a71a-e93002424242.png",
+      "avatarFile": null,
+      "tagline": "fransys",
+      "role": "designer, indie_hacker, founder",
+      "stack": [
+        "no entra todo",
+        "nvidia",
+        "apple",
+        "amd",
+        "qualcom",
+        "lo que sea! nuevas cuentas"
+      ],
+      "projects": [
+        {
+          "title": "Tokenized Rpg Themed Hub",
+          "description": "Magic Services For Cheap",
+          "status": "Idea",
+          "stack": [
+            "no entra todo"
+          ],
+          "link": null
+        },
+        {
+          "title": "Fine Tunning Academy",
+          "description": "imaginate reservar una super pc por 1 dolar el turno de 2 horas? imaginate pertenecer a una hermandad de fine tunning donde resolvemos problemas y alimentamos modelos locales entre la comunidad. todo tipo de incentivos de modelos que resuelven problemas, tooling.",
+          "status": "Idea",
+          "stack": [
+            "nvidia",
+            "apple",
+            "amd",
+            "qualcom",
+            "lo que sea! nuevas cuentas"
+          ],
+          "link": "https://github.com/sunderdeva"
+        }
+      ],
+      "location": "BA / West Side ;V",
+      "country": null,
+      "countryName": null,
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/noname",
+      "fetchError": null
+    },
+    {
+      "username": "nleunda",
+      "name": "nleunda",
+      "avatar": "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/29201ad8-36dd-46be-8bd0-49c9b5502526/avatars/swjlsu1wmnj-1781889635806-WhatsApp_Image_2026-06-19_at_2.19.31_PM.webp",
+      "avatarFile": "avatars/nleunda.jpg",
+      "tagline": "1er intento de founder",
+      "role": null,
+      "stack": [
+        "React native",
+        "Nestjs",
+        "PostgreSql"
+      ],
+      "projects": [
+        {
+          "title": "AutoLibre AI",
+          "description": "Una aplicación que centraliza la gestión administrativa, el diagnóstico via sintomas y escaneo de la computadora del auto y el mantenimiento inteligente de tu auto usando IA.",
+          "status": "En construcción",
+          "stack": [
+            "React native",
+            "Nestjs",
+            "PostgreSql"
+          ],
+          "link": "https://www.autolibre.ai/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "Argentina 🇦🇷",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/nleunda",
+      "fetchError": null
+    },
+    {
+      "username": "manu",
+      "name": "Manu",
+      "avatar": "https://avatars.githubusercontent.com/u/28766769?v=4",
+      "avatarFile": "avatars/manu.jpg",
+      "tagline": "Manuel Ponsa",
+      "role": "founder",
+      "stack": [
+        "go",
+        "react",
+        "muchas"
+      ],
+      "projects": [
+        {
+          "title": "picsel",
+          "description": "picsel es la forma más sencilla de vender fotos y videos online para fotógrafos latinoamericanos.",
+          "status": "Idea",
+          "stack": [
+            "go",
+            "react"
+          ],
+          "link": "https://picsel.app/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "blueprintdata",
+          "description": "Ayudamos a empresas a construir su plataforma de datos desde 0",
+          "status": "Idea",
+          "stack": [
+            "muchas"
+          ],
+          "link": "https://blueprintdata.xyz/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "Yo",
+          "description": "Mi página personal, donde escribo y comparto mis pensamientos sobre emprender y la vida en general.",
+          "status": "Idea",
+          "stack": [],
+          "link": "https://ponsa.xyz/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": null,
+      "country": null,
+      "countryName": null,
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/manu",
+      "fetchError": null
+    },
+    {
+      "username": "juancrluna",
+      "name": "@juancrluna",
+      "avatar": "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/ecb0fbf4-35a3-49de-8449-e7a4bb6e1292/avatars/tuu768q93y-1781275664517.webp",
+      "avatarFile": "avatars/juancrluna.jpg",
+      "tagline": "Product Designer",
+      "role": "designer",
+      "stack": [
+        "Astro 5+ con React islands",
+        "GSAP + ScrollTrigger",
+        "OGL",
+        "CSS Modules"
+      ],
+      "projects": [
+        {
+          "title": "Portfolio & Web",
+          "description": "Rediseñé y construí mi portfolio personal para mostrar no solo mis proyectos, sino también cómo pienso, qué estoy construyendo y cómo estoy integrando AI, no-code y builder mindset a mi trabajo como Product Designer. El sitio funciona como una primera versión de mi sistema personal: casos de estudio, archivo, proyectos activos, aprendizajes y una narrativa profesional más humana.",
+          "status": "Idea",
+          "stack": [
+            "Astro 5+ con React islands",
+            "GSAP + ScrollTrigger",
+            "OGL",
+            "CSS Modules"
+          ],
+          "link": "https://www.juancruzluna.xyz/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "CABA, AR",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/juancrluna",
+      "fetchError": null
+    },
+    {
+      "username": "oviedo97fer",
+      "name": "Fernando Oviedo",
+      "avatar": "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/894dab06-3e17-45c6-bbdf-cce5caa1d328/avatars/2sgbu8cbe5v-1775579488499.webp",
+      "avatarFile": "avatars/oviedo97fer.jpg",
+      "tagline": "Nunca parar de construir",
+      "role": null,
+      "stack": [
+        "TS",
+        "React",
+        "ThreeJS",
+        "Svelte",
+        "AI SDK",
+        "Next",
+        "PayloadCMS",
+        "SocketIO"
+      ],
+      "projects": [
+        {
+          "title": "Casos Criminales ECI - BoardCork",
+          "description": "Resuelve casos criminales como un verdadero detective. El juego de escape room online perfecto para regalar o jugar en cenas con amigos. ¡Empieza la investigación hoy",
+          "status": "Idea",
+          "stack": [
+            "Next",
+            "TypeScript",
+            "Tailwind",
+            "Postgresql",
+            "Payload CMS",
+            "Docker"
+          ],
+          "link": "https://cases.boardcork.com/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "EmprendeKit",
+          "description": "Kit de herramientas para emprender, basados en grandes estudios y modelos de universidades prestigiosas: - Lean Startup - Business Model Canvas - Effectuation - etc",
+          "status": "Idea",
+          "stack": [
+            "Next",
+            "TypeScript",
+            "Tailwind"
+          ],
+          "link": "https://canvas-model.boardcork.com/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "English Teacher AI - RPG",
+          "description": "Tool para practicar inglés hablado real-time con corrección en vivo + Sistema de aprendizaje gamificado estilo RPG",
+          "status": "En construcción",
+          "stack": [
+            "React",
+            "TypeScript",
+            "AI SDK",
+            "Mastra"
+          ],
+          "link": "https://english-rpg.fernandooviedo.site/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "Argentina 🇦🇷",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/oviedo97fer",
+      "fetchError": null
+    },
+    {
+      "username": "calanai",
+      "name": "Camila Migliore",
+      "avatar": "https://cdn.phototourl.com/free/2026-06-04-14f5201d-f667-465b-b811-654d1e4320eb.jpg",
+      "avatarFile": null,
+      "tagline": "hand's on",
+      "role": "founder, indie_hacker, designer",
+      "stack": [
+        "React",
+        "TypeScript",
+        "Tailwind",
+        "Supabase",
+        "Vite",
+        "Cloudflare"
+      ],
+      "projects": [
+        {
+          "title": "honorario.app",
+          "description": "Herramienta para honorarios de arquitectos, interioristas y renderistas de Argentina. Calculá, gestioná y compartí tu experiencia con colegas.",
+          "status": "Idea",
+          "stack": [
+            "React",
+            "TypeScript",
+            "Tailwind",
+            "Supabase",
+            "Vite",
+            "Cloudflare"
+          ],
+          "link": "https://honorario.app/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": null,
+      "country": null,
+      "countryName": null,
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/calanai",
+      "fetchError": null
+    },
+    {
+      "username": "alex",
+      "name": "alex",
+      "avatar": "https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/cbbe9917-61cb-4d45-a9ff-ffd2b819f0f6/avatars/up17e4iahg-1782319339333-profile_-_copia.webp",
+      "avatarFile": "avatars/alex.jpg",
+      "tagline": "Fullstack Developer",
+      "role": "developer",
+      "stack": [
+        "Tailwind",
+        "React.js",
+        "Next.js",
+        "Express.js",
+        "Node.js",
+        "AWS"
+      ],
+      "projects": [
+        {
+          "title": "Fidufy",
+          "description": "Plataforma de fidelización para pequeños comercios. Pueden cargar puntos, objetivos y acciones.",
+          "status": "Idea",
+          "stack": [
+            "Tailwind",
+            "React.js",
+            "Next.js",
+            "Express.js",
+            "Node.js",
+            "AWS"
+          ],
+          "link": "https://fidufy.com/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": "Buenos Aires",
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/alex",
+      "fetchError": null
+    },
+    {
+      "username": "santiagogmv",
+      "name": "Santiago Vera",
+      "avatar": "https://ugc.production.linktr.ee/c6c629f2-8cc0-4d88-817d-0a2559f9a736_179324418.jpeg?io=true&size=avatar-v3_0",
+      "avatarFile": "avatars/santiagogmv.jpg",
+      "tagline": "Backend developer and digital project creator. Continuously learning and enhancing my skills.",
+      "role": "developer, indie_hacker, designer",
+      "stack": [],
+      "projects": [
+        {
+          "title": "Contact via WhatsApp",
+          "description": "Proyecto destacado importado desde wa.me.",
+          "status": "Idea",
+          "stack": [],
+          "link": "https://wa.me/5492235675072?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "Santiago Vera | Backend Developer",
+          "description": "Proyecto destacado importado desde portafolio-sepia-five.vercel.app.",
+          "status": "Idea",
+          "stack": [],
+          "link": "https://portafolio-sepia-five.vercel.app/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": null,
+      "country": "AR",
+      "countryName": "Argentina",
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/santiagogmv",
+      "fetchError": null
+    },
+    {
+      "username": "martinpulitano",
+      "name": "Martín Ezequiel Pulitano",
+      "avatar": "https://ugc.production.linktr.ee/6d289c2b-4749-4b1c-9dc9-afbf77d67fc3_WhatsApp-Image-2025-12-18-at-14.52.56.jpeg?io=true&size=avatar-v3_0",
+      "avatarFile": "avatars/martinpulitano.jpg",
+      "tagline": "Software Developer | Bilingual Computer Engineering Student at UCEMA | Founder, Enterepeneur & Developer",
+      "role": "developer, founder",
+      "stack": [],
+      "projects": [
+        {
+          "title": "FUNDACION CIPE",
+          "description": "Proyecto destacado importado desde fundacioncipe.com.",
+          "status": "Idea",
+          "stack": [],
+          "link": "https://www.fundacioncipe.com/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        },
+        {
+          "title": "ATLAS ONE",
+          "description": "Proyecto destacado importado desde atlasone.ar.",
+          "status": "Idea",
+          "stack": [],
+          "link": "https://atlasone.ar/?utm_source=huevsite&utm_medium=profile&utm_campaign=launch"
+        }
+      ],
+      "location": null,
+      "country": null,
+      "countryName": null,
+      "isWinner": false,
+      "profileUrl": "https://huevsite.io/martinpulitano",
+      "fetchError": null
+    }
+  ],
+  "weeklyWinners": [
+    {
+      "username": "giannidona",
+      "name": "Gianluca Donato",
+      "week": "2026-W40",
+      "tagline": "Desarrollador Web, Estudiante de la carrera Diseño y Programación Web en Da Vinci",
+      "url": "https://huevsite.io/giannidona"
+    },
+    {
+      "username": "tomidelu",
+      "name": "Tomas Deluca",
+      "week": "2026-W34",
+      "tagline": "Creativo Tech",
+      "url": "https://huevsite.io/tomidelu"
+    },
+    {
+      "username": "repetto-a",
+      "name": "Alejandro Repetto",
+      "week": "2026-W32",
+      "tagline": "Systems engineering student. Competitive programming, hackathons & CTFs. SWE at RoxiumLabs.",
+      "url": "https://huevsite.io/repetto-a"
+    },
+    {
+      "username": "nicoproducto",
+      "name": "Nico",
+      "week": "2026-W30",
+      "tagline": "Lo importante es QUE construir",
+      "url": "https://huevsite.io/nicoproducto"
+    },
+    {
+      "username": "pato-iturraspe",
+      "name": "pato-iturraspe",
+      "week": "2026-W30",
+      "tagline": "Mate & Build",
+      "url": "https://huevsite.io/pato-iturraspe"
+    },
+    {
+      "username": "artugrande",
+      "name": "artugrande",
+      "week": "2026-W27",
+      "tagline": "Product Builder",
+      "url": "https://huevsite.io/artugrande"
+    },
+    {
+      "username": "aeterna",
+      "name": "Nahuel Sigismondi",
+      "week": "2026-W26",
+      "tagline": "god",
+      "url": "https://huevsite.io/aeterna"
+    },
+    {
+      "username": "celizin",
+      "name": "Matias Celiz",
+      "week": "2026-W25",
+      "tagline": "Builder",
+      "url": "https://huevsite.io/celizin"
+    },
+    {
+      "username": "luigicanoro",
+      "name": "Luigi Raffaele Siano Canoro",
+      "week": "2026-W24",
+      "tagline": "Founder",
+      "url": "https://huevsite.io/luigicanoro"
+    },
+    {
+      "username": "kero",
+      "name": "Kero",
+      "week": "2026-W24",
+      "tagline": "Builder",
+      "url": "https://huevsite.io/kero"
+    },
+    {
+      "username": "rober",
+      "name": "Robertino",
+      "week": "2026-W23",
+      "tagline": "Full-stack builder",
+      "url": "https://huevsite.io/rober"
+    },
+    {
+      "username": "martinpulitano",
+      "name": "Martín Ezequiel Pulitano",
+      "week": "2026-W21",
+      "tagline": "Software Developer | Bilingual Computer Engineering Student at UCEMA | Founder, Enterepeneur & Developer",
+      "url": "https://huevsite.io/martinpulitano"
+    },
+    {
+      "username": "tomidelu",
+      "name": "Tomas Deluca",
+      "week": "2026-W20",
+      "tagline": "Creativo Tech",
+      "url": "https://huevsite.io/tomidelu"
+    },
+    {
+      "username": "joaquin",
+      "name": "JoaquinGiorgis",
+      "week": "2026-W19",
+      "tagline": "Builder",
+      "url": "https://huevsite.io/joaquin"
+    },
+    {
+      "username": "azanello",
+      "name": "Ale Zanello",
+      "week": "2026-W18",
+      "tagline": "Software Engineer | Agentic AI Specialist",
+      "url": "https://huevsite.io/azanello"
+    },
+    {
+      "username": "galfrevn",
+      "name": "Valentín Galfré",
+      "week": "2026-W17",
+      "tagline": "Software Engineer",
+      "url": "https://huevsite.io/galfrevn"
+    },
+    {
+      "username": "nicoproducto",
+      "name": "Nico",
+      "week": "2026-W17",
+      "tagline": "Lo importante es QUE construir",
+      "url": "https://huevsite.io/nicoproducto"
+    },
+    {
+      "username": "galfrevn",
+      "name": "Valentín Galfré",
+      "week": "2026-W15",
+      "tagline": "Software Engineer",
+      "url": "https://huevsite.io/galfrevn"
+    },
+    {
+      "username": "ponti",
+      "name": "ponti",
+      "week": "2026-W15",
+      "tagline": "i just ship things",
+      "url": "https://huevsite.io/ponti"
+    },
+    {
+      "username": "tomidelu",
+      "name": "Tomas Deluca",
+      "week": "2026-W14",
+      "tagline": "Creativo Tech",
+      "url": "https://huevsite.io/tomidelu"
+    },
+    {
+      "username": "azanello",
+      "name": "Ale Zanello",
+      "week": "2026-W14",
+      "tagline": "Software Engineer | Agentic AI Specialist",
+      "url": "https://huevsite.io/azanello"
+    },
+    {
+      "username": "ramadan",
+      "name": "Ramiro Carnicer Souble",
+      "week": "2026-W13",
+      "tagline": "Software Developer ready to learn from anyone!",
+      "url": "https://huevsite.io/ramadan"
+    },
+    {
+      "username": "galfrevn",
+      "name": "Valentín Galfré",
+      "week": "2026-W12",
+      "tagline": "Software Engineer",
+      "url": "https://huevsite.io/galfrevn"
+    },
+    {
+      "username": "tomidelu",
+      "name": "Tomas Deluca",
+      "week": "2026-W11",
+      "tagline": "Creativo Tech",
+      "url": "https://huevsite.io/tomidelu"
+    },
+    {
+      "username": "repetto-a",
+      "name": "Alejandro Repetto",
+      "week": "2026-W10",
+      "tagline": "Systems engineering student. Competitive programming, hackathons & CTFs. SWE at RoxiumLabs.",
+      "url": "https://huevsite.io/repetto-a"
+    },
+    {
+      "username": "tomidelu",
+      "name": "Tomas Deluca",
+      "week": "2026-W10",
+      "tagline": "Creativo Tech",
+      "url": "https://huevsite.io/tomidelu"
+    },
+    {
+      "username": "ainponce",
+      "name": "Ain Moises Ponce",
+      "week": "2026-W10",
+      "tagline": "Builder",
+      "url": "https://huevsite.io/ainponce"
+    },
+    {
+      "username": "tomidelu",
+      "name": "Tomas Deluca",
+      "week": "2026-W09",
+      "tagline": "Creativo Tech",
+      "url": "https://huevsite.io/tomidelu"
+    }
+  ],
+  "launches": {
+    "week": "2026-W27",
+    "currentWeek": "2026-W44",
+    "weeksScannedEmptyBeforeHit": [
+      "2026-W44",
+      "2026-W43",
+      "2026-W42",
+      "2026-W41",
+      "2026-W40",
+      "2026-W39",
+      "2026-W38",
+      "2026-W37",
+      "2026-W36",
+      "2026-W35",
+      "2026-W34",
+      "2026-W33",
+      "2026-W32",
+      "2026-W31",
+      "2026-W30",
+      "2026-W29",
+      "2026-W28"
+    ],
+    "items": [
+      {
+        "title": "Huevsite Builders Hub",
+        "description": "Portfolio y red social para builders que buscan mostrar sus proyectos.",
+        "stack": [],
+        "upvoteCount": 5,
+        "featured": true,
+        "link": "https://huevsite.io",
+        "username": "tomidelu",
+        "name": "Tomas Deluca"
+      },
+      {
+        "title": "VoyBien — Mapa colaborativo de seguridad de Mar del Plata",
+        "description": "Mapa colaborativo vecinal de seguridad por cuadras de Mar del Plata. Elegí tu destino y el mapa te da el camino más seguro, basado en datos reales; la de los marplatenses.",
+        "stack": [
+          "Nextjs",
+          "apk"
+        ],
+        "upvoteCount": 6,
+        "featured": false,
+        "link": "https://voybien.com.ar/",
+        "username": "kero",
+        "name": "Kero"
+      },
+      {
+        "title": "Martín Coll — Software a medida, potenciado por IA",
+        "description": "Desarrollo de Apps mobile, sistemas backend, web, ciberseguridad y más. De la idea al deploy en semanas.",
+        "stack": [],
+        "upvoteCount": 0,
+        "featured": false,
+        "link": "https://martincoll.dev/",
+        "username": "konixdev",
+        "name": "Martin Coll"
+      },
+      {
+        "title": "UseDeploy — DDD-first TypeScript SaaS boilerplate",
+        "description": "A production-grade TypeScript SaaS starter built around Domain-Driven Design. BetterAuth with 2FA + magic-link, Prisma (DB-agnostic), Stripe + MercadoPago + Polar, webhooks, GDPR-c",
+        "stack": [],
+        "upvoteCount": 0,
+        "featured": false,
+        "link": "https://usedeploy.dev/",
+        "username": "konixdev",
+        "name": "Martin Coll"
+      },
+      {
+        "title": "mibio.app — tu negocio en un link",
+        "description": "Link en bio para coaches y consultores LATAM. Agenda, links de pago y WhatsApp en una página que tu cliente entiende. 0% comisión, sin tarjeta para empezar.",
+        "stack": [],
+        "upvoteCount": 0,
+        "featured": false,
+        "link": "https://mibio.app/",
+        "username": "konixdev",
+        "name": "Martin Coll"
+      },
+      {
+        "title": "Tata — Your business runs in WhatsApp",
+        "description": "Tata is the app for plumbers, electricians, and gas fitters who run clients, jobs, and payments from WhatsApp. You talk to it like a coworker; it keeps the books.",
+        "stack": [],
+        "upvoteCount": 0,
+        "featured": false,
+        "link": "https://tata.com.ar/",
+        "username": "konixdev",
+        "name": "Martin Coll"
+      },
+      {
+        "title": "Commercy — Tienda online y punto de venta sin comisiones",
+        "description": "Tienda online propia, caja POS, ventas por WhatsApp y facturación AFIP automática. 0% comisión por venta. Probá gratis 14 días.",
+        "stack": [],
+        "upvoteCount": 0,
+        "featured": false,
+        "link": "https://commercy.com.ar/",
+        "username": "konixdev",
+        "name": "Martin Coll"
+      }
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "huevsite-promo-video",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Video promocional de huevsite.io. Aislado de la app. Sin audio.",
+  "scripts": {
+    "snapshot": "node scripts/snapshot.mjs",
+    "studio": "remotion studio src/index.ts",
+    "render:vertical": "remotion render src/index.ts Vertical out/vertical.mp4 --codec=h264 --crf=18 --concurrency=2",
+    "render:landscape": "remotion render src/index.ts Landscape out/landscape.mp4 --codec=h264 --crf=18 --concurrency=2",
+    "still:vertical": "remotion still src/index.ts Vertical out/cover-vertical.png --frame=1320",
+    "still:landscape": "remotion still src/index.ts Landscape out/cover-landscape.png --frame=1320"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.0",
+    "@remotion/cli": "^4.0.0"
+  }
+}

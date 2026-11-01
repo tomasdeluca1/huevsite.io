@@ -143,6 +143,33 @@ export const wallBuilders: BuilderCard[] = selectWall(true);
  */
 export const roster: BuilderCard[] = selectWall(false);
 
+/** Ale Zanello is one of the 52. These are his public projects, used as the lone-builder story. */
+export const soloBuilder: BuilderCard =
+  roster.find((b) => b.username === "azanello") ?? roster[0];
+
+export const soloProjects: { title: string; description: string; host: string }[] = [
+  {
+    title: "Portfolio",
+    description: "Acceso completo a mi portfolio",
+    host: "azanello.com",
+  },
+  {
+    title: "Declarado",
+    description: "Declaraciones juradas de funcionarios publicos con facil acceso",
+    host: "declarado.azanello.com",
+  },
+  {
+    title: "Cordoba Bondi Real-Time",
+    description: "Mapa en tiempo real de los colectivos de la Ciudad de Cordoba",
+    host: "calculadora.azanello.com",
+  },
+  {
+    title: "Cordoba Risk Map",
+    description: "Mapa iterativo estilo Cyberpunk de la ciudad de cordoba con zonas peligrosas",
+    host: "cordoba.azanello.com",
+  },
+];
+
 function bestProject(b: RawBuilder): Project | null {
   let best: Project | null = null;
   let bestScore = -1;

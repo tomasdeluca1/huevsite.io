@@ -1,27 +1,15 @@
-import { AbsoluteFill, Audio, staticFile, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Audio, staticFile } from "remotion";
 import { BG } from "./brand";
 import { Fonts } from "./fonts";
-import { shotAt } from "./edit.mjs";
-import { Logo } from "./components/Type";
-import { Stage } from "./v2/Stage";
+import { Story } from "./v3/Story";
 import type { Layout } from "./timing";
 
-const CORNER = new Set(["cluster", "fly", "project", "geo", "bdls", "launch"]);
-
-export function Film({ layout }: { layout: Layout }) {
-  const frame = useCurrentFrame();
-  const shot = shotAt(frame);
-
+export function Film({ layout, variant }: { layout: Layout; variant: "organic" | "ads" }) {
   return (
     <AbsoluteFill style={{ background: BG, overflow: "hidden" }}>
       <Fonts />
-      <Audio src={staticFile("audio/master.wav")} />
-      <Stage frame={frame} shot={shot} layout={layout} />
-      {CORNER.has(shot.kind) ? (
-        <div style={{ position: "absolute", top: layout === "vertical" ? 28 : 22, left: layout === "vertical" ? 32 : 36 }}>
-          <Logo height={layout === "vertical" ? 30 : 26} />
-        </div>
-      ) : null}
+      <Audio src={staticFile("audio/bed.wav")} />
+      <Story layout={layout} variant={variant} />
     </AbsoluteFill>
   );
 }

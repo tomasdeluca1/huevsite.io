@@ -62,8 +62,8 @@ function drawCard(card: BuilderCard, avatar: HTMLImageElement | null) {
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
   ctx.fillStyle = "#FFFFFF";
-  ctx.font = "800 72px 'Bricolage Grotesque'";
-  ctx.fillText(fit(ctx, card.name, maxW), textX, 58);
+  ctx.font = "800 88px 'Bricolage Grotesque'";
+  ctx.fillText(fit(ctx, card.name, maxW), textX, 48);
 
   ctx.fillStyle = "#C8FF00";
   ctx.font = "500 40px 'JetBrains Mono'";

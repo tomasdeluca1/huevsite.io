@@ -3,8 +3,10 @@
  * Single source of visual language for every social-share image on huevsite —
  * home, profile, blog, leaderboard, explore, feed/Builders Hunt, etc. Every
  * page OG composes these primitives so the whole discovery family reads as one
- * brand: dark base, lime (#C8FF00) accent, the real wordmark (huev + lime site +
- * dim .io), a hairline inner frame and a faint dot grid.
+ * brand. Los colores NO se escriben acá: salen de `lib/brand.ts`, la misma tabla
+ * que usa el CSS del producto, para que una pieza compartida y la página a la
+ * que lleva sean del mismo color. `scripts/verify-brand-tokens.js` falla si este
+ * archivo vuelve a tener un hex propio.
  *
  * Hardening rules baked in here:
  *  - Satori (the edge renderer) can't decode webp/avif, so every remote avatar
@@ -20,19 +22,21 @@
  * JSX-returning helpers (not React components) — fine for ImageResponse.
  */
 
+import { BRAND } from "@/lib/brand";
 import { getContrastColor } from "@/lib/profile-types";
 import { hiResFaviconUrl } from "@/lib/favicon";
 
 export const OG_SIZE = { width: 1200, height: 630 };
 export const OG_CONTENT_TYPE = "image/png";
 
-export const ACCENT = "#C8FF00";
-export const BG_TOP = "#07070b";
-export const BG_BOTTOM = "#0a0a0f";
-export const BORDER = "rgba(255,255,255,0.08)";
-export const TEXT_DIM = "rgba(255,255,255,0.64)";
-export const TEXT_MUTED = "rgba(255,255,255,0.42)";
-export const TEXT_FAINT = "rgba(255,255,255,0.30)";
+export const ACCENT = BRAND.color.accent;
+export const BG_TOP = BRAND.color.bg;
+export const BG_BOTTOM = BRAND.color.bg;
+export const BORDER = BRAND.color.border;
+export const TEXT_DIM = BRAND.color.textDim;
+export const TEXT_MUTED = BRAND.color.textMuted;
+// El gris del isotipo es casi exactamente el blanco al 30% que había acá.
+export const TEXT_FAINT = BRAND.color.slate;
 
 export function truncate(text: string, max: number) {
   if (!text) return "";
@@ -57,7 +61,7 @@ export function rootStyle(accent: string) {
     flexDirection: "column" as const,
     padding: "54px 64px",
     color: "white",
-    background: `radial-gradient(circle at 12% 8%, ${accent}24 0%, transparent 40%), radial-gradient(circle at 90% 96%, ${accent}1a 0%, transparent 46%), linear-gradient(155deg, ${BG_TOP} 0%, ${BG_BOTTOM} 58%, #07070a 100%)`,
+    background: `radial-gradient(circle at 12% 8%, ${accent}24 0%, transparent 40%), radial-gradient(circle at 90% 96%, ${accent}1a 0%, transparent 46%), linear-gradient(155deg, ${BG_TOP} 0%, ${BG_BOTTOM} 58%, ${BRAND.color.bg} 100%)`,
     position: "relative" as const,
   };
 }

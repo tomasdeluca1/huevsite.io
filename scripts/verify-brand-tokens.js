@@ -80,6 +80,16 @@ for (const page of ['app/[username]/page.tsx', 'app/[username]/[slug]/page.tsx']
   eq(`${page} inyecta --accent por usuario`, /--accent:\s*\$\{/.test(read(page)), true);
 }
 
+// --- las imágenes OG salen de la misma tabla ---
+const ogKit = read('lib/og/shared.tsx');
+eq('el kit OG importa BRAND', /from ["']@\/lib\/brand["']/.test(ogKit), true);
+eq('el kit OG no tiene hex propios', ogKit.match(/#[0-9a-fA-F]{6}/g) || [], []);
+const ogBlog = read('app/blog/[slug]/opengraph-image.tsx');
+eq('la OG del blog importa BRAND', /from ["']@\/lib\/brand["']/.test(ogBlog), true);
+eq('la OG del blog no repite el acento ni el negro', ogBlog.match(/#(C8FF00|050505|0c0c0c)/gi) || [], []);
+// El kit corre en edge y arrastra a brand.ts: tiene que ser solo constantes.
+eq('brand.ts no importa nada', /^\s*(import|require)\b/m.test(read('lib/brand.ts')), false);
+
 // --- texto negro sobre el lima: de esto depende cada botón de acento ---
 eq('negro sobre el acento', getContrastColor(BRAND.color.accent), '#000000');
 

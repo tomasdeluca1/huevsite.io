@@ -5,6 +5,7 @@
   "description": "Video promocional de huevsite.io. Aislado de la app. Sin audio.",
   "scripts": {
     "snapshot": "node scripts/snapshot.mjs",
+    "audio": "node scripts/synthesize-audio.mjs",
     "studio": "remotion studio src/index.ts",
     "render:vertical": "remotion render src/index.ts Vertical out/vertical.mp4 --codec=h264 --crf=18 --concurrency=2",
     "render:landscape": "remotion render src/index.ts Landscape out/landscape.mp4 --codec=h264 --crf=18 --concurrency=2",
@@ -12,9 +13,13 @@
     "still:landscape": "remotion still src/index.ts Landscape out/cover-landscape.png --frame=1320"
   },
   "dependencies": {
+    "@react-three/drei": "^9.117.3",
+    "@react-three/fiber": "^8.17.14",
+    "@remotion/cli": "^4.0.0",
+    "@remotion/three": "^4.0.539",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "remotion": "^4.0.0",
-    "@remotion/cli": "^4.0.0"
+    "three": "^0.170.0"
   }
 }

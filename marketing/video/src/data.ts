@@ -112,13 +112,14 @@ const JUNK_TAGLINE = /linktree|reci[eé]n llegado|^hola\.?$|^ai\.?$|^opa\.?$|^yo
 /** Visible third-party typos. We drop the card; we don't rewrite their copy. */
 const TYPO_TAGLINE = /caos organizado|caso organizado|enterepeneur/i;
 
-/** Profiles with a real name, photo and tagline. Junk imports stay in the JSON, off the wall. */
-export const wallBuilders: BuilderCard[] = (() => {
+function selectWall(skipTypos: boolean): BuilderCard[] {
   const readable = builders.filter((b) => {
     if (!b.avatarFile || !b.tagline) return false;
     if (!/[A-Za-zÁÉÍÓÚáéíóúÑñ]/.test(b.name)) return false;
     const tagline = b.tagline.trim();
-    return tagline.length > 8 && !JUNK_TAGLINE.test(tagline) && !TYPO_TAGLINE.test(tagline);
+    if (tagline.length <= 8 || JUNK_TAGLINE.test(tagline)) return false;
+    if (skipTypos && TYPO_TAGLINE.test(tagline)) return false;
+    return true;
   });
   const abroad = readable.filter((b) => b.country && b.country !== "AR");
   const home = readable.filter((b) => !abroad.includes(b));
@@ -130,7 +131,17 @@ export const wallBuilders: BuilderCard[] = (() => {
     if (j < abroad.length) out.push(abroad[j++]);
   }
   return out;
-})();
+}
+
+/** Profiles with a real name, photo and tagline. Junk imports stay off the wall. */
+export const wallBuilders: BuilderCard[] = selectWall(true);
+
+/**
+ * The 52 builders from the first cut. v2 keeps this roster (no new people).
+ * Taglines with a visible typo still belong to that person; cards show them
+ * as published and we don't rewrite the words.
+ */
+export const roster: BuilderCard[] = selectWall(false);
 
 function bestProject(b: RawBuilder): Project | null {
   let best: Project | null = null;

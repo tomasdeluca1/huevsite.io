@@ -14,6 +14,7 @@ import { ColorPicker } from "./ColorPicker";
 import { BlockSelector } from "./BlockSelector";
 import { QuestPanel } from "./QuestPanel";
 import LocaleToggle from "@/components/LocaleToggle";
+import { Logo } from "@/components/brand/Logo";
 
 interface SidebarProps {
   profile: ProfileData;
@@ -121,11 +122,8 @@ export function DashboardSidebar({
         {/* Header: identity (logo + board switcher) */}
         <div className="px-6 pt-5 pb-2 relative z-30">
           <div className="flex items-center justify-between mb-5">
-            <Link href="/" className="group flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-[var(--accent)] flex items-center justify-center rotate-3 group-hover:rotate-12 transition-transform shadow-[0_0_15px_var(--accent)]/40">
-                <Sparkles size={18} className="text-black" />
-              </div>
-              <span className="text-xl font-[900] tracking-tighter text-white">huev<span className="text-[var(--accent)]">site</span></span>
+            <Link href="/" className="group flex items-center">
+              <Logo className="h-7 w-auto transition-transform group-hover:scale-[1.03]" />
             </Link>
           </div>
 

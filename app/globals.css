@@ -4,14 +4,15 @@
 
 /* huevsite.io Design System */
 :root {
-  --bg: #080808;
-  --surface: #111111;
-  --surface2: #1a1a1a;
-  --border: #222222;
-  --border-bright: #333333;
+  --bg: #050505;
+  --surface: #0E0E0F;
+  --surface2: #171718;
+  --border: #202022;
+  --border-bright: #303033;
   --accent: #C8FF00;
   --accent-dim: rgba(200, 255, 0, 0.12);
   --accent-mid: rgba(200, 255, 0, 0.3);
+  --slate: #4A4949;
   --text: #f0f0f0;
   --text-muted: #888888;
   --text-dim: #D1D1D1;
@@ -26,8 +27,17 @@
   --radius-xl: 28px;
   --font-display: var(--font-display-next, 'Bricolage Grotesque', sans-serif);
   --font-mono: var(--font-mono-next, 'JetBrains Mono', monospace);
+  /* Escala tipográfica. El mono se usa de --fs-label para abajo (etiquetas,
+     URLs, métricas) y nunca para texto corrido. */
+  --fs-display: clamp(40px, 7vw, 72px);
+  --fs-h1: clamp(30px, 5vw, 46px);
+  --fs-h2: clamp(22px, 3.4vw, 30px);
+  --fs-h3: 20px;
+  --fs-body: 16px;
+  --fs-sm: 14px;
+  --fs-label: 12px;
+  --fs-micro: 10px;
   --space: 8px;
-  --glow: 0 0 30px rgba(200, 255, 0, 0.15);
   /* Landing section rhythm — one responsive scale so every section shares the
      same vertical/horizontal padding and shrinks gracefully on phones
      (was a grab-bag of fixed 56–120px vertical / 24–48px horizontal values). */
@@ -122,7 +132,7 @@ nav {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(8, 8, 8, 0.7);
+  background: rgba(5, 5, 5, 0.7);
   backdrop-filter: blur(24px) saturate(180%);
 }
 
@@ -208,7 +218,6 @@ nav {
 .btn-accent:hover {
   background: #d4ff1a;
   transform: translateY(-1px);
-  box-shadow: var(--glow);
 }
 
 /* Hero Section */
@@ -631,7 +640,6 @@ nav {
 
 .hero-claim-button:hover {
   transform: translateY(-1px);
-  box-shadow: var(--glow);
 }
 
 .hero-claim-button:disabled {
@@ -3031,7 +3039,7 @@ footer {
   align-items: center;
   justify-content: space-between;
   padding: 18px 40px;
-  background: rgba(8, 8, 8, 0.85);
+  background: rgba(5, 5, 5, 0.85);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }

@@ -12,6 +12,7 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
+import { Logo } from "@/components/brand/Logo";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("referrals");
@@ -79,10 +80,10 @@ export default async function ReferralsPage() {
         <div className="absolute right-[-12rem] top-[22rem] h-[28rem] w-[28rem] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.08),transparent_60%)] blur-3xl" />
       </div>
 
-      <header className="sticky top-0 z-30 border-b border-white/8 bg-[rgba(8,8,8,0.72)] backdrop-blur-2xl">
+      <header className="sticky top-0 z-30 border-b border-white/8 bg-[rgba(5,5,5,0.72)] backdrop-blur-2xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 lg:px-8">
-          <Link href="/" className="logo">
-            huev<span style={{ color: "var(--accent)" }}>site</span>.io
+          <Link href="/">
+            <Logo className="h-6 w-auto" />
           </Link>
           <div className="flex items-center gap-3">
             <LocaleToggle />

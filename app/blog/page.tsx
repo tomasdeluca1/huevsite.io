@@ -16,6 +16,7 @@ import { SITE_URL } from "@/lib/site-url";
 import { keywordsFor } from "@/lib/seo";
 import { safeJsonLd } from "@/lib/json-ld";
 import { breadcrumbLd, ORGANIZATION_ID, WEBSITE_ID } from "@/lib/structured-data";
+import { Logo } from "@/components/brand/Logo";
 
 // Always render fresh: the listing combines static MDX + DB rows (new Builder
 // de la Semana posts get published frequently) and uses searchParams for tag
@@ -135,7 +136,7 @@ export default async function BlogIndexPage({
       />
       <header className="mb-12">
         <div className="flex items-center justify-between mb-8">
-          <Link href="/" className="logo">huev<span>site</span>.io</Link>
+          <Link href="/"><Logo className="h-6 w-auto" /></Link>
           <div className="flex items-center gap-3">
             <LocaleToggle />
           </div>

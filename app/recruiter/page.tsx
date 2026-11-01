@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { Briefcase } from 'lucide-react';
 import LocaleToggle from '@/components/LocaleToggle';
 import { RecruiterTalentBoard, type RecruiterTalent } from '@/components/recruiter/RecruiterTalentBoard';
+import { Logo } from "@/components/brand/Logo";
 
 // Señales de "open to work" en el status libre del hero block
 // (no existe una columna dedicada — el status es texto que escribe el usuario).
@@ -126,7 +127,7 @@ export default async function RecruiterDashboard() {
             <nav className="fixed top-0 inset-x-0 z-50 bg-black/60 backdrop-blur-xl border-b border-[var(--border)]">
                 <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <Link href="/" className="logo text-xl">huev<span className="text-white">site</span>.io</Link>
+                        <Link href="/"><Logo className="h-6 w-auto" /></Link>
                         <div className="h-6 w-px bg-[var(--border)]" />
                         <div className="flex items-center gap-2 text-sm font-semibold text-[#C8FF00]">
                             <Briefcase size={16} /> {t('mode')}

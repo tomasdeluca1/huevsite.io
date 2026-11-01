@@ -8,7 +8,7 @@ import type { Layout } from "../timing";
 
 export function Hunt({ layout }: { layout: Layout }) {
   const vertical = layout === "vertical";
-  const title = useRise(6, 22);
+  const title = useRise(0, 18);
   const winner = useRise(16, 18);
   const trail = useRise(28, 14);
   const feed = useRise(40, 16);

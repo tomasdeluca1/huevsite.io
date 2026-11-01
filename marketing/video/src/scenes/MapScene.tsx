@@ -9,7 +9,7 @@ export function MapScene({ layout }: { layout: Layout }) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const vertical = layout === "vertical";
-  const title = useRise(8, 24);
+  const title = useRise(0, 18);
   const max = Math.max(...countryRows.map((r) => r.count));
 
   const rows = (

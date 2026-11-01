@@ -1,4 +1,5 @@
 import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { EASE } from "../motion";
 import { ACCENT, BG, BORDER, DISPLAY, MONO, SURFACE, TEXT_DIM, TEXT_MUTED, TEXT_STRONG, TRACKING } from "../brand";
 import { featuredProjects, statusLabel, type Project } from "../data";
 import { useRise } from "../motion";
@@ -104,14 +105,19 @@ export function Projects({ layout }: { layout: Layout }) {
   const setDur = Math.max(1, Math.floor(300 / safeSets.length));
   const setIndex = Math.min(safeSets.length - 1, Math.floor(frame / setDur));
   const local = frame - setIndex * setDur;
-  const enter = interpolate(local, [0, 10], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-  const fadeOut =
-    setIndex === safeSets.length - 1
-      ? 1
-      : interpolate(local, [setDur - 8, setDur], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-  const line1 = useRise(6, 22);
-  const line2 = useRise(16, 16);
+  const slideFrames = 16;
+  const isLast = setIndex === safeSets.length - 1;
+  const swap = !isLast && local >= setDur - slideFrames
+    ? interpolate(local, [setDur - slideFrames, setDur], [0, 1], {
+        easing: EASE,
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      })
+    : 0;
+  const line1 = useRise(0, 18);
+  const line2 = useRise(4, 14);
   const current = safeSets[setIndex] || [];
+  const upcoming = swap > 0 ? safeSets[setIndex + 1] || [] : [];
 
   const phrase = (
     <div>
@@ -129,9 +135,11 @@ export function Projects({ layout }: { layout: Layout }) {
   );
 
   const deckStyle: React.CSSProperties = {
-    opacity: Math.min(enter, fadeOut),
-    transform: `translateY(${interpolate(enter, [0, 1], [16, 0])}px)`,
+    position: "relative",
+    overflow: "hidden",
   };
+  const outgoingShift = interpolate(swap, [0, 1], [0, -56]);
+  const incomingShift = interpolate(swap, [0, 1], [56, 0]);
 
   return (
     <AbsoluteFill style={{ background: BG }}>
@@ -140,22 +148,42 @@ export function Projects({ layout }: { layout: Layout }) {
         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", padding: "140px 64px 80px" }}>
           <div style={{ width: "100%" }}>
             {phrase}
-            <div style={{ marginTop: 36, display: "flex", flexDirection: "column", gap: 16, ...deckStyle }}>
-              {current.map((project) => (
-                <div key={project.username + project.title} style={{ height: 340 }}>
-                  <ProjectCard project={project} />
+            <div style={{ marginTop: 36, ...deckStyle }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 16, transform: `translateY(${outgoingShift}px)` }}>
+                {current.map((project) => (
+                  <div key={project.username + project.title} style={{ height: 340 }}>
+                    <ProjectCard project={project} />
+                  </div>
+                ))}
+              </div>
+              {upcoming.length > 0 ? (
+                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", gap: 16, transform: `translateY(${incomingShift}px)` }}>
+                  {upcoming.map((project) => (
+                    <div key={project.username + project.title} style={{ height: 340 }}>
+                      <ProjectCard project={project} />
+                    </div>
+                  ))}
                 </div>
-              ))}
+              ) : null}
             </div>
           </div>
         </div>
       ) : (
         <div style={{ position: "absolute", top: 120, left: 72, right: 72, bottom: 48, display: "flex", gap: 48 }}>
           <div style={{ width: 520, flexShrink: 0, display: "flex", alignItems: "center" }}>{phrase}</div>
-          <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr 1fr", gap: 14, ...deckStyle }}>
-            {current.map((project) => (
-              <ProjectCard key={project.username + project.title} project={project} compact />
-            ))}
+          <div style={{ flex: 1, ...deckStyle }}>
+            <div style={{ position: "absolute", inset: 0, display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr 1fr", gap: 14, transform: `translateY(${outgoingShift}px)` }}>
+              {current.map((project) => (
+                <ProjectCard key={project.username + project.title} project={project} compact />
+              ))}
+            </div>
+            {upcoming.length > 0 ? (
+              <div style={{ position: "absolute", inset: 0, display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr 1fr", gap: 14, transform: `translateY(${incomingShift}px)` }}>
+                {upcoming.map((project) => (
+                  <ProjectCard key={project.username + project.title} project={project} compact />
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
       )}

@@ -1,4 +1,5 @@
-import { AbsoluteFill, Easing, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { EASE } from "../motion";
 import { ACCENT, BG, BORDER, DISPLAY, MONO, TEXT_MUTED, TEXT_STRONG, TRACKING } from "../brand";
 import { directoryLabel, directoryTotal, wallBuilders } from "../data";
 import { Chrome } from "../components/Type";
@@ -24,7 +25,7 @@ export function Wall({ layout }: { layout: Layout }) {
   const scroll = interpolate(frame, [28, 230], [0, maxScroll], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
-    easing: Easing.inOut(Easing.cubic),
+    easing: EASE,
   });
   const dim = interpolate(frame, [228, 252], [1, 0.55], {
     extrapolateLeft: "clamp",
@@ -34,7 +35,7 @@ export function Wall({ layout }: { layout: Layout }) {
     interpolate(frame, [214, 252], [0, directoryTotal], {
       extrapolateLeft: "clamp",
       extrapolateRight: "clamp",
-      easing: Easing.out(Easing.cubic),
+      easing: EASE,
     }),
   );
   const local = Math.max(0, frame - 236);

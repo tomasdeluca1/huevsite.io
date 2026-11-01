@@ -1,5 +1,5 @@
 import { AbsoluteFill, Img, staticFile } from "remotion";
-import { ACCENT, BG, DISPLAY, MONO, TEXT_MUTED, TEXT_STRONG, TRACKING } from "../brand";
+import { ACCENT, BG, DISPLAY, MONO, TEXT_STRONG, TRACKING } from "../brand";
 import { useRise } from "../motion";
 import { Chrome, Logo } from "../components/Type";
 import type { Layout } from "../timing";
@@ -36,12 +36,10 @@ export function Close({ layout }: { layout: Layout }) {
                 Nominados
               </div>
             </div>
-            <div style={{ marginTop: 14, ...sub }}>
-              <div style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: vertical ? 32 : 36, letterSpacing: TRACKING, lineHeight: 1.05, color: TEXT_STRONG }}>
+            <div style={{ marginTop: 16, ...sub }}>
+              <div style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: vertical ? 30 : 34, letterSpacing: TRACKING, lineHeight: 1.15, color: TEXT_STRONG }}>
                 PremiosTech.la
-              </div>
-              <div style={{ marginTop: 8, fontFamily: DISPLAY, fontWeight: 800, fontSize: vertical ? 32 : 36, letterSpacing: TRACKING, color: ACCENT }}>
-                Comunidad
+                <span style={{ color: ACCENT }}> · Comunidad</span>
               </div>
             </div>
           </div>
@@ -49,14 +47,12 @@ export function Close({ layout }: { layout: Layout }) {
         </div>
 
         <div style={{ marginTop: vertical ? 72 : 48, ...cta, display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <div style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: vertical ? 48 : 44, letterSpacing: TRACKING, color: TEXT_STRONG, lineHeight: 1 }}>
+          <div style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: vertical ? 42 : 40, letterSpacing: TRACKING, color: TEXT_STRONG, lineHeight: 1.05 }}>
             Reclamá tu username
+            <span style={{ fontFamily: MONO, fontWeight: 500, color: ACCENT }}> · huevsite.io</span>
           </div>
-          <div style={{ marginTop: 22 }}>
+          <div style={{ marginTop: 28 }}>
             <Logo height={vertical ? 48 : 44} />
-          </div>
-          <div style={{ marginTop: 16, fontFamily: MONO, fontWeight: 500, fontSize: 16, color: TEXT_MUTED }}>
-            huevsite.io <span style={{ fontFamily: "Noto Color Emoji, sans-serif" }}>🥚</span>
           </div>
         </div>
       </div>

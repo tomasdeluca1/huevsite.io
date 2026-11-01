@@ -109,6 +109,8 @@ export const builders: BuilderCard[] = raw.builders.map((b) => ({
 }));
 
 const JUNK_TAGLINE = /linktree|reci[eé]n llegado|^hola\.?$|^ai\.?$|^opa\.?$|^yo\.?$|^dev\.?$|^builder\.?$|^god\.?$/i;
+/** Visible third-party typos. We drop the card; we don't rewrite their copy. */
+const TYPO_TAGLINE = /caos organizado|caso organizado|enterepeneur/i;
 
 /** Profiles with a real name, photo and tagline. Junk imports stay in the JSON, off the wall. */
 export const wallBuilders: BuilderCard[] = (() => {
@@ -116,7 +118,7 @@ export const wallBuilders: BuilderCard[] = (() => {
     if (!b.avatarFile || !b.tagline) return false;
     if (!/[A-Za-zÁÉÍÓÚáéíóúÑñ]/.test(b.name)) return false;
     const tagline = b.tagline.trim();
-    return tagline.length > 8 && !JUNK_TAGLINE.test(tagline);
+    return tagline.length > 8 && !JUNK_TAGLINE.test(tagline) && !TYPO_TAGLINE.test(tagline);
   });
   const abroad = readable.filter((b) => b.country && b.country !== "AR");
   const home = readable.filter((b) => !abroad.includes(b));
@@ -138,6 +140,10 @@ function bestProject(b: RawBuilder): Project | null {
     if (!p.title || p.title.length < 3 || p.title.length > 58) continue;
     if (/^yo$/i.test(p.title.trim())) continue;
     if (!description || description.length < 20 || BAD_DESC.test(description)) continue;
+    // "picsel es…" reads as "picseles" on a card. Leave the copy alone, pick another project.
+    const visible = `${p.title} ${description}`;
+    // On-screen typos from public copy. Skip the card; don't edit the words.
+    if (/picsel|suplmenetos|enterepeneur|chianeable|sintomas/i.test(visible)) continue;
     const tech = (p.stack || []).join(" ").toLowerCase();
     const launched = /lanzado/i.test(p.status || "");
     let score = (launched ? 6 : 0) + Math.min((p.stack || []).length, 4);

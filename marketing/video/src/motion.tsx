@@ -1,5 +1,7 @@
 import { Easing, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
-import { ACCENT, BG } from "./brand";
+import { SLIDE_FRAMES } from "./timing";
+
+export const EASE = Easing.bezier(0.65, 0, 0.35, 1);
 
 export function useRise(delay = 0, distance = 28) {
   const frame = useCurrentFrame();
@@ -12,23 +14,45 @@ export function useRise(delay = 0, distance = 28) {
   };
 }
 
-/** Hard editorial wipe: a black plate leaves to the right with a 3px lime edge. */
-export function Reveal({ children }: { children: React.ReactNode }) {
+/**
+ * Section change: the incoming frame slides up and settles from a short zoom.
+ * The outgoing frame lifts with it. No glow, no dissolve to black.
+ */
+export function SceneShift({
+  children,
+  duration,
+  enter = true,
+  exit = true,
+}: {
+  children: React.ReactNode;
+  duration: number;
+  enter?: boolean;
+  exit?: boolean;
+}) {
   const frame = useCurrentFrame();
-  const { width } = useVideoConfig();
-  const p = interpolate(frame, [0, 12], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-    easing: Easing.inOut(Easing.cubic),
-  });
+  const { height } = useVideoConfig();
+  const enterP = enter
+    ? interpolate(frame, [0, SLIDE_FRAMES], [0, 1], {
+        easing: EASE,
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      })
+    : 1;
+  const exitStart = Math.max(SLIDE_FRAMES, duration - SLIDE_FRAMES);
+  const exitP = exit
+    ? interpolate(frame, [exitStart, duration], [0, 1], {
+        easing: EASE,
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      })
+    : 0;
+  const travel = height;
+  const y = interpolate(enterP, [0, 1], [travel, 0]) + interpolate(exitP, [0, 1], [0, -travel]);
+  const scale = interpolate(enterP, [0, 1], [enter ? 1.035 : 1, 1]) * interpolate(exitP, [0, 1], [1, exit ? 0.985 : 1]);
+
   return (
-    <div style={{ position: "absolute", inset: 0 }}>
+    <div style={{ position: "absolute", inset: 0, transform: `translateY(${y}px) scale(${scale})`, transformOrigin: "center center" }}>
       {children}
-      {p < 1 ? (
-        <div style={{ position: "absolute", inset: 0, transform: `translateX(${p * width}px)`, background: BG }}>
-          <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: ACCENT }} />
-        </div>
-      ) : null}
     </div>
   );
 }

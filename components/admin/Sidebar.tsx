@@ -15,6 +15,7 @@ import {
   ExternalLink,
   Music,
 } from "lucide-react";
+import { Logo } from "@/components/brand/Logo";
 
 type NavItem = {
   href: string;
@@ -80,9 +81,9 @@ export function AdminSidebar() {
         <div className="shrink-0 px-6 pt-8 pb-6">
           <Link
             href="/"
-            className="inline-block text-lg font-black tracking-tighter text-white"
+            className="inline-block"
           >
-            HUEV<span className="text-[var(--accent)]">SITE</span>.IO
+            <Logo className="h-6 w-auto" />
           </Link>
           <div className="text-[10px] font-mono text-[var(--text-dim)] uppercase tracking-widest mt-1.5">
             admin panel

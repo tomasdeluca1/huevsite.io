@@ -160,8 +160,8 @@ export function DomainConnectionCard({
             >
               <div className={`rounded-[1.6rem] border px-5 py-4 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl ${
                 visibleNotification.isValid
-                  ? "border-green-400/20 bg-[linear-gradient(135deg,rgba(34,197,94,0.16),rgba(8,8,8,0.92))] text-green-100"
-                  : "border-amber-400/20 bg-[linear-gradient(135deg,rgba(245,158,11,0.16),rgba(8,8,8,0.92))] text-amber-50"
+                  ? "border-green-400/20 bg-[linear-gradient(135deg,rgba(34,197,94,0.16),rgba(5,5,5,0.92))] text-green-100"
+                  : "border-amber-400/20 bg-[linear-gradient(135deg,rgba(245,158,11,0.16),rgba(5,5,5,0.92))] text-amber-50"
               }`}>
                 <div className="flex items-start gap-4">
                   <div className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border ${

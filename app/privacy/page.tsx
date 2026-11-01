@@ -16,7 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function PrivacyPage() {
   const t = await getTranslations('legal')
   return (
-    <div className="min-h-screen bg-[#080808] text-white px-4 py-16">
+    <div className="min-h-screen bg-[var(--bg)] text-white px-4 py-16">
       <div className="max-w-3xl mx-auto">
         <Link
           href="/"

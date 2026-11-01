@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { SITE_URL } from "@/lib/site-url";
 import LocaleToggle from "@/components/LocaleToggle";
+import { Logo } from "@/components/brand/Logo";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("bdls");
@@ -45,8 +46,8 @@ export default async function BuilderGuiaPage() {
   return (
     <div className="min-h-screen bg-[#050505] text-white font-display flex flex-col">
       <header className="flex items-center justify-between px-6 py-5">
-        <Link href="/" className="text-sm font-black tracking-tighter">
-          HUEV<span className="text-[#C8FF00]">SITE</span>.IO
+        <Link href="/">
+          <Logo className="h-5 w-auto" />
         </Link>
         <div className="flex items-center gap-4">
           <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-700">

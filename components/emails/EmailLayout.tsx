@@ -1,4 +1,6 @@
 import * as React from 'react';
+import { SITE_URL } from '@/lib/site-url';
+import { BRAND } from '@/lib/brand';
 
 interface EmailLayoutProps {
   children: React.ReactNode;
@@ -11,7 +13,7 @@ interface EmailLayoutProps {
 export const EmailLayout: React.FC<EmailLayoutProps> = ({ children, previewText }) => (
   <div
     style={{
-      backgroundColor: '#000000',
+      backgroundColor: BRAND.color.bg,
       margin: 0,
       padding: '28px 12px',
       fontFamily: "system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
@@ -25,8 +27,8 @@ export const EmailLayout: React.FC<EmailLayoutProps> = ({ children, previewText 
       style={{
         maxWidth: '600px',
         margin: '0 auto',
-        backgroundColor: '#0a0a0c',
-        border: '1px solid #1c1c20',
+        backgroundColor: BRAND.color.surface,
+        border: `1px solid ${BRAND.color.border}`,
         borderRadius: '20px',
         overflow: 'hidden',
       }}
@@ -34,11 +36,17 @@ export const EmailLayout: React.FC<EmailLayoutProps> = ({ children, previewText 
       {/* accent bar */}
       <div style={{ height: '4px', background: 'linear-gradient(90deg, #C8FF00, #a3e635 55%, #65a30d)' }} />
 
-      {/* header */}
+      {/* header: el logo va como <img> con URL absoluta (un mail no resuelve rutas
+          relativas) y con alt, que es lo que se lee si el cliente bloquea imágenes. */}
       <div style={{ padding: '28px 32px 4px', textAlign: 'center' }}>
-        <span style={{ fontSize: '22px', fontWeight: 800, letterSpacing: '-0.04em', color: '#ffffff' }}>
-          huev<span style={{ color: '#C8FF00' }}>site</span><span style={{ color: '#6b7280' }}>.io</span>
-        </span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={`${SITE_URL}/logo-huevsite.png`}
+          alt="huevsite.io"
+          width={164}
+          height={40}
+          style={{ display: 'inline-block', width: '164px', height: 'auto', border: 0 }}
+        />
       </div>
 
       {/* body */}

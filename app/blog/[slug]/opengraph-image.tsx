@@ -5,6 +5,7 @@ import {
   type BlogPost,
 } from "@/lib/blog-data";
 import { ogAvatarUrl } from "@/lib/og-avatar";
+import { BRAND } from "@/lib/brand";
 
 // BDLS posts are published from the DB after deploy, so this metadata route
 // must stay dynamic instead of serving a cached shell from build time.
@@ -19,9 +20,9 @@ export const size = {
 
 export const contentType = "image/png";
 
-const ACCENT = "#C8FF00";
-const BG_TOP = "#050505";
-const BG_BOTTOM = "#0c0c0c";
+const ACCENT = BRAND.color.accent;
+const BG_TOP = BRAND.color.bg;
+const BG_BOTTOM = BRAND.color.surface;
 const BORDER = "rgba(255,255,255,0.08)";
 const TEXT_DIM = "rgba(255,255,255,0.62)";
 const TEXT_MUTED = "rgba(255,255,255,0.38)";
@@ -214,7 +215,7 @@ function AuthorAvatar({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "linear-gradient(135deg, #C8FF00 0%, #7aaa00 100%)",
+        background: `linear-gradient(135deg, ${ACCENT} 0%, #7aaa00 100%)`,
         color: "black",
         fontSize: Math.round(avatarSize * 0.42),
         fontWeight: 900,
@@ -336,7 +337,7 @@ function renderBuilderOfTheWeek(post: BlogPost) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              background: "linear-gradient(135deg, #C8FF00 0%, #7aaa00 100%)",
+              background: `linear-gradient(135deg, ${ACCENT} 0%, #7aaa00 100%)`,
               color: "black",
               fontSize: 184,
               fontWeight: 900,

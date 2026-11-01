@@ -12,6 +12,7 @@ import LocaleToggle from "@/components/LocaleToggle";
 import { ExploreClient } from "@/components/explore/ExploreClient";
 import { DiscoveryHeader } from "@/components/discovery/DiscoveryHeader";
 import { HallOfFameButton } from "@/components/discovery/HallOfFameButton";
+import { Logo } from "@/components/brand/Logo";
 
 export const revalidate = 60; // Revalidate simple cache every 60s
 
@@ -130,9 +131,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
       {/* FOOTER */}
       <footer className="py-10 px-6 border-t border-[var(--border)] flex flex-col md:flex-row items-center justify-between gap-4 max-w-[1440px] mx-auto w-full">
         <div className="flex flex-col items-center md:items-start gap-1">
-          <div className="logo text-[var(--text-muted)] text-sm font-mono font-bold tracking-tight">
-            huevsite.io
-          </div>
+          <Logo className="h-5 w-auto opacity-70" />
           <div className="text-xs text-[var(--text-dim)]">{t("footerTagline")}</div>
         </div>
         <div className="flex gap-6">

@@ -10,6 +10,7 @@ import { getLocale } from "@/lib/locale";
 import { canonical, keywordsFor } from "@/lib/seo";
 import { safeJsonLd } from "@/lib/json-ld";
 import { breadcrumbLd, pricingLd } from "@/lib/structured-data";
+import { Logo } from "@/components/brand/Logo";
 
 export const dynamic = "force-dynamic";
 
@@ -89,8 +90,8 @@ export default async function PreciosPage({
       />
       <div className="max-w-5xl mx-auto px-6 py-16 sm:py-24">
         <div className="flex items-center justify-between mb-12">
-          <Link href="/" className="logo">
-            huev<span style={{ color: "var(--accent)" }}>site</span>.io
+          <Link href="/">
+            <Logo className="h-6 w-auto" />
           </Link>
           <div className="flex items-center gap-3">
             <LocaleToggle />

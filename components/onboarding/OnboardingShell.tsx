@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { STEPS, type StepId } from "@/lib/onboarding-types";
 import Link from "next/link";
 import LocaleToggle from "@/components/LocaleToggle";
+import { Logo } from "@/components/brand/Logo";
 
 interface OnboardingShellProps {
   currentStep: number;
@@ -42,9 +43,9 @@ export function OnboardingShell({
         </div>
 
         {/* Nav */}
-        <div className="flex items-center justify-between px-8 py-4 bg-[rgba(8,8,8,0.7)] backdrop-blur-xl border-b border-[var(--border)]">
-          <Link href="/" className="logo scale-90 origin-left">
-            huev<span>site</span>.io
+        <div className="flex items-center justify-between px-8 py-4 bg-[rgba(5,5,5,0.7)] backdrop-blur-xl border-b border-[var(--border)]">
+          <Link href="/">
+            <Logo className="h-6 w-auto" />
           </Link>
 
           {/* Step indicators */}

@@ -20,6 +20,7 @@ import { safeJsonLd } from "@/lib/json-ld";
 import { breadcrumbLd, profilePageLd } from "@/lib/structured-data";
 import { keywordsFor } from "@/lib/seo";
 import { getLocale } from "@/lib/locale";
+import { Logo } from "@/components/brand/Logo";
 
 interface Props {
   params: { username: string };
@@ -445,7 +446,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
               // builder logic • {profile.displayName} &apos;s huevsite
             </div>
             {profile.subscriptionTier !== "pro" && (
-              <div className="logo mt-4 scale-75 opacity-10 filter grayscale select-none">huev<span>site</span>.io</div>
+              <Logo className="mt-4 h-5 w-auto opacity-10 grayscale select-none" />
             )}
           </footer>
         )}

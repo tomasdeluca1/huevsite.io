@@ -1,3 +1,4 @@
+import { BRAND } from '@/lib/brand';
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { verifyUnsubscribe } from "@/lib/email-unsubscribe";
@@ -5,7 +6,7 @@ import { verifyUnsubscribe } from "@/lib/email-unsubscribe";
 export const dynamic = "force-dynamic";
 
 function htmlPage(title: string, message: string, status: number) {
-  const body = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><style>body{background:#050505;color:#fff;font-family:system-ui,-apple-system,sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;padding:24px}.card{max-width:440px;text-align:center;border:1px solid #1a1a1a;border-radius:16px;padding:40px}h1{font-size:22px;letter-spacing:-.03em;margin:0 0 12px}.logo{font-weight:900;letter-spacing:-.05em;margin-bottom:24px;font-size:20px}.logo span{color:#C8FF00}a{color:#C8FF00;text-decoration:none;font-weight:700}p{color:#a1a1aa;line-height:1.6;margin:8px 0}</style></head><body><div class="card"><div class="logo">HUEV<span>SITE</span>.IO</div><h1>${title}</h1><p>${message}</p><p><a href="https://huevsite.io">Volver a huevsite.io →</a></p></div></body></html>`;
+  const body = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><style>body{background:${BRAND.color.bg};color:#fff;font-family:system-ui,-apple-system,sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;padding:24px}.card{max-width:440px;text-align:center;border:1px solid ${BRAND.color.border};border-radius:16px;padding:40px}h1{font-size:22px;letter-spacing:-.03em;margin:0 0 12px}.logo{display:block;margin:0 auto 24px;width:150px;height:auto}a{color:${BRAND.color.accent};text-decoration:none;font-weight:700}p{color:${BRAND.color.textMuted};line-height:1.6;margin:8px 0}</style></head><body><div class="card"><img src="/logo-huevsite.png" alt="huevsite.io" width="150" class="logo"><h1>${title}</h1><p>${message}</p><p><a href="https://huevsite.io">Volver a huevsite.io →</a></p></div></body></html>`;
   return new NextResponse(body, {
     status,
     headers: { "Content-Type": "text/html; charset=utf-8" },

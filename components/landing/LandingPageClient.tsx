@@ -20,6 +20,7 @@ import { toEmbedUrl } from "@/lib/site-settings-service";
 import { trackEvent, HERO_VARIANT_KEY } from "@/lib/track";
 import type { FounderOffer } from "@/lib/founder-offer";
 import type { CheckoutAttribution } from "@/lib/checkout-attribution";
+import { Logo } from "@/components/brand/Logo";
 
 interface LandingPageClientProps {
   showcaseData: any;
@@ -1078,7 +1079,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
       {/* FOOTER */}
       <footer>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <div className="logo">huev<span style={{ color: 'var(--accent)' }}>site</span>.io</div>
+          <Logo className="h-6 w-auto" />
           <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
             {tFooter("tagline")}{' '}
             <a

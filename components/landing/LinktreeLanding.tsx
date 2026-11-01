@@ -19,6 +19,7 @@ import {
   Zap,
   Star,
 } from "lucide-react";
+import { Logo } from "@/components/brand/Logo";
 
 function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
@@ -140,8 +141,8 @@ export default function LinktreeLanding() {
     <div className="lt-landing">
       {/* ── NAV ───────────────────────────────────────── */}
       <nav className="lt-nav">
-        <Link href="/" className="logo">
-          huev<span style={{ color: "var(--accent)" }}>site</span>.io
+        <Link href="/">
+          <Logo className="h-6 w-auto" />
         </Link>
         <div className="flex items-center gap-3">
           <LocaleToggle />
@@ -409,8 +410,8 @@ export default function LinktreeLanding() {
 
       {/* ── FOOTER ────────────────────────────────────── */}
       <footer className="lt-footer">
-        <Link href="/" className="logo">
-          huev<span style={{ color: "var(--accent)" }}>site</span>.io
+        <Link href="/">
+          <Logo className="h-6 w-auto" />
         </Link>
         <div className="lt-footer-links">
           <Link href="/explore">{t("footerExplore")}</Link>

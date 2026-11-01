@@ -21,6 +21,7 @@ import Image from "next/image";
 import { SITE_URL } from "@/lib/site-url";
 import { safeJsonLd } from "@/lib/json-ld";
 import { breadcrumbLd, ORGANIZATION_ID } from "@/lib/structured-data";
+import { Logo } from "@/components/brand/Logo";
 
 // DB-backed BDLS posts are published ad-hoc — avoid serving cached shells
 // from the previous build that don't know about them yet.
@@ -146,7 +147,7 @@ export default async function BlogPostPage({
         <header className="mb-12">
           <div className="flex items-center justify-between mb-8">
             <Link href="/blog" className="text-[10px] font-mono uppercase tracking-widest text-[var(--accent)] hover:text-white transition-colors">{t('backToBlog')}</Link>
-            <Link href="/" className="logo text-lg scale-75 opacity-50 hover:opacity-100 transition-opacity">huev<span>site</span>.io</Link>
+            <Link href="/" className="opacity-50 hover:opacity-100 transition-opacity"><Logo className="h-5 w-auto" /></Link>
           </div>
 
           <div className="flex flex-col gap-6 mt-16 mb-12">

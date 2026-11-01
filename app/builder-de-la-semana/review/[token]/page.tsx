@@ -23,6 +23,7 @@ import {
   Upload,
   Trash2,
 } from "lucide-react";
+import { Logo } from "@/components/brand/Logo";
 
 interface VideoInfo {
   uploadedAt: string | null;
@@ -304,8 +305,8 @@ export default function BuilderReviewPage() {
     <div className="min-h-screen bg-[#050505] text-white font-display flex flex-col">
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-5 border-b border-white/5">
-        <Link href="/" className="text-lg font-black tracking-tighter">
-          HUEV<span className="text-[#C8FF00]">SITE</span>.IO
+        <Link href="/">
+          <Logo className="h-6 w-auto" />
         </Link>
         <div className="flex items-center gap-4">
           <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-600">

@@ -84,7 +84,7 @@ export const MOCK_PROFILE: ProfileData = {
       links: [
         {
           platform: "twitter",
-          url: "https://x.com/huevsite",
+          url: "https://x.com/huevsite_io",
           label: "X / Twitter"
         }
       ]

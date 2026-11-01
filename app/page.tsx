@@ -51,8 +51,8 @@ export async function generateMetadata(): Promise<Metadata> {
       card: "summary_large_image",
       title: OG_TITLE,
       description: OG_DESCRIPTION,
-      site: "@huevsite",
-      creator: "@huevsite",
+      site: "@huevsite_io",
+      creator: "@huevsite_io",
       images: [`${SITE_URL}/twitter-image?v=${v}`],
     },
   };
@@ -83,8 +83,8 @@ const organizationSchema = {
     "comunidad de builders",
   ],
   sameAs: [
-    "https://x.com/huevsite",
-    "https://instagram.com/huevsite",
+    "https://x.com/huevsite_io",
+    "https://www.instagram.com/huevsite.io",
     "https://www.linkedin.com/company/huevsite",
   ],
   contactPoint: {

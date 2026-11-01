@@ -157,8 +157,8 @@ Huevsite.io está construido con:
 ## Datos de Contacto y Sociales
 
 - **Web**: https://huevsite.io
-- **Twitter/X**: https://x.com/huevsite
-- **Instagram**: https://instagram.com/huevsite
+- **Twitter/X**: https://x.com/huevsite_io
+- **Instagram**: https://www.instagram.com/huevsite.io
 - **Email**: hi@huevsite.studio
 - **Blog**: https://huevsite.io/blog
 

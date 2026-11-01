@@ -61,8 +61,8 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     twitter: {
       card: "summary_large_image",
-      site: "@huevsite",
-      creator: "@huevsite",
+      site: "@huevsite_io",
+      creator: "@huevsite_io",
     },
     alternates: {
       types: {

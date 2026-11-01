@@ -14,10 +14,9 @@ function add(shot) {
 }
 
 add({ kind: "cursor", dur: 8, sound: "tick" });
-add({ kind: "logo", dur: 12, sound: "impact" });
-add({ kind: "logo", dur: 14, sound: "clack", phase: 1 });
+add({ kind: "logo", dur: 28, sound: "clack" });
 add({ kind: "type", dur: 14, sound: "clack", text: "Mostrá", accent: false });
-add({ kind: "type", dur: 16, sound: "enter", text: "lo que shippeás.", accent: true });
+add({ kind: "type", dur: 16, sound: "enter", text: "lo que shippeás.", accent: false });
 add({ kind: "gap", dur: 10, sound: null });
 add({ kind: "type", dur: 16, sound: "impact", text: "Que te encuentren.", accent: false });
 

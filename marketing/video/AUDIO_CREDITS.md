@@ -13,6 +13,6 @@ Every sound in the promo is synthesized in `scripts/synthesize-audio.mjs`. There
 | `egg` | Six short highpassed cracks over ~110 ms, then a low crunch. An eggshell, not a whoosh. | The 🥚 on the CTA, on the cut into the hold | Original synthesis. CC0 |
 | silence | Frames with no event. | Before “Que te encuentren.” and before the CTA | — |
 
-The master is `public/audio/master.wav`: mono, 48 kHz, 45.000 s. Hits are soft-clipped and peak-normalized. Measured on the final file: integrated loudness −23.1 LUFS, sample peak −2.5 dBFS, true peak −1.2 dBFS. Nothing clips. Integrated loudness is not −14 because the cut is short transients plus silence on purpose; another 9 dB of gain would push the true peak through 0 dBFS. The hits already sit at the ceiling.
+The master is `public/audio/master.wav`: mono, 48 kHz, 45.000 s. Hits are soft-clipped, then gained and run through a lookahead limiter (`alimiter`, ceiling about −5 dBFS sample so inter-sample peaks stay under −1 dBTP). Silences are untouched. Measured on the final file: integrated loudness −14.6 LUFS, true peak −2.9 dBFS. Nothing clips.
 
 Not in this cut, on purpose: whooshes, risers, stock drums, and any track from a sample library.

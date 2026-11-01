@@ -31,14 +31,8 @@ export function Stage({
   const { width } = useVideoConfig();
   const local = frame - shot.from;
   const vertical = layout === "vertical";
-  const impact = shot.sound === "impact" || shot.sound === "egg";
-
   if (shot.kind === "gap") {
     return <AbsoluteFill style={{ background: BG }} />;
-  }
-
-  if (impact && local < 2) {
-    return <AbsoluteFill style={{ background: ACCENT }} />;
   }
 
   if (shot.kind === "cursor") {
@@ -59,10 +53,11 @@ export function Stage({
 
   if (shot.kind === "type" && shot.text) {
     const size = typeSize(shot.text, vertical);
-    const p = Math.min(1, Math.max(0, (local - 2) / 5));
-    const scale = 1.16 - 0.16 * (1 - (1 - p) ** 3);
+    const invert = shot.sound === "impact" && local === 0;
+    const p = Math.min(1, local / 5);
+    const scale = 1.12 - 0.12 * (1 - (1 - p) ** 3);
     return (
-      <AbsoluteFill style={{ background: BG, alignItems: "center", justifyContent: "center", padding: vertical ? 56 : 80 }}>
+      <AbsoluteFill style={{ background: invert ? ACCENT : BG, alignItems: "center", justifyContent: "center", padding: vertical ? 56 : 80 }}>
         <div
           style={{
             fontFamily: DISPLAY,
@@ -70,7 +65,7 @@ export function Stage({
             fontSize: size,
             letterSpacing: TRACKING,
             lineHeight: 0.96,
-            color: shot.accent ? ACCENT : TEXT_STRONG,
+            color: invert ? "#050505" : shot.accent ? ACCENT : TEXT_STRONG,
             textAlign: "center",
             transform: `scale(${scale})`,
             maxWidth: width - (vertical ? 112 : 160),

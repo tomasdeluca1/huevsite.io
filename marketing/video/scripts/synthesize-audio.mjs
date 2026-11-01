@@ -162,7 +162,7 @@ const norm = spawnSync(
     "-i",
     rawPath,
     "-af",
-    "volume=0dB",
+    "volume=20dB,alimiter=limit=0.54:attack=2:release=60:level=false",
     "-ar",
     String(SR),
     "-ac",

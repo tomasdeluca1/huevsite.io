@@ -90,6 +90,13 @@ eq('la OG del blog no repite el acento ni el negro', ogBlog.match(/#(C8FF00|0505
 // El kit corre en edge y arrastra a brand.ts: tiene que ser solo constantes.
 eq('brand.ts no importa nada', /^\s*(import|require)\b/m.test(read('lib/brand.ts')), false);
 
+// --- la página de referencia no se escribe a mano: dice lo que dice la tabla ---
+const doc = read('docs/brand/README.md');
+const faltan = [];
+for (const [k, v] of Object.entries(BRAND.color)) if (!doc.includes(`\`${v}\``)) faltan.push(`color.${k}=${v}`);
+for (const [k, v] of Object.entries(BRAND.type)) if (!doc.includes(`\`${v}\``)) faltan.push(`type.${k}=${v}`);
+eq('la referencia tiene todos los valores de la tabla', faltan, []);
+
 // --- texto negro sobre el lima: de esto depende cada botón de acento ---
 eq('negro sobre el acento', getContrastColor(BRAND.color.accent), '#000000');
 

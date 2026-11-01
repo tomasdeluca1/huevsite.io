@@ -25,7 +25,10 @@ export function Logo({
       width={983}
       height={240}
       priority={priority}
-      className={className}
+      // self-start es del componente y no de quien lo usa: dentro de un flex en
+      // columna, un <img> con width:auto se estira al ancho del contenedor (el
+      // del pie de la home salía a 13:1). Fuera de un flex, es inerte.
+      className={`self-start ${className}`}
     />
   );
 }

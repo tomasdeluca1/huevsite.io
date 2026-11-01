@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { SITE_URL } from '@/lib/site-url';
+import { BRAND } from '@/lib/brand';
 
 interface EmailLayoutProps {
   children: React.ReactNode;
@@ -12,7 +13,7 @@ interface EmailLayoutProps {
 export const EmailLayout: React.FC<EmailLayoutProps> = ({ children, previewText }) => (
   <div
     style={{
-      backgroundColor: '#000000',
+      backgroundColor: BRAND.color.bg,
       margin: 0,
       padding: '28px 12px',
       fontFamily: "system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
@@ -26,8 +27,8 @@ export const EmailLayout: React.FC<EmailLayoutProps> = ({ children, previewText 
       style={{
         maxWidth: '600px',
         margin: '0 auto',
-        backgroundColor: '#0a0a0c',
-        border: '1px solid #1c1c20',
+        backgroundColor: BRAND.color.surface,
+        border: `1px solid ${BRAND.color.border}`,
         borderRadius: '20px',
         overflow: 'hidden',
       }}

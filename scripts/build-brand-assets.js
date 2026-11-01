@@ -94,6 +94,30 @@ async function icono(isotipo, size, destino) {
   console.log(`${destino} ${size}x${size}`);
 }
 
+/**
+ * El favicon, como ICO de verdad. El que había era un PNG de 30x32 con el
+ * verde viejo y extensión .ico, y es el ícono que más se ve: el layout lo
+ * declara primero y con sizes="any". Un ICO puede llevar un PNG adentro:
+ * cabecera de 6 bytes, una entrada de 16 y los bytes del PNG.
+ */
+async function favicon(destino) {
+  const png = fs.readFileSync(abs('public/icons/icon-32.png'));
+  const cabecera = Buffer.alloc(22);
+  cabecera.writeUInt16LE(0, 0);        // reservado
+  cabecera.writeUInt16LE(1, 2);        // tipo: ícono
+  cabecera.writeUInt16LE(1, 4);        // una sola imagen
+  cabecera.writeUInt8(32, 6);          // ancho
+  cabecera.writeUInt8(32, 7);          // alto
+  cabecera.writeUInt8(0, 8);           // colores de paleta: 0 = más de 256
+  cabecera.writeUInt8(0, 9);           // reservado
+  cabecera.writeUInt16LE(1, 10);       // planos
+  cabecera.writeUInt16LE(32, 12);      // bits por píxel
+  cabecera.writeUInt32LE(png.length, 14);
+  cabecera.writeUInt32LE(22, 18);      // dónde empieza la imagen
+  fs.writeFileSync(abs(destino), Buffer.concat([cabecera, png]));
+  console.log(`${destino} 32x32 (ICO con PNG adentro)`);
+}
+
 (async () => {
   console.log(`lockup: ${await recolorearLockup()} píxeles verdes llevados a ${BRAND.color.accent}`);
   const isotipo = await recortarIsotipo();
@@ -101,4 +125,5 @@ async function icono(isotipo, size, destino) {
   await icono(isotipo, 512, 'public/icons/icon-512.png');
   await icono(isotipo, 192, 'public/icons/icon-192.png');
   await icono(isotipo, 32, 'public/icons/icon-32.png');
+  await favicon('public/favicon.ico');
 })();

@@ -97,6 +97,24 @@ for (const [k, v] of Object.entries(BRAND.color)) if (!doc.includes(`\`${v}\``))
 for (const [k, v] of Object.entries(BRAND.type)) if (!doc.includes(`\`${v}\``)) faltan.push(`type.${k}=${v}`);
 eq('la referencia tiene todos los valores de la tabla', faltan, []);
 
+// --- el logo no se deforma ---
+// Un <img> con width:auto dentro de un flex en columna se estira al ancho del
+// contenedor: el del pie de la home salía a 13:1. El componente se defiende
+// solo, porque el que lo usa pasa su propia className y pisa la del default.
+eq('el logo trae self-start', /self-start/.test(read('components/brand/Logo.tsx')), true);
+const aMano = ui.filter((f) => !f.includes('components/brand') && /huev<span|HUEV<span/i.test(read(f)));
+eq('nadie escribe el wordmark a mano', aMano, []);
+
+// --- los mails son superficie de marca: el marco sale de la tabla ---
+const mail = read('components/emails/EmailLayout.tsx');
+eq('el marco del mail importa BRAND', /from ['"]@\/lib\/brand['"]/.test(mail), true);
+eq('el marco del mail no tiene negros a mano', mail.match(/#(000000|0a0a0c|1c1c20)/gi) || [], []);
+eq('la página de desuscripción sale de la tabla', /BRAND\.color/.test(read('app/api/email/unsubscribe/route.ts')), true);
+
+// --- sharp lo usa `npm run verify`: tiene que estar declarado ---
+const pkg = JSON.parse(read('package.json'));
+eq('sharp está declarado', !!((pkg.devDependencies || {}).sharp || (pkg.dependencies || {}).sharp), true);
+
 // --- texto negro sobre el lima: de esto depende cada botón de acento ---
 eq('negro sobre el acento', getContrastColor(BRAND.color.accent), '#000000');
 

@@ -84,6 +84,30 @@ async function esquina(file) {
     eq(`${src} ya no usa el icon.jpeg viejo`, /icon\.jpeg/.test(txt), false);
   }
 
+  // El favicon es el ícono que de verdad ve la gente: el layout lo declara
+  // primero y con sizes="any". El que había era un PNG de 30x32 con el verde
+  // viejo sobre #181818, disfrazado de .ico.
+  const ico = fs.existsSync(abs('public/favicon.ico')) ? fs.readFileSync(abs('public/favicon.ico')) : null;
+  eq('favicon.ico es un ICO de verdad', ico ? [ico.readUInt16LE(0), ico.readUInt16LE(2)] : 'no existe', [0, 1]);
+  if (ico && ico.readUInt16LE(2) === 1) {
+    const ancho = ico[6] || 256, alto = ico[7] || 256;
+    eq('favicon.ico declara 32x32', [ancho, alto], [32, 32]);
+    const tam = ico.readUInt32LE(14), desde = ico.readUInt32LE(18);
+    const dentro = ico.subarray(desde, desde + tam);
+    const m = await sharp(dentro).metadata();
+    eq('la imagen de adentro mide 32x32', [m.width, m.height], [32, 32]);
+    const { data, info } = await sharp(dentro).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    const c = new Map();
+    for (let i = 0; i < data.length; i += info.channels) {
+      const [r, g, b, a] = [data[i], data[i + 1], data[i + 2], data[i + 3]];
+      if (a < 250 || !(g > b + 40 && g >= r && r > b)) continue;
+      const k = hex(r, g, b);
+      c.set(k, (c.get(k) || 0) + 1);
+    }
+    const verde = [...c.entries()].sort((x, y) => y[1] - x[1])[0]?.[0];
+    eq('favicon.ico está en el verde de la tabla (±6)', cerca(verde, acento, 6), true);
+  }
+
   if (failed) {
     console.error(`\n${failed} comprobación(es) fallaron`);
     process.exit(1);

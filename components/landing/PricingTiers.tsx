@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { lemonLifetimeCheckoutUrl, buildLemonCheckoutUrl } from "@/lib/lemon-checkout-url";
+import { buildLemonCheckoutUrl, withCheckoutSuccess } from "@/lib/lemon-checkout-url";
+import type { CheckoutAttribution } from "@/lib/checkout-attribution";
+import type { FounderOffer } from "@/lib/founder-offer";
 import { trackEvent } from "@/lib/track";
 
 interface PricingUser {
@@ -32,23 +34,32 @@ export function PricingTiers({
   user,
   loginNext = "/precios",
   utm,
-  founderRemaining,
+  attribution,
+  founderOffer,
 }: {
   user: PricingUser | null;
   loginNext?: string;
   /** Query string de UTMs (sin ? inicial), p.ej. "utm_source=email&utm_campaign=somos-200". */
   utm?: string;
-  /** Founder batch: asientos restantes (vivo, cap - is_lifetime). Omitir/negativo = sin contador. */
-  founderRemaining?: number | null;
+  /** Mismos UTMs (y ref) para mandarlos como custom data de Lemon, no como query suelta. */
+  attribution?: CheckoutAttribution | null;
+  /** Precio, checkout y estado de cupo, resueltos en el server. */
+  founderOffer: FounderOffer;
 }) {
   const t = useTranslations("pricing");
   // Deslogueado: volvemos a la misma página CON los UTMs, así tras loguearse el
   // checkout ya los arrastra. Logueado: van directo a la URL de Lemon.
   const nextTarget = appendQuery(loginNext, utm);
   const loginHref = `/login?next=${encodeURIComponent(nextTarget)}`;
-  const proHref = user ? appendQuery(buildLemonCheckoutUrl(user.id, user.email), utm) : loginHref;
-  const founderHref = user
-    ? appendQuery(buildLemonCheckoutUrl(user.id, user.email, lemonLifetimeCheckoutUrl), utm)
+  const proHref = user
+    ? withCheckoutSuccess(buildLemonCheckoutUrl(user.id, user.email, undefined, attribution), "pro", 9)
+    : loginHref;
+  const founderHref = user && founderOffer.checkoutUrl
+    ? withCheckoutSuccess(
+        buildLemonCheckoutUrl(user.id, user.email, founderOffer.checkoutUrl, attribution),
+        "founder",
+        founderOffer.price
+      )
     : loginHref;
   const trackTier = (tier: "free" | "pro" | "founder") =>
     trackEvent("landing_pricing_click", { tier, loggedIn: !!user?.id });
@@ -121,14 +132,19 @@ export function PricingTiers({
           <span className="text-[9px] border border-white/15 text-[var(--text-dim)] px-2 py-0.5 rounded font-black uppercase tracking-wider">{t("founderBadge")}</span>
         </div>
         <div className="flex items-baseline gap-1 mb-1">
-          <span className="text-5xl font-black text-white">$79</span>
+          <span className="text-5xl font-black text-white">{`$${founderOffer.price}`}</span>
           <span className="text-sm font-mono text-[var(--text-muted)]">{t("founderPriceUnit")}</span>
         </div>
         {/* Founder batch: live scarcity (never renders a made-up number — the
             count comes from profiles.is_lifetime via getFounderSeats). */}
-        {typeof founderRemaining === "number" && founderRemaining > 0 && (
+        {founderOffer.remaining > 0 && (
           <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-[var(--accent)]/30 bg-[var(--accent)]/5 px-2.5 py-1 text-[10px] font-mono uppercase tracking-widest text-[var(--accent)] w-fit">
-            {t("founderSeatsLeft", { n: founderRemaining })}
+            {t("founderSeatsLeft", { n: founderOffer.remaining })}
+          </div>
+        )}
+        {founderOffer.remaining === 0 && (
+          <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] font-mono uppercase tracking-widest text-[var(--text-dim)] w-fit">
+            {t("founderCapFull")}
           </div>
         )}
         <p className="text-xs text-[var(--text-muted)] mb-8">{t("founderSubtitle")}</p>
@@ -140,7 +156,14 @@ export function PricingTiers({
             </li>
           ))}
         </ul>
-        {lemonLifetimeCheckoutUrl ? (
+        {founderOffer.soldOut || !founderOffer.checkoutUrl ? (
+          <button
+            disabled
+            className="btn btn-ghost w-full !py-4 !rounded-2xl text-center justify-center opacity-40 cursor-not-allowed"
+          >
+            {founderOffer.soldOut ? t("founderSoldOut") : t("founderCtaSoon")}
+          </button>
+        ) : (
           <Link
             href={founderHref}
             onClick={() => trackTier("founder")}
@@ -148,13 +171,6 @@ export function PricingTiers({
           >
             {t("founderCta")}
           </Link>
-        ) : (
-          <button
-            disabled
-            className="btn btn-ghost w-full !py-4 !rounded-2xl text-center justify-center opacity-40 cursor-not-allowed"
-          >
-            {t("founderCtaSoon")}
-          </button>
         )}
       </div>
     </>

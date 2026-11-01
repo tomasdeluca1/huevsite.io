@@ -5,12 +5,32 @@ declare global {
     umami?: {
       track: (eventName: string, data?: Record<string, any>) => void;
     };
+    gtag?: (...args: any[]) => void;
   }
 }
 
 export function trackEvent(eventName: string, data?: Record<string, any>) {
   if (typeof window === "undefined") return;
   window.umami?.track(eventName, data);
+}
+
+/** Umami + GA4 purchase. Fired once the post-checkout page confirms Pro. */
+export function trackPurchase(params: {
+  tier: "pro" | "founder";
+  transactionId?: string;
+  value?: number;
+}) {
+  const data: Record<string, any> = { tier: params.tier, currency: "USD" };
+  if (params.transactionId) data.transaction_id = params.transactionId;
+  if (typeof params.value === "number") data.value = params.value;
+  trackEvent("purchase", data);
+  if (typeof window === "undefined") return;
+  window.gtag?.("event", "purchase", {
+    currency: "USD",
+    ...(params.transactionId ? { transaction_id: params.transactionId } : {}),
+    ...(typeof params.value === "number" ? { value: params.value } : {}),
+    items: [{ item_name: params.tier === "founder" ? "Founder" : "Pro" }],
+  });
 }
 
 /** Cookie + localStorage key for the sticky hero A/B variant. Assigned

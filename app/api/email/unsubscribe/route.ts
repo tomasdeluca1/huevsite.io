@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
   if (!verifyUnsubscribe(userId, sig)) {
     return htmlPage(
       "Link inválido",
-      "Este link de baja no es válido. Si querés dejar de recibir el resumen semanal, respondé cualquiera de nuestros emails y lo resolvemos.",
+      "Este link de baja no es válido. Si querés dejar de recibir los avisos, respondé cualquiera de nuestros emails y lo resolvemos.",
       400
     );
   }
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
 
   return htmlPage(
     "Listo, te diste de baja",
-    "No vas a recibir más el resumen semanal de la comunidad. Si fue sin querer, escribinos y lo revertimos.",
+    "No vas a recibir más los avisos de la comunidad: resúmenes, campañas y novedades. Si fue sin querer, escribinos y lo revertimos.",
     200
   );
 }

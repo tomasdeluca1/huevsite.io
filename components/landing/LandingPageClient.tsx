@@ -18,6 +18,8 @@ import type { Faq } from "@/lib/faq-service";
 import type { NetworkPulse } from "@/lib/showcase-service";
 import { toEmbedUrl } from "@/lib/site-settings-service";
 import { trackEvent, HERO_VARIANT_KEY } from "@/lib/track";
+import type { FounderOffer } from "@/lib/founder-offer";
+import type { CheckoutAttribution } from "@/lib/checkout-attribution";
 
 interface LandingPageClientProps {
   showcaseData: any;
@@ -29,15 +31,18 @@ interface LandingPageClientProps {
   networkPulse?: NetworkPulse;
   /** A/B: sticky hero-headline variant, assigned server-side (app/page.tsx). */
   heroAbVariant?: HeroAbVariant;
-  /** Founder batch: live remaining seats for the pricing scarcity counter. */
-  founderRemaining?: number | null;
+  /** Precio y checkout Founder según el cupo vivo. */
+  founderOffer: FounderOffer;
+  /** Query string de UTMs para el login de vuelta. */
+  utm?: string;
+  attribution?: CheckoutAttribution | null;
 }
 
 type HeroVariant = "claim" | "social" | "product";
 /** T1 experiment: identity-challenge H1 (control) vs outcome-focused H1. */
 export type HeroAbVariant = "identity" | "outcome";
 
-export default function LandingPageClient({ showcaseData, testimonials = [], faqs = [], founderVideoUrl = "", founderQuote = "", activeThisWeek = 0, networkPulse, heroAbVariant = "identity", founderRemaining = null }: LandingPageClientProps) {
+export default function LandingPageClient({ showcaseData, testimonials = [], faqs = [], founderVideoUrl = "", founderQuote = "", activeThisWeek = 0, networkPulse, heroAbVariant = "identity", founderOffer, utm, attribution }: LandingPageClientProps) {
   const t = useTranslations("landing");
   const tNav = useTranslations("nav");
   const tFooter = useTranslations("footer");
@@ -907,7 +912,13 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                 viewport={{ once: true }}
                 className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto items-stretch"
               >
-                <PricingTiers user={user ? { id: user.id, email: user.email } : null} founderRemaining={founderRemaining} />
+                <PricingTiers
+                  user={user ? { id: user.id, email: user.email } : null}
+                  loginNext="/"
+                  utm={utm}
+                  attribution={attribution}
+                  founderOffer={founderOffer}
+                />
               </motion.div>
             </div>
           )}

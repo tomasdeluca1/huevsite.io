@@ -13,6 +13,8 @@ import { canonical, keywordsFor } from "@/lib/seo";
 import { ORGANIZATION_ID, WEBSITE_ID } from "@/lib/structured-data";
 import { getLocale } from "@/lib/locale";
 import { getFounderSeats } from "@/lib/founder-seats";
+import { resolveFounderOffer } from "@/lib/founder-offer";
+import { attributionFromSearchParams, attributionToQuery } from "@/lib/checkout-attribution";
 
 export const dynamic = "force-dynamic";
 
@@ -220,7 +222,11 @@ const speakableSchema = {
   },
 };
 
-export default async function LandingPage() {
+export default async function LandingPage({
+  searchParams,
+}: {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}) {
   // A/B T1 (hero H1): sticky 50/50 assignment. Returning visitors keep their
   // cookie'd variant (no flash — the H1 is decided server-side); first visits
   // get a random one that the client then persists (cookie + localStorage).
@@ -286,7 +292,9 @@ export default async function LandingPage() {
         activeThisWeek={activeThisWeek}
         networkPulse={networkPulse}
         heroAbVariant={heroAbVariant}
-        founderRemaining={founderSeats.remaining}
+        founderOffer={resolveFounderOffer(founderSeats)}
+        utm={attributionToQuery(attributionFromSearchParams(searchParams))}
+        attribution={attributionFromSearchParams(searchParams)}
       />
     </>
   );

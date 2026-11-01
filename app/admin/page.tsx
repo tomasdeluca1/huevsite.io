@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { GrantFounderForm } from "@/components/admin/GrantFounderForm";
 import {
   Mic,
   MessageSquare,
@@ -323,6 +324,8 @@ export default function AdminDashboard() {
           )}
         </div>
       )}
+
+      <GrantFounderForm />
 
       {/* Quick nav footer */}
       <div className="mt-12 pt-8 border-t border-[var(--border)]">

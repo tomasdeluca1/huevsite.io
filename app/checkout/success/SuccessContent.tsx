@@ -7,6 +7,7 @@ import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, Loader2, Sparkles, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { trackPurchase } from "@/lib/track";
 
 // ~30s de polling antes de mostrar el estado "delayed" (el webhook a veces tarda
 // o falla — sin esto la pantalla queda en spinner infinito).
@@ -47,6 +48,23 @@ export default function SuccessContent() {
                 if (profile?.subscription_tier === "pro") {
                     setStatus("success");
                     if (interval) clearInterval(interval);
+                    try {
+                        const params = new URLSearchParams(window.location.search);
+                        const tier = params.get("plan") === "founder" ? "founder" : "pro";
+                        const parsed = Number(params.get("value"));
+                        const value = Number.isFinite(parsed) && parsed > 0 ? parsed : tier === "pro" ? 9 : undefined;
+                        const storageKey = `hv_purchase_${authUser.id}_${tier}`;
+                        if (!window.localStorage.getItem(storageKey)) {
+                            trackPurchase({
+                                tier,
+                                transactionId: params.get("order_id") || params.get("checkout_id") || undefined,
+                                value,
+                            });
+                            window.localStorage.setItem(storageKey, "1");
+                        }
+                    } catch {
+                        // Private mode or a blocked storage API: the page still confirms Pro.
+                    }
                     triggerConfetti();
                 } else if (attempts >= MAX_POLL_ATTEMPTS) {
                     setStatus("delayed");

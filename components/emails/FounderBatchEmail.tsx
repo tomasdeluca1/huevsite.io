@@ -68,7 +68,7 @@ export const FounderBatchEmail: React.FC<FounderBatchEmailProps> = ({
       {[
         { emoji: "⚡", text: "Todo lo de Pro, de por vida: dominio propio, insights, 22 bloques, sub-sitios y aparecer primero en el feed, el showcase y el ranking." },
         { emoji: "🚫", text: "Cero mensualidad. Pagás una vez y no pensás nunca más en otra suscripción." },
-        { emoji: "🥚", text: "Badge Founder exclusivo en tu perfil: fuiste de los primeros que apostaron." },
+        { emoji: "🥚", text: "Un lugar entre quienes apostaron al proyecto cuando recién arrancaba." },
       ].map((item, i) => (
         <div
           key={i}

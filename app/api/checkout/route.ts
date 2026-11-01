@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { buildLemonCheckoutUrl } from "@/lib/lemon-checkout-url";
+import { attributionFromSearchParams } from "@/lib/checkout-attribution";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,8 @@ async function handler(req: NextRequest) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  return NextResponse.redirect(buildLemonCheckoutUrl(user.id, user.email), {
+  const attribution = attributionFromSearchParams(req.nextUrl.searchParams);
+  return NextResponse.redirect(buildLemonCheckoutUrl(user.id, user.email, undefined, attribution), {
     status: 302,
   });
 }

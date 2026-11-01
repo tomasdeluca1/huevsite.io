@@ -1,9 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 
 // Founder batch scarcity: the $79 lifetime tier is capped at FOUNDER_SEATS_CAP
-// seats, after which the price moves to FOUNDER_NEXT_PRICE. "Sold" is REAL —
-// counted live from profiles.is_lifetime (set by the Lemon order_created
-// webhook) — so the public counter never lies.
+// seats, after which the public price moves to $129 (see resolveFounderOffer).
+// "Sold" is REAL — counted live from profiles.is_lifetime. That flag is set by
+// the Lemon order_created webhook (both the $79 and the $129 variants) AND by
+// the admin gift (POST /api/admin/grant-founder), and cleared on order_refunded.
+// A gifted Founder therefore occupies a seat. The public counter never lies.
 export const FOUNDER_SEATS_CAP = parseInt(process.env.FOUNDER_SEATS_CAP || "20", 10);
 export const FOUNDER_NEXT_PRICE = process.env.FOUNDER_NEXT_PRICE || "$129";
 

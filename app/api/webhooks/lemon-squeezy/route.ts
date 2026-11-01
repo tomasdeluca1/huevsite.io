@@ -6,6 +6,15 @@ import { postProUpgrade } from "@/lib/twitter";
 import { resolveXHandles } from "@/lib/twitter-utils";
 import { findUserIdByEmail } from "@/lib/find-user-by-email";
 import { scoreService } from "@/lib/score-service";
+import {
+  founderRefundAlreadyRecorded,
+  hasActiveProSubscription,
+  isFounderVariant,
+  isRecordedFounderOrder,
+  markLemonOrderRefunded,
+  orderVariantId,
+  recordLemonPurchase,
+} from "@/lib/lemon-purchases";
 
 // Recompute the builder score after a tier change (pro/free affects it).
 // Non-fatal: a webhook must still 200 even if the score RPC hiccups.
@@ -116,6 +125,16 @@ export async function POST(req: NextRequest) {
 
          // Tier changed → recompute the builder score.
          await recomputeScoreSafe(userId);
+
+         if (eventName === "subscription_created") {
+            await recordLemonPurchase(supabase, {
+               userId,
+               eventName,
+               lemonId: subscriptionId,
+               status,
+               customData,
+            });
+         }
 
          if (eventName === "subscription_created" && isPro) {
             await supabase.from("activities").insert({
@@ -247,9 +266,9 @@ export async function POST(req: NextRequest) {
       else if (eventName === "order_created") {
          const attrs = payload.data.attributes || {};
 
-         const lifetimeVariant = process.env.LEMON_LIFETIME_VARIANT_ID || "1769406";
          const boostVariant = process.env.LEMON_BOOST_VARIANT_ID || "";
-         const orderVariant = attrs.first_order_item?.variant_id?.toString();
+         const orderVariant = orderVariantId(attrs);
+         const orderId = payload.data?.id?.toString() || "";
 
          // One-time "Launch boost" ($12): flips featured on the buyer's launch.
          // Ownership is enforced in the UPDATE (id + user_id) so a crafted
@@ -279,19 +298,28 @@ export async function POST(req: NextRequest) {
                await supabase.from("activities").insert({
                   user_id: boostUserId,
                   type: "launch_boost",
-                  data: { launch_id: launchId, order_id: payload.data.id },
+                  data: { launch_id: launchId, order_id: orderId },
                });
             } catch (e) {
                console.error("boost order_created: activity insert (non-fatal):", e);
             }
+            await recordLemonPurchase(supabase, {
+               userId: boostUserId,
+               eventName,
+               lemonId: orderId,
+               variantId: orderVariant,
+               status: "paid",
+               customData,
+            });
             console.log(`launch boost aplicado: launch ${launchId} destacado (user ${boostUserId})`);
             return NextResponse.json({ message: "Launch boosted" }, { status: 200 });
          }
 
-         // Gate: only grant Pro for the lifetime variant, so any other one-time
-         // product (now or later) won't grant Pro. Env var overrides the default.
-         if (lifetimeVariant && orderVariant && orderVariant !== lifetimeVariant) {
-            console.log(`order_created ignorado: variant ${orderVariant} != lifetime ${lifetimeVariant}`);
+         // Gate: only grant Pro for a Founder variant ($79 or $129). A missing
+         // variant still grants, matching the previous webhook (some payloads
+         // omit first_order_item). Any other one-time product does not.
+         if (orderVariant && !isFounderVariant(orderVariant)) {
+            console.log(`order_created ignorado: variant ${orderVariant} no es Founder`);
             return NextResponse.json({ message: "Order ignored (not lifetime)" }, { status: 200 });
          }
 
@@ -332,10 +360,91 @@ export async function POST(req: NextRequest) {
             await supabase.from("activities").insert({
                user_id: userId,
                type: "pro_upgrade",
-               data: { event: eventName, lifetime: true },
+               data: { event: eventName, lifetime: true, order_id: orderId, variant_id: orderVariant },
             });
          } catch (e) {
             console.error("order_created: activity insert (non-fatal):", e);
+         }
+
+         await recordLemonPurchase(supabase, {
+            userId,
+            eventName,
+            lemonId: orderId,
+            variantId: orderVariant,
+            status: "paid",
+            customData,
+         });
+      }
+      // Full or partial refund of a Founder order. Drops lifetime. Pro stays
+      // only when a separate subscription is active or on trial right now.
+      else if (eventName === "order_refunded") {
+         const attrs = payload.data.attributes || {};
+         const orderVariant = orderVariantId(attrs);
+         const orderId = payload.data?.id?.toString() || "";
+
+         if (!orderId) {
+            return NextResponse.json({ error: "Missing order id" }, { status: 400 });
+         }
+         const founderOrder = isFounderVariant(orderVariant) || (!orderVariant && await isRecordedFounderOrder(supabase, orderId));
+         if (!founderOrder) {
+            console.log(`order_refunded ignorado: variant ${orderVariant || "?"} no es Founder`);
+            return NextResponse.json({ message: "Refund ignored (not founder)" }, { status: 200 });
+         }
+         if (await founderRefundAlreadyRecorded(supabase, orderId)) {
+            return NextResponse.json({ message: "Refund already processed" }, { status: 200 });
+         }
+
+         let userId = customData?.user_id;
+         if (!userId) userId = await findUserIdByEmail(supabase, attrs.user_email);
+         if (!userId) {
+            console.error("order_refunded: no se pudo mapear el comprador");
+            return NextResponse.json({ error: "Missing user for refund" }, { status: 400 });
+         }
+
+         const { data: profile, error: profileError } = await supabase
+            .from("profiles")
+            .select("id, lemon_squeezy_subscription_id")
+            .eq("id", userId)
+            .maybeSingle();
+         if (profileError || !profile) {
+            console.error("order_refunded: perfil no encontrado", profileError);
+            return NextResponse.json({ error: "Profile not found" }, { status: 400 });
+         }
+
+         const keepPro = await hasActiveProSubscription(profile.lemon_squeezy_subscription_id);
+         if (keepPro === null) {
+            return NextResponse.json({ error: "Could not verify subscription" }, { status: 500 });
+         }
+
+         const patch: Record<string, unknown> = { is_lifetime: false };
+         if (!keepPro) patch.subscription_tier = "free";
+
+         const { error } = await supabase.from("profiles").update(patch).eq("id", userId);
+         if (error) {
+            console.error("order_refunded: error actualizando el perfil:", error);
+            return NextResponse.json({ error: "Database update failed" }, { status: 500 });
+         }
+
+         await recomputeScoreSafe(userId);
+         await markLemonOrderRefunded(supabase, orderId, userId, orderVariant);
+
+         try {
+            const { data: prior } = await supabase
+               .from("activities")
+               .select("id")
+               .eq("user_id", userId)
+               .eq("type", "founder_refund")
+               .contains("data", { order_id: orderId })
+               .maybeSingle();
+            if (!prior) {
+               await supabase.from("activities").insert({
+                  user_id: userId,
+                  type: "founder_refund",
+                  data: { order_id: orderId, variant_id: orderVariant, kept_pro: keepPro },
+               });
+            }
+         } catch (e) {
+            console.error("order_refunded: activity insert (non-fatal):", e);
          }
       }
 

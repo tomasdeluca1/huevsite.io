@@ -5,11 +5,13 @@ import { render } from "@react-email/render";
 import { MonthlyDigestEmail } from "@/components/emails/MonthlyDigestEmail";
 import { BLOG_POSTS } from "@/lib/blog-data";
 import { listAllAuthUsers } from "@/lib/list-auth-users";
+import { buildUnsubscribeUrl } from "@/lib/email-unsubscribe";
 import React from "react";
 
 export const dynamic = "force-dynamic";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+const UNSUB_MARKER = "__UNSUB_URL__";
 
 /**
  * Monthly Digest Cron Job
@@ -125,9 +127,16 @@ export async function GET(request: NextRequest) {
             totalNominations: nominations?.length || 0,
         };
 
+        const { data: optedOut, error: optErr } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("community_digest_unsubscribed", true);
+        if (optErr) throw optErr;
+        const unsubIds = new Set((optedOut || []).map((p) => p.id));
+
         // -- 7. Fetch All Users and Send Emails --
         const emailResults: { email: string; sent: boolean; error?: string }[] = [];
-        let usersToNotify: { email?: string }[] = [];
+        let usersToNotify: { id?: string; email?: string }[] = [];
 
         if (testEmail) {
             usersToNotify = [{ email: testEmail }];
@@ -146,20 +155,27 @@ export async function GET(request: NextRequest) {
                     excerpt: p.excerpt,
                     slug: p.slug
                 })),
-                stats
+                stats,
+                unsubscribeUrl: UNSUB_MARKER,
             })
         );
 
         // Send to each user sequentially with a small delay
         for (const user of usersToNotify) {
             if (!user.email) continue;
+            if (!testEmail && user.id && unsubIds.has(user.id)) continue;
+
+            const html = emailHtml.replaceAll(
+                UNSUB_MARKER,
+                buildUnsubscribeUrl(user.id || "test")
+            );
 
             try {
                 await resend.emails.send({
                     from: process.env.EMAIL_FROM || "hi@huevsite.studio",
                     to: user.email,
                     subject: `📊 Huevsite Digest: Lo mejor de ${capitalizedMonthName}`,
-                    html: emailHtml,
+                    html,
                 });
                 emailResults.push({ email: user.email, sent: true });
                 

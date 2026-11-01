@@ -25,6 +25,7 @@ interface MonthlyDigestEmailProps {
     totalBuilders?: number;
     totalNominations?: number;
   };
+  unsubscribeUrl: string;
 }
 
 export const MonthlyDigestEmail: React.FC<Readonly<MonthlyDigestEmailProps>> = ({
@@ -33,6 +34,7 @@ export const MonthlyDigestEmail: React.FC<Readonly<MonthlyDigestEmailProps>> = (
   weeklyWinners,
   features,
   stats,
+  unsubscribeUrl,
 }) => (
   <EmailLayout previewText={`¡Resumen de ${monthName} en Huevsite! Mirá quiénes fueron los builders destacados.`}>
     {/* Header Section */}
@@ -217,6 +219,16 @@ export const MonthlyDigestEmail: React.FC<Readonly<MonthlyDigestEmailProps>> = (
       }}>
         Explorar la comunidad →
       </a>
+    </div>
+
+    <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: "20px", textAlign: "center", marginTop: "28px" }}>
+      <p style={{ fontSize: "12px", lineHeight: 1.6, color: "#52525b", margin: 0 }}>
+        Recibís este email porque tenés una cuenta en huevsite.io.{" "}
+        <a href={unsubscribeUrl} style={{ color: "#71717a", textDecoration: "underline" }}>
+          Darme de baja de estos avisos
+        </a>
+        .
+      </p>
     </div>
   </EmailLayout>
 );

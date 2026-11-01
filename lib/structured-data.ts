@@ -152,7 +152,7 @@ export function pricingLd({
   name: string;
   description: string;
   url: string;
-  offers: { name: string; price: string; currency?: string; recurring?: boolean; description?: string }[];
+  offers: { name: string; price: string; currency?: string; recurring?: boolean; description?: string; availability?: string }[];
 }) {
   return {
     "@context": "https://schema.org",
@@ -171,7 +171,7 @@ export function pricingLd({
       price: offer.price,
       priceCurrency: offer.currency ?? "USD",
       url,
-      availability: "https://schema.org/InStock",
+      availability: offer.availability ?? "https://schema.org/InStock",
       ...(offer.description ? { description: offer.description } : {}),
       ...(offer.recurring
         ? {

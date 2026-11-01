@@ -3,6 +3,8 @@ import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { PricingTiers } from "@/components/landing/PricingTiers";
 import { getFounderSeats } from "@/lib/founder-seats";
+import { resolveFounderOffer } from "@/lib/founder-offer";
+import { attributionFromSearchParams, attributionToQuery } from "@/lib/checkout-attribution";
 import LocaleToggle from "@/components/LocaleToggle";
 import { getLocale } from "@/lib/locale";
 import { canonical, keywordsFor } from "@/lib/seo";
@@ -29,20 +31,6 @@ export async function generateMetadata() {
   };
 }
 
-// Reconstruye SOLO los utm_* entrantes como query string saneado (evita arrastrar
-// params arbitrarios al checkout / login).
-function buildUtmQuery(sp?: { [key: string]: string | string[] | undefined }): string {
-  if (!sp) return "";
-  const keys = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"];
-  const parts: string[] = [];
-  for (const k of keys) {
-    const raw = sp[k];
-    const val = Array.isArray(raw) ? raw[0] : raw;
-    if (val) parts.push(`${k}=${encodeURIComponent(val)}`);
-  }
-  return parts.join("&");
-}
-
 export default async function PreciosPage({
   searchParams,
 }: {
@@ -57,8 +45,10 @@ export default async function PreciosPage({
   const tPricing = await getTranslations("pricing");
 
   const pricingUser = user ? { id: user.id, email: user.email } : null;
-  const utm = buildUtmQuery(searchParams);
+  const attribution = attributionFromSearchParams(searchParams);
+  const utm = attributionToQuery(attribution);
   const founderSeats = await getFounderSeats();
+  const founderOffer = resolveFounderOffer(founderSeats);
 
   // SoftwareApplication + Offers. Makes the plan lineup machine-readable so
   // price-annotated results and AI answers quote the real numbers (including
@@ -71,7 +61,14 @@ export default async function PreciosPage({
       offers: [
         { name: "Free", price: "0", description: tPricing("schemaFreeDescription") },
         { name: "Pro", price: "9", recurring: true, description: tPricing("schemaProDescription") },
-        { name: "Founder", price: "79", description: tPricing("schemaFounderDescription") },
+        {
+          name: "Founder",
+          price: String(founderOffer.price),
+          description: tPricing("schemaFounderDescription"),
+          availability: founderOffer.soldOut
+            ? "https://schema.org/OutOfStock"
+            : "https://schema.org/InStock",
+        },
       ],
     }),
     breadcrumbLd([
@@ -117,7 +114,13 @@ export default async function PreciosPage({
         </div>
 
         <div className="grid md:grid-cols-3 gap-5 items-stretch">
-          <PricingTiers user={pricingUser} loginNext="/precios" utm={utm} founderRemaining={founderSeats.remaining} />
+          <PricingTiers
+            user={pricingUser}
+            loginNext="/precios"
+            utm={utm}
+            attribution={attribution}
+            founderOffer={founderOffer}
+          />
         </div>
 
         <p className="text-center text-[11px] font-mono text-[var(--text-muted)] uppercase tracking-widest mt-12 opacity-50">

@@ -11,10 +11,6 @@
     {
       "path": "/api/cron/weekly-digest",
       "schedule": "0 15 * * 5"
-    },
-    {
-      "path": "/api/cron/founder-batch",
-      "schedule": "0 13 7 7 *"
     }
   ]
 }

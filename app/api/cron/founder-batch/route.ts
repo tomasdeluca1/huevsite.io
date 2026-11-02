@@ -8,9 +8,11 @@ export const maxDuration = 300;
 const SENT_KEY = "founder_batch_email_sent";
 const SITE = "https://huevsite.io";
 
-// One-shot Founder batch scarcity email, fired by the Vercel cron (vercel.json,
-// 2026-07-07 13:00 UTC = 10:00 ART). Auth mirrors builders-hunt-launch: Vercel
-// cron bearer (CRON_SECRET) OR ?secret=ADMIN_SECRET for a manual trigger.
+// July 2026 one-shot. The `0 13 7 7 *` schedule was removed from vercel.json
+// after it fired (2026-07-07 13:00 UTC). Do not add it back. The Nov 2026
+// Founder mail is manual only: /api/admin/send-founder-mail1, after an explicit OK.
+// Auth mirrors builders-hunt-launch: Vercel cron bearer (CRON_SECRET) OR
+// ?secret=ADMIN_SECRET for a manual trigger.
 // Unlike builders-hunt-launch, the sent flag is set BEFORE firing: if this
 // route dies mid-wait we prefer a manual ?force=1 retry over ever double
 // blasting a scarcity claim to the whole base.

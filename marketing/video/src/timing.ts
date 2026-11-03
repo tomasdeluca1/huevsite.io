@@ -1,5 +1,5 @@
 export const FPS = 30;
-export const DURATION = 45 * FPS;
+export const DURATION = 36 * FPS;
 
 /** Overlap so the next section can slide up over the previous one. Total stays 45s. */
 export const SLIDE_FRAMES = 18;

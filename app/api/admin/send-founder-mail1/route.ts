@@ -29,6 +29,22 @@ export const maxDuration = 300;
 
 const SENT_KEY = "founder_nov26_mail1_sent";
 const THROTTLE_MS = 100;
+const FROM_DISPLAY_NAME = "Tomás de huevsite";
+const REPLY_TO = "tomidelu@huevsite.com";
+
+// Display name is fixed. The address is FOUNDER_MAIL_FROM_ADDRESS, then EMAIL_FROM,
+// then hi@huevsite.studio (the domain Resend has verified). A value that already
+// includes "Name <addr>" contributes only the address.
+function founderFromHeader(): string {
+  const raw = (
+    process.env.FOUNDER_MAIL_FROM_ADDRESS ||
+    process.env.EMAIL_FROM ||
+    "hi@huevsite.studio"
+  ).trim();
+  const bracketed = raw.match(/<([^<>]+)>/);
+  const address = (bracketed ? bracketed[1] : raw).trim();
+  return `${FROM_DISPLAY_NAME} <${address}>`;
+}
 
 // Constructed on send. `new Resend()` throws when the key is missing, and preview
 // must still render with no key and no send.
@@ -91,7 +107,7 @@ export async function GET(request: NextRequest) {
     }
 
     const subject = FOUNDER_MAIL1_SUBJECT;
-    const from = process.env.EMAIL_FROM || "hi@huevsite.studio";
+    const from = founderFromHeader();
 
     if (preview) {
       const supabase = createServiceRoleClient();
@@ -111,6 +127,8 @@ export async function GET(request: NextRequest) {
         startPage,
         seats,
         subject,
+        from,
+        replyTo: REPLY_TO,
         previewText: founderMail1PreviewText(seats.remaining),
         authUsers: audience.authUsers.length,
         eligibleRecipients: audience.eligible.length,
@@ -141,6 +159,7 @@ export async function GET(request: NextRequest) {
       });
       const sent = await resend.emails.send({
         from,
+        replyTo: REPLY_TO,
         to: testEmail,
         subject,
         html,
@@ -203,6 +222,7 @@ export async function GET(request: NextRequest) {
       try {
         const sent = await resend.emails.send({
           from,
+          replyTo: REPLY_TO,
           to: recipient.email,
           subject,
           html,

@@ -2,7 +2,7 @@ import * as React from "react";
 import { BRAND } from "@/lib/brand";
 import { SITE_URL } from "@/lib/site-url";
 
-export const FOUNDER_MAIL1_SUBJECT = "🥚 Founder de huevsite: Pro para siempre, USD 79 una vez";
+export const FOUNDER_MAIL1_SUBJECT = "Tomás de huevsite: quedamos nominados";
 
 export const FOUNDER_MAIL1_CTA =
   "https://huevsite.io/precios?utm_source=email&utm_medium=email&utm_campaign=founder&utm_content=mail1";
@@ -12,7 +12,7 @@ export const FOUNDER_MAIL1_NAME_MARKER = "%%HUEVSITE_NAME%%";
 export const FOUNDER_MAIL1_UNSUB_MARKER = "%%HUEVSITE_UNSUB%%";
 
 export function founderMail1PreviewText(remaining: number): string {
-  return `20 lugares a USD 79, después USD 129. Quedan ${remaining}.`;
+  return `Quedamos nominados. Founder: USD 79 una vez, Pro para siempre. Quedan ${remaining}.`;
 }
 
 interface FounderMail1EmailProps {

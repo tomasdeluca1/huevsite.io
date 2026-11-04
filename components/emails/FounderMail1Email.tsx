@@ -27,11 +27,17 @@ interface FounderMail1EmailProps {
 const FEATURES = [
   "Insights: quién te visitó y qué miró",
   "Tu propio dominio",
-  "Sub-sitios ilimitados, uno por proyecto (y uno armado con IA desde una URL)",
   "Hasta 22 bloques en tu grid (en free son 5)",
   "Launches ilimitados y siempre destacados en Builders Hunt",
   "Más visibilidad en el feed, el showcase y el ranking",
+  "Acceso anticipado a las features nuevas, antes que nadie",
+  "Soporte personalizado, directo conmigo",
 ];
+
+// Official header lockup from https://www.premiostech.la/ (apex redirects here):
+// /site/logo-techla.*.svg + /site/logo-2026.*.svg, fill #FBF5F5, on --naranja-reflector #ED6025.
+const PREMIOS_URL = "https://www.premiostech.la/";
+const PREMIOS_LOGO = "https://huevsite.io/premiostech-2026-logo.png";
 
 const bodyText: React.CSSProperties = {
   fontSize: "16px",
@@ -40,9 +46,10 @@ const bodyText: React.CSSProperties = {
   margin: "0 0 16px",
 };
 
-// Mail 1 · Lanzamiento. Copy is the campaign draft (section 2.2), verbatim.
-// Lime is only the // founder label and the CTA. No gradient, no glow,
-// no Founder badge. Background is the brand black.
+// Mail 1 · Lanzamiento. Section 2.2 copy, minus sub-sites (that feature is
+// being dropped) and plus two Founder-only lines. Lime is only the // founder
+// label and the CTA. No gradient, no glow, no Founder badge. Background is
+// the brand black.
 export const FounderMail1Email: React.FC<FounderMail1EmailProps> = ({
   remaining,
   name,
@@ -91,6 +98,31 @@ export const FounderMail1Email: React.FC<FounderMail1EmailProps> = ({
         es mérito de un producto, es de los más de 300 builders que armaron su perfil y shippean en
         público. Gracias.
       </p>
+
+      <a
+        href={PREMIOS_URL}
+        style={{ textDecoration: "none", display: "inline-block", margin: "0 0 20px", maxWidth: "100%" }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={PREMIOS_LOGO}
+          alt="Premios Tech.La 2026 — nominados en Comunidad"
+          width={200}
+          height={118}
+          style={{ display: "block", width: "200px", maxWidth: "100%", height: "auto", border: 0 }}
+        />
+        <div
+          style={{
+            fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+            fontSize: "12px",
+            lineHeight: 1.4,
+            color: "#FBF5F5",
+            marginTop: "8px",
+          }}
+        >
+          Nominados · Comunidad
+        </div>
+      </a>
 
       <p style={bodyText}>
         La segunda: quiero que esta red siga gratis para todos los que se suman. Por eso hay un plan

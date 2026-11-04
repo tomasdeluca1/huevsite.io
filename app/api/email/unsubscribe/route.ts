@@ -13,12 +13,26 @@ function htmlPage(title: string, message: string, status: number) {
   });
 }
 
-// GET /api/email/unsubscribe?u=<userId>&sig=<hmac>
-// One-click opt-out from the weekly community digest email. No login required.
-export async function GET(request: NextRequest) {
+// GET  /api/email/unsubscribe?u=<userId>&sig=<hmac>
+// POST /api/email/unsubscribe?u=<userId>&sig=<hmac>
+// The footer link is a GET. Mailbox one-click (RFC 8058) is a POST to the same
+// URL with body `List-Unsubscribe=One-Click`. The signature is in the query.
+// Either one sets community_digest_unsubscribed. No login required.
+async function readIdentity(request: NextRequest): Promise<{ userId: string; sig: string }> {
   const { searchParams } = new URL(request.url);
-  const userId = searchParams.get("u") || "";
-  const sig = searchParams.get("sig") || "";
+  let userId = searchParams.get("u") || "";
+  let sig = searchParams.get("sig") || "";
+  if (request.method === "POST" && (!userId || !sig)) {
+    const text = await request.text().catch(() => "");
+    const body = new URLSearchParams(text);
+    userId = userId || body.get("u") || "";
+    sig = sig || body.get("sig") || "";
+  }
+  return { userId, sig };
+}
+
+async function handleUnsubscribe(request: NextRequest) {
+  const { userId, sig } = await readIdentity(request);
 
   if (!verifyUnsubscribe(userId, sig)) {
     return htmlPage(
@@ -48,4 +62,12 @@ export async function GET(request: NextRequest) {
     "No vas a recibir más los avisos de la comunidad: resúmenes, campañas y novedades. Si fue sin querer, escribinos y lo revertimos.",
     200
   );
+}
+
+export async function GET(request: NextRequest) {
+  return handleUnsubscribe(request);
+}
+
+export async function POST(request: NextRequest) {
+  return handleUnsubscribe(request);
 }

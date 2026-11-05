@@ -1,0 +1,7 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx"
+  },
+  "include": ["./**/*.ts", "../app/opengraph-image.tsx", "../lib/og/**/*.ts", "../lib/og/**/*.tsx"]
+}

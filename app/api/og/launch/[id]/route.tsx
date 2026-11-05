@@ -42,7 +42,6 @@ function UpvoteBadge({ count }: { count: number }) {
         padding: "22px 0",
         borderRadius: 24,
         background: ACCENT,
-        boxShadow: `0 0 60px ${ACCENT}66`,
       }}
     >
       <Triangle w={32} h={22} color="#0a0a0f" />

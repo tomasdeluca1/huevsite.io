@@ -12,7 +12,7 @@ import {
   rootStyle,
   Texture,
   InnerBorder,
-  Wordmark,
+  OgLogo,
   Eyebrow,
   BrandFallback,
 } from '@/lib/og/shared';
@@ -45,11 +45,11 @@ export async function GET(
 
     return new ImageResponse(
       (
-        <div style={rootStyle(accent)}>
+        <div style={rootStyle()}>
           <Texture />
           <InnerBorder />
 
-          {/* Top bar: wordmark + creator chip */}
+          {/* Top bar: logo + creator chip */}
           <div
             style={{
               display: 'flex',
@@ -59,7 +59,7 @@ export async function GET(
               zIndex: 1,
             }}
           >
-            <Wordmark accent={accent} />
+            <OgLogo />
             {creator && (
               <div
                 style={{
@@ -100,7 +100,7 @@ export async function GET(
           >
             <div style={{ display: 'flex', flexDirection: 'column', flex: 1.2, justifyContent: 'center' }}>
               <div style={{ display: 'flex', marginBottom: 22 }}>
-                <Eyebrow label="Proyecto" accent={accent} />
+                <Eyebrow label="Proyecto" />
               </div>
 
               <div
@@ -135,16 +135,6 @@ export async function GET(
             </div>
 
             <div style={{ display: 'flex', flex: 1, position: 'relative', alignItems: 'center', justifyContent: 'center' }}>
-              <div
-                style={{
-                  position: 'absolute',
-                  width: '120%',
-                  height: '100%',
-                  background: `radial-gradient(circle, ${accent}2e 0%, transparent 70%)`,
-                  borderRadius: '50%',
-                  display: 'flex',
-                }}
-              />
               {projectAvatarSrc ? (
                 <img
                   src={projectAvatarSrc}

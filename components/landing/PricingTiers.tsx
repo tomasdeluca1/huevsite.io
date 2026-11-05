@@ -91,7 +91,7 @@ export function PricingTiers({
       </div>
 
       {/* PRO — highlighted */}
-      <div className="flex flex-col bg-white/[0.03] border border-[var(--accent)]/40 rounded-[2rem] p-8 relative overflow-hidden shadow-2xl shadow-[var(--accent)]/5 md:-mt-4 md:mb-0">
+      <div className="flex flex-col bg-white/[0.03] border border-[var(--accent)]/40 rounded-[2rem] p-8 relative overflow-hidden md:-mt-4 md:mb-0">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-[var(--accent)]/10 blur-[100px] rounded-full opacity-60 pointer-events-none" />
         <div className="relative z-10 flex flex-col h-full">
           <div className="flex items-center justify-between mb-3">

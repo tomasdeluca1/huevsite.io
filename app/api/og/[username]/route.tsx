@@ -10,10 +10,11 @@ import {
   TEXT_FAINT,
   OG_SIZE,
   truncate,
+  SURFACE,
   rootStyle,
   Texture,
   InnerBorder,
-  Wordmark,
+  OgLogo,
   Eyebrow,
   BrandFallback,
 } from '@/lib/og/shared';
@@ -69,7 +70,7 @@ export async function GET(
 
     return new ImageResponse(
       (
-        <div style={rootStyle(accent)}>
+        <div style={rootStyle()}>
           <Texture />
           <InnerBorder />
 
@@ -83,9 +84,9 @@ export async function GET(
               zIndex: 1,
             }}
           >
-            <Wordmark accent={accent} />
+            <OgLogo />
             {isWinner ? (
-              <Eyebrow label="Builder de la Semana" accent={accent} />
+              <Eyebrow label="Builder de la Semana" />
             ) : (
               <div
                 style={{
@@ -119,18 +120,6 @@ export async function GET(
             }}
           >
             <div style={{ display: 'flex', position: 'relative' }}>
-              <div
-                style={{
-                  position: 'absolute',
-                  top: -24,
-                  left: -24,
-                  right: -24,
-                  bottom: -24,
-                  background: `radial-gradient(circle, ${accent}33 0%, transparent 70%)`,
-                  borderRadius: '50%',
-                  display: 'flex',
-                }}
-              />
               {avatarSrc ? (
                 <img
                   src={avatarSrc}
@@ -169,7 +158,7 @@ export async function GET(
                   position: 'absolute',
                   bottom: -18,
                   right: -18,
-                  background: '#0a0a0f',
+                  background: SURFACE,
                   border: `2px solid ${accent}`,
                   borderRadius: 22,
                   padding: '10px 18px',
@@ -290,8 +279,8 @@ export async function GET(
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                background: accent,
-                color: onAccent,
+                background: ACCENT,
+                color: getContrastColor(ACCENT),
                 padding: '13px 26px',
                 borderRadius: 14,
                 fontSize: 18,

@@ -328,10 +328,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                   back to the eyebrow when the number would read weak). */}
               {activeThisWeek >= 10 ? (
                 <>
-                  <span className="relative flex h-2 w-2 shrink-0">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400" />
-                  </span>
+                  <span className="dot" />
                   <span>{t("heroActiveBuilders", { count: fmtNum(Math.round(activeThisWeek / 10) * 10) })}</span>
                 </>
               ) : (
@@ -968,7 +965,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
               <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-[var(--accent)] mb-4 text-center">
                 {t("founderEyebrow")}
               </div>
-              <div className="rounded-[1.5rem] overflow-hidden border border-white/[0.08] bg-black aspect-video shadow-2xl shadow-[var(--accent)]/5">
+              <div className="rounded-[1.5rem] overflow-hidden border border-white/[0.08] bg-black aspect-video">
                 {founderVideo.file ? (
                   <video src={founderVideo.file} controls playsInline className="w-full h-full object-cover" />
                 ) : (
@@ -1005,7 +1002,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                 <img
                   src="https://sdijcsgsfvwwdehcllsm.supabase.co/storage/v1/object/public/assets/6e919edb-d649-412b-b5f8-0263b60ffa0e/avatars/39wv6adk9l8-1778691295879.webp"
                   alt="Tomas Deluca"
-                  className="w-20 h-20 rounded-full object-cover border-2 border-[var(--accent)]/40 shadow-lg shadow-[var(--accent)]/10"
+                  className="w-20 h-20 rounded-full object-cover border-2 border-[var(--accent)]/40"
                 />
               </div>
               <div className="flex-1 min-w-0 flex flex-col justify-center">
@@ -1035,7 +1032,6 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
 
       {/* FINAL CTA */}
       <section className="final-cta-section">
-        <div className="final-cta-glow" aria-hidden="true" />
         <div className="final-cta-inner">
           <div className="section-label" style={{ justifyContent: 'center' }}>{t("finalCtaSectionLabel")}</div>
           <h2 className="final-cta-title">

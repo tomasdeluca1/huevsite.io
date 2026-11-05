@@ -12,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       images: [
         {
-          url: "/opengraph-image.png",
+          url: "/opengraph-image.png?v=brand",
           width: 1200,
           height: 630,
           alt: "huevsite.io",
@@ -23,7 +23,7 @@ export async function generateMetadata(): Promise<Metadata> {
       card: "summary_large_image",
       title: t("ogTitle"),
       description: t("metaDescription"),
-      images: ["/opengraph-image.png"],
+      images: ["/opengraph-image.png?v=brand"],
     },
   };
 }

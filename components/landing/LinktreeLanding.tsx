@@ -302,7 +302,7 @@ export default function LinktreeLanding() {
                   </div>
                 </div>
               </div>
-              <p className="lt-compare-caption" style={{ color: "#efffc4" }}>
+              <p className="lt-compare-caption" style={{ color: "var(--text-dim)" }}>
                 {t("compareAfterCaption")}
               </p>
             </div>
@@ -366,7 +366,6 @@ export default function LinktreeLanding() {
 
       {/* ── FINAL CTA ─────────────────────────────────── */}
       <section className="lt-cta-section">
-        <div className="lt-cta-glow" />
         <div className="lt-cta-inner">
           <div className="lt-cta-icon">
             <Zap size={28} />

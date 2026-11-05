@@ -2,7 +2,7 @@ import * as React from "react";
 import { BRAND } from "@/lib/brand";
 import { SITE_URL } from "@/lib/site-url";
 
-export const FOUNDER_MAIL1_SUBJECT = "Tomás de huevsite: quedamos nominados";
+export const FOUNDER_MAIL1_SUBJECT = "Nominados a PremiosTech.la · Founder USD 79";
 
 export const FOUNDER_MAIL1_CTA =
   "https://huevsite.io/precios?utm_source=email&utm_medium=email&utm_campaign=founder&utm_content=mail1";

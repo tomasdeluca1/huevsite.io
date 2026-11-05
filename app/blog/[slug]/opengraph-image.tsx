@@ -6,6 +6,7 @@ import {
 } from "@/lib/blog-data";
 import { ogAvatarUrl } from "@/lib/og-avatar";
 import { BRAND } from "@/lib/brand";
+import { OgLogo } from "@/lib/og/shared";
 
 // BDLS posts are published from the DB after deploy, so this metadata route
 // must stay dynamic instead of serving a cached shell from build time.
@@ -22,10 +23,9 @@ export const contentType = "image/png";
 
 const ACCENT = BRAND.color.accent;
 const BG_TOP = BRAND.color.bg;
-const BG_BOTTOM = BRAND.color.surface;
-const BORDER = "rgba(255,255,255,0.08)";
-const TEXT_DIM = "rgba(255,255,255,0.62)";
-const TEXT_MUTED = "rgba(255,255,255,0.38)";
+const BORDER = BRAND.color.border;
+const TEXT_DIM = BRAND.color.textDim;
+const TEXT_MUTED = BRAND.color.textMuted;
 
 function truncate(text: string, max: number) {
   if (!text) return "";
@@ -73,27 +73,21 @@ function renderFallback() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        color: ACCENT,
-        fontSize: 64,
-        fontWeight: 900,
-        letterSpacing: "-0.05em",
       }}
     >
-      huevsite.io
+      <OgLogo height={64} />
     </div>
   );
 }
 
-function FrameBackground({ tinted = false }: { tinted?: boolean }) {
+function FrameBackground() {
   return (
     <>
       <div
         style={{
           position: "absolute",
           inset: 0,
-          background: `linear-gradient(160deg, ${BG_TOP} 0%, ${BG_BOTTOM} 60%, ${
-            tinted ? "#111307" : "#0a0a0a"
-          } 100%)`,
+          background: BG_TOP,
           display: "flex",
         }}
       />
@@ -110,32 +104,6 @@ function FrameBackground({ tinted = false }: { tinted?: boolean }) {
       <div
         style={{
           position: "absolute",
-          top: -160,
-          right: -140,
-          width: 540,
-          height: 540,
-          borderRadius: 999,
-          background:
-            "radial-gradient(circle, rgba(200,255,0,0.20) 0%, rgba(200,255,0,0.05) 40%, transparent 72%)",
-          display: "flex",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          bottom: -200,
-          left: -140,
-          width: 460,
-          height: 460,
-          borderRadius: 999,
-          background:
-            "radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%)",
-          display: "flex",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
           inset: 24,
           border: `1px solid ${BORDER}`,
           borderRadius: 28,
@@ -146,18 +114,6 @@ function FrameBackground({ tinted = false }: { tinted?: boolean }) {
   );
 }
 
-function Logo() {
-  // Real site logo: "huev" + "site" (accent) + ".io" (dim). Matches the shared
-  // OG Wordmark and /api/og/[username] — no floating brand-lime dot.
-  return (
-    <div style={{ display: "flex", alignItems: "baseline" }}>
-      <span style={{ color: "white", fontSize: 22, fontWeight: 900, letterSpacing: "-0.04em" }}>huev</span>
-      <span style={{ color: ACCENT, fontSize: 22, fontWeight: 900, letterSpacing: "-0.04em" }}>site</span>
-      <span style={{ color: "white", opacity: 0.4, fontSize: 22, fontWeight: 900, letterSpacing: "-0.04em" }}>.io</span>
-    </div>
-  );
-}
-
 function TagPill({ tag }: { tag: string }) {
   return (
     <div
@@ -165,8 +121,8 @@ function TagPill({ tag }: { tag: string }) {
         display: "flex",
         padding: "8px 14px",
         borderRadius: 999,
-        background: "rgba(200,255,0,0.10)",
-        border: "1px solid rgba(200,255,0,0.28)",
+        background: BRAND.color.accentDim,
+        border: `1px solid ${BRAND.color.accentMid}`,
         color: ACCENT,
         fontSize: 13,
         fontWeight: 800,
@@ -201,7 +157,7 @@ function AuthorAvatar({
           objectFit: "cover",
           border: ring
             ? `3px solid ${ACCENT}`
-            : "1px solid rgba(200,255,0,0.35)",
+            : `1px solid ${BRAND.color.accentMid}`,
         }}
       />
     );
@@ -215,7 +171,7 @@ function AuthorAvatar({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: `linear-gradient(135deg, ${ACCENT} 0%, #7aaa00 100%)`,
+        background: ACCENT,
         color: "black",
         fontSize: Math.round(avatarSize * 0.42),
         fontWeight: 900,
@@ -253,9 +209,9 @@ function renderBuilderOfTheWeek(post: BlogPost) {
         padding: "52px 60px",
       }}
     >
-      <FrameBackground tinted />
+      <FrameBackground />
 
-      {/* Top bar: wordmark + Builder de la Semana eyebrow */}
+      {/* Top bar: logo + Builder de la Semana eyebrow */}
       <div
         style={{
           display: "flex",
@@ -265,7 +221,7 @@ function renderBuilderOfTheWeek(post: BlogPost) {
           zIndex: 1,
         }}
       >
-        <Logo />
+        <OgLogo />
         <div
           style={{
             display: "flex",
@@ -273,8 +229,8 @@ function renderBuilderOfTheWeek(post: BlogPost) {
             gap: 12,
             padding: "10px 18px",
             borderRadius: 999,
-            background: "rgba(200,255,0,0.10)",
-            border: "1px solid rgba(200,255,0,0.32)",
+            background: BRAND.color.accentDim,
+            border: `1px solid ${BRAND.color.accentMid}`,
           }}
         >
           <div
@@ -284,7 +240,6 @@ function renderBuilderOfTheWeek(post: BlogPost) {
               borderRadius: 999,
               background: ACCENT,
               display: "flex",
-              boxShadow: `0 0 16px ${ACCENT}`,
             }}
           />
           <span
@@ -325,7 +280,6 @@ function renderBuilderOfTheWeek(post: BlogPost) {
               borderRadius: 40,
               objectFit: "cover",
               border: `4px solid ${ACCENT}`,
-              boxShadow: "0 24px 80px rgba(200,255,0,0.22)",
             }}
           />
         ) : (
@@ -337,7 +291,7 @@ function renderBuilderOfTheWeek(post: BlogPost) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              background: `linear-gradient(135deg, ${ACCENT} 0%, #7aaa00 100%)`,
+              background: ACCENT,
               color: "black",
               fontSize: 184,
               fontWeight: 900,
@@ -474,7 +428,7 @@ function renderDefaultPost(post: BlogPost) {
           zIndex: 1,
         }}
       >
-        <Logo />
+        <OgLogo />
         <span
           style={{
             color: TEXT_MUTED,

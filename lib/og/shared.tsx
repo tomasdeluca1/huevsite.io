@@ -25,13 +25,13 @@
 import { BRAND } from "@/lib/brand";
 import { getContrastColor } from "@/lib/profile-types";
 import { hiResFaviconUrl } from "@/lib/favicon";
+import { LOGO_DATA_URI, LOGO_HEIGHT, LOGO_WIDTH } from "@/lib/og/logo-data";
 
 export const OG_SIZE = { width: 1200, height: 630 };
 export const OG_CONTENT_TYPE = "image/png";
 
 export const ACCENT = BRAND.color.accent;
-export const BG_TOP = BRAND.color.bg;
-export const BG_BOTTOM = BRAND.color.bg;
+export const SURFACE = BRAND.color.surface;
 export const BORDER = BRAND.color.border;
 export const TEXT_DIM = BRAND.color.textDim;
 export const TEXT_MUTED = BRAND.color.textMuted;
@@ -53,22 +53,22 @@ export function safeAvatarUrl(src: string | null | undefined, size: number): str
   return `https://images.weserv.nl/?url=${encoded}&w=${size * 2}&h=${size * 2}&fit=cover&output=jpg`;
 }
 
-export function rootStyle(accent: string) {
+// Flat brand black. The frame never takes a page accent: a user color (or the
+// Builder-of-the-Week color) is a detail inside a card, not a wash over the image.
+export function rootStyle() {
   return {
     width: "100%",
     height: "100%",
     display: "flex",
     flexDirection: "column" as const,
     padding: "54px 64px",
-    color: "white",
-    background: `radial-gradient(circle at 12% 8%, ${accent}24 0%, transparent 40%), radial-gradient(circle at 90% 96%, ${accent}1a 0%, transparent 46%), linear-gradient(155deg, ${BG_TOP} 0%, ${BG_BOTTOM} 58%, ${BRAND.color.bg} 100%)`,
+    color: BRAND.color.textStrong,
+    background: BRAND.color.bg,
     position: "relative" as const,
   };
 }
 
-// Faint technical dot grid — gives the dark base texture without competing with
-// the content. Rendered as its own absolutely-positioned layer so it never
-// fights the radial glows in the `background` shorthand.
+// Faint technical dot grid. A dot texture, not a colored halo.
 export function Texture() {
   return (
     <div
@@ -101,17 +101,18 @@ export function InnerBorder() {
   );
 }
 
-export function Wordmark({ accent = ACCENT, size = 30 }: { accent?: string; size?: number } = {}) {
-  // Mirrors the live site logo (.logo span { color: var(--accent) }): "huev" +
-  // "site" (accent) + ".io" (dim). "site" carries the page accent so the
-  // wordmark belongs to the same palette as the rest of the image.
-  const base = { fontSize: size, fontWeight: 900, letterSpacing: "-0.045em" };
+// The lockup file, measured by height (same rule as components/brand/Logo).
+// Always this file — never a text wordmark, and never recolored.
+export function OgLogo({ height = 40 }: { height?: number } = {}) {
+  const width = Math.round((height * LOGO_WIDTH) / LOGO_HEIGHT);
   return (
-    <div style={{ display: "flex", alignItems: "baseline" }}>
-      <span style={{ ...base, color: "white" }}>huev</span>
-      <span style={{ ...base, color: accent }}>site</span>
-      <span style={{ ...base, color: "white", opacity: 0.4 }}>.io</span>
-    </div>
+    <img
+      src={LOGO_DATA_URI}
+      width={width}
+      height={height}
+      alt="huevsite.io"
+      style={{ width, height, objectFit: "contain", display: "flex" }}
+    />
   );
 }
 
@@ -128,7 +129,7 @@ export function Eyebrow({ label, accent = ACCENT }: { label: string; accent?: st
         border: `1px solid ${accent}59`,
       }}
     >
-      <div style={{ width: 9, height: 9, borderRadius: 999, background: accent, display: "flex", boxShadow: `0 0 14px ${accent}` }} />
+      <div style={{ width: 9, height: 9, borderRadius: 999, background: accent, display: "flex" }} />
       <span
         style={{
           color: accent,
@@ -241,22 +242,20 @@ export function FooterCTA({
 }
 
 export function OgFrame({
-  accent = ACCENT,
   eyebrow,
   footer,
   children,
 }: {
-  accent?: string;
   eyebrow?: any;
   footer?: any;
   children: any;
 }) {
   return (
-    <div style={rootStyle(accent)}>
+    <div style={rootStyle()}>
       <Texture />
       <InnerBorder />
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", zIndex: 1 }}>
-        <Wordmark accent={accent} />
+        <OgLogo />
         {eyebrow ?? null}
       </div>
       <div style={{ display: "flex", flex: 1, width: "100%", marginTop: 30, position: "relative", zIndex: 1 }}>{children}</div>
@@ -353,13 +352,13 @@ export function Card({ accent = ACCENT, width, children }: { accent?: string; wi
 // Last-resort branded image for dynamic API OG routes: any unrecoverable error
 // (DB down, bad data, proxy hiccup) renders this instead of a 500/blank, so a
 // shared link never previews as broken.
-export function BrandFallback({ accent = ACCENT, label }: { accent?: string; label?: string } = {}) {
+export function BrandFallback({ label }: { label?: string } = {}) {
   return (
-    <div style={rootStyle(accent)}>
+    <div style={rootStyle()}>
       <Texture />
       <InnerBorder />
       <div style={{ display: "flex", position: "relative", zIndex: 1 }}>
-        <Wordmark accent={accent} />
+        <OgLogo />
       </div>
       <div
         style={{
@@ -391,7 +390,7 @@ export function BrandFallback({ accent = ACCENT, label }: { accent?: string; lab
         </div>
       </div>
       <div style={{ position: "relative", zIndex: 1, display: "flex" }}>
-        <FooterCTA cta="Empezá gratis" hint="huevsite.io" accent={accent} />
+        <FooterCTA cta="Empezá gratis" hint="huevsite.io" />
       </div>
     </div>
   );

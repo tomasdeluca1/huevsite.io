@@ -331,7 +331,7 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
                             key={site.id}
                             href={`/${currentProfile.username}/${site.slug}`}
                             target="_blank"
-                            className="group/item flex items-center gap-3.5 p-3.5 rounded-2xl bg-white/5 border border-white/[0.08] hover:border-[var(--accent)]/40 hover:bg-[var(--accent)]/10 hover:shadow-[0_8px_32px_-12px_var(--accent-dim)] transition-all duration-300 text-left relative overflow-hidden"
+                            className="group/item flex items-center gap-3.5 p-3.5 rounded-2xl bg-white/5 border border-white/[0.08] hover:border-[var(--accent)]/40 hover:bg-[var(--accent)]/10 transition-all duration-300 text-left relative overflow-hidden"
                           >
                             <div className="absolute top-0 right-0 w-24 h-24 bg-[var(--accent)]/20 blur-[30px] rounded-full translate-x-1/2 -translate-y-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity duration-500" />
                             
@@ -437,7 +437,7 @@ export function WinnerSection({ initialData, user }: WinnerSectionProps) {
             <Link
               href={user ? "/dashboard" : "/login"}
               onClick={() => trackEvent("landing_winner_cta_click", { loggedIn: !!user })}
-              className="w-full px-6 py-3 bg-[var(--surface2)] hover:bg-[var(--border-bright)] border border-[var(--border-bright)] rounded-lg text-[14px] font-bold transition-all text-white text-center whitespace-nowrap hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(200,255,0,0.1)]"
+              className="w-full px-6 py-3 bg-[var(--surface2)] hover:bg-[var(--border-bright)] border border-[var(--border-bright)] rounded-lg text-[14px] font-bold transition-all text-white text-center whitespace-nowrap hover:scale-[1.02]"
             >
               {user ? t("winnerCtaButtonUser") : t("winnerCtaButtonGuest")}
             </Link>

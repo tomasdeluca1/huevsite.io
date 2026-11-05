@@ -31,23 +31,24 @@ const SUB =
   "Proyectos, métricas reales y endorsements de otros builders. Que te vean shippeando, no diciendo.";
 
 function renderWithWinner(winner: Winner) {
-  const accent = winner.accent_color || ACCENT;
+  // The frame (logo, eyebrow, CTA, card border) stays brand lime. The winner's
+  // own accent is only the avatar ring and the handle.
+  const detail = winner.accent_color || ACCENT;
   const name = winner.name || winner.username;
   const tagline = truncate(winner.tagline || "", 70);
 
   return (
     <OgFrame
-      accent={accent}
-      eyebrow={<Eyebrow label="Builder de la Semana" accent={accent} />}
-      footer={<FooterCTA cta="Empezá gratis" hint="huevsite.io/tuusuario" accent={accent} />}
+      eyebrow={<Eyebrow label="Builder de la Semana" />}
+      footer={<FooterCTA cta="Empezá gratis" hint="huevsite.io/tuusuario" />}
     >
       <SplitBody
         headline={HEADLINE}
         sub={SUB}
         right={
-          <Card accent={accent} width={420}>
+          <Card width={420}>
             <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
-              <AvatarCircle url={winner.image} name={name} size={104} accent={accent} />
+              <AvatarCircle url={winner.image} name={name} size={104} accent={detail} />
               <div style={{ display: "flex", flexDirection: "column", flex: 1, gap: 6 }}>
                 <span
                   style={{
@@ -61,7 +62,7 @@ function renderWithWinner(winner: Winner) {
                 >
                   {truncate(name, 18)}
                 </span>
-                <span style={{ fontSize: 16, fontWeight: 700, color: accent, display: "flex" }}>
+                <span style={{ fontSize: 16, fontWeight: 700, color: detail, display: "flex" }}>
                   @{winner.username}
                 </span>
               </div>
@@ -112,10 +113,14 @@ function renderBrandOnly() {
   );
 }
 
+export function homeOgElement(winner: Winner | null) {
+  return winner ? renderWithWinner(winner) : renderBrandOnly();
+}
+
 export default async function Image() {
   try {
     const winner = await fetchCurrentWinner();
-    return new ImageResponse(winner ? renderWithWinner(winner) : renderBrandOnly(), { ...size });
+    return new ImageResponse(homeOgElement(winner), { ...size });
   } catch {
     return new ImageResponse(<BrandFallback label={SUB} />, { ...size });
   }

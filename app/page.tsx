@@ -73,7 +73,9 @@ const organizationSchema = {
     width: 512,
     height: 512,
   },
-  image: "https://huevsite.io/opengraph-image.png",
+  // Static brand frame (logo + lime on #050505). Social cards use the
+  // winner-versioned /opengraph-image route from generateMetadata.
+  image: "https://huevsite.io/opengraph-image.png?v=brand",
   description:
     "Red social y plataforma de portfolios para builders, desarrolladores, diseñadores y founders de todo el mundo.",
   slogan: "Mostrá lo que buildeás.",

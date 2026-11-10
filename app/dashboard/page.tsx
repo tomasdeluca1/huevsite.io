@@ -42,6 +42,7 @@ import { BlockEditorModal } from "@/components/dashboard/BlockEditorModal";
 import { ProjectTracker } from "@/components/dashboard/ProjectTracker";
 import { ColorPicker } from "@/components/dashboard/ColorPicker";
 import { FeedbackModal } from "@/components/dashboard/FeedbackModal";
+import { McpAccessModal } from "@/components/dashboard/McpAccessModal";
 import { OnboardingModal } from "@/components/dashboard/OnboardingModal";
 import Link from "next/link";
 import { DiscoveryHeader } from "@/components/discovery/DiscoveryHeader";
@@ -88,6 +89,7 @@ export default function DashboardPage() {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [editingBlock, setEditingBlock] = useState<BlockData | null>(null);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [isMcpOpen, setIsMcpOpen] = useState(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -1625,6 +1627,7 @@ export default function DashboardPage() {
         setIsCreateSubSiteOpen={setIsCreateSubSiteOpen}
           setIsUpgradeModalOpen={setIsUpgradeModalOpen}
           setIsFeedbackOpen={setIsFeedbackOpen}
+          setIsMcpOpen={setIsMcpOpen}
           setIsDeleteAccountOpen={setIsDeleteAccountOpen}
           setIsLinktreeRefactorOpen={setIsLinktreeRefactorOpen}
           setTempProfileData={setTempProfileData}
@@ -2322,6 +2325,7 @@ export default function DashboardPage() {
         />
       )}
       <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
+      <McpAccessModal isOpen={isMcpOpen} onClose={() => setIsMcpOpen(false)} />
       <OnboardingModal 
         isOpen={isOnboardingOpen} 
         onClose={() => { 

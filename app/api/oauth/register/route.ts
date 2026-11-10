@@ -10,7 +10,7 @@ export function OPTIONS() {
 }
 
 export async function POST(request: Request) {
-  if (!registrationAllowed(request)) {
+  if (!(await registrationAllowed(request))) {
     return oauthError("slow_down", "Demasiados registros. Esperá un toque.", 429);
   }
   let body: unknown;

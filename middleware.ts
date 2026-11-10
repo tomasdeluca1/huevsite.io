@@ -2,6 +2,14 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { hasProAccess } from '@/lib/pro-access'
 
+function withOauthFrameGuard(response: NextResponse, pathname: string) {
+  if (pathname.startsWith('/oauth')) {
+    response.headers.set('X-Frame-Options', 'DENY')
+    response.headers.set('Content-Security-Policy', "frame-ancestors 'none'")
+  }
+  return response
+}
+
 export async function middleware(request: NextRequest) {
   const url = request.nextUrl
   const hostname = request.headers.get('host') || ''
@@ -23,7 +31,7 @@ export async function middleware(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 365,
       sameSite: 'lax',
     })
-    return redirect
+    return withOauthFrameGuard(redirect, url.pathname)
   }
 
   // 1. Definir hosts reservados (la plataforma principal)
@@ -70,7 +78,7 @@ export async function middleware(request: NextRequest) {
   // Solo para usuarios PRO que hayan configurado su dominio
   if (!isReserved) {
     // Si intentan entrar a rutas de sistema por un dominio custom, mandarlos al sitio principal
-    const systemPaths = ['/dashboard', '/login', '/welcome', '/onboarding', '/checkout', '/admin']
+    const systemPaths = ['/dashboard', '/login', '/welcome', '/onboarding', '/checkout', '/admin', '/oauth']
     if (systemPaths.some(path => url.pathname.startsWith(path))) {
       return NextResponse.redirect(new URL(url.pathname + url.search, 'https://huevsite.io'))
     }
@@ -109,7 +117,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  return response
+  return withOauthFrameGuard(response, url.pathname)
 }
 
 export const config = {

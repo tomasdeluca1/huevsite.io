@@ -22,8 +22,21 @@ const PRIVATE_V4 = [
   /^100\.(6[4-9]|[7-9]\d|1[0-1]\d|12[0-7])\./,
 ];
 
+function mappedIpv4(ip: string): string | null {
+  if (!ip.startsWith("::ffff:")) return null;
+  const rest = ip.slice("::ffff:".length);
+  if (/^\d{1,3}(?:\.\d{1,3}){3}$/.test(rest)) return rest;
+  const hex = rest.match(/^([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
+  if (!hex) return null;
+  const hi = parseInt(hex[1], 16);
+  const lo = parseInt(hex[2], 16);
+  return `${(hi >> 8) & 255}.${hi & 255}.${(lo >> 8) & 255}.${lo & 255}`;
+}
+
 export function isPrivateAddress(address: string): boolean {
   const ip = address.toLowerCase().replace(/^\[|\]$/g, "");
+  const v4 = mappedIpv4(ip);
+  if (v4) return isPrivateAddress(v4);
   if (ip === "::1" || ip === "0:0:0:0:0:0:0:1") return true;
   if (ip.startsWith("fc") || ip.startsWith("fd") || ip.startsWith("fe80:")) return true;
   if (ip.includes(":")) return false;

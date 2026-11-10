@@ -67,6 +67,12 @@ function memory(): OAuthStore & { grants: StoredGrant[] } {
     async insertGrant(grant) { grants.push(grant); },
     async getByAccessHash(hash) { return grants.find((item) => item.accessTokenHash === hash) || null; },
     async getByRefreshHash(hash) { return grants.find((item) => item.refreshTokenHash === hash) || null; },
+    async consumeRefresh(hash, now) {
+      const row = grants.find((item) => item.refreshTokenHash === hash && !item.revokedAt);
+      if (!row) return null;
+      row.revokedAt = now.toISOString();
+      return row;
+    },
     async revokeFamily(familyId, now) {
       for (const grant of grants) {
         if (grant.familyId === familyId && !grant.revokedAt) grant.revokedAt = now.toISOString();
@@ -100,6 +106,8 @@ ok("127.0.0.1 también", redirectAllowed("http://127.0.0.1:53682/callback", ["ht
 ok("otro host no entra", !redirectAllowed("https://evil.example/callback", ["https://claude.ai/api/mcp/auth_callback"]));
 ok("javascript no se registra", !isRegisterableRedirect("javascript:alert(1)"));
 ok("una IP privada se rechaza", isPrivateAddress("127.0.0.1") && isPrivateAddress("10.1.1.1") && isPrivateAddress("169.254.1.1"));
+ok("una IPv4 privada mapeada a IPv6 se rechaza", isPrivateAddress("::ffff:127.0.0.1") && isPrivateAddress("::ffff:169.254.169.254") && isPrivateAddress("::ffff:a9fe:a9fe"));
+ok("una IP pública no se trata como privada", !isPrivateAddress("1.1.1.1") && !isPrivateAddress("2001:4860:4860::8888"));
 ok("el documento CIMD tiene que coincidir el client_id", !parseClientMetadataDocument("https://claude.ai/oauth/mcp-oauth-client-metadata", {
   client_id: "https://otro.example/client",
   client_name: "Claude",

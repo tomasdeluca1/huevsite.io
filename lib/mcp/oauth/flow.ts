@@ -59,6 +59,7 @@ export interface OAuthStore {
   insertGrant(grant: StoredGrant): Promise<void>;
   getByAccessHash(hash: string): Promise<StoredGrant | null>;
   getByRefreshHash(hash: string): Promise<StoredGrant | null>;
+  consumeRefresh(hash: string, now: Date): Promise<StoredGrant | null>;
   revokeFamily(familyId: string, now: Date): Promise<void>;
   touchGrant(id: string, now: Date): Promise<void>;
   listConnections(userId: string): Promise<OAuthConnection[]>;
@@ -178,11 +179,14 @@ export async function exchangeRefreshToken(
   if (input.resource && !sameResource(input.resource, input.expectedResource)) {
     return { ok: false, error: "invalid_target", description: "El resource no es el MCP de huevsite." };
   }
-  const row = await store.getByRefreshHash(sha256(input.refreshToken));
+  const hash = sha256(input.refreshToken);
+  const row = await store.consumeRefresh(hash, input.now);
   if (!row || row.clientId !== input.client.clientId) {
+    const existing = row || (await store.getByRefreshHash(hash));
+    if (existing) await store.revokeFamily(existing.familyId, input.now);
     return { ok: false, error: "invalid_grant", description: "El refresh token no sirve." };
   }
-  if (row.revokedAt || (row.refreshExpiresAt && Date.parse(row.refreshExpiresAt) <= input.now.getTime())) {
+  if (row.refreshExpiresAt && Date.parse(row.refreshExpiresAt) <= input.now.getTime()) {
     await store.revokeFamily(row.familyId, input.now);
     return { ok: false, error: "invalid_grant", description: "El refresh token ya no vale. Volvé a conectar la app." };
   }

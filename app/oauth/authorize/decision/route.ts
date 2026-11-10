@@ -8,6 +8,23 @@ import { createSupabaseOAuthStore } from "@/lib/mcp/oauth/supabase";
 
 export const dynamic = "force-dynamic";
 
+function isBrowserSameOrigin(request: Request): boolean {
+  const expected = new URL(request.url).origin;
+  const origin = request.headers.get("origin");
+  if (origin) return origin === expected;
+  const site = (request.headers.get("sec-fetch-site") || "").toLowerCase();
+  if (site) return site === "same-origin";
+  const referer = request.headers.get("referer");
+  if (referer) {
+    try {
+      return new URL(referer).origin === expected;
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}
+
 function bounce(redirectUri: string, params: Record<string, string | undefined>) {
   const target = new URL(redirectUri);
   for (const [key, value] of Object.entries(params)) {
@@ -17,8 +34,7 @@ function bounce(redirectUri: string, params: Record<string, string | undefined>)
 }
 
 export async function POST(request: Request) {
-  const origin = request.headers.get("origin");
-  if (origin && origin !== new URL(request.url).origin) {
+  if (!isBrowserSameOrigin(request)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
   const form = await request.formData();

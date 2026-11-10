@@ -3,9 +3,12 @@ import { randomToken, sha256 } from "@/lib/mcp/oauth/crypto";
 import { parseRegistration, fetchClientMetadata, isMetadataClientId } from "@/lib/mcp/oauth/clients";
 import { endpointsFromRequest } from "@/lib/mcp/oauth/metadata";
 import { createSupabaseOAuthStore } from "@/lib/mcp/oauth/supabase";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import type { StoredClient } from "@/lib/mcp/oauth/flow";
 
 const registerLimiter = rateLimit({ interval: 60 * 60 * 1000, uniqueTokenPerInterval: 2000 });
+const DCR_PER_IP_PER_HOUR = 30;
+const DCR_GLOBAL_PER_HOUR = 200;
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -79,8 +82,24 @@ export async function resolveOauthClient(clientId: string): Promise<StoredClient
   return store.getClient(clientId);
 }
 
-export function registrationAllowed(request: Request): boolean {
-  return registerLimiter.check(30, `reg:${clientIp(request)}`).success;
+export async function registrationAllowed(request: Request): Promise<boolean> {
+  if (!registerLimiter.check(DCR_PER_IP_PER_HOUR, `reg:${clientIp(request)}`).success) return false;
+  try {
+    const db = createServiceRoleClient();
+    const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { count, error } = await db
+      .from("oauth_clients")
+      .select("client_id", { count: "exact", head: true })
+      .gte("created_at", since);
+    if (error) {
+      console.error("[oauth] register cap", error.message);
+      return true;
+    }
+    return (count || 0) < DCR_GLOBAL_PER_HOUR;
+  } catch (error) {
+    console.error("[oauth] register cap", error instanceof Error ? error.message : "error");
+    return true;
+  }
 }
 
 export function issuedClient(client: StoredClient, secret: string | null) {

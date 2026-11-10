@@ -118,6 +118,17 @@ export function createSupabaseOAuthStore(): OAuthStore {
       if (error) throw new Error(error.message);
       return data ? mapGrant(data) : null;
     },
+    async consumeRefresh(hash, now) {
+      const { data, error } = await db
+        .from("oauth_grants")
+        .update({ revoked_at: now.toISOString() })
+        .eq("refresh_token_hash", hash)
+        .is("revoked_at", null)
+        .select("*")
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      return data ? mapGrant(data) : null;
+    },
     async revokeFamily(familyId, now) {
       const { error } = await db
         .from("oauth_grants")

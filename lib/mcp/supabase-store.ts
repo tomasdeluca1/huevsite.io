@@ -5,7 +5,7 @@ import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import type { McpBlock, McpNewBlock, McpProfile, McpStore } from "@/lib/mcp/types";
 
 const PROFILE_COLS =
-  "id, username, name, tagline, image, github_handle, accent_color, border_radius, layout, roles, location, country, available, subscription_tier, pro_since, referral_reward_expires_at, free_trial_claimed_at, free_trial_started_at, free_trial_ends_at, free_trial_last_insights_viewed_at, extra_blocks_from_share, builder_score, published_board";
+  "id, username, name, tagline, image, github_handle, accent_color, border_radius, layout, profile_layout, link_box_style, roles, location, country, available, subscription_tier, pro_since, referral_reward_expires_at, free_trial_claimed_at, free_trial_started_at, free_trial_ends_at, free_trial_last_insights_viewed_at, extra_blocks_from_share, builder_score, published_board";
 
 function mapProfile(row: Record<string, any>): McpProfile {
   return {
@@ -18,6 +18,8 @@ function mapProfile(row: Record<string, any>): McpProfile {
     accent_color: row.accent_color ?? null,
     border_radius: row.border_radius ?? null,
     layout: row.layout ?? null,
+    profile_layout: row.profile_layout ?? "portfolio",
+    link_box_style: row.link_box_style ?? "pill",
     roles: Array.isArray(row.roles) ? row.roles : null,
     location: row.location ?? null,
     country: row.country ?? null,
@@ -56,7 +58,15 @@ export function createSupabaseMcpStore(): McpStore {
 
   return {
     async getProfile(userId) {
-      const { data, error } = await db.from("profiles").select(PROFILE_COLS).eq("id", userId).maybeSingle();
+      // profile_layout y link_box_style llegan con 20261110200000. Si esa
+      // migración todavía no está, el SELECT falla y reintentamos sin ellas.
+      const legacyCols = PROFILE_COLS.replace(", profile_layout, link_box_style", "");
+      const first = await db.from("profiles").select(PROFILE_COLS).eq("id", userId).maybeSingle();
+      const retry = first.error
+        ? await db.from("profiles").select(legacyCols).eq("id", userId).maybeSingle()
+        : first;
+      const data = retry.data as Record<string, any> | null;
+      const error = retry.error;
       if (error) {
         console.error("[mcp] getProfile", error.message);
         throw new Error("No se pudo leer el perfil.");

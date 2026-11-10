@@ -9,7 +9,7 @@ import { auditMeta, dispatchMcp } from "../lib/mcp/server";
 import { handleMcpHttp, readRpcView } from "../lib/mcp/http";
 import { endpointsForIssuer, wwwAuthenticate } from "../lib/mcp/oauth/metadata";
 import { countUsableMcpTokens, isMcpTokenExpired, mcpTokenExpiresAt, parseMcpTokenTtl } from "../lib/mcp/token-expiry";
-import { createProjectInputSchema, updateProfileInputSchema } from "../lib/mcp/schemas";
+import { createProjectInputSchema, updateProfileInputSchema, updateProjectInputSchema } from "../lib/mcp/schemas";
 import { announceLaunch, createProject, deleteProject, getMyProfile, listMyProjects, postUpdate, syncFromGithub, updateProfile, updateProject, MCP_TOOL_NAMES, MCP_TOOLS } from "../lib/mcp/tools";
 import { aiCatalog, MCP_CARD_DESCRIPTION, MCP_CARD_NAME, MCP_CARD_VERSION, mcpServerCard } from "../lib/mcp/discovery";
 import { PUBLISH_PROMPT, STARTER_PROMPT } from "../lib/mcp/guide";
@@ -38,6 +38,8 @@ function profile(partial: Partial<McpProfile> = {}): McpProfile {
     accent_color: "#C8FF00",
     border_radius: "1.5rem",
     layout: "dev_heavy",
+    profile_layout: "portfolio",
+    link_box_style: "pill",
     roles: ["developer"],
     location: "Buenos Aires",
     country: "AR",
@@ -182,6 +184,9 @@ ok("los vencidos no cuentan para el tope", countUsableMcpTokens([
 ok("accent inválido lo rechaza el mismo schema del dashboard", profilePatchSchema.safeParse({ accent_color: "red" }).success === false);
 ok("el MCP usa ese límite de tagline", updateProfileInputSchema.safeParse({ tagline: "a".repeat(201) }).success === false);
 ok("border_radius no acepta CSS inyectado", updateProfileInputSchema.safeParse({ border_radius: "1.5rem;color:red" }).success === false);
+ok("profile_layout solo acepta portfolio o links", updateProfileInputSchema.safeParse({ profile_layout: "links" }).success === true && updateProfileInputSchema.safeParse({ profile_layout: "grid" }).success === false);
+ok("link_box_style rechaza un valor raro", updateProfileInputSchema.safeParse({ link_box_style: "neon" }).success === false);
+ok("boxStyle del proyecto acepta featured", updateProjectInputSchema.safeParse({ project_id: "10000000-0000-4000-8000-000000000004", boxStyle: "featured" }).success === true);
 ok("un link que no es http se rechaza", updateProfileInputSchema.safeParse({ links: [{ platform: "website", url: "javascript:alert(1)" }] }).success === false);
 ok("una imagen javascript se rechaza", updateProfileInputSchema.safeParse({ image: "javascript:alert(1)" }).success === false);
 ok("un data URI de imagen se rechaza", updateProfileInputSchema.safeParse({ image: "data:image/png;base64,aaaa" }).success === false);
@@ -231,6 +236,9 @@ async function run() {
   ok("update_profile guarda headline y bio", updated.ok && updated.data.tagline === "headline nueva" && updated.data.bio === "estoy buildeando el MCP");
   ok("update_profile crea links y stack", updated.ok && Array.isArray(updated.data.links) && Array.isArray(updated.data.stack));
 
+  const styled = await updateProfile(base, USER, { profile_layout: "links", link_box_style: "card" });
+  ok("update_profile guarda el modo links", styled.ok && styled.data.profile_layout === "links" && styled.data.link_box_style === "card");
+
   const listed = await listMyProjects(base, USER);
   ok("list_my_projects no incluye el de otro ni el sub-site", listed.ok && (listed.data.projects as { id: string }[]).length === 1 && (listed.data.projects as { id: string }[])[0].id === "10000000-0000-4000-8000-000000000002");
 
@@ -270,8 +278,9 @@ async function run() {
     : null;
   ok("ese avance lo ve el cron de avances", candidate?.sourceType === "update" && candidate.sourceId === "10000000-0000-4000-8000-000000000004");
 
-  const patched = await updateProject(aged, USER, { project_id: "10000000-0000-4000-8000-000000000004", title: "Viejo v2" });
+  const patched = await updateProject(aged, USER, { project_id: "10000000-0000-4000-8000-000000000004", title: "Viejo v2", boxStyle: "featured" });
   ok("update_project cambia el título", patched.ok && (patched.data.project as { title: string }).title === "Viejo v2");
+  ok("update_project guarda boxStyle", patched.ok && (patched.data.project as { boxStyle: string }).boxStyle === "featured");
   const stolen = await updateProject(aged, USER, { project_id: "33333333-3333-4333-8333-333333333333", title: "no" });
   ok("un id que no es tuyo es not_found", !stolen.ok && stolen.error === "not_found");
 

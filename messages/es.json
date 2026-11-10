@@ -452,7 +452,10 @@
       "linktreeRefactorTitle": "Refactorizar con Linktree",
       "linktreeRefactorSubtitle": "Rehace el board por 1 crédito IA",
       "deleteAccount": "Eliminar cuenta",
-      "logout": "Salir de la cuenta"
+      "logout": "Salir de la cuenta",
+      "profileLayoutLabel": "Diseño del perfil",
+      "layoutPortfolio": "Portfolio",
+      "layoutLinks": "Links"
     },
     "mcp": {
       "title": "Agentes",
@@ -798,7 +801,14 @@
       "errorNetworkSaveProfile": "Error de red al guardar el perfil.",
       "shareMessage": "Armé mi huevsite: mi portfolio de builder 🚀",
       "countryLabel": "País",
-      "countryPlaceholder": "Elegí tu país"
+      "countryPlaceholder": "Elegí tu país",
+      "tabHome": "Perfil",
+      "tabMore": "Más",
+      "primaryNav": "Secciones del dashboard",
+      "headingHomePrefix": "Tu",
+      "headingHomeWord": "perfil",
+      "headingMorePrefix": "Lo",
+      "headingMoreWord": "demás"
     },
     "insights": {
       "osTooltipMacOs": "Audiencia con entorno de trabajo típico de builders, founders y perfiles creativos.",
@@ -1164,6 +1174,55 @@
       "selectInstruction": "Seleccioná {limit} bloques",
       "confirmSelection": "Confirmar selección",
       "keepAllWithPro": "Mantener todo con Pro"
+    },
+    "studio": {
+      "layoutLabel": "Diseño del perfil",
+      "layoutPortfolio": "Portfolio",
+      "layoutLinks": "Links",
+      "layoutHint": "Portfolio es la grilla de siempre. Links es tu bio con botones grandes.",
+      "boxLabel": "Formato de los links",
+      "boxGlobal": "Para todos",
+      "boxPill": "Píldora",
+      "boxCard": "Tarjeta",
+      "boxCompact": "Compacto",
+      "boxFeatured": "Destacado",
+      "boxExpandable": "Expandible",
+      "boxPerLink": "Formato de este link",
+      "boxFollowGlobal": "Usar el general",
+      "name": "Nombre",
+      "bio": "Bio corta",
+      "addTitle": "Título del link",
+      "addUrl": "https://...",
+      "add": "Agregar",
+      "emptyTitle": "Todavía no hay links",
+      "emptyBody": "Sumá un proyecto con título y URL. Después lo arrastrás para ordenarlo.",
+      "share": "Compartir",
+      "copy": "Copiar link",
+      "copied": "Copiado",
+      "view": "Ver página",
+      "preview": "Vista previa",
+      "edit": "Editar",
+      "saved": "Guardado",
+      "saving": "Guardando...",
+      "saveError": "No se pudo guardar",
+      "hide": "Ocultar",
+      "show": "Mostrar",
+      "drag": "Arrastrar para reordenar",
+      "statsScore": "Puntos",
+      "statsViews": "Visitas",
+      "statsClicks": "Clicks",
+      "statsRange": "Últimos 7 días",
+      "statsLocked": "Las visitas y los clicks están en Pro.",
+      "openStats": "Ver stats",
+      "openGrid": "Editar la grilla",
+      "subsiteNote": "El modo Links se publica en tu perfil principal, no en este sub-sitio.",
+      "backToMain": "Volver al perfil principal",
+      "editDetails": "Editar detalles",
+      "moreIntro": "Proyectos, dominio y sub-sitios. Color, newsletter y la cuenta siguen en el panel de la izquierda.",
+      "proDomain": "Dominio y sub-sitios son Pro",
+      "seePro": "Ver Pro",
+      "rowSocial": "Redes",
+      "rowNotes": "Notas"
     }
   },
   "recruiter": {
@@ -2266,5 +2325,13 @@
     "nominations": "nominaciones",
     "score": "score",
     "whatIsThis": "¿Qué es esto?"
+  },
+  "profileLinks": {
+    "share": "Compartir",
+    "copied": "Link copiado",
+    "expand": "Ver detalle",
+    "collapse": "Ocultar detalle",
+    "noDetail": "Sin detalle extra.",
+    "also": "También"
   }
 }

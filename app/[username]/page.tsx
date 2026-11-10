@@ -21,6 +21,7 @@ import { breadcrumbLd, profilePageLd } from "@/lib/structured-data";
 import { keywordsFor } from "@/lib/seo";
 import { getLocale } from "@/lib/locale";
 import { Logo } from "@/components/brand/Logo";
+import { LinksProfile } from "@/components/profile/LinksProfile";
 
 interface Props {
   params: { username: string };
@@ -362,10 +363,48 @@ export default async function ProfilePage({ params, searchParams }: Props) {
           </div>
         )}
 
-        {/* Mobile-first ordering: the board (ProfileGrid) leads on phones so you
+        {profile.profileLayout === "links" ? (
+          <div className="relative z-10">
+            {!embed && profile.winnerWeek && (
+              <WinnerBanner
+                winnerWeek={profile.winnerWeek}
+                notaHref={bdlsNotaHref}
+                historyHref="/builders-de-la-semana"
+              />
+            )}
+            <LinksProfile
+              blocks={profile.blocks}
+              globalStyle={profile.linkBoxStyle}
+              username={profile.username}
+              displayName={profile.displayName || profile.username}
+              avatarUrl={profile.avatarUrl}
+              bio={profile.tagline || heroData.tagline || heroData.description || ""}
+              accentColor={profile.accentColor}
+              borderRadius={profile.borderRadius}
+              userId={profile.id}
+              showEcosystem={profile.showEcosystem}
+              subSites={profile.subSites}
+            />
+            <ProfileSocialBar
+              className="mt-8"
+              profileId={profile.id}
+              isFollowing={isFollowing}
+              followersCount={followersCount}
+              followingCount={followingCount}
+              nominationsCount={nominationsCount}
+              builderScore={profile.builderScore || 0}
+              accentColor={profile.accentColor}
+              showFollowButton={showFollowButton}
+              currentUserId={currentUserId}
+              isEnabledSocialNetwork={isEnabled("socialNetwork")}
+              embed={embed}
+            />
+          </div>
+        ) : (
+        /* Mobile-first ordering: the board (ProfileGrid) leads on phones so you
             see the builder's content on entry; the social stats + follow/nominate
             (ProfileSocialBar) drop below it. Desktop keeps the classic order
-            (header → stats → winner chip → board) via md:order-*. */}
+            (header → stats → winner chip → board) via md:order-*. */
         <div className="flex flex-col">
           <div className="order-1">
             <ProfileHeader
@@ -425,6 +464,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
             />
           </div>
         </div>
+        )}
 
         {/* Endorsements (feature flag: red social) */}
         {isEnabled("socialNetwork") && profile.id && (

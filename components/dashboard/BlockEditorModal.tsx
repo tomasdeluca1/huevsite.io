@@ -8,6 +8,8 @@ import { createPortal } from "react-dom";
 import { ImageUpload } from "@/components/dashboard/ImageUpload";
 import { FileUpload } from "@/components/dashboard/FileUpload";
 import { SOCIAL_PLATFORMS, SocialPlatformKey, buildSocialUrl, getUrlPreview } from "@/lib/social-platforms";
+import { BoxStylePicker } from "@/components/dashboard/BoxStylePicker";
+import { parseBoxStyleOverride } from "@/lib/profile-layout";
 import { AIRewriteButton } from "@/components/dashboard/AIRewriteButton";
 import { useTranslations } from "next-intl";
 
@@ -274,6 +276,11 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
       case "project":
         return (
           <div className="space-y-6">
+            <BoxStylePicker
+              allowDefault
+              value={parseBoxStyleOverride(formData.boxStyle)}
+              onChange={(value) => handleChange("boxStyle", value)}
+            />
             {block.type === "project" && (
               <ImageUpload
                 label={t("blockEditor.project.previewLabel")}

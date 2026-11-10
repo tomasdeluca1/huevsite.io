@@ -1,4 +1,5 @@
 import { AccentColor, Role } from "./onboarding-types";
+import type { LinkBoxStyle, ProfileLayoutMode } from "./profile-layout";
 
 export type SubscriptionTier = "free" | "pro";
 
@@ -149,6 +150,8 @@ export interface BaseBlock {
   visibleOn?: 'both' | 'desktop' | 'mobile';
   // Board preset al que pertenece el bloque del perfil principal (0-2).
   board_index?: number;
+  // Formato del botón en el modo Links. null o ausente: usa el global del perfil.
+  boxStyle?: LinkBoxStyle | null;
 }
 
 export interface HeroBlockData extends BaseBlock {
@@ -377,6 +380,8 @@ export interface ProfileData {
   freeTrial?: FreeTrialState;
   badges?: ProfileBadge[];
   borderRadius?: string;
+  profileLayout?: ProfileLayoutMode;
+  linkBoxStyle?: LinkBoxStyle;
   // Mostrar la sección de ecosistema (sub-sitios) en el header. Default true.
   showEcosystem: boolean;
   /** Solo dashboard: espeja el criterio de `subscriptionTier` de la vista pública (incluye recompensa de referidos). */

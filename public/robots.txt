@@ -29,6 +29,7 @@ Disallow: /admin
 Disallow: /welcome
 Disallow: /checkout
 Disallow: /auth/
+Disallow: /lab
 # NO se bloquean ?from= ni utm_*: esas URLs se comparten en redes y los
 # crawlers de preview (facebookexternalhit, LinkedInBot) caen bajo "*", asi
 # que bloquearlas romperia el OG de todo link con campaña. Los duplicados ya

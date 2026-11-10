@@ -19,6 +19,9 @@ export const PUBLISH_PROMPT = `Quiero publicar un avance de lo que estoy buildea
 export const MCP_INSTRUCTIONS = `huevsite es el perfil público de la persona que inició sesión. Solo podés leer y editar ese perfil.
 Llamá get_my_profile primero. Si falta bio, proyectos, links o stack, preguntá.
 Proponé los cambios y esperá un sí antes de escribir con update_profile, create_project o update_project.
+profile_layout es portfolio (grilla) o links (bio con botones). El default es portfolio.
+link_box_style es el formato global de esos botones: pill, card, compact, featured o expandable.
+boxStyle en un proyecto pisa ese formato. null vuelve al global.
 update_profile, create_project, update_project, delete_project y post_update aceptan dry_run: true: corren las mismas validaciones, devuelven cómo quedaría y no guardan nada. Usalo para mostrar la vista previa antes de pedir el sí.
 Después ofrecé post_update para un avance en público.
 delete_project solo si te pasan confirm true. No mandes mails ni publiques en redes.

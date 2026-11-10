@@ -7,7 +7,7 @@ import { profilePatchSchema } from "../lib/profile-schemas";
 import { effectiveBlockLimit, launchPlanIsPro, mcpBatchAllowed, mcpCallAllowed, MCP_FREE_CALLS_PER_HOUR, MCP_PRO_CALLS_PER_HOUR } from "../lib/mcp/limits";
 import { auditMeta, dispatchMcp } from "../lib/mcp/server";
 import { readRpcView } from "../lib/mcp/http";
-import { updateProfileInputSchema } from "../lib/mcp/schemas";
+import { createProjectInputSchema, updateProfileInputSchema } from "../lib/mcp/schemas";
 import { announceLaunch, createProject, deleteProject, getMyProfile, listMyProjects, postUpdate, syncFromGithub, updateProfile, updateProject, MCP_TOOL_NAMES } from "../lib/mcp/tools";
 import { generateMcpToken, hashMcpToken, parseBearer } from "../lib/mcp/tokens";
 import type { CreateLaunchResult } from "../lib/launch-service";
@@ -160,6 +160,10 @@ ok("accent inválido lo rechaza el mismo schema del dashboard", profilePatchSche
 ok("el MCP usa ese límite de tagline", updateProfileInputSchema.safeParse({ tagline: "a".repeat(201) }).success === false);
 ok("border_radius no acepta CSS inyectado", updateProfileInputSchema.safeParse({ border_radius: "1.5rem;color:red" }).success === false);
 ok("un link que no es http se rechaza", updateProfileInputSchema.safeParse({ links: [{ platform: "website", url: "javascript:alert(1)" }] }).success === false);
+ok("una imagen javascript se rechaza", updateProfileInputSchema.safeParse({ image: "javascript:alert(1)" }).success === false);
+ok("un data URI de imagen se rechaza", updateProfileInputSchema.safeParse({ image: "data:image/png;base64,aaaa" }).success === false);
+ok("una imagen https pasa", updateProfileInputSchema.safeParse({ image: "https://ada.dev/me.png" }).success === true);
+ok("imageUrl del proyecto no acepta javascript", createProjectInputSchema.safeParse({ title: "X", imageUrl: "javascript:alert(1)" }).success === false);
 
 ok("free son 60 llamadas", MCP_FREE_CALLS_PER_HOUR === 60 && mcpCallAllowed(59, 60) && !mcpCallAllowed(60, 60));
 ok("pro son 600", MCP_PRO_CALLS_PER_HOUR === 600 && mcpBatchAllowed(599, 1, 600) && !mcpBatchAllowed(599, 2, 600));

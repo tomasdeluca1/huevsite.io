@@ -23,6 +23,8 @@ export const updateProfileInputSchema = mcpProfileColumnSchema.extend({
   country: z.string().max(2).optional(),
   links: z.array(mcpSocialLinkSchema).max(30).optional(),
   stack: mcpStackSchema.optional(),
+  // Override profilePatchSchema's z.string().url(), which allows javascript: and data:.
+  image: httpUrl.optional(),
 });
 
 export const projectWriteSchema = z.object({
@@ -33,8 +35,8 @@ export const projectWriteSchema = z.object({
   status: z.enum(["idea", "building", "launched"]).optional(),
   metrics: z.string().max(200).optional(),
   launchDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal("")).optional(),
-  imageUrl: z.string().url().or(z.literal("")).optional(),
-  faviconUrl: z.string().url().or(z.literal("")).optional(),
+  imageUrl: httpUrl.optional(),
+  faviconUrl: httpUrl.optional(),
   imageMode: z.enum(["og", "favicon"]).optional(),
   showStatus: z.boolean().optional(),
   archived: z.boolean().optional(),

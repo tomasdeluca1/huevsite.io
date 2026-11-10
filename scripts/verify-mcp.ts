@@ -9,6 +9,9 @@ import { auditMeta, dispatchMcp } from "../lib/mcp/server";
 import { readRpcView } from "../lib/mcp/http";
 import { createProjectInputSchema, updateProfileInputSchema } from "../lib/mcp/schemas";
 import { announceLaunch, createProject, deleteProject, getMyProfile, listMyProjects, postUpdate, syncFromGithub, updateProfile, updateProject, MCP_TOOL_NAMES } from "../lib/mcp/tools";
+import { aiCatalog, MCP_CARD_DESCRIPTION, MCP_CARD_NAME, MCP_CARD_VERSION, mcpServerCard } from "../lib/mcp/discovery";
+import { PUBLISH_PROMPT, STARTER_PROMPT } from "../lib/mcp/guide";
+import { claudeConfig, cursorConfig, tokenConfig, vscodeConfig } from "../lib/mcp/install-links";
 import { generateMcpToken, hashMcpToken, parseBearer } from "../lib/mcp/tokens";
 import type { CreateLaunchResult } from "../lib/launch-service";
 import type { McpBlock, McpProfile, McpStore } from "../lib/mcp/types";
@@ -311,6 +314,28 @@ async function run() {
   const callBody = await called.json();
   const text = callBody?.result?.content?.[0]?.text || "";
   ok("tools/call get_my_profile audita y responde", audited === "get_my_profile" && text.includes("ada"), text.slice(0, 180));
+
+  const card = mcpServerCard("https://huevsite.io");
+  ok("la server card cabe en 100 caracteres", MCP_CARD_DESCRIPTION.length >= 1 && MCP_CARD_DESCRIPTION.length <= 100, String(MCP_CARD_DESCRIPTION.length));
+  ok("la server card tiene nombre reverse-dns y version del runtime", card.name === MCP_CARD_NAME && /^[a-zA-Z0-9.-]+\/[a-zA-Z0-9._-]+$/.test(card.name) && card.version === MCP_CARD_VERSION && card.title === "huevsite");
+  ok("la server card apunta al endpoint", card.remotes[0]?.type === "streamable-http" && card.remotes[0]?.url === "https://huevsite.io/api/mcp" && (card.remotes[0]?.supportedProtocolVersions?.length || 0) > 0);
+  ok("la server card no lista tools", !("tools" in card) && card.websiteUrl === "https://huevsite.io/mcp");
+  const catalog = aiCatalog("https://huevsite.io");
+  ok("el catalogo apunta a la server card", catalog.entries[0]?.type === "application/mcp-server-card+json" && catalog.entries[0]?.url === "https://huevsite.io/api/mcp/server-card");
+  ok("los prompts nativos tienen texto", STARTER_PROMPT.includes("get_my_profile") && PUBLISH_PROMPT.includes("post_update"));
+  ok("las configs pegan la URL", [cursorConfig, vscodeConfig, claudeConfig, tokenConfig].every((build) => build("https://huevsite.io/api/mcp").includes("https://huevsite.io/api/mcp")));
+
+  const docs = fs.readFileSync(path.join(__dirname, "../app/mcp/page.tsx"), "utf8");
+  ok("la doc muestra los prompts en bloques copiables", ["CopyBlock", "armar_mi_perfil", "publicar_avance", "STARTER_PROMPT", "PUBLISH_PROMPT", "cursorConfig", "vscodeConfig", "claudeConfig"].every((bit) => docs.includes(bit)));
+  const robots = fs.readFileSync(path.join(__dirname, "../public/robots.txt"), "utf8");
+  ok("robots deja ver mcp, llms y well-known", ["Allow: /mcp", "Allow: /llms.txt", "Allow: /.well-known/", "Allow: /api/mcp/server-card"].every((bit) => robots.includes(bit)));
+  const llms = fs.readFileSync(path.join(__dirname, "../public/llms.txt"), "utf8");
+  const llmsFull = fs.readFileSync(path.join(__dirname, "../public/llms-full.txt"), "utf8");
+  ok("llms.txt describe el endpoint, la auth y las tools", ["https://huevsite.io/api/mcp", "https://huevsite.io/mcp", "OAuth", "get_my_profile", "armar_mi_perfil"].every((bit) => llms.includes(bit) && llmsFull.includes(bit)));
+  const sitemap = fs.readFileSync(path.join(__dirname, "../app/sitemap.ts"), "utf8");
+  ok("el sitemap incluye /mcp", sitemap.includes("/mcp"));
+  const home = fs.readFileSync(path.join(__dirname, "../app/page.tsx"), "utf8");
+  ok("el home apunta a la guia del mcp", home.includes('rel="help"') && home.includes("/mcp"));
 
   const migration = fs.readFileSync(path.join(__dirname, "../supabase/migrations/20261110183000_mcp_access_tokens.sql"), "utf8");
   ok("la migración prende RLS", /enable row level security/i.test(migration));

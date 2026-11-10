@@ -61,6 +61,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
   const totalRegistered = count || 0;
   const { data: { user } } = await supabase.auth.getUser();
   const t = await getTranslations("explore");
+  const tFooter = await getTranslations("footer");
 
   if (error) {
     console.error("Error fetching explore profiles:", error);
@@ -139,6 +140,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
               renders its own list client-side, so this is the only link a
               non-JS crawler can follow from here into the builder profiles. */}
           <Link href="/builders" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">{t("directoryLink")}</Link>
+          <Link href="/mcp" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">{tFooter("agents")}</Link>
           <Link href="https://x.com/i/communities/2026312282527932637" target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">X Community</Link>
           <Link href="https://discord.gg/qE4CWG6D" target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">Discord Community</Link>
           <Link href="https://github.com/tomasdeluca1" target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">GitHub</Link>

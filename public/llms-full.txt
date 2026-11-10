@@ -84,7 +84,35 @@ Página de links centralizados para campañas y redes sociales.
 
 ## API
 
-Huevsite.io cuenta con una API interna utilizada por la propia plataforma. La API es privada y no está abierta a terceros en esta fase. Las rutas públicas de la plataforma (`/explore`, `/showcase`, `/[username]`) son la forma oficial de acceder a la información de los builders.
+Las páginas públicas (`/explore`, `/builders`, `/[username]`) son la forma de leer perfiles sin cuenta. Para que un agente lea y edite el perfil de quien inició sesión, el camino es el MCP de abajo. El resto de `/api/` es de la plataforma.
+
+## MCP para agentes
+
+Servidor MCP remoto. La persona entra con su cuenta de huevsite y el agente solo toca ese perfil.
+
+- Documentación: https://huevsite.io/mcp
+- Endpoint: https://huevsite.io/api/mcp
+- Transporte: streamable HTTP
+- Auth: OAuth 2.1 (authorization code + PKCE, registro dinámico de clientes). El cliente abre https://huevsite.io/oauth/authorize. También se puede usar un token personal, `Authorization: Bearer`, creado en el dashboard.
+- Catálogo: https://huevsite.io/.well-known/ai-catalog.json
+- Server card (SEP-2127): https://huevsite.io/api/mcp/server-card
+- Misma card, para clientes que todavía miran estas rutas: https://huevsite.io/.well-known/mcp.json y https://huevsite.io/.well-known/mcp/server-card.json
+- OAuth Protected Resource: https://huevsite.io/.well-known/oauth-protected-resource
+- OAuth Authorization Server: https://huevsite.io/.well-known/oauth-authorization-server
+
+Herramientas:
+
+- `get_my_profile`: lee headline, bio, links, stack y proyectos.
+- `update_profile`: cambia esos campos, con los mismos límites que el dashboard. No toca username, email, dominio ni newsletter.
+- `list_my_projects`, `create_project`, `update_project`.
+- `delete_project`: exige `confirm: true`.
+- `post_update`: publica un avance de build in public. Cuenta para el cron de avances de builders, salvo el eco de un proyecto creado hace menos de dos horas.
+- `announce_launch`: lanza un proyecto en Builders Hunt. Free: uno por mes. Programar una semana futura es Pro. El proyecto necesita un link http(s).
+- `sync_from_github`: refresca stats de bloques de GitHub que ya están en el perfil. No crea el bloque.
+
+Prompts: `armar_mi_perfil` (arma el perfil y no escribe hasta un sí) y `publicar_avance` (confirma el texto y publica un avance). Están copiables en https://huevsite.io/mcp#prompts
+
+Límites: 60 llamadas por hora en free, 600 en Pro. El agente no manda mails ni publica en redes.
 
 ---
 
@@ -168,9 +196,12 @@ Huevsite.io está construido con:
 
 - **llms.txt** (resumen): https://huevsite.io/llms.txt
 - **llms-full.txt** (este documento): https://huevsite.io/llms-full.txt
+- **MCP**: https://huevsite.io/mcp
+- **Server card**: https://huevsite.io/api/mcp/server-card
+- **AI Catalog**: https://huevsite.io/.well-known/ai-catalog.json
 - **Sitemap**: https://huevsite.io/sitemap.xml
 - **RSS Blog**: https://huevsite.io/blog/feed.xml
 
 ---
 
-*Este documento ha sido redactado específicamente para permitir indexación comprensiva por parte de LLMs, agentes autónomos y motores de respuesta generativa. Última actualización: Abril 2026.*
+*Este documento ha sido redactado específicamente para permitir indexación comprensiva por parte de LLMs, agentes autónomos y motores de respuesta generativa. Última actualización: noviembre 2026.*

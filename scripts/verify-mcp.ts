@@ -10,7 +10,7 @@ import { handleMcpHttp, readRpcView } from "../lib/mcp/http";
 import { endpointsForIssuer, wwwAuthenticate } from "../lib/mcp/oauth/metadata";
 import { countUsableMcpTokens, isMcpTokenExpired, mcpTokenExpiresAt, parseMcpTokenTtl } from "../lib/mcp/token-expiry";
 import { createProjectInputSchema, updateProfileInputSchema, updateProjectInputSchema } from "../lib/mcp/schemas";
-import { announceLaunch, createProject, deleteProject, getMyProfile, listMyProjects, postUpdate, syncFromGithub, updateProfile, updateProject, MCP_TOOL_NAMES } from "../lib/mcp/tools";
+import { announceLaunch, createProject, deleteProject, getMyProfile, listMyProjects, postUpdate, syncFromGithub, updateProfile, updateProject, MCP_TOOL_NAMES, MCP_TOOLS } from "../lib/mcp/tools";
 import { aiCatalog, MCP_CARD_DESCRIPTION, MCP_CARD_NAME, MCP_CARD_VERSION, mcpServerCard } from "../lib/mcp/discovery";
 import { PUBLISH_PROMPT, STARTER_PROMPT } from "../lib/mcp/guide";
 import { claudeConfig, cursorConfig, tokenConfig, vscodeConfig } from "../lib/mcp/install-links";
@@ -390,6 +390,41 @@ async function run() {
   const llms = fs.readFileSync(path.join(__dirname, "../public/llms.txt"), "utf8");
   const llmsFull = fs.readFileSync(path.join(__dirname, "../public/llms-full.txt"), "utf8");
   ok("llms.txt describe el endpoint, la auth y las tools", ["https://huevsite.io/api/mcp", "https://huevsite.io/mcp", "OAuth", "get_my_profile", "armar_mi_perfil"].every((bit) => llms.includes(bit) && llmsFull.includes(bit)));
+  // dry_run: misma lógica, cero escrituras.
+  const tool = (name: string) => MCP_TOOLS.find((item) => item.name === name)!.handler;
+  const dryId = "10000000-0000-4000-8000-0000000000d1";
+  const dryStore = memory({
+    blocks: [
+      block({ id: "hero-dry", type: "hero", data: { name: "Ana", description: "bio vieja" } }),
+      block({ id: dryId, type: "project", data: { title: "Viejo", description: "antes" } }),
+    ],
+  });
+  const snapshot = JSON.stringify(await dryStore.listMainBlocks(USER)) + JSON.stringify(await dryStore.getProfile(USER));
+  const dryProfile = await tool("update_profile")(dryStore, USER, { bio: "bio nueva", tagline: "nuevo headline", dry_run: true });
+  const dryPreview = dryProfile.ok ? (dryProfile.data.preview as Record<string, unknown>) : {};
+  ok("dry_run de update_profile devuelve el perfil como quedaría", dryProfile.ok && dryProfile.data.dry_run === true && dryPreview.bio === "bio nueva" && dryPreview.tagline === "nuevo headline");
+  ok("dry_run de update_profile lista las escrituras", dryProfile.ok && Array.isArray(dryProfile.data.writes) && (dryProfile.data.writes as Array<{ target: string }>).some((write) => write.target === "profile"));
+  const dryUpdate = await tool("update_project")(dryStore, USER, { project_id: dryId, title: "Nuevo", dry_run: true });
+  ok("dry_run de update_project muestra el cambio", dryUpdate.ok && ((dryUpdate.data.preview as { project: { title: string } }).project.title === "Nuevo"));
+  const dryCreate = await tool("create_project")(dryStore, USER, { title: "Otro", dry_run: true });
+  ok("dry_run de create_project no inventa un id real", dryCreate.ok && String((dryCreate.data.preview as { project: { id: string } }).project.id).startsWith("dry-run-"));
+  const dryDelete = await tool("delete_project")(dryStore, USER, { project_id: dryId, confirm: true, dry_run: true });
+  ok("dry_run de delete_project avisa el borrado", dryDelete.ok && (dryDelete.data.writes as Array<{ op: string }>).some((write) => write.op === "delete"));
+  const dryNote = await tool("post_update")(dryStore, USER, { project_id: dryId, note: "avance", dry_run: true });
+  ok("dry_run de post_update calcula el flag de avances", dryNote.ok && "counts_for_avances" in (dryNote.data.preview as object));
+  const dryBad = await tool("update_project")(dryStore, USER, { project_id: dryId, dry_run: true });
+  ok("dry_run sin cambios sigue siendo un error", !dryBad.ok && dryBad.error === "invalid");
+  const dryFull = memory({ blocks: Array.from({ length: 5 }, (_, i) => block({ id: `full-${i}`, type: "project" })) });
+  const dryCapped = await tool("create_project")(dryFull, USER, { title: "No entra", dry_run: true });
+  ok("dry_run respeta el cupo de bloques", !dryCapped.ok && dryCapped.error === "limit");
+  ok(
+    "dry_run no escribe nada",
+    snapshot === JSON.stringify(await dryStore.listMainBlocks(USER)) + JSON.stringify(await dryStore.getProfile(USER))
+      && dryStore.activities.length === 0 && dryStore.deleted.length === 0,
+  );
+  const realRun = await tool("update_project")(dryStore, USER, { project_id: dryId, title: "Aplicado", dry_run: false });
+  ok("dry_run: false escribe de verdad", realRun.ok && !("dry_run" in realRun.data) && dryStore.activities.length === 1);
+
   const sitemap = fs.readFileSync(path.join(__dirname, "../app/sitemap.ts"), "utf8");
   ok("el sitemap incluye /mcp", sitemap.includes("/mcp"));
   const home = fs.readFileSync(path.join(__dirname, "../app/page.tsx"), "utf8");

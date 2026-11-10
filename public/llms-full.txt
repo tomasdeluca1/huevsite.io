@@ -104,6 +104,7 @@ Herramientas:
 
 - `get_my_profile`: lee headline, bio, links, stack y proyectos.
 - `update_profile`: cambia esos campos, con los mismos límites que el dashboard. No toca username, email, dominio ni newsletter.
+- `dry_run: true` en `update_profile`, `create_project`, `update_project`, `delete_project` y `post_update`: corre las mismas validaciones (cupo, dueño, formato), devuelve `preview` con cómo quedaría y `writes` con lo que se escribiría. No guarda nada ni recalcula el score.
 - `list_my_projects`, `create_project`, `update_project`.
 - `delete_project`: exige `confirm: true`.
 - `post_update`: publica un avance de build in public. Cuenta para el cron de avances de builders, salvo el eco de un proyecto creado hace menos de dos horas.

@@ -4,7 +4,7 @@ import { MCP_INSTRUCTIONS, PUBLISH_PROMPT, STARTER_PROMPT } from "@/lib/mcp/guid
 import { MCP_TOOLS } from "@/lib/mcp/tools";
 import type { McpStore } from "@/lib/mcp/types";
 
-const SAFE_META_KEYS = new Set(["project_id", "block_id", "force", "confirm", "set_description", "week", "status", "country"]);
+const SAFE_META_KEYS = new Set(["project_id", "block_id", "force", "confirm", "set_description", "week", "status", "country", "dry_run"]);
 
 export function auditMeta(args: unknown): Record<string, unknown> {
   if (!args || typeof args !== "object" || Array.isArray(args)) return {};

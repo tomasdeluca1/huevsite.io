@@ -38,6 +38,7 @@ Herramientas, siempre sobre el perfil propio:
 
 - `get_my_profile`: lee headline, bio, links, stack y proyectos.
 - `update_profile`: cambia esos campos, con los mismos límites que el dashboard.
+- `dry_run: true` en `update_profile`, `create_project`, `update_project`, `delete_project` y `post_update`: devuelve cómo quedaría y qué se escribiría, sin guardar nada.
 - `list_my_projects`, `create_project`, `update_project`.
 - `delete_project`: solo borra si le pasás `confirm: true`.
 - `post_update`: publica un avance de build in public.

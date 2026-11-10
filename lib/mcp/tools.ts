@@ -1,6 +1,7 @@
 import { isValidCountry } from "@/lib/countries";
 import { isCreateEcho, isPublicProjectBlock } from "@/lib/avances-builders";
 import { compareWeeks, currentLaunchWeek } from "@/lib/launch-week";
+import { runDryRun } from "@/lib/mcp/dry-run";
 import { effectiveBlockLimit, launchPlanIsPro } from "@/lib/mcp/limits";
 import { hasProAccess } from "@/lib/pro-access";
 import {
@@ -439,6 +440,18 @@ export async function syncFromGithub(store: McpStore, userId: string, raw: unkno
   };
 }
 
+type ToolHandler = (store: McpStore, userId: string, args: unknown) => Promise<ToolOutcome>;
+
+// Saca dry_run de los argumentos. Con dry_run: true, el handler corre igual
+// pero contra un store que no persiste, y la respuesta trae la vista previa.
+function withDryRun(handler: ToolHandler): ToolHandler {
+  return (store, userId, args) => {
+    const { dry_run: dryRun, ...rest } = asRecord(args);
+    if (dryRun === true) return runDryRun(store, (preview) => handler(preview, userId, rest));
+    return handler(store, userId, rest);
+  };
+}
+
 export type McpToolName =
   | "get_my_profile"
   | "update_profile"
@@ -476,9 +489,9 @@ export const MCP_TOOLS: Array<{
   },
   {
     name: "update_profile",
-    description: "Actualiza el perfil propio. Acepta name, tagline (headline), bio, location, country, roles, available, github_handle, accent_color, layout, image, border_radius, profile_layout (portfolio o links), link_box_style (pill, card, compact, featured o expandable), links y stack. Usa los mismos límites que el dashboard. No cambia username, email, dominio ni la newsletter.",
+    description: "Actualiza el perfil propio. Acepta name, tagline (headline), bio, location, country, roles, available, github_handle, accent_color, layout, image, border_radius, profile_layout (portfolio o links), link_box_style (pill, card, compact, featured o expandable), links y stack. Usa los mismos límites que el dashboard. No cambia username, email, dominio ni la newsletter. Con dry_run: true devuelve cómo quedaría sin guardar nada.",
     inputSchema: updateProfileInputSchema,
-    handler: (store, userId, args) => updateProfile(store, userId, args),
+    handler: withDryRun((store, userId, args) => updateProfile(store, userId, args)),
   },
   {
     name: "list_my_projects",
@@ -490,25 +503,25 @@ export const MCP_TOOLS: Array<{
     name: "create_project",
     description: "Crea un proyecto en el perfil principal. Respeta el cupo de bloques visibles del plan (5 en free, 22 en Pro, más los bloques extra por compartir). boxStyle es opcional: pill, card, compact, featured o expandable.",
     inputSchema: createProjectInputSchema,
-    handler: (store, userId, args) => createProject(store, userId, args),
+    handler: withDryRun((store, userId, args) => createProject(store, userId, args)),
   },
   {
     name: "update_project",
     description: "Actualiza un proyecto propio. Acepta boxStyle (pill, card, compact, featured, expandable o null para usar el formato global). Deja una actividad block_update para que el cron de avances builders pueda contarla, si el bloque es público y no es el eco de haberlo creado recién.",
     inputSchema: updateProjectInputSchema,
-    handler: (store, userId, args) => updateProject(store, userId, args),
+    handler: withDryRun((store, userId, args) => updateProject(store, userId, args)),
   },
   {
     name: "delete_project",
     description: "Borra un proyecto propio. Hay que pasar confirm: true. Si no, no borra nada.",
     inputSchema: deleteProjectInputSchema,
-    handler: (store, userId, args) => deleteProject(store, userId, args),
+    handler: withDryRun((store, userId, args) => deleteProject(store, userId, args)),
   },
   {
     name: "post_update",
     description: "Publica un avance de build in public sobre un proyecto o un bloque building del perfil principal. Escribe la nota y una actividad block_update, que es lo que mira el cron de avances builders. Si el bloque tiene menos de 2 horas, el cron lo ignora como eco de la creación.",
     inputSchema: postUpdateInputSchema,
-    handler: (store, userId, args) => postUpdate(store, userId, args),
+    handler: withDryRun((store, userId, args) => postUpdate(store, userId, args)),
   },
   {
     name: "announce_launch",

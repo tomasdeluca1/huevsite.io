@@ -18,7 +18,13 @@ export const mcpSocialLinkSchema = z.object({
 
 export const mcpStackSchema = z.array(z.string().trim().min(1).max(40)).max(40);
 
+const dryRun = z
+  .boolean()
+  .optional()
+  .describe("true: devuelve cómo quedaría el perfil y qué se escribiría, sin guardar nada.");
+
 export const updateProfileInputSchema = mcpProfileColumnSchema.extend({
+  dry_run: dryRun,
   // Bio lives on the hero block (data.description). There is no profiles.bio column.
   bio: z.string().max(2000).optional(),
   country: z.string().max(2).optional(),
@@ -44,21 +50,24 @@ export const projectWriteSchema = z.object({
   boxStyle: linkBoxStyleSchema.nullable().optional(),
 });
 
-export const createProjectInputSchema = projectWriteSchema;
+export const createProjectInputSchema = projectWriteSchema.extend({ dry_run: dryRun });
 
 export const updateProjectInputSchema = projectWriteSchema.partial().extend({
   project_id: z.string().uuid(),
+  dry_run: dryRun,
 });
 
 export const deleteProjectInputSchema = z.object({
   project_id: z.string().uuid(),
   confirm: z.literal(true),
+  dry_run: dryRun,
 });
 
 export const postUpdateInputSchema = z.object({
   project_id: z.string().uuid(),
   note: z.string().trim().min(1).max(500),
   set_description: z.boolean().optional(),
+  dry_run: dryRun,
 });
 
 export const announceLaunchInputSchema = z.object({

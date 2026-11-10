@@ -443,18 +443,24 @@ export function DashboardSidebar({
               </button>
             </div>
 
-            <button
-              onClick={() => openModal(setIsMcpOpen)}
-              className="w-full flex items-center gap-3 rounded-2xl p-2.5 text-white/40 transition-all hover:bg-white/5 hover:text-white"
-            >
-              <div className="rounded-lg bg-white/5 p-1.5">
-                <Bot size={18} />
-              </div>
-              <div className="flex-1 text-left">
-                <div className="text-sm font-bold">{t("sidebar.agents")}</div>
-                <div className="text-[10px] font-mono text-white/25">{t("sidebar.agentsHint")}</div>
-              </div>
-            </button>
+            <div className="flex w-full items-center gap-2 rounded-2xl p-2.5 text-white/40 transition-all hover:bg-white/5 hover:text-white">
+              <button
+                type="button"
+                onClick={() => openModal(setIsMcpOpen)}
+                className="flex min-w-0 flex-1 items-center gap-3 text-left"
+              >
+                <div className="rounded-lg bg-white/5 p-1.5">
+                  <Bot size={18} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-bold">{t("sidebar.agents")}</div>
+                  <div className="text-[10px] font-mono text-white/25">{t("sidebar.agentsHint")}</div>
+                </div>
+              </button>
+              <Link href="/mcp" className="shrink-0 text-[10px] font-black uppercase tracking-widest text-[var(--accent)]">
+                {t("sidebar.agentsDocs")}
+              </Link>
+            </div>
 
             <button
               onClick={() => openModal(setIsFeedbackOpen)}

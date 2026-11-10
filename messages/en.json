@@ -447,7 +447,8 @@
       "newsletterSubscribeAria": "Subscribe to the newsletter",
       "feedback": "Feedback",
       "agents": "Agents",
-      "agentsHint": "Token so your agent can update the profile",
+      "agentsHint": "Cursor, Claude, or ChatGPT with your account",
+      "agentsDocs": "Guide",
       "linktreeRefactorTitle": "Refactor with Linktree",
       "linktreeRefactorSubtitle": "Rebuild the board for 1 AI credit",
       "deleteAccount": "Delete account",
@@ -1404,6 +1405,8 @@
     "contentPathFeedCopy": "Come in through real activity, not an abstract landing.",
     "contentPathBlogLabel": "Understand the system",
     "contentPathBlogCopy": "Read how the score, sub-sites and visibility work.",
+    "contentPathAgentsLabel": "Connect an agent",
+    "contentPathAgentsCopy": "Cursor, VS Code, Claude, or ChatGPT keep your profile up to date.",
     "contentPathFollow": "Follow along here",
     "pulseSectionLabel": "// the network, live",
     "pulseRankingLabel": "Live ranking",
@@ -1577,7 +1580,8 @@
   },
   "footer": {
     "tagline": "Show what you build. A project by",
-    "blog": "Blog"
+    "blog": "Blog",
+    "agents": "Agents"
   },
   "legal": {
     "backToHome": "Back home",

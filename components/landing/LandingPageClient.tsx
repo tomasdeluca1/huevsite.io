@@ -12,7 +12,7 @@ import { LatamFlags } from "@/components/landing/LatamFlags";
 import { supabase } from "@/lib/supabase";
 import { PricingTiers } from "@/components/landing/PricingTiers";
 import { User } from "@supabase/supabase-js";
-import { Activity, Compass, Users, PlusCircle, Layout, Check, BookOpen, Globe, BarChart3, Loader2, ArrowRight, Sparkles, Zap, LayoutGrid, Eye, ChevronDown, ChevronUp, X, Trophy, TrendingUp, HeartHandshake, Rocket, ArrowBigUp, CalendarDays, ThumbsUp } from "lucide-react";
+import { Activity, Bot, Compass, Users, PlusCircle, Layout, Check, BookOpen, Globe, BarChart3, Loader2, ArrowRight, Sparkles, Zap, LayoutGrid, Eye, ChevronDown, ChevronUp, X, Trophy, TrendingUp, HeartHandshake, Rocket, ArrowBigUp, CalendarDays, ThumbsUp } from "lucide-react";
 import type { LandingTestimonial } from "@/lib/testimonial-service";
 import type { Faq } from "@/lib/faq-service";
 import type { NetworkPulse } from "@/lib/showcase-service";
@@ -148,6 +148,12 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
       label: t("contentPathBlogLabel"),
       copy: t("contentPathBlogCopy"),
       icon: BookOpen,
+    },
+    {
+      href: "/mcp",
+      label: t("contentPathAgentsLabel"),
+      copy: t("contentPathAgentsCopy"),
+      icon: Bot,
     },
   ];
 
@@ -524,7 +530,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
 
         </div>
 
-        <div className="w-full max-w-6xl mt-8 grid gap-3 md:grid-cols-3">
+        <div className="w-full max-w-6xl mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {contentPath.map((item) => {
             const Icon = item.icon;
             return (
@@ -1090,6 +1096,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
           </div>
         </div>
         <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <Link href="/mcp" style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textDecoration: 'none' }}>{tFooter("agents")}</Link>
           <Link href="/blog" style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textDecoration: 'none' }}>{tFooter("blog")}</Link>
           <Link href="https://x.com/i/communities/2026312282527932637" target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textDecoration: 'none' }}>X Community</Link>
           <Link href="https://discord.gg/qE4CWG6D" target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textDecoration: 'none' }}>Discord Community</Link>

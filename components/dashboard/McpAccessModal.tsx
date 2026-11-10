@@ -172,6 +172,9 @@ export function McpAccessModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
               </div>
               <h3 className="text-xl font-black tracking-tight text-white">{t("mcp.title")}</h3>
               <p className="mt-1 text-sm text-white/50">{t("mcp.intro")}</p>
+              <Link href="/mcp" className="mt-2 inline-flex text-xs font-bold text-[var(--accent)] underline-offset-4 hover:underline">
+                {t("mcp.docs")}
+              </Link>
             </div>
             <button onClick={onClose} className="rounded-xl p-2 text-white/40 hover:bg-white/5 hover:text-white" aria-label={t("mcp.close")}>
               <X size={16} />

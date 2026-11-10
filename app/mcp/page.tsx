@@ -37,7 +37,7 @@ export default function McpDocsPage() {
         </p>
         <ConnectPanel mcpUrl={MCP_URL} />
         <p className="mt-8 text-sm text-white/40">
-          Si tu cliente solo acepta un token, en el dashboard, Agentes, abrí Token a mano. Ese camino sigue andando.
+          Si tu cliente solo acepta un token, en el dashboard, Agentes, abrí Token a mano. Al crearlo elegís 30 días, 90 días o nunca. 90 días ya viene marcado. Los que ya tenías siguen sin vencimiento.
         </p>
       </div>
     </div>

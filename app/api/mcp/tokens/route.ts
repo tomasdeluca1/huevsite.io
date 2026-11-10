@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { MCP_MAX_ACTIVE_TOKENS, mcpHourlyLimit } from "@/lib/mcp/limits";
+import { countUsableMcpTokens, mcpTokenExpiresAt, parseMcpTokenTtl } from "@/lib/mcp/token-expiry";
 import { generateMcpToken } from "@/lib/mcp/tokens";
 
 export const dynamic = "force-dynamic";
@@ -69,22 +70,26 @@ export async function POST(request: NextRequest) {
   }
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Poné un nombre de hasta 60 caracteres." }, { status: 400 });
+  const ttlInput = body && typeof body === "object" && !Array.isArray(body) ? (body as { ttl?: unknown }).ttl : undefined;
+  const ttl = parseMcpTokenTtl(ttlInput);
+  if (ttl === "invalid") return NextResponse.json({ error: "Elegí 30 días, 90 días o nunca." }, { status: 400 });
 
   const db = createServiceRoleClient();
-  const { count, error: countError } = await db
+  const { data: openTokens, error: countError } = await db
     .from("mcp_access_tokens")
-    .select("id", { count: "exact", head: true })
+    .select("revoked_at, expires_at")
     .eq("user_id", user.id)
     .is("revoked_at", null);
   if (countError) {
     console.error("[mcp] count tokens", countError.message);
     return NextResponse.json({ error: "No se pudieron crear tokens. ¿Aplicaste la migración?" }, { status: 503 });
   }
-  if ((count || 0) >= MCP_MAX_ACTIVE_TOKENS) {
+  if (countUsableMcpTokens(openTokens || []) >= MCP_MAX_ACTIVE_TOKENS) {
     return NextResponse.json({ error: `Podés tener hasta ${MCP_MAX_ACTIVE_TOKENS} tokens activos. Revocá uno primero.` }, { status: 400 });
   }
 
   const minted = generateMcpToken();
+  const expiresAt = mcpTokenExpiresAt(ttl);
   const { data, error } = await db
     .from("mcp_access_tokens")
     .insert({
@@ -92,8 +97,9 @@ export async function POST(request: NextRequest) {
       name: parsed.data.name,
       token_prefix: minted.prefix,
       token_hash: minted.hash,
+      expires_at: expiresAt,
     })
-    .select("id, name, token_prefix, created_at")
+    .select("id, name, token_prefix, created_at, expires_at")
     .single();
 
   if (error || !data) {
@@ -106,6 +112,7 @@ export async function POST(request: NextRequest) {
     name: data.name,
     prefix: data.token_prefix,
     created_at: data.created_at,
+    expires_at: data.expires_at,
     token: minted.raw,
   });
 }

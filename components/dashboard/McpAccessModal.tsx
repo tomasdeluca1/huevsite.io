@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import { Bot, Check, Copy, X } from "lucide-react";
 import { ConnectPanel } from "@/components/mcp/ConnectPanel";
+import { isMcpTokenExpired, type McpTokenTtl } from "@/lib/mcp/token-expiry";
 import { SITE_URL } from "@/lib/site-url";
 
 type TokenRow = {
@@ -15,6 +16,7 @@ type TokenRow = {
   created_at: string;
   last_used_at: string | null;
   revoked_at: string | null;
+  expires_at: string | null;
 };
 
 type AuditRow = {
@@ -32,10 +34,12 @@ const MCP_URL = `${SITE_URL}/api/mcp`;
 
 export function McpAccessModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const t = useTranslations("dashboard");
+  const locale = useLocale();
   const [tokens, setTokens] = useState<TokenRow[]>([]);
   const [audit, setAudit] = useState<AuditRow[]>([]);
   const [limits, setLimits] = useState<Limits>({ maxActive: 5, hourly: 60 });
   const [name, setName] = useState("");
+  const [ttl, setTtl] = useState<McpTokenTtl>("90d");
   const [freshToken, setFreshToken] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -107,7 +111,7 @@ export function McpAccessModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
       const res = await fetch("/api/mcp/tokens", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim() || "Agente" }),
+        body: JSON.stringify({ name: name.trim() || "Agente", ttl }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -116,6 +120,7 @@ export function McpAccessModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
       }
       setFreshToken(data.token);
       setName("");
+      setTtl("90d");
       await refresh();
     } finally {
       setLoading(false);
@@ -146,6 +151,12 @@ export function McpAccessModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
 
   const active = tokens.filter((token) => !token.revoked_at);
   const revoked = tokens.filter((token) => token.revoked_at);
+  const dateLocale = locale === "en" ? "en-US" : "es-AR";
+  const expiryText = (expiresAt: string | null) => {
+    if (!expiresAt) return t("mcp.noExpiry");
+    const date = formatExpiryDate(expiresAt, dateLocale);
+    return date ? `${t("mcp.expires")}: ${date}` : t("mcp.expired");
+  };
 
   return (
     <AnimatePresence>
@@ -226,6 +237,7 @@ export function McpAccessModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
                   className="flex-1 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white outline-none placeholder:text-white/20 focus:border-[var(--accent)]/40"
                 />
                 <button
+                  type="button"
                   onClick={create}
                   disabled={loading}
                   className="rounded-2xl bg-[var(--accent)] px-4 py-3 text-xs font-black uppercase tracking-wide text-black disabled:opacity-50"
@@ -233,6 +245,27 @@ export function McpAccessModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
                   {loading ? t("mcp.creating") : t("mcp.create")}
                 </button>
               </div>
+              <fieldset className="m-0 min-w-0 space-y-2 border-0 p-0">
+                <legend className="text-[10px] font-black uppercase tracking-[0.18em] text-white/40">{t("mcp.expiryLabel")}</legend>
+                <div className="flex flex-wrap gap-2">
+                  {TTL_CHOICES.map((choice) => (
+                    <label
+                      key={choice.value}
+                      className={`cursor-pointer rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest ${ttl === choice.value ? "bg-[var(--accent)] text-black" : "bg-white/[0.03] text-white/50 hover:text-white"}`}
+                    >
+                      <input
+                        type="radio"
+                        name="mcp-token-ttl"
+                        value={choice.value}
+                        checked={ttl === choice.value}
+                        onChange={() => setTtl(choice.value)}
+                        className="sr-only"
+                      />
+                      {t(choice.labelKey)}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
             </div>
 
             {freshToken && (
@@ -255,19 +288,29 @@ export function McpAccessModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
                 <p className="text-sm text-white/40">{t("mcp.empty")}</p>
               ) : (
                 <ul className="space-y-2">
-                  {active.map((token) => (
-                    <li key={token.id} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-sm font-bold text-white">{token.name}</div>
-                        <div className="font-mono text-[10px] text-white/35">
-                          {token.token_prefix}… · {t("mcp.lastUsed")}: {token.last_used_at ? new Date(token.last_used_at).toLocaleString() : t("mcp.never")}
+                  {active.map((token) => {
+                    const expired = isMcpTokenExpired(token.expires_at);
+                    return (
+                      <li key={token.id} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <div className="truncate text-sm font-bold text-white">{token.name}</div>
+                            {expired && (
+                              <span className="shrink-0 rounded-full bg-red-500/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-red-200">
+                                {t("mcp.expired")}
+                              </span>
+                            )}
+                          </div>
+                          <div className="font-mono text-[10px] text-white/35">
+                            {token.token_prefix}… · {t("mcp.lastUsed")}: {token.last_used_at ? new Date(token.last_used_at).toLocaleString(dateLocale) : t("mcp.never")} · {expiryText(token.expires_at)}
+                          </div>
                         </div>
-                      </div>
-                      <button onClick={() => revoke(token.id)} className="text-[10px] font-black uppercase tracking-widest text-red-300/80 hover:text-red-200">
-                        {t("mcp.revoke")}
-                      </button>
-                    </li>
-                  ))}
+                        <button type="button" onClick={() => revoke(token.id)} className="text-[10px] font-black uppercase tracking-widest text-red-300/80 hover:text-red-200">
+                          {t("mcp.revoke")}
+                        </button>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </section>
@@ -278,7 +321,7 @@ export function McpAccessModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
                 <ul className="space-y-1">
                   {revoked.map((token) => (
                     <li key={token.id} className="font-mono text-[11px] text-white/30">
-                      {token.name} · {token.token_prefix}…
+                      {token.name} · {token.token_prefix}… · {expiryText(token.expires_at)}
                     </li>
                   ))}
                 </ul>
@@ -309,4 +352,20 @@ export function McpAccessModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
       </div>
     </AnimatePresence>
   );
+}
+
+const TTL_CHOICES: { value: McpTokenTtl; labelKey: "mcp.expiry30" | "mcp.expiry90" | "mcp.expiryNever" }[] = [
+  { value: "30d", labelKey: "mcp.expiry30" },
+  { value: "90d", labelKey: "mcp.expiry90" },
+  { value: "never", labelKey: "mcp.expiryNever" },
+];
+
+function formatExpiryDate(value: string, locale: string): string | null {
+  const parsed = Date.parse(value);
+  if (Number.isNaN(parsed)) return null;
+  return new Date(parsed).toLocaleDateString(locale, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }

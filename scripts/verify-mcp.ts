@@ -6,7 +6,9 @@ import { updateCandidate, type ActivityRow, type PublicBlock, type PublicProfile
 import { profilePatchSchema } from "../lib/profile-schemas";
 import { effectiveBlockLimit, launchPlanIsPro, mcpBatchAllowed, mcpCallAllowed, MCP_FREE_CALLS_PER_HOUR, MCP_PRO_CALLS_PER_HOUR } from "../lib/mcp/limits";
 import { auditMeta, dispatchMcp } from "../lib/mcp/server";
-import { readRpcView } from "../lib/mcp/http";
+import { handleMcpHttp, readRpcView } from "../lib/mcp/http";
+import { endpointsForIssuer, wwwAuthenticate } from "../lib/mcp/oauth/metadata";
+import { countUsableMcpTokens, isMcpTokenExpired, mcpTokenExpiresAt, parseMcpTokenTtl } from "../lib/mcp/token-expiry";
 import { createProjectInputSchema, updateProfileInputSchema } from "../lib/mcp/schemas";
 import { announceLaunch, createProject, deleteProject, getMyProfile, listMyProjects, postUpdate, syncFromGithub, updateProfile, updateProject, MCP_TOOL_NAMES } from "../lib/mcp/tools";
 import { aiCatalog, MCP_CARD_DESCRIPTION, MCP_CARD_NAME, MCP_CARD_VERSION, mcpServerCard } from "../lib/mcp/discovery";
@@ -158,6 +160,24 @@ ok("el hash es estable", hashMcpToken(minted.raw) === minted.hash);
 ok("Bearer válido", parseBearer(`Bearer ${minted.raw}`) === minted.raw);
 ok("sin Bearer no pasa", parseBearer(minted.raw) === null);
 ok("un token corto no pasa", parseBearer("Bearer hvst_corto") === null);
+
+const expiryNow = Date.parse("2026-11-10T12:00:00.000Z");
+const dayMs = 24 * 60 * 60 * 1000;
+ok("sin fecha no vence", isMcpTokenExpired(null, expiryNow) === false && isMcpTokenExpired(undefined, expiryNow) === false && isMcpTokenExpired("", expiryNow) === false);
+ok("una fecha futura no está vencida", isMcpTokenExpired(new Date(expiryNow + 1000).toISOString(), expiryNow) === false);
+ok("una fecha pasada está vencida", isMcpTokenExpired(new Date(expiryNow - 1000).toISOString(), expiryNow) === true);
+ok("el instante exacto está vencido", isMcpTokenExpired(new Date(expiryNow).toISOString(), expiryNow) === true);
+ok("una fecha rota se rechaza", isMcpTokenExpired("no-es-fecha", expiryNow) === true);
+ok("30 días suma 30 días", mcpTokenExpiresAt("30d", expiryNow) === new Date(expiryNow + 30 * dayMs).toISOString());
+ok("90 días suma 90 días", mcpTokenExpiresAt("90d", expiryNow) === new Date(expiryNow + 90 * dayMs).toISOString());
+ok("nunca no tiene vencimiento", mcpTokenExpiresAt("never", expiryNow) === null);
+ok("si no elegís, son 90 días", parseMcpTokenTtl(undefined) === "90d" && parseMcpTokenTtl(null) === "90d");
+ok("30 días, 90 días y nunca son los únicos plazos", parseMcpTokenTtl("30d") === "30d" && parseMcpTokenTtl("90d") === "90d" && parseMcpTokenTtl("never") === "never" && parseMcpTokenTtl("1d") === "invalid" && parseMcpTokenTtl(30) === "invalid");
+ok("los vencidos no cuentan para el tope", countUsableMcpTokens([
+  { revoked_at: null, expires_at: null },
+  { revoked_at: null, expires_at: new Date(expiryNow - 1).toISOString() },
+  { revoked_at: "2020-01-01T00:00:00.000Z", expires_at: null },
+], expiryNow) === 1);
 
 ok("accent inválido lo rechaza el mismo schema del dashboard", profilePatchSchema.safeParse({ accent_color: "red" }).success === false);
 ok("el MCP usa ese límite de tagline", updateProfileInputSchema.safeParse({ tagline: "a".repeat(201) }).success === false);
@@ -315,6 +335,35 @@ async function run() {
   const text = callBody?.result?.content?.[0]?.text || "";
   ok("tools/call get_my_profile audita y responde", audited === "get_my_profile" && text.includes("ada"), text.slice(0, 180));
 
+  const tokenRequest = (forwardedFor: string) => new Request("https://huevsite.io/api/mcp", {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${minted.raw}`,
+      "content-type": "application/json",
+      accept: "application/json",
+      "x-forwarded-for": forwardedFor,
+    },
+    body: "{}",
+  });
+  const expiredAuth = await handleMcpHttp(tokenRequest("203.0.113.50"), {
+    lookupPersonalToken: async () => ({
+      id: "tok-expired",
+      user_id: USER,
+      revoked_at: null,
+      expires_at: "2000-01-01T00:00:00.000Z",
+    }),
+  });
+  const invalidAuth = await handleMcpHttp(tokenRequest("203.0.113.51"), {
+    lookupPersonalToken: async () => null,
+  });
+  const expiredBody = await expiredAuth.json();
+  const invalidBody = await invalidAuth.json();
+  const expiredChallenge = expiredAuth.headers.get("www-authenticate") || "";
+  const invalidChallenge = invalidAuth.headers.get("www-authenticate") || "";
+  const expectedChallenge = wwwAuthenticate(endpointsForIssuer("https://huevsite.io").metadataUrl);
+  ok("un token vencido responde 401", expiredAuth.status === 401 && expiredBody?.error?.message === "Token inválido o vencido.");
+  ok("el vencido tiene la misma forma que un token inválido", expiredAuth.status === invalidAuth.status && JSON.stringify(expiredBody) === JSON.stringify(invalidBody) && expiredChallenge === invalidChallenge);
+  ok("ese 401 trae resource_metadata", expiredChallenge === expectedChallenge && expiredChallenge.includes("resource_metadata="), expiredChallenge);
   const card = mcpServerCard("https://huevsite.io");
   ok("la server card cabe en 100 caracteres", MCP_CARD_DESCRIPTION.length >= 1 && MCP_CARD_DESCRIPTION.length <= 100, String(MCP_CARD_DESCRIPTION.length));
   ok("la server card tiene nombre reverse-dns y version del runtime", card.name === MCP_CARD_NAME && /^[a-zA-Z0-9.-]+\/[a-zA-Z0-9._-]+$/.test(card.name) && card.version === MCP_CARD_VERSION && card.title === "huevsite");
@@ -341,6 +390,15 @@ async function run() {
   ok("la migración prende RLS", /enable row level security/i.test(migration));
   ok("la migración le saca el GRANT a anon y authenticated", /revoke all on public\.mcp_access_tokens from anon, authenticated/i.test(migration) && /revoke all on public\.mcp_audit_log from anon, authenticated/i.test(migration));
   ok("la migración no guarda el token en claro", !/token text/i.test(migration) && /token_hash/.test(migration));
+
+  const expiryMigration = fs.readFileSync(path.join(__dirname, "../supabase/migrations/20261110210000_mcp_token_expires_at.sql"), "utf8");
+  ok(
+    "la migración de vencimiento deja expires_at nullable y no reescribe filas",
+    /alter table public\.mcp_access_tokens\s+add column if not exists expires_at timestamptz\s*;/i.test(expiryMigration)
+      && !/expires_at timestamptz not null/i.test(expiryMigration)
+      && !/expires_at timestamptz default/i.test(expiryMigration)
+      && !/update\s+public\.mcp_access_tokens/i.test(expiryMigration),
+  );
 
   if (failed) {
     console.error(`\n${failed} checks fallaron`);

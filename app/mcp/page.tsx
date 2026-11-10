@@ -105,6 +105,9 @@ export default function McpDocsPage() {
           Un click, o pegá la URL. Entrás con tu cuenta de huevsite y el agente mantiene tu perfil al día. No hace falta copiar un token.
         </p>
         <ConnectPanel mcpUrl={MCP_URL} />
+        <p className="mt-8 text-sm text-white/40">
+          Si tu cliente solo acepta un token, en el dashboard, Agentes, abrí Token a mano. Al crearlo elegís 30 días, 90 días o nunca. 90 días ya viene marcado. Los que ya tenías siguen sin vencimiento.
+        </p>
 
         <section id="prompts" className="mt-12 space-y-4">
           <h2 className="text-xl font-black">Prompts del servidor</h2>

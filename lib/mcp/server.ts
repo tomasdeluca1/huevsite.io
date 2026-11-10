@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
+import { MCP_INSTRUCTIONS, PUBLISH_PROMPT, STARTER_PROMPT } from "@/lib/mcp/guide";
 import { MCP_TOOLS } from "@/lib/mcp/tools";
 import type { McpStore } from "@/lib/mcp/types";
 
@@ -25,9 +26,32 @@ export function buildMcpServer(input: {
   const server = new McpServer(
     { name: "huevsite", version: "1.0.0" },
     {
-      instructions:
-        "Este servidor solo lee y edita el perfil de la persona dueña del token. No puede ver ni cambiar perfiles ajenos, ni mandar mails, ni publicar en redes.",
+      instructions: MCP_INSTRUCTIONS,
     }
+  );
+
+  server.registerPrompt(
+    "armar_mi_perfil",
+    {
+      title: "Armar mi perfil",
+      description: "Lee tu huevsite, pregunta lo que falta y recién escribe cuando decís que sí.",
+    },
+    async () => ({
+      description: "Guía para armar el perfil.",
+      messages: [{ role: "user", content: { type: "text", text: STARTER_PROMPT } }],
+    })
+  );
+
+  server.registerPrompt(
+    "publicar_avance",
+    {
+      title: "Publicar un avance",
+      description: "Confirma el texto y publica un avance de build in public.",
+    },
+    async () => ({
+      description: "Guía para publicar un avance.",
+      messages: [{ role: "user", content: { type: "text", text: PUBLISH_PROMPT } }],
+    })
   );
 
   for (const tool of MCP_TOOLS) {

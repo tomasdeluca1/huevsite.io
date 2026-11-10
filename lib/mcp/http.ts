@@ -2,6 +2,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { mcpBatchAllowed, mcpHourlyLimit, MCP_AUTH_FAILS_PER_WINDOW, MCP_AUTH_WINDOW_MS, MCP_BURST_PER_MINUTE, MCP_HOUR_MS } from "@/lib/mcp/limits";
 import { MCP_TOOL_NAMES } from "@/lib/mcp/tools";
 import { hashMcpToken, parseBearer, readBearer } from "@/lib/mcp/tokens";
+import { isMcpTokenExpired } from "@/lib/mcp/token-expiry";
 import { createSupabaseMcpStore } from "@/lib/mcp/supabase-store";
 import { dispatchMcp } from "@/lib/mcp/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
@@ -78,6 +79,17 @@ export function readRpcView(text: string): RpcView {
 type AuthOk = { tokenId: string | null; credentialId: string; userId: string; profile: McpProfile };
 type AuthResult = AuthOk | { expired: true } | null;
 
+export type PersonalTokenRow = {
+  id: string;
+  user_id: string;
+  revoked_at: string | null;
+  expires_at: string | null;
+};
+
+type McpHttpDeps = {
+  lookupPersonalToken?: (raw: string) => Promise<PersonalTokenRow | null>;
+};
+
 async function authenticateOauth(raw: string, request: Request): Promise<AuthResult> {
   const endpoints = endpointsFromRequest(request);
   const result = await authenticateAccessToken(createSupabaseOAuthStore(), raw, endpoints.resource, new Date());
@@ -87,35 +99,44 @@ async function authenticateOauth(raw: string, request: Request): Promise<AuthRes
   return { tokenId: null, credentialId: `oauth:${result.familyId}`, userId: result.userId, profile };
 }
 
-async function authenticate(raw: string, request: Request): Promise<AuthResult> {
+async function authenticate(raw: string, request: Request, deps?: McpHttpDeps): Promise<AuthResult> {
   if (!parseBearer(`Bearer ${raw}`)) {
     if (!isAccessToken(raw)) return null;
     return authenticateOauth(raw, request);
   }
-  const db = createServiceRoleClient();
-  const { data, error } = await db
-    .from("mcp_access_tokens")
-    .select("id, user_id, revoked_at, expires_at")
-    .eq("token_hash", hashMcpToken(raw))
-    .maybeSingle();
-  if (error) {
-    console.error("[mcp] token lookup", error.message);
-    throw new Error("mcp_unavailable");
+  const db = deps?.lookupPersonalToken ? null : createServiceRoleClient();
+  let data: PersonalTokenRow | null;
+  if (deps?.lookupPersonalToken) {
+    data = await deps.lookupPersonalToken(raw);
+  } else {
+    const { data: row, error } = await db!
+      .from("mcp_access_tokens")
+      .select("id, user_id, revoked_at, expires_at")
+      .eq("token_hash", hashMcpToken(raw))
+      .maybeSingle();
+    if (error) {
+      console.error("[mcp] token lookup", error.message);
+      throw new Error("mcp_unavailable");
+    }
+    data = row;
   }
-  if (!data || data.revoked_at) return null;
-  if (data.expires_at && Date.parse(data.expires_at) <= Date.now()) return null;
+  // Expired, revoked and unknown tokens share one rejection. The 401 below
+  // stays the same shape, including WWW-Authenticate with resource_metadata.
+  if (!data || data.revoked_at || isMcpTokenExpired(data.expires_at)) return null;
 
   const store = createSupabaseMcpStore();
   const profile = await store.getProfile(data.user_id);
   if (!profile) return null;
 
-  void db
-    .from("mcp_access_tokens")
-    .update({ last_used_at: new Date().toISOString() })
-    .eq("id", data.id)
-    .then(({ error: touchError }) => {
-      if (touchError) console.error("[mcp] last_used", touchError.message);
-    });
+  if (db) {
+    void db
+      .from("mcp_access_tokens")
+      .update({ last_used_at: new Date().toISOString() })
+      .eq("id", data.id)
+      .then(({ error: touchError }) => {
+        if (touchError) console.error("[mcp] last_used", touchError.message);
+      });
+  }
 
   return { tokenId: data.id, credentialId: `pat:${data.id}`, userId: data.user_id, profile };
 }
@@ -165,7 +186,7 @@ async function writeAudit(row: {
   if (error) console.error("[mcp] audit", error.message);
 }
 
-export async function handleMcpHttp(request: Request): Promise<Response> {
+export async function handleMcpHttp(request: Request, deps?: McpHttpDeps): Promise<Response> {
   if (request.method === "OPTIONS") {
     return withCors(new Response(null, { status: 204 }));
   }
@@ -178,7 +199,7 @@ export async function handleMcpHttp(request: Request): Promise<Response> {
 
   let auth: AuthResult;
   try {
-    auth = await authenticate(raw, request);
+    auth = await authenticate(raw, request, deps);
   } catch {
     return jsonRpcError(503, "El MCP no está disponible. Falta aplicar la migración.", null, challenge(request));
   }

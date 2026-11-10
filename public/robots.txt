@@ -7,11 +7,21 @@
 # Queremos indexación máxima en motores de búsqueda (Google, Bing, etc.)
 User-agent: *
 Allow: /
+# La guía del MCP, llms.txt y /.well-known (OAuth, AI Catalog, server card)
+# son públicos. Allow: / ya los cubre. Quedan explícitos para quien lea el archivo.
+Allow: /mcp
+Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /llm.txt
+Allow: /.well-known/
 # Rutas privadas/internas deshabilitadas.
 # Sin la barra final: "Disallow: /dashboard/" NO bloquea /dashboard (el match
 # de robots.txt es por prefijo literal), asi que la pagina principal de cada
 # seccion privada quedaba crawleable. El prefijo sin barra cubre ambas.
 Disallow: /api/
+# La server card es metadata pública del MCP (SEP-2127). El resto de /api/
+# sigue cerrado. Allow más específico que Disallow, para que gane el match.
+Allow: /api/mcp/server-card
 Disallow: /_next/
 Disallow: /dashboard
 Disallow: /onboarding
@@ -96,10 +106,13 @@ Allow: /
 User-agent: YouBot
 Allow: /
 
-# Acceso explícito a archivos LLM
+# Acceso explícito a archivos LLM, a la guía del MCP y a discovery
+# (OAuth, AI Catalog, server card). Nada de esto está en un Disallow.
 Allow: /llms.txt
 Allow: /llms-full.txt
 Allow: /llm.txt
+Allow: /mcp
+Allow: /.well-known/
 
 # Sitemap para descubrimiento acelerado
 Sitemap: https://huevsite.io/sitemap.xml

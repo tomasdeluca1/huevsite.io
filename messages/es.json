@@ -447,7 +447,8 @@
       "newsletterSubscribeAria": "Suscribirse al newsletter",
       "feedback": "Feedback",
       "agents": "Agentes",
-      "agentsHint": "Token para que tu agente actualice el perfil",
+      "agentsHint": "Cursor, Claude o ChatGPT con tu cuenta",
+      "agentsDocs": "Guía",
       "linktreeRefactorTitle": "Refactorizar con Linktree",
       "linktreeRefactorSubtitle": "Rehace el board por 1 crédito IA",
       "deleteAccount": "Eliminar cuenta",
@@ -473,6 +474,13 @@
       "revoked": "Revocados",
       "lastUsed": "Último uso",
       "never": "Nunca",
+      "expiryLabel": "Vencimiento",
+      "expiry30": "30 días",
+      "expiry90": "90 días",
+      "expiryNever": "Nunca",
+      "noExpiry": "No vence",
+      "expired": "Vencido",
+      "expires": "Vence",
       "audit": "Últimas llamadas",
       "auditEmpty": "Todavía no hay llamadas.",
       "limit": "{hourly} llamadas por hora · hasta {max} tokens activos",
@@ -1463,6 +1471,8 @@
     "contentPathFeedCopy": "Entrar por actividad real, no por una landing abstracta.",
     "contentPathBlogLabel": "Entender el sistema",
     "contentPathBlogCopy": "Leer cómo funciona el score, los sub-sites y la visibilidad.",
+    "contentPathAgentsLabel": "Conectar un agente",
+    "contentPathAgentsCopy": "Cursor, VS Code, Claude o ChatGPT te actualizan el perfil.",
     "contentPathFollow": "Seguir por aca",
     "pulseSectionLabel": "// la red, en vivo",
     "pulseRankingLabel": "Ranking en vivo",
@@ -1636,7 +1646,8 @@
   },
   "footer": {
     "tagline": "Mostrá lo que buildeás. A project by",
-    "blog": "Blog"
+    "blog": "Blog",
+    "agents": "Agentes"
   },
   "legal": {
     "backToHome": "Volver al inicio",

@@ -4,7 +4,7 @@ import { Resend } from "resend";
 import { render } from "@react-email/render";
 import React from "react";
 import { ProductUpdateEmail } from "@/components/emails/ProductUpdateEmail";
-import { emailFrom } from "@/lib/email-from";
+import { emailFrom, emailReplyTo } from "@/lib/email-from";
 import { marketingUnsubscribe } from "@/lib/email-compliance";
 import { isEmailSuppressed, listSuppressedEmails } from "@/lib/email-suppression";
 import { listAllAuthUsers } from "@/lib/list-auth-users";
@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
     if (testEmail) {
       const mail = marketingUnsubscribe("test");
       const html = htmlTemplate.replaceAll(UNSUB_MARKER, mail.unsubscribeUrl);
-      await resend.emails.send({ from, to: testEmail, subject, html, headers: mail.headers });
+      await resend.emails.send({ from, replyTo: emailReplyTo(), to: testEmail, subject, html, headers: mail.headers });
       return NextResponse.json({ success: true, test: true, sentTo: testEmail });
     }
 
@@ -137,7 +137,7 @@ export async function GET(request: NextRequest) {
       const mail = marketingUnsubscribe(u.id);
       const html = htmlTemplate.replaceAll(UNSUB_MARKER, mail.unsubscribeUrl);
       try {
-        await resend.emails.send({ from, to: u.email, subject, html, headers: mail.headers });
+        await resend.emails.send({ from, replyTo: emailReplyTo(), to: u.email, subject, html, headers: mail.headers });
         emailsSent++;
         await new Promise((r) => setTimeout(r, 100));
       } catch (err: any) {

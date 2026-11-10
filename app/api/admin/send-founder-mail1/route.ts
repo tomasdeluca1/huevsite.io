@@ -10,7 +10,7 @@ import {
   fillFounderMail1Html,
   founderMail1PreviewText,
 } from "@/components/emails/FounderMail1Email";
-import { founderMailFromAddress } from "@/lib/email-from";
+import { emailFrom, emailReplyTo } from "@/lib/email-from";
 import { marketingUnsubscribe } from "@/lib/email-compliance";
 import { buildUnsubscribeUrl } from "@/lib/email-unsubscribe";
 import { listSuppressedEmails } from "@/lib/email-suppression";
@@ -32,15 +32,6 @@ export const maxDuration = 300;
 
 const SENT_KEY = "founder_nov26_mail1_sent";
 const THROTTLE_MS = 100;
-const FROM_DISPLAY_NAME = "Tomás de huevsite";
-const REPLY_TO = "tomidelu@huevsite.com";
-
-// Display name is fixed. The address is FOUNDER_MAIL_FROM_ADDRESS, then EMAIL_FROM,
-// then hi@huevsite.studio (the domain Resend has verified). Reply-To stays
-// tomidelu@huevsite.com.
-function founderFromHeader(): string {
-  return `${FROM_DISPLAY_NAME} <${founderMailFromAddress()}>`;
-}
 
 // Constructed on send. `new Resend()` throws when the key is missing, and preview
 // must still render with no key and no send.
@@ -103,7 +94,7 @@ export async function GET(request: NextRequest) {
     }
 
     const subject = FOUNDER_MAIL1_SUBJECT;
-    const from = founderFromHeader();
+    const from = emailFrom();
 
     if (preview) {
       const supabase = createServiceRoleClient();
@@ -124,7 +115,7 @@ export async function GET(request: NextRequest) {
         seats,
         subject,
         from,
-        replyTo: REPLY_TO,
+        replyTo: emailReplyTo(),
         previewText: founderMail1PreviewText(seats.remaining),
         authUsers: audience.authUsers.length,
         eligibleRecipients: audience.eligible.length,
@@ -149,14 +140,14 @@ export async function GET(request: NextRequest) {
         .select("name")
         .eq("email", testEmail)
         .maybeSingle();
-      const mail = marketingUnsubscribe("test", founderMailFromAddress());
+      const mail = marketingUnsubscribe("test");
       const html = fillFounderMail1Html(htmlTemplate, {
         name: (profile?.name || "").trim(),
         unsubscribeUrl: mail.unsubscribeUrl,
       });
       const sent = await resend.emails.send({
         from,
-        replyTo: REPLY_TO,
+        replyTo: emailReplyTo(),
         to: testEmail,
         subject,
         html,
@@ -211,7 +202,7 @@ export async function GET(request: NextRequest) {
     let emailsSent = 0;
     const errors: string[] = [];
     for (const recipient of audience.eligible) {
-      const mail = marketingUnsubscribe(recipient.id, founderMailFromAddress());
+      const mail = marketingUnsubscribe(recipient.id);
       const html = fillFounderMail1Html(htmlTemplate, {
         name: recipient.name,
         unsubscribeUrl: mail.unsubscribeUrl,
@@ -219,7 +210,7 @@ export async function GET(request: NextRequest) {
       try {
         const sent = await resend.emails.send({
           from,
-          replyTo: REPLY_TO,
+          replyTo: emailReplyTo(),
           to: recipient.email,
           subject,
           html,

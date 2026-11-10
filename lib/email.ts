@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { Resend } from "resend";
 import { render } from "@react-email/render";
-import { emailFrom } from "./email-from";
+import { emailFrom, emailReplyTo } from "./email-from";
 
 export async function sendRenderedEmail({
   to,
@@ -26,6 +26,7 @@ export async function sendRenderedEmail({
 
   return resend.emails.send({
     from: emailFrom(),
+    replyTo: emailReplyTo(),
     to,
     subject,
     html,

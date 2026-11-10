@@ -5,7 +5,7 @@ import { render } from "@react-email/render";
 import { MonthlyDigestEmail } from "@/components/emails/MonthlyDigestEmail";
 import { BLOG_POSTS } from "@/lib/blog-data";
 import { listAllAuthUsers } from "@/lib/list-auth-users";
-import { emailFrom } from "@/lib/email-from";
+import { emailFrom, emailReplyTo } from "@/lib/email-from";
 import { marketingUnsubscribe } from "@/lib/email-compliance";
 import { isEmailSuppressed, listSuppressedEmails } from "@/lib/email-suppression";
 import React from "react";
@@ -175,6 +175,7 @@ export async function GET(request: NextRequest) {
             try {
                 await resend.emails.send({
                     from: emailFrom(),
+                    replyTo: emailReplyTo(),
                     to: user.email,
                     subject: `📊 Huevsite Digest: Lo mejor de ${capitalizedMonthName}`,
                     html,

@@ -6,10 +6,11 @@ import path from "path";
 import {
   DEFAULT_EMAIL_FROM,
   bareEmailAddress,
+  EMAIL_REPLY_TO,
   emailFrom,
   emailFromAddress,
   emailPostalAddress,
-  founderMailFromAddress,
+  emailReplyTo,
   listUnsubscribeMailto,
   senderIdentityLine,
 } from "../lib/email-from";
@@ -51,7 +52,6 @@ const read = (p: string) => fs.readFileSync(path.join(root, p), "utf8");
 
 process.env.EMAIL_UNSUBSCRIBE_SECRET = "verify-email-compliance-secret";
 delete process.env.EMAIL_FROM;
-delete process.env.FOUNDER_MAIL_FROM_ADDRESS;
 delete process.env.EMAIL_POSTAL_ADDRESS;
 
 const userId = "11111111-1111-1111-1111-111111111111";
@@ -89,25 +89,26 @@ ok(
     headers["List-Unsubscribe"].includes(encodeURIComponent(token))
 );
 eq("List-Unsubscribe-Post es one-click", headers["List-Unsubscribe-Post"], "List-Unsubscribe=One-Click");
-eq("el mailto sale del From default", listUnsubscribeMailto(), `mailto:${DEFAULT_EMAIL_FROM}?subject=unsubscribe`);
-eq("From default es el del digest", emailFrom(), DEFAULT_EMAIL_FROM);
+eq("el mailto sale del From default", listUnsubscribeMailto(), `mailto:${EMAIL_REPLY_TO}?subject=unsubscribe`);
+eq("From default es Tomás", emailFrom(), DEFAULT_EMAIL_FROM);
+eq("la dirección del From es tomidelu", emailFromAddress(), EMAIL_REPLY_TO);
+eq("el reply-to es tomidelu", emailReplyTo(), EMAIL_REPLY_TO);
 eq("sin domicilio postal no hay línea", emailPostalAddress(), null);
 
-process.env.EMAIL_FROM = "Huevsite <hola@example.com>";
-eq("EMAIL_FROM con nombre deja solo la dirección", emailFromAddress(), "hola@example.com");
-eq("el mailto sigue a EMAIL_FROM", listUnsubscribeMailto(), "mailto:hola@example.com?subject=unsubscribe");
-process.env.FOUNDER_MAIL_FROM_ADDRESS = "founder@huevsite.studio";
-eq("Mail 1 puede pisar la dirección", founderMailFromAddress(), "founder@huevsite.studio");
+process.env.EMAIL_FROM = "Huevsite <otro@example.com>";
+eq("EMAIL_FROM con nombre deja solo la dirección", emailFromAddress(), "otro@example.com");
+eq("el mailto sigue a EMAIL_FROM", listUnsubscribeMailto(), "mailto:otro@example.com?subject=unsubscribe");
+eq("el reply-to no cambia si se pisa el From", emailReplyTo(), EMAIL_REPLY_TO);
 eq(
   "la identidad del pie nombra huevsite y la dirección",
-  senderIdentityLine("hi@huevsite.studio"),
-  "huevsite.io · hi@huevsite.studio"
+  senderIdentityLine(EMAIL_REPLY_TO),
+  `huevsite.io · ${EMAIL_REPLY_TO}`
 );
 process.env.EMAIL_POSTAL_ADDRESS = "  Calle Falsa 123\n";
 eq("el domicilio postal se limpia", emailPostalAddress(), "Calle Falsa 123");
 process.env.EMAIL_POSTAL_ADDRESS = "\n";
 eq("un domicilio vacío se omite", emailPostalAddress(), null);
-eq("una dirección pelada no se rompe", bareEmailAddress("hi@huevsite.studio"), "hi@huevsite.studio");
+eq("una dirección pelada no se rompe", bareEmailAddress(EMAIL_REPLY_TO), EMAIL_REPLY_TO);
 
 const mail = marketingUnsubscribe(userId);
 ok("el helper de marketing arma el header con el mismo link", mail.headers["List-Unsubscribe"].includes(mail.unsubscribeUrl));
@@ -194,11 +195,27 @@ for (const file of marketingRoutes) {
   const source = read(file);
   ok(`${file} arma headers de baja`, source.includes("marketingUnsubscribe"));
 }
-ok("Mail 1 conserva el reply-to", read("app/api/admin/send-founder-mail1/route.ts").includes("replyTo: REPLY_TO"));
 ok("el envío transaccional usa emailFrom", read("lib/email.ts").includes("emailFrom()"));
+ok("el envío transaccional responde a Tomás", read("lib/email.ts").includes("replyTo: emailReplyTo()"));
 ok("el envío transaccional no agrega List-Unsubscribe", !read("lib/email.ts").includes("List-Unsubscribe"));
-ok("no queda el remitente de sandbox de Resend", !read("app/api/feedback/route.tsx").includes("onboarding@resend.dev"));
-ok("no queda hola@huevsite.studio", !read("lib/email.ts").includes("hola@huevsite.studio"));
+
+const senderFiles = [
+  ...marketingRoutes,
+  "lib/email.ts",
+  "lib/email-from.ts",
+  "lib/bdls-content-pipeline.ts",
+  "app/api/feedback/route.tsx",
+  "app/api/admin/resend-winner-email/route.tsx",
+  "components/emails/FounderMail1Email.tsx",
+];
+const retiredSenders = ["hi@huevsite.studio", "hola@huevsite.studio", "onboarding@resend.dev"];
+for (const file of senderFiles) {
+  const source = read(file);
+  ok(`${file} responde a Tomás`, source.includes("emailReplyTo()") || source.includes("senderIdentityLine("));
+  for (const retired of retiredSenders) {
+    ok(`${file} no usa ${retired}`, !source.includes(retired));
+  }
+}
 
 const commercialTemplates = [
   "components/emails/MonthlyDigestEmail.tsx",

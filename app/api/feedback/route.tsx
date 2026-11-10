@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { FeedbackEmail } from "@/components/emails/FeedbackEmail";
-import { emailFrom } from "@/lib/email-from";
+import { emailFrom, emailReplyTo } from "@/lib/email-from";
 
 function getServiceRoleClient() {
   return createSupabaseClient(
@@ -65,6 +65,7 @@ export async function POST(req: NextRequest) {
         if (process.env.NOTIFY_EMAIL) {
           await resend.emails.send({
             from: emailFrom(),
+            replyTo: emailReplyTo(),
             to: process.env.NOTIFY_EMAIL || "",
             subject: `🚀 Nuevo Feedback: ${category}`,
             react: <FeedbackEmail

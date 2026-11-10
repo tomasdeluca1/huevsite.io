@@ -4,7 +4,7 @@ import { Resend } from "resend";
 import { render } from "@react-email/render";
 import React from "react";
 import { Community200Email } from "@/components/emails/Community200Email";
-import { emailFrom } from "@/lib/email-from";
+import { emailFrom, emailReplyTo } from "@/lib/email-from";
 import { marketingUnsubscribe } from "@/lib/email-compliance";
 import { isEmailSuppressed, listSuppressedEmails } from "@/lib/email-suppression";
 import { listAllAuthUsers } from "@/lib/list-auth-users";
@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
       const html = htmlTemplate
         .replaceAll(NAME_MARKER, "builder")
         .replaceAll(UNSUB_MARKER, mail.unsubscribeUrl);
-      await resend.emails.send({ from, to: testEmail, subject, html, headers: mail.headers });
+      await resend.emails.send({ from, replyTo: emailReplyTo(), to: testEmail, subject, html, headers: mail.headers });
       return NextResponse.json({ success: true, test: true, sentTo: testEmail, memberCount });
     }
 
@@ -147,7 +147,7 @@ export async function GET(request: NextRequest) {
         .replaceAll(NAME_MARKER, greeting(p.name, p.username))
         .replaceAll(UNSUB_MARKER, mail.unsubscribeUrl);
       try {
-        await resend.emails.send({ from, to: u.email, subject, html, headers: mail.headers });
+        await resend.emails.send({ from, replyTo: emailReplyTo(), to: u.email, subject, html, headers: mail.headers });
         emailsSent++;
         await new Promise((r) => setTimeout(r, 100));
       } catch (err: any) {

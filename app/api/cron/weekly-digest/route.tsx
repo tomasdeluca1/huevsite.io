@@ -7,7 +7,7 @@ import { WeeklyDigestEmail } from "@/components/emails/WeeklyDigestEmail";
 import { postWeeklyDigest } from "@/lib/twitter";
 import { postWeeklyDigestLinkedIn } from "@/lib/linkedin";
 import { resolveXHandles } from "@/lib/twitter-utils";
-import { emailFrom } from "@/lib/email-from";
+import { emailFrom, emailReplyTo } from "@/lib/email-from";
 import { marketingUnsubscribe } from "@/lib/email-compliance";
 import { getAllBlogPosts, getPostCategory } from "@/lib/blog-data";
 import { getWeekLaunches } from "@/lib/launch-service";
@@ -216,6 +216,7 @@ export async function GET(request: NextRequest) {
       const html = emailHtml.replaceAll(UNSUB_MARKER, mail.unsubscribeUrl);
       await resend.emails.send({
         from: emailFrom(),
+        replyTo: emailReplyTo(),
         to: testEmail!,
         subject,
         html,

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { BRAND } from "@/lib/brand";
 import { SITE_URL } from "@/lib/site-url";
-import { emailPostalAddress, senderIdentityLine, founderMailFromAddress } from "@/lib/email-from";
+import { emailPostalAddress, senderIdentityLine } from "@/lib/email-from";
 
 export const FOUNDER_MAIL1_SUBJECT = "Nominados a PremiosTech.la · Founder USD 79";
 
@@ -187,7 +187,7 @@ export const FounderMail1Email: React.FC<FounderMail1EmailProps> = ({
           </a>
         </p>
         <p style={{ ...bodyText, margin: "16px 0 0", fontSize: "13px", color: BRAND.color.textMuted }}>
-          {senderIdentityLine(founderMailFromAddress())}
+          {senderIdentityLine()}
         </p>
         {emailPostalAddress() ? (
           <p style={{ ...bodyText, margin: "4px 0 0", fontSize: "13px", color: BRAND.color.textMuted }}>

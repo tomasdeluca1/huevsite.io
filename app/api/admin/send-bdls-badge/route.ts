@@ -3,7 +3,7 @@ import { Resend } from "resend";
 import { render } from "@react-email/render";
 import React from "react";
 import { BadgeAwardEmail } from "@/components/emails/BadgeAwardEmail";
-import { emailFrom } from "@/lib/email-from";
+import { emailFrom, emailReplyTo } from "@/lib/email-from";
 import { marketingUnsubscribe } from "@/lib/email-compliance";
 import { isEmailSuppressed, listSuppressedEmails } from "@/lib/email-suppression";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
         unsubscribeUrl: mail.unsubscribeUrl,
       })
     );
-    await resend.emails.send({ from, to: testEmail, subject, html, headers: mail.headers });
+    await resend.emails.send({ from, replyTo: emailReplyTo(), to: testEmail, subject, html, headers: mail.headers });
     return NextResponse.json({ test: true, sentTo: testEmail, sample: w });
   }
 
@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
           unsubscribeUrl: mail.unsubscribeUrl,
         })
       );
-      await resend.emails.send({ from, to: email, subject, html, headers: mail.headers });
+      await resend.emails.send({ from, replyTo: emailReplyTo(), to: email, subject, html, headers: mail.headers });
       await new Promise((r) => setTimeout(r, 200)); // gentle pace
     }
     sent++;

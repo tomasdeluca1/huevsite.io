@@ -455,7 +455,7 @@
     },
     "mcp": {
       "title": "Agents",
-      "intro": "A personal token lets Claude, Cursor or ChatGPT keep this profile up to date. It can only touch yours.",
+      "intro": "Add it to your AI in one click and sign in with your account. The agent only touches your profile.",
       "docs": "How to connect",
       "nameLabel": "Token name",
       "namePlaceholder": "Laptop Claude",

@@ -21,6 +21,13 @@ export function hashMcpToken(raw: string): string {
   return createHash("sha256").update(raw).digest("hex");
 }
 
+export function readBearer(header: string | null): string | null {
+  if (!header) return null;
+  const match = /^Bearer\s+(\S+)$/.exec(header.trim());
+  if (!match || match[1].length > 500) return null;
+  return match[1];
+}
+
 export function parseBearer(header: string | null): string | null {
   if (!header) return null;
   const match = /^Bearer\s+(\S+)$/.exec(header.trim());

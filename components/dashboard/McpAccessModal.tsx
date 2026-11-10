@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import { Bot, Check, Copy, X } from "lucide-react";
+import { ConnectPanel } from "@/components/mcp/ConnectPanel";
+import { SITE_URL } from "@/lib/site-url";
 
 type TokenRow = {
   id: string;
@@ -24,6 +26,9 @@ type AuditRow = {
 };
 
 type Limits = { maxActive: number; hourly: number };
+type Connection = { clientId: string; clientName: string; lastUsedAt: string | null };
+
+const MCP_URL = `${SITE_URL}/api/mcp`;
 
 export function McpAccessModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const t = useTranslations("dashboard");
@@ -35,6 +40,7 @@ export function McpAccessModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [connections, setConnections] = useState<Connection[]>([]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -44,8 +50,12 @@ export function McpAccessModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
     }
     let cancelled = false;
     (async () => {
-      const res = await fetch("/api/mcp/tokens");
+      const [res, apps] = await Promise.all([
+        fetch("/api/mcp/tokens"),
+        fetch("/api/mcp/connections"),
+      ]);
       const data = await res.json().catch(() => ({}));
+      const appData = await apps.json().catch(() => ({}));
       if (cancelled) return;
       if (!res.ok) {
         setError(data.error || t("mcp.error"));
@@ -54,6 +64,7 @@ export function McpAccessModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
       setError("");
       setTokens(data.tokens || []);
       setAudit(data.audit || []);
+      setConnections(appData.connections || []);
       if (data.limits) setLimits(data.limits);
     })();
     return () => {
@@ -73,6 +84,20 @@ export function McpAccessModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
     setTokens(data.tokens || []);
     setAudit(data.audit || []);
     if (data.limits) setLimits(data.limits);
+    const apps = await fetch("/api/mcp/connections");
+    const appData = await apps.json().catch(() => ({}));
+    setConnections(appData.connections || []);
+  };
+
+  const disconnect = async (clientId: string) => {
+    setError("");
+    const res = await fetch(`/api/mcp/connections?client_id=${encodeURIComponent(clientId)}`, { method: "DELETE" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setError(data.error || t("mcp.error"));
+      return;
+    }
+    await refresh();
   };
 
   const create = async () => {
@@ -136,7 +161,7 @@ export function McpAccessModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
           initial={{ opacity: 0, scale: 0.95, y: 16 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 16 }}
-          className="relative flex max-h-[min(720px,90vh)] w-full max-w-lg flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-[#0A0A0A] shadow-[0_0_50px_rgba(0,0,0,0.5)]"
+          className="relative flex max-h-[min(820px,92vh)] w-full max-w-xl flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-[#0A0A0A] shadow-[0_0_50px_rgba(0,0,0,0.5)]"
         >
           <div className="absolute left-0 top-0 h-[2px] w-full bg-gradient-to-r from-transparent via-[var(--accent)] to-transparent opacity-60" />
           <div className="flex items-start justify-between gap-4 px-6 pb-2 pt-6">
@@ -154,9 +179,32 @@ export function McpAccessModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
           </div>
 
           <div className="custom-scrollbar space-y-5 overflow-y-auto px-6 py-4">
-            <Link href="/mcp" className="inline-flex text-xs font-bold text-[var(--accent)] underline-offset-4 hover:underline">
-              {t("mcp.docs")}
-            </Link>
+            <ConnectPanel mcpUrl={MCP_URL} />
+
+            <section>
+              <h4 className="mb-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/40">Apps conectadas</h4>
+              {connections.length === 0 ? (
+                <p className="text-sm text-white/40">Cuando entres desde Cursor, Claude o ChatGPT, la app aparece acá.</p>
+              ) : (
+                <ul className="space-y-2">
+                  {connections.map((app) => (
+                    <li key={app.clientId} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-bold text-white">{app.clientName}</div>
+                        <div className="truncate font-mono text-[10px] text-white/35">{app.clientId}</div>
+                      </div>
+                      <button type="button" onClick={() => disconnect(app.clientId)} className="text-[10px] font-black uppercase tracking-widest text-red-300/80 hover:text-red-200">
+                        Desconectar
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            <details className="rounded-2xl border border-white/10 p-4">
+              <summary className="cursor-pointer text-sm font-black text-white/70">Token a mano</summary>
+              <div className="mt-4 space-y-5">
             <p className="font-mono text-[10px] uppercase tracking-widest text-white/30">
               {t("mcp.limit", limits)}
             </p>
@@ -251,6 +299,8 @@ export function McpAccessModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
                 </ul>
               )}
             </section>
+              </div>
+            </details>
           </div>
         </motion.div>
       </div>

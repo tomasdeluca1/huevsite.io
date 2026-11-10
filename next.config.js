@@ -24,6 +24,17 @@ const nextConfig = {
             },
         ],
     },
+    async headers() {
+        return [
+            {
+                source: '/oauth/:path*',
+                headers: [
+                    { key: 'X-Frame-Options', value: 'DENY' },
+                    { key: 'Content-Security-Policy', value: "frame-ancestors 'none'" },
+                ],
+            },
+        ];
+    },
     async redirects() {
         return [
             // The testimonial page is /testimonio; accept the plural too.

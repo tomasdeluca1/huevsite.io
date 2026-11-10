@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Trophy, Check, Globe,
   Save, LogOut, MessageSquare,
-  Sparkles, Lock, ChevronRight, User, PlusCircle, Trash2, Link2, Mail, Share2
+  Sparkles, Lock, ChevronRight, User, PlusCircle, Trash2, Link2, Mail, Share2, Bot
 } from "lucide-react";
 import Link from "next/link";
 import { ProfileData, BlockType, PRESET_BORDER_RADIUS } from "@/lib/profile-types";
@@ -31,6 +31,7 @@ interface SidebarProps {
   setIsCreateSubSiteOpen: (open: boolean) => void;
   setIsUpgradeModalOpen: (open: boolean) => void;
   setIsFeedbackOpen: (open: boolean) => void;
+  setIsMcpOpen: (open: boolean) => void;
   setIsDeleteAccountOpen: (open: boolean) => void;
   setIsLinktreeRefactorOpen: (open: boolean) => void;
   setTempProfileData: (data: any) => void;
@@ -64,6 +65,7 @@ export function DashboardSidebar({
   setIsCreateSubSiteOpen,
   setIsUpgradeModalOpen,
   setIsFeedbackOpen,
+  setIsMcpOpen,
   setIsDeleteAccountOpen,
   setIsLinktreeRefactorOpen,
   setTempProfileData,
@@ -440,6 +442,19 @@ export function DashboardSidebar({
                 <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all duration-300 ${newsletterSubscribed ? 'right-1' : 'left-1'}`} />
               </button>
             </div>
+
+            <button
+              onClick={() => openModal(setIsMcpOpen)}
+              className="w-full flex items-center gap-3 rounded-2xl p-2.5 text-white/40 transition-all hover:bg-white/5 hover:text-white"
+            >
+              <div className="rounded-lg bg-white/5 p-1.5">
+                <Bot size={18} />
+              </div>
+              <div className="flex-1 text-left">
+                <div className="text-sm font-bold">{t("sidebar.agents")}</div>
+                <div className="text-[10px] font-mono text-white/25">{t("sidebar.agentsHint")}</div>
+              </div>
+            </button>
 
             <button
               onClick={() => openModal(setIsFeedbackOpen)}

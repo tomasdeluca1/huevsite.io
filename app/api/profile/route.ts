@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
+import { profilePatchSchema } from '@/lib/profile-schemas'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
 import { isValidCountry } from '@/lib/countries'
 import { scoreService } from '@/lib/score-service'
@@ -8,35 +8,6 @@ import { vercelService } from '@/lib/vercel-service'
 import { hasProAccess } from '@/lib/pro-access'
 import { rateLimit, getIdentifier } from '@/lib/rate-limit'
 import { subscribeToBeehiiv, unsubscribeFromBeehiiv } from '@/lib/beehiiv'
-
-const profilePatchSchema = z.object({
-  name: z.string().max(100).optional(),
-  username: z.string().min(1).max(50).regex(/^[a-zA-Z0-9_-]+$/, 'Username solo puede tener letras, números, guiones y guiones bajos').optional(),
-  // Accept "" so the dashboard can send the field unconditionally without a
-  // 400. An empty string is normalized to null below (clears the email).
-  email: z.string().email().or(z.literal('')).optional(),
-  tagline: z.string().max(200).optional(),
-  // CSS injection guard: accent_color is interpolated into a <style dangerouslySetInnerHTML>
-  // tag on public profile pages. Must be a strict 6-digit hex color.
-  accent_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'accent_color debe ser un color hex de 6 dígitos (ej: #C8FF00)').optional(),
-  layout: z.string().optional(),
-  roles: z.array(z.string()).optional(),
-  location: z.string().max(100).optional(),
-  available: z.boolean().optional(),
-  github_handle: z.string().max(50).optional(),
-  image: z.string().url().or(z.literal('')).optional(),
-  has_seen_update_feb25: z.boolean().optional(),
-  custom_domain: z.string().max(253).optional(),
-  // Same CSS injection vector: border_radius is interpolated into the same <style> tag.
-  // Allow only a numeric value with rem/px/em units (or plain "0").
-  border_radius: z.string().regex(/^(0|\d+(\.\d+)?(rem|px|em))$/, 'border_radius debe ser un valor CSS válido (ej: 1.5rem, 12px, 0)').optional(),
-  is_onboarding_test_user: z.boolean().optional(),
-  newsletter_subscribed: z.boolean().optional(),
-  show_ecosystem: z.boolean().optional(),
-  // Board presets (Pro): qué board está publicado (0-2) y sus nombres.
-  published_board: z.number().int().min(0).max(2).optional(),
-  board_names: z.record(z.string().max(40)).optional(),
-})
 
 const profileUpdateLimiter = rateLimit({ interval: 60_000, uniqueTokenPerInterval: 500 })
 

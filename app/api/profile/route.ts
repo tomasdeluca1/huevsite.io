@@ -193,6 +193,8 @@ export async function PATCH(request: NextRequest) {
       'community_digest_unsubscribed',
       'published_board',
       'board_names',
+      'profile_layout',
+      'link_box_style',
     ]
 
     // Board presets son Pro: publicar un board != 0 requiere acceso Pro.

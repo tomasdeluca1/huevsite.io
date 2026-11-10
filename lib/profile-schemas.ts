@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { linkBoxStyleSchema, profileLayoutSchema } from "@/lib/profile-layout";
 
 // Same object the dashboard PATCH /api/profile validates against.
 // accent_color and border_radius land in a public <style> tag, so the
@@ -25,6 +26,8 @@ export const profilePatchSchema = z.object({
   show_ecosystem: z.boolean().optional(),
   published_board: z.number().int().min(0).max(2).optional(),
   board_names: z.record(z.string().max(40)).optional(),
+  profile_layout: profileLayoutSchema.optional(),
+  link_box_style: linkBoxStyleSchema.optional(),
 });
 
 // Fields an agent may change. Username, email, custom domain, newsletter and
@@ -41,4 +44,6 @@ export const mcpProfileColumnSchema = profilePatchSchema.pick({
   github_handle: true,
   image: true,
   border_radius: true,
+  profile_layout: true,
+  link_box_style: true,
 });

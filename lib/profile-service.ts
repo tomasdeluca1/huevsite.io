@@ -1,5 +1,6 @@
 import { cache } from 'react';
 import { ProfileData, BlockData, getAdjustedAccentColor, MAX_FREE_BLOCKS } from './profile-types';
+import { parseLinkBoxStyle, parseProfileLayout } from './profile-layout';
 import { getProfileBadges } from './profile-badges';
 import { getFreeTrialState, hasProAccess } from './pro-access';
 import { getCurrentWeek, getWeekString } from './showcase-service';
@@ -57,7 +58,7 @@ export const profileService = {
     let profileError: any = null;
     ({ data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select(PROFILE_COLS + ', published_board, show_ecosystem')
+      .select(PROFILE_COLS + ', published_board, show_ecosystem, profile_layout, link_box_style')
       .eq('username', username)
       .single());
     if (profileError) {
@@ -209,7 +210,7 @@ export const profileService = {
     let profileError: any = null;
     ({ data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select(SUB_PROFILE_COLS + ', show_ecosystem')
+      .select(SUB_PROFILE_COLS + ', show_ecosystem, profile_layout, link_box_style')
       .eq('username', username)
       .single());
     if (profileError) {
@@ -349,6 +350,8 @@ export const profileService = {
       freeTrialLastInsightsViewedAt: profile.free_trial_last_insights_viewed_at || null,
       freeTrial: getFreeTrialState(profile),
       borderRadius: profile.border_radius || '1.5rem',
+      profileLayout: parseProfileLayout(profile.profile_layout),
+      linkBoxStyle: parseLinkBoxStyle(profile.link_box_style),
       // Pre-migración la columna no viene: undefined => true (comportamiento actual).
       showEcosystem: profile.show_ecosystem !== false,
       isOnboardingTestUser: profile.is_onboarding_test_user || false,

@@ -451,7 +451,10 @@
       "linktreeRefactorTitle": "Refactor with Linktree",
       "linktreeRefactorSubtitle": "Rebuild the board for 1 AI credit",
       "deleteAccount": "Delete account",
-      "logout": "Log out"
+      "logout": "Log out",
+      "profileLayoutLabel": "Profile layout",
+      "layoutPortfolio": "Portfolio",
+      "layoutLinks": "Links"
     },
     "mcp": {
       "title": "Agents",
@@ -790,7 +793,14 @@
       "errorNetworkSaveProfile": "Network error saving the profile.",
       "shareMessage": "I built my huevsite: my builder portfolio 🚀",
       "countryLabel": "Country",
-      "countryPlaceholder": "Select your country"
+      "countryPlaceholder": "Select your country",
+      "tabHome": "Profile",
+      "tabMore": "More",
+      "primaryNav": "Dashboard sections",
+      "headingHomePrefix": "Your",
+      "headingHomeWord": "profile",
+      "headingMorePrefix": "The",
+      "headingMoreWord": "rest"
     },
     "insights": {
       "osTooltipMacOs": "Audience with a work environment typical of builders, founders and creative profiles.",
@@ -1156,6 +1166,55 @@
       "selectInstruction": "Select {limit} blocks",
       "confirmSelection": "Confirm selection",
       "keepAllWithPro": "Keep everything with Pro"
+    },
+    "studio": {
+      "layoutLabel": "Profile layout",
+      "layoutPortfolio": "Portfolio",
+      "layoutLinks": "Links",
+      "layoutHint": "Portfolio is the usual grid. Links is your bio with big buttons.",
+      "boxLabel": "Link format",
+      "boxGlobal": "For all",
+      "boxPill": "Pill",
+      "boxCard": "Card",
+      "boxCompact": "Compact",
+      "boxFeatured": "Featured",
+      "boxExpandable": "Expandable",
+      "boxPerLink": "This link's format",
+      "boxFollowGlobal": "Use the global one",
+      "name": "Name",
+      "bio": "Short bio",
+      "addTitle": "Link title",
+      "addUrl": "https://...",
+      "add": "Add",
+      "emptyTitle": "No links yet",
+      "emptyBody": "Add a project with a title and URL. Then drag to reorder it.",
+      "share": "Share",
+      "copy": "Copy link",
+      "copied": "Copied",
+      "view": "View page",
+      "preview": "Preview",
+      "edit": "Edit",
+      "saved": "Saved",
+      "saving": "Saving...",
+      "saveError": "Couldn't save",
+      "hide": "Hide",
+      "show": "Show",
+      "drag": "Drag to reorder",
+      "statsScore": "Points",
+      "statsViews": "Views",
+      "statsClicks": "Clicks",
+      "statsRange": "Last 7 days",
+      "statsLocked": "Views and clicks are on Pro.",
+      "openStats": "See stats",
+      "openGrid": "Edit the grid",
+      "subsiteNote": "Links mode publishes on your main profile, not on this sub-site.",
+      "backToMain": "Back to the main profile",
+      "editDetails": "Edit details",
+      "moreIntro": "Projects, domain and sub-sites. Color, newsletter and the account stay in the left panel.",
+      "proDomain": "Domain and sub-sites are Pro",
+      "seePro": "See Pro",
+      "rowSocial": "Social",
+      "rowNotes": "Notes"
     }
   },
   "recruiter": {
@@ -2255,5 +2314,13 @@
     "nominations": "nominations",
     "score": "score",
     "whatIsThis": "What is this?"
+  },
+  "profileLinks": {
+    "share": "Share",
+    "copied": "Link copied",
+    "expand": "Show detail",
+    "collapse": "Hide detail",
+    "noDetail": "No extra detail.",
+    "also": "Also"
   }
 }

@@ -10,6 +10,8 @@ export type McpProfile = {
   accent_color: string | null;
   border_radius: string | null;
   layout: string | null;
+  profile_layout: string | null;
+  link_box_style: string | null;
   roles: string[] | null;
   location: string | null;
   country: string | null;

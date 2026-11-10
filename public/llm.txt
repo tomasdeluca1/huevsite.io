@@ -20,6 +20,13 @@ Nuestros usuarios (“builders”) combinan múltiples fuentes de actividad en u
 - Home: [https://huevsite.io](/)
 - Explorar Talento (Feed): [https://huevsite.io/explore](/explore)
 - Showcase Semanal: [https://huevsite.io/showcase](/showcase)
+- Guía del MCP: [https://huevsite.io/mcp](/mcp)
+
+## MCP para agentes
+
+Servidor remoto en https://huevsite.io/api/mcp. Auth con OAuth 2.1 (la persona entra con su cuenta) o con un token `Authorization: Bearer`. Guía: https://huevsite.io/mcp. Server card: https://huevsite.io/api/mcp/server-card. Catálogo: https://huevsite.io/.well-known/ai-catalog.json.
+
+Herramientas del perfil propio: `get_my_profile`, `update_profile`, `list_my_projects`, `create_project`, `update_project`, `delete_project` (con `confirm: true`), `post_update`, `announce_launch`, `sync_from_github`. Prompts: `armar_mi_perfil` y `publicar_avance`.
 
 ## Perfiles Individuales
 Cada creador tiene una página pública accesible en `/[username]`. Ejemplos de uso (que puedes extraer):

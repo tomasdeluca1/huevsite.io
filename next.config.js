@@ -33,6 +33,15 @@ const nextConfig = {
                     { key: 'Content-Security-Policy', value: "frame-ancestors 'none'" },
                 ],
             },
+            {
+                source: '/',
+                headers: [
+                    {
+                        key: 'Link',
+                        value: '<https://huevsite.io/mcp>; rel="help", <https://huevsite.io/llms.txt>; rel="describedby"; type="text/plain", <https://huevsite.io/.well-known/ai-catalog.json>; rel="service"; type="application/ai-catalog+json"',
+                    },
+                ],
+            },
         ];
     },
     async redirects() {

@@ -20,6 +20,33 @@ Nuestros usuarios (“builders”) combinan múltiples fuentes de actividad en u
 - Home: [https://huevsite.io](/)
 - Explorar Talento (Feed): [https://huevsite.io/explore](/explore)
 - Showcase Semanal: [https://huevsite.io/showcase](/showcase)
+- Guía del MCP: [https://huevsite.io/mcp](/mcp)
+
+## MCP para agentes
+
+huevsite publica un servidor MCP remoto. Un agente entra con la cuenta de la persona y lee o actualiza solo ese perfil.
+
+- Documentación: https://huevsite.io/mcp
+- Endpoint: https://huevsite.io/api/mcp
+- Transporte: streamable HTTP
+- Auth: OAuth 2.1. El cliente abre el navegador y la persona entra con su cuenta de huevsite. También acepta un token personal en el header `Authorization: Bearer`.
+- Catálogo de dominio: https://huevsite.io/.well-known/ai-catalog.json
+- Server card: https://huevsite.io/api/mcp/server-card (también en https://huevsite.io/.well-known/mcp.json y https://huevsite.io/.well-known/mcp/server-card.json)
+- Metadata OAuth: https://huevsite.io/.well-known/oauth-protected-resource y https://huevsite.io/.well-known/oauth-authorization-server
+
+Herramientas, siempre sobre el perfil propio:
+
+- `get_my_profile`: lee headline, bio, links, stack y proyectos.
+- `update_profile`: cambia esos campos, con los mismos límites que el dashboard.
+- `list_my_projects`, `create_project`, `update_project`.
+- `delete_project`: solo borra si le pasás `confirm: true`.
+- `post_update`: publica un avance de build in public.
+- `announce_launch`: mete un proyecto en Builders Hunt. Free: uno por mes.
+- `sync_from_github`: refresca las stats de los bloques de GitHub que ya existen. No crea el bloque.
+
+Prompts nativos: `armar_mi_perfil` y `publicar_avance`. El texto está en https://huevsite.io/mcp#prompts
+
+El agente no cambia username, email, dominio propio ni la newsletter. No manda mails ni publica en redes.
 
 ## Perfiles Individuales
 Cada creador tiene una página pública accesible en `/[username]`. Ejemplos de uso (que puedes extraer):

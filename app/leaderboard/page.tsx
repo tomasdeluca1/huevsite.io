@@ -45,6 +45,7 @@ export default async function LeaderboardPage({
   const params = await searchParams;
   const fromDashboard = params.from === "dashboard";
   const t = await getTranslations("leaderboard");
+  const tFooter = await getTranslations("footer");
 
   const {
     data: { user },
@@ -112,6 +113,7 @@ export default async function LeaderboardPage({
         </div>
         <div className="flex gap-6">
           <Link href="/explore" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">{t("navExplore")}</Link>
+          <Link href="/mcp" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">{tFooter("agents")}</Link>
           <Link href="/feed" className="text-xs font-mono text-[var(--text-muted)] hover:text-white transition-colors">{t("footerFeed")}</Link>
         </div>
       </footer>

@@ -37,6 +37,10 @@ export async function generateMetadata(): Promise<Metadata> {
     description: OG_DESCRIPTION,
     keywords: keywordsFor("home", locale),
     alternates: { canonical: canonical("/") },
+    other: {
+      "mcp-docs": `${SITE_URL}/mcp`,
+      "mcp-server": `${SITE_URL}/api/mcp`,
+    },
     openGraph: {
       title: OG_TITLE,
       description: OG_DESCRIPTION,
@@ -110,6 +114,13 @@ const websiteSchema = {
   description:
     "El portfolio que se arma solo y se ve como si lo hubiera hecho un diseñador caro. Red social y portfolio para builders de todo el mundo.",
   inLanguage: "es",
+  hasPart: {
+    "@type": "WebAPI",
+    "@id": "https://huevsite.io/api/mcp#webapi",
+    name: "huevsite MCP",
+    url: "https://huevsite.io/api/mcp",
+    documentation: "https://huevsite.io/mcp",
+  },
   potentialAction: {
     "@type": "SearchAction",
     target: {
@@ -276,6 +287,11 @@ export default async function LandingPage({
 
   return (
     <>
+      <head>
+        <link rel="help" href={`${SITE_URL}/mcp`} title="Documentación del MCP de huevsite" />
+        <link rel="describedby" href={`${SITE_URL}/llms.txt`} type="text/plain" title="llms.txt" />
+        <link rel="service" href={`${SITE_URL}/.well-known/ai-catalog.json`} type="application/ai-catalog+json" title="Catálogo de servidores MCP" />
+      </head>
       {/* Plain <script>, NOT next/script: with strategy="beforeInteractive"
           next/script only ships the tag inside the RSC flight payload and
           injects it client-side, so the JSON-LD was absent from the server

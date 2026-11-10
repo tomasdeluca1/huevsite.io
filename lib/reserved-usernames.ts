@@ -15,7 +15,7 @@
 // Top-level app routes (app/<segment>) that are valid username shapes.
 const ROUTE_RESERVED = [
   'admin', 'api', 'auth', 'blog', 'builders-de-la-semana', 'checkout', 'dashboard',
-  'explore', 'feed', 'leaderboard', 'linktree', 'login', 'onboarding', 'precios',
+  'explore', 'feed', 'lab', 'leaderboard', 'linktree', 'login', 'onboarding', 'precios',
   'privacy', 'recruiter', 'referrals', 'showcase', 'terms', 'testimonio', 'welcome',
 ];
 

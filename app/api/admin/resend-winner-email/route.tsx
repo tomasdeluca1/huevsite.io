@@ -5,6 +5,7 @@ import { render } from "@react-email/render";
 import { WinnerEmail } from "@/components/emails/WinnerEmail";
 import React from "react";
 import crypto from "crypto";
+import { emailFrom } from "@/lib/email-from";
 
 export const dynamic = "force-dynamic";
 
@@ -105,7 +106,7 @@ export async function POST(request: NextRequest) {
                 );
 
                 await resend.emails.send({
-                    from: process.env.EMAIL_FROM || "hi@huevsite.studio",
+                    from: emailFrom(),
                     to: userEmail,
                     subject: "🏆 ¡Sos el builder de la semana en Huevsite!",
                     html,

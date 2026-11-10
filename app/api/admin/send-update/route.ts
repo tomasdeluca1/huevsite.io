@@ -4,7 +4,9 @@ import { Resend } from "resend";
 import { render } from "@react-email/render";
 import React from "react";
 import { ProductUpdateEmail } from "@/components/emails/ProductUpdateEmail";
-import { buildUnsubscribeUrl } from "@/lib/email-unsubscribe";
+import { emailFrom } from "@/lib/email-from";
+import { marketingUnsubscribe } from "@/lib/email-compliance";
+import { isEmailSuppressed, listSuppressedEmails } from "@/lib/email-suppression";
 import { listAllAuthUsers } from "@/lib/list-auth-users";
 import { SITE_URL } from "@/lib/site-url";
 
@@ -83,7 +85,7 @@ export async function GET(request: NextRequest) {
     );
 
     const subject = "🚀 Llegó Builders Hunt — lanzá tu proyecto y que la comunidad vote";
-    const from = process.env.EMAIL_FROM || "hi@huevsite.studio";
+    const from = emailFrom();
 
     if (preview) {
       const supabase = createSupabaseClient(
@@ -96,16 +98,18 @@ export async function GET(request: NextRequest) {
         .select("id, username, community_digest_unsubscribed")
         .not("username", "is", null);
       const profMap = new Map((profs || []).map((p) => [p.id, p]));
+      const suppressed = await listSuppressedEmails(supabase);
       const eligible = authUsers.filter((u) => {
         const p = profMap.get(u.id);
-        return u.email && p && !p.community_digest_unsubscribed;
+        return u.email && p && !p.community_digest_unsubscribed && !isEmailSuppressed(suppressed, u.email);
       });
       return NextResponse.json({ preview: true, startPage, authUsers: authUsers.length, eligibleRecipients: eligible.length, subject, features });
     }
 
     if (testEmail) {
-      const html = htmlTemplate.replaceAll(UNSUB_MARKER, buildUnsubscribeUrl("test"));
-      await resend.emails.send({ from, to: testEmail, subject, html });
+      const mail = marketingUnsubscribe("test");
+      const html = htmlTemplate.replaceAll(UNSUB_MARKER, mail.unsubscribeUrl);
+      await resend.emails.send({ from, to: testEmail, subject, html, headers: mail.headers });
       return NextResponse.json({ success: true, test: true, sentTo: testEmail });
     }
 
@@ -118,6 +122,7 @@ export async function GET(request: NextRequest) {
       .select("id, username, community_digest_unsubscribed")
       .not("username", "is", null);
     const profMap = new Map((profs || []).map((p) => [p.id, p]));
+    const suppressed = await listSuppressedEmails(supabase);
 
     const authUsers = await listAllAuthUsers(supabase, startPage);
 
@@ -128,9 +133,11 @@ export async function GET(request: NextRequest) {
       const p = profMap.get(u.id);
       if (!p) continue;
       if (p.community_digest_unsubscribed) continue;
-      const html = htmlTemplate.replaceAll(UNSUB_MARKER, buildUnsubscribeUrl(u.id));
+      if (isEmailSuppressed(suppressed, u.email)) continue;
+      const mail = marketingUnsubscribe(u.id);
+      const html = htmlTemplate.replaceAll(UNSUB_MARKER, mail.unsubscribeUrl);
       try {
-        await resend.emails.send({ from, to: u.email, subject, html });
+        await resend.emails.send({ from, to: u.email, subject, html, headers: mail.headers });
         emailsSent++;
         await new Promise((r) => setTimeout(r, 100));
       } catch (err: any) {

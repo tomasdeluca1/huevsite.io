@@ -42,7 +42,7 @@ export const WeeklyDigestEmail: React.FC<WeeklyDigestEmailProps> = ({
   news,
   unsubscribeUrl,
 }) => (
-  <EmailLayout previewText={`Resumen de la comunidad — ${weekLabel}`}>
+  <EmailLayout previewText={`Resumen de la comunidad — ${weekLabel}`} unsubscribeUrl={unsubscribeUrl}>
     {/* HEADER */}
     <div
       style={{

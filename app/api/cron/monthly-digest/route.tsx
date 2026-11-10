@@ -5,7 +5,9 @@ import { render } from "@react-email/render";
 import { MonthlyDigestEmail } from "@/components/emails/MonthlyDigestEmail";
 import { BLOG_POSTS } from "@/lib/blog-data";
 import { listAllAuthUsers } from "@/lib/list-auth-users";
-import { buildUnsubscribeUrl } from "@/lib/email-unsubscribe";
+import { emailFrom } from "@/lib/email-from";
+import { marketingUnsubscribe } from "@/lib/email-compliance";
+import { isEmailSuppressed, listSuppressedEmails } from "@/lib/email-suppression";
 import React from "react";
 
 export const dynamic = "force-dynamic";
@@ -133,6 +135,7 @@ export async function GET(request: NextRequest) {
             .eq("community_digest_unsubscribed", true);
         if (optErr) throw optErr;
         const unsubIds = new Set((optedOut || []).map((p) => p.id));
+        const suppressed = await listSuppressedEmails(supabase);
 
         // -- 7. Fetch All Users and Send Emails --
         const emailResults: { email: string; sent: boolean; error?: string }[] = [];
@@ -164,18 +167,18 @@ export async function GET(request: NextRequest) {
         for (const user of usersToNotify) {
             if (!user.email) continue;
             if (!testEmail && user.id && unsubIds.has(user.id)) continue;
+            if (!testEmail && isEmailSuppressed(suppressed, user.email)) continue;
 
-            const html = emailHtml.replaceAll(
-                UNSUB_MARKER,
-                buildUnsubscribeUrl(user.id || "test")
-            );
+            const mail = marketingUnsubscribe(user.id || "test");
+            const html = emailHtml.replaceAll(UNSUB_MARKER, mail.unsubscribeUrl);
 
             try {
                 await resend.emails.send({
-                    from: process.env.EMAIL_FROM || "hi@huevsite.studio",
+                    from: emailFrom(),
                     to: user.email,
                     subject: `📊 Huevsite Digest: Lo mejor de ${capitalizedMonthName}`,
                     html,
+                    headers: mail.headers,
                 });
                 emailResults.push({ email: user.email, sent: true });
                 

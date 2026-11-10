@@ -36,7 +36,10 @@ export const MonthlyDigestEmail: React.FC<Readonly<MonthlyDigestEmailProps>> = (
   stats,
   unsubscribeUrl,
 }) => (
-  <EmailLayout previewText={`¡Resumen de ${monthName} en Huevsite! Mirá quiénes fueron los builders destacados.`}>
+  <EmailLayout
+    previewText={`¡Resumen de ${monthName} en Huevsite! Mirá quiénes fueron los builders destacados.`}
+    unsubscribeUrl={unsubscribeUrl}
+  >
     {/* Header Section */}
     <div style={{
       background: 'linear-gradient(180deg, rgba(200, 255, 0, 0.1) 0%, transparent 100%)',

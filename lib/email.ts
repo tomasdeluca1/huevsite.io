@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { Resend } from "resend";
 import { render } from "@react-email/render";
+import { emailFrom } from "./email-from";
 
 export async function sendRenderedEmail({
   to,
@@ -24,7 +25,7 @@ export async function sendRenderedEmail({
   const html = await render(react);
 
   return resend.emails.send({
-    from: process.env.EMAIL_FROM || "Huevsite <hola@huevsite.studio>",
+    from: emailFrom(),
     to,
     subject,
     html,

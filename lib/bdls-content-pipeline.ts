@@ -10,6 +10,7 @@ import {
 import { createTypefullyDraft, getTypefullyDraftUrl } from "@/lib/typefully";
 import { WinnerEmail } from "@/components/emails/WinnerEmail";
 import { sendRenderedEmail } from "@/lib/email";
+import { emailFrom } from "@/lib/email-from";
 import { InterviewNotificationEmail } from "@/components/emails/InterviewNotificationEmail";
 
 // Shared content pipeline used by:
@@ -299,7 +300,7 @@ async function sendWinnerEmail(
       })
     );
     await resend.emails.send({
-      from: process.env.EMAIL_FROM || "hi@huevsite.studio",
+      from: emailFrom(),
       to: builderEmail,
       subject: "🏆 ¡Sos el builder de la semana en Huevsite!",
       html,

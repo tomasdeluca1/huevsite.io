@@ -1,7 +1,8 @@
-import { BRAND } from '@/lib/brand';
+import { BRAND } from "@/lib/brand";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-import { verifyUnsubscribe } from "@/lib/email-unsubscribe";
+import { unsubscribeFromBeehiiv } from "@/lib/beehiiv";
+import { identityFromParts, verifyUnsubscribe } from "@/lib/email-unsubscribe";
 
 export const dynamic = "force-dynamic";
 
@@ -13,28 +14,52 @@ function htmlPage(title: string, message: string, status: number) {
   });
 }
 
-// GET  /api/email/unsubscribe?u=<userId>&sig=<hmac>
-// POST /api/email/unsubscribe?u=<userId>&sig=<hmac>
-// The footer link is a GET. Mailbox one-click (RFC 8058) is a POST to the same
-// URL with body `List-Unsubscribe=One-Click`. The signature is in the query.
-// Either one sets community_digest_unsubscribed. No login required.
-async function readIdentity(request: NextRequest): Promise<{ userId: string; sig: string }> {
+// GET  /api/email/unsubscribe?token=<userId>.<hmac>
+//      (legacy links: ?u=<userId>&sig=<hmac>)
+// POST same URL, no login. Mailbox one-click (RFC 8058) posts
+// `List-Unsubscribe=One-Click`. The signature stays in the query.
+// Either method opts the person out and GET shows the confirmation page.
+async function readIdentity(request: NextRequest): Promise<{ userId: string; sig: string } | null> {
   const { searchParams } = new URL(request.url);
+  let token = searchParams.get("token") || "";
   let userId = searchParams.get("u") || "";
   let sig = searchParams.get("sig") || "";
-  if (request.method === "POST" && (!userId || !sig)) {
+  if (request.method === "POST" && (!token || !userId || !sig)) {
     const text = await request.text().catch(() => "");
     const body = new URLSearchParams(text);
+    token = token || body.get("token") || "";
     userId = userId || body.get("u") || "";
     sig = sig || body.get("sig") || "";
   }
-  return { userId, sig };
+  return identityFromParts({ token, userId, sig });
+}
+
+async function syncBeehiiv(supabase: any, userId: string) {
+  try {
+    let email: string | null = null;
+    const { data: profile } = await supabase.from("profiles").select("email").eq("id", userId).maybeSingle();
+    email = profile?.email || null;
+    if (!email) {
+      const { data } = await supabase.auth.admin.getUserById(userId);
+      email = data?.user?.email || null;
+    }
+    if (!email) {
+      console.warn("[unsubscribe] no email on file, beehiiv sync skipped");
+      return;
+    }
+    const result = await unsubscribeFromBeehiiv(email);
+    if (!result.ok) {
+      console.warn("[unsubscribe] beehiiv:", result.error);
+    }
+  } catch (err) {
+    console.error("[unsubscribe] beehiiv threw:", err);
+  }
 }
 
 async function handleUnsubscribe(request: NextRequest) {
-  const { userId, sig } = await readIdentity(request);
+  const identity = await readIdentity(request);
 
-  if (!verifyUnsubscribe(userId, sig)) {
+  if (!identity || !verifyUnsubscribe(identity.userId, identity.sig)) {
     return htmlPage(
       "Link inválido",
       "Este link de baja no es válido. Si querés dejar de recibir los avisos, respondé cualquiera de nuestros emails y lo resolvemos.",
@@ -50,8 +75,18 @@ async function handleUnsubscribe(request: NextRequest) {
     const { error } = await supabase
       .from("profiles")
       .update({ community_digest_unsubscribed: true })
-      .eq("id", userId);
+      .eq("id", identity.userId);
     if (error) throw error;
+
+    const { error: newsError } = await supabase
+      .from("profiles")
+      .update({ newsletter_subscribed: false })
+      .eq("id", identity.userId);
+    if (newsError) {
+      console.warn("[unsubscribe] newsletter flag:", newsError.message);
+    }
+
+    await syncBeehiiv(supabase, identity.userId);
   } catch (e) {
     console.error("[unsubscribe] error:", e);
     return htmlPage("Ups", "No pudimos procesar la baja ahora mismo. Reintentá en un momento.", 500);

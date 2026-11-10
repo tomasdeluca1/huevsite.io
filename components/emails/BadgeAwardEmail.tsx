@@ -4,17 +4,25 @@ import { EmailLayout } from "./EmailLayout";
 interface BadgeAwardEmailProps {
   name: string;
   username: string;
+  unsubscribeUrl: string;
 }
 
 // Sent to Builder de la Semana winners (one-time to past winners + future ones)
 // so they can drop their official laurel badge on their portfolio / personal site.
-export const BadgeAwardEmail: React.FC<Readonly<BadgeAwardEmailProps>> = ({ name, username }) => {
+export const BadgeAwardEmail: React.FC<Readonly<BadgeAwardEmailProps>> = ({
+  name,
+  username,
+  unsubscribeUrl,
+}) => {
   const badge = `https://huevsite.io/api/badge/bdls/${username}?v=3`;
   const profile = `https://huevsite.io/${username}`;
   const html = `<a href="${profile}"><img src="${badge}" alt="Builder de la Semana en huevsite.io" width="240" /></a>`;
 
   return (
-    <EmailLayout previewText={`${name}, tu badge de Builder de la Semana ya está listo`}>
+    <EmailLayout
+      previewText={`${name}, tu badge de Builder de la Semana ya está listo`}
+      unsubscribeUrl={unsubscribeUrl}
+    >
       <div style={{ textAlign: "center", padding: "8px 0 24px" }}>
         <div style={{ fontSize: "44px", marginBottom: "12px" }}>🏆</div>
         <h2 style={{ fontSize: "28px", fontWeight: 800, margin: "0 0 8px", lineHeight: 1.15 }}>

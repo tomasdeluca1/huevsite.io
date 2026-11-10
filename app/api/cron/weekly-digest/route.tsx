@@ -7,7 +7,8 @@ import { WeeklyDigestEmail } from "@/components/emails/WeeklyDigestEmail";
 import { postWeeklyDigest } from "@/lib/twitter";
 import { postWeeklyDigestLinkedIn } from "@/lib/linkedin";
 import { resolveXHandles } from "@/lib/twitter-utils";
-import { buildUnsubscribeUrl } from "@/lib/email-unsubscribe";
+import { emailFrom } from "@/lib/email-from";
+import { marketingUnsubscribe } from "@/lib/email-compliance";
 import { getAllBlogPosts, getPostCategory } from "@/lib/blog-data";
 import { getWeekLaunches } from "@/lib/launch-service";
 import { currentLaunchWeek } from "@/lib/launch-week";
@@ -211,8 +212,15 @@ export async function GET(request: NextRequest) {
           unsubscribeUrl: UNSUB_MARKER,
         })
       );
-      const html = emailHtml.replaceAll(UNSUB_MARKER, buildUnsubscribeUrl("test"));
-      await resend.emails.send({ from: process.env.EMAIL_FROM || "hi@huevsite.studio", to: testEmail!, subject, html });
+      const mail = marketingUnsubscribe("test");
+      const html = emailHtml.replaceAll(UNSUB_MARKER, mail.unsubscribeUrl);
+      await resend.emails.send({
+        from: emailFrom(),
+        to: testEmail!,
+        subject,
+        html,
+        headers: mail.headers,
+      });
       emailsSent = 1;
     }
 

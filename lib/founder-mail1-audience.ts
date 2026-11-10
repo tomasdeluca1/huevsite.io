@@ -19,7 +19,13 @@ export interface FounderMail1AuthUser {
   user_metadata?: Record<string, unknown> | null;
 }
 
-export type FounderMail1SkipReason = "no_email" | "owner" | "unsubscribed" | "lifetime" | "pro";
+export type FounderMail1SkipReason =
+  | "no_email"
+  | "owner"
+  | "unsubscribed"
+  | "suppressed"
+  | "lifetime"
+  | "pro";
 
 export interface FounderMail1OwnerMatch {
   emails: Set<string>;
@@ -68,7 +74,8 @@ export function buildOwnerMatch(input: {
 export function founderMail1SkipReason(
   user: FounderMail1AuthUser,
   profile: FounderMail1Profile | undefined,
-  owner: FounderMail1OwnerMatch
+  owner: FounderMail1OwnerMatch,
+  suppressed: Set<string> = new Set()
 ): FounderMail1SkipReason | null {
   const email = norm(user.email);
   if (!email) return "no_email";
@@ -83,6 +90,7 @@ export function founderMail1SkipReason(
     return "owner";
   }
   if (profile?.community_digest_unsubscribed) return "unsubscribed";
+  if (suppressed.has(email) || (profileEmail && suppressed.has(profileEmail))) return "suppressed";
   if (profile?.is_lifetime) return "lifetime";
   if (norm(profile?.subscription_tier) === "pro" && !profile?.is_lifetime) return "pro";
   return null;

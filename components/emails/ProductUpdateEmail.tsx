@@ -19,7 +19,10 @@ const SITE = "https://huevsite.io";
 // One-time product update announcement ("comunicado") for the recent batch of
 // features. Send via /api/admin/send-update once the updates are deployed.
 export const ProductUpdateEmail: React.FC<ProductUpdateEmailProps> = ({ features, unsubscribeUrl }) => (
-  <EmailLayout previewText="Novedades en huevsite: GitHub real, leaderboard, quests, +3 bloques y más">
+  <EmailLayout
+    previewText="Novedades en huevsite: GitHub real, leaderboard, quests, +3 bloques y más"
+    unsubscribeUrl={unsubscribeUrl}
+  >
     {/* HEADER */}
     <div
       style={{

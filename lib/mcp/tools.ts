@@ -28,6 +28,8 @@ const PROFILE_COLUMNS = [
   "github_handle",
   "image",
   "border_radius",
+  "profile_layout",
+  "link_box_style",
 ] as const;
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -55,6 +57,7 @@ function projectView(block: McpBlock) {
     metrics: typeof data.metrics === "string" ? data.metrics : "",
     launchDate: typeof data.launchDate === "string" ? data.launchDate : "",
     archived: data.archived === true,
+    boxStyle: typeof data.boxStyle === "string" ? data.boxStyle : null,
     visible: block.visible,
     created_at: block.created_at,
   };
@@ -123,6 +126,8 @@ export async function getMyProfile(store: McpStore, userId: string): Promise<Too
       github_handle: profile.github_handle,
       accent_color: profile.accent_color,
       layout: profile.layout,
+      profile_layout: profile.profile_layout === "links" ? "links" : "portfolio",
+      link_box_style: profile.link_box_style || "pill",
       border_radius: profile.border_radius,
       image: profile.image,
       builder_score: profile.builder_score || 0,
@@ -283,6 +288,7 @@ export async function createProject(store: McpStore, userId: string, raw: unknow
   if (parsed.data.faviconUrl !== undefined) data.faviconUrl = parsed.data.faviconUrl;
   if (parsed.data.imageMode !== undefined) data.imageMode = parsed.data.imageMode;
   if (parsed.data.showStatus !== undefined) data.showStatus = parsed.data.showStatus;
+  if (parsed.data.boxStyle !== undefined) data.boxStyle = parsed.data.boxStyle;
 
   const block = await store.insertBlock(userId, {
     type: "project",
@@ -464,13 +470,13 @@ export const MCP_TOOLS: Array<{
 }> = [
   {
     name: "get_my_profile",
-    description: "Devuelve el perfil del dueño del token: headline, bio, links, stack, proyectos y el cupo de bloques. No lee perfiles ajenos.",
+    description: "Devuelve el perfil del dueño del token: headline, bio, links, stack, proyectos, profile_layout, link_box_style y el cupo de bloques. No lee perfiles ajenos.",
     inputSchema: emptyInputSchema,
     handler: (store, userId) => getMyProfile(store, userId),
   },
   {
     name: "update_profile",
-    description: "Actualiza el perfil propio. Acepta name, tagline (headline), bio, location, country, roles, available, github_handle, accent_color, layout, image, border_radius, links y stack. Usa los mismos límites que el dashboard. No cambia username, email, dominio ni la newsletter.",
+    description: "Actualiza el perfil propio. Acepta name, tagline (headline), bio, location, country, roles, available, github_handle, accent_color, layout, image, border_radius, profile_layout (portfolio o links), link_box_style (pill, card, compact, featured o expandable), links y stack. Usa los mismos límites que el dashboard. No cambia username, email, dominio ni la newsletter.",
     inputSchema: updateProfileInputSchema,
     handler: (store, userId, args) => updateProfile(store, userId, args),
   },
@@ -482,13 +488,13 @@ export const MCP_TOOLS: Array<{
   },
   {
     name: "create_project",
-    description: "Crea un proyecto en el perfil principal. Respeta el cupo de bloques visibles del plan (5 en free, 22 en Pro, más los bloques extra por compartir).",
+    description: "Crea un proyecto en el perfil principal. Respeta el cupo de bloques visibles del plan (5 en free, 22 en Pro, más los bloques extra por compartir). boxStyle es opcional: pill, card, compact, featured o expandable.",
     inputSchema: createProjectInputSchema,
     handler: (store, userId, args) => createProject(store, userId, args),
   },
   {
     name: "update_project",
-    description: "Actualiza un proyecto propio. Deja una actividad block_update para que el cron de avances builders pueda contarla, si el bloque es público y no es el eco de haberlo creado recién.",
+    description: "Actualiza un proyecto propio. Acepta boxStyle (pill, card, compact, featured, expandable o null para usar el formato global). Deja una actividad block_update para que el cron de avances builders pueda contarla, si el bloque es público y no es el eco de haberlo creado recién.",
     inputSchema: updateProjectInputSchema,
     handler: (store, userId, args) => updateProject(store, userId, args),
   },

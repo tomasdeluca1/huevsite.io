@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   DndContext,
   closestCenter,
@@ -69,6 +69,9 @@ import { getProfileBadges, ALL_BADGE_KEYS, BADGE_CATALOG } from "@/lib/profile-b
 import { BadgeItem } from "@/components/profile/BadgeItem";
 import { ProFeatureTour } from "@/components/dashboard/ProFeatureTour";
 import { TrialExpiredBlockChooser } from "@/components/dashboard/TrialExpiredBlockChooser";
+import { ProfileStudio } from "@/components/dashboard/ProfileStudio";
+import { applyLinkOrder } from "@/lib/link-layout";
+import { parseLinkBoxStyle, parseProfileLayout, type LinkBoxStyle, type ProfileLayoutMode } from "@/lib/profile-layout";
 
 // "transfer" NO va en estas listas a propósito. La pestaña era Pro-only, o sea
 // que la veía el que acababa de pagar, y al tocarla saltaba un alert() diciendo
@@ -131,7 +134,9 @@ export default function DashboardPage() {
   const boardInitRef = useRef(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [badgesCollapsed, setBadgesCollapsed] = useState(true);
-  const [activeTab, setActiveTab] = useState<'board' | 'projects' | 'insights' | 'subsites' | 'domain' | 'transfer'>('board');
+  const [activeTab, setActiveTab] = useState<'home' | 'board' | 'projects' | 'insights' | 'subsites' | 'domain' | 'transfer' | 'more'>('home');
+  const [studioSave, setStudioSave] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [previewKey, setPreviewKey] = useState(0);
   const [domain, setDomain] = useState("");
   const [transferEmail, setTransferEmail] = useState("");
   const [verifying, setVerifying] = useState(false);
@@ -146,11 +151,6 @@ export default function DashboardPage() {
   const supabase = createClient();
   const referralsSectionRef = useRef<HTMLDivElement | null>(null);
   const isPro = profile?.hasProAccess === true;
-  const availableTabs = isPro
-    ? DASHBOARD_TABS
-    : profile?.freeTrial?.canUseLastInsightsView
-      ? (["board", "insights"] as const)
-      : (["board"] as const);
 
   const normalizeDomainInput = (value: string) =>
     value.trim().replace(/^(?:https?:\/\/)?/i, "").replace(/^www\./i, "").split("/")[0].toLowerCase();
@@ -320,6 +320,8 @@ export default function DashboardPage() {
         email: data.profile.email || "",
         accentColor: data.profile.accent_color,
         borderRadius: data.profile.border_radius || "1.5rem",
+        profileLayout: parseProfileLayout(data.profile.profile_layout),
+        linkBoxStyle: parseLinkBoxStyle(data.profile.link_box_style),
         showEcosystem: data.profile.show_ecosystem !== false,
         roles: data.profile.roles || [],
         layout: data.profile.layout || null,
@@ -441,8 +443,9 @@ export default function DashboardPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
-    if (tab === "board") {
-      setActiveTab("board");
+    if (!tab) return;
+    if (tab === "home" || tab === "board" || tab === "more" || tab === "projects") {
+      setActiveTab(tab);
       return;
     }
 
@@ -457,13 +460,16 @@ export default function DashboardPage() {
   }, [isPro, profile?.freeTrial?.canUseLastInsightsView]);
 
   useEffect(() => {
-    if (!isPro && !profile?.freeTrial?.canUseLastInsightsView && activeTab !== "board") {
-      setActiveTab("board");
+    if (!profile) return;
+    const allowed = new Set<string>(["home", "board", "more", "projects"]);
+    if (isPro || profile.freeTrial?.canUseLastInsightsView) allowed.add("insights");
+    if (isPro) {
+      allowed.add("domain");
+      allowed.add("subsites");
+      allowed.add("transfer");
     }
-    if (!isPro && profile?.freeTrial?.canUseLastInsightsView && !["board", "insights"].includes(activeTab)) {
-      setActiveTab("board");
-    }
-  }, [activeTab, isPro, profile?.freeTrial?.canUseLastInsightsView]);
+    if (!allowed.has(activeTab)) setActiveTab("home");
+  }, [activeTab, isPro, profile]);
 
   useEffect(() => {
     if (!profile) return;
@@ -816,7 +822,7 @@ export default function DashboardPage() {
     setBlockChooserResolved(true);
   };
 
-  const addBlock = async (type: BlockType, prefill?: Record<string, any>) => {
+  const addBlock = async (type: BlockType, prefill?: Record<string, any>, opts?: { silent?: boolean }) => {
     const newId = `temp-${type}-${Date.now()}`;
     const colSpan = type === "hero" || type === "ecosystem" ? 2 : (type === "github" || type === "project" ? 1 : 1);
     const rowSpan = type === "hero" || type === "ecosystem" ? 2 : (type === "github" || type === "project" ? 2 : 1);
@@ -1011,7 +1017,7 @@ export default function DashboardPage() {
         ...prev,
         blocks: prev.blocks.map(b => b.id === newId ? { ...b, id: block.id } : b)
       } : prev);
-      setEditingBlock({ ...initialData, id: block.id } as BlockData);
+      if (!opts?.silent) setEditingBlock({ ...initialData, id: block.id } as BlockData);
       // El EcosystemBlock ya lista los sub-sitios: apagar el panel del header para que no se dupliquen.
       if (type === "ecosystem" && profile?.showEcosystem !== false) {
         handleShowEcosystemChange(false);
@@ -1022,7 +1028,7 @@ export default function DashboardPage() {
     }
   };
 
-  const updateBlock = async (updatedBlock: BlockData) => {
+  const updateBlock = async (updatedBlock: BlockData): Promise<boolean> => {
     setProfile((prev) => {
       if (!prev) return prev;
 
@@ -1052,15 +1058,18 @@ export default function DashboardPage() {
         // bloque no debe tocarlo (y evita depender de la columna en cada edición).
         // Lo mismo vale para visibleOn: solo lo escribe handleViewChange (gate Pro).
         const { id, mobileOrder: _mo, visibleOn: _vo, ...updatePayload } = updatedBlock;
-        await fetch(`/api/blocks/${updatedBlock.id}`, {
+        const res = await fetch(`/api/blocks/${updatedBlock.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(updatePayload),
         });
+        return res.ok;
       } catch (error) {
         console.error('Error updating block:', error);
+        return false;
       }
     }
+    return true;
   };
 
   const renderBlockContent = (block: BlockData) => {
@@ -1555,6 +1564,105 @@ export default function DashboardPage() {
     return () => { if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current); };
   }, [profile, autoSaveEnabled, loading]);
 
+  const markStudio = (ok: boolean) => {
+    setStudioSave(ok ? "saved" : "error");
+    if (ok) setPreviewKey((key) => key + 1);
+  };
+
+  const handleProfileLayout = async (layout: ProfileLayoutMode) => {
+    const previous = profile?.profileLayout || "portfolio";
+    setProfile((prev) => prev ? { ...prev, profileLayout: layout } : prev);
+    setStudioSave("saving");
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profile_layout: layout }),
+      });
+      if (!res.ok) throw new Error("layout");
+      markStudio(true);
+    } catch {
+      setProfile((prev) => prev ? { ...prev, profileLayout: previous } : prev);
+      setStudioSave("error");
+    }
+  };
+
+  const handleLinkBoxStyle = async (style: LinkBoxStyle) => {
+    const previous = profile?.linkBoxStyle || "pill";
+    setProfile((prev) => prev ? { ...prev, linkBoxStyle: style } : prev);
+    setStudioSave("saving");
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ link_box_style: style }),
+      });
+      if (!res.ok) throw new Error("box");
+      markStudio(true);
+    } catch {
+      setProfile((prev) => prev ? { ...prev, linkBoxStyle: previous } : prev);
+      setStudioSave("error");
+    }
+  };
+
+  const handleStudioBasics = useCallback(async (patch: { displayName: string; tagline: string }) => {
+    setStudioSave("saving");
+    setProfile((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        displayName: patch.displayName,
+        tagline: patch.tagline,
+        blocks: prev.blocks.map((block) =>
+          block.type === "hero" ? { ...block, name: patch.displayName, tagline: patch.tagline } : block
+        ),
+      };
+    });
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: patch.displayName, tagline: patch.tagline }),
+      });
+      const hero = profile?.blocks.find((block) => block.type === "hero");
+      if (hero && !hero.id.startsWith("temp-")) {
+        await updateBlock({ ...hero, name: patch.displayName, tagline: patch.tagline } as BlockData);
+      }
+      markStudio(res.ok);
+    } catch {
+      setStudioSave("error");
+    }
+  }, [profile?.blocks]);
+
+  const handleStudioReorder = async (orderedIds: string[]) => {
+    if (!profile) return;
+    const next = applyLinkOrder(profile.blocks, orderedIds);
+    setProfile({ ...profile, blocks: next });
+    setStudioSave("saving");
+    try {
+      const res = await fetch("/api/blocks/reorder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(next.filter((block) => !block.id.startsWith("temp-")).map((block) => ({ id: block.id, order: block.order }))),
+      });
+      markStudio(res.ok);
+    } catch {
+      setStudioSave("error");
+    }
+  };
+
+  const handleStudioBox = async (block: BlockData, style: LinkBoxStyle | null) => {
+    setStudioSave("saving");
+    const ok = await updateBlock({ ...block, boxStyle: style });
+    markStudio(ok);
+  };
+
+  const handleStudioVisible = async (block: BlockData) => {
+    setStudioSave("saving");
+    const ok = await updateBlock({ ...block, visible: block.visible === false });
+    markStudio(ok);
+  };
+
   const toggleAutoSave = () => {
     const newVal = !autoSaveEnabled;
     setAutoSaveEnabled(newVal);
@@ -1633,6 +1741,7 @@ export default function DashboardPage() {
           setTempProfileData={setTempProfileData}
           addBlock={addBlock}
         handleColorChange={handleColorChange}
+        onProfileLayoutChange={handleProfileLayout}
         handleBorderRadiusChange={handleBorderRadiusChange}
         handleShowEcosystemChange={handleShowEcosystemChange}
         toggleAutoSave={toggleAutoSave}
@@ -1759,7 +1868,9 @@ export default function DashboardPage() {
             }} />
             <div className="mb-3 hidden md:block"><div className="section-label">// dashboard / {activeTab}</div></div>
             <h2 className="text-3xl md:text-4xl xl:text-5xl font-[950] tracking-tighter leading-[0.94] text-balance">
-              {activeTab === 'board' ? <>{t("page.headingBoardPrefix")} <span style={{ color: profile.accentColor }}>{selectedSubSiteId ? (profile.subSites.find(s => s.id === selectedSubSiteId)?.title || t("page.boardFallback")) : "huevsite"}</span>.</> :
+              {activeTab === 'home' ? <>{t("page.headingHomePrefix")} <span style={{ color: profile.accentColor }}>{t("page.headingHomeWord")}</span>.</> :
+               activeTab === 'more' ? <>{t("page.headingMorePrefix")} <span style={{ color: profile.accentColor }}>{t("page.headingMoreWord")}</span>.</> :
+               activeTab === 'board' ? <>{t("page.headingBoardPrefix")} <span style={{ color: profile.accentColor }}>{selectedSubSiteId ? (profile.subSites.find(s => s.id === selectedSubSiteId)?.title || t("page.boardFallback")) : "huevsite"}</span>.</> :
                activeTab === 'insights' ? <>{t("page.headingInsightsPrefix")} <span style={{ color: profile.accentColor }}>{t("page.headingInsightsWord")}</span>.</> :
                activeTab === 'domain' ? <>{t("page.headingDomainPrefix")} <span style={{ color: profile.accentColor }}>{t("page.headingDomainWord")}</span>.</> :
                activeTab === 'subsites' ? <>{t("page.headingSubsitesPrefix")} <span style={{ color: profile.accentColor }}>{t("page.headingSubsitesWord")}</span>.</> :
@@ -1890,102 +2001,70 @@ export default function DashboardPage() {
             {t("page.feedback")}
           </button>
 
-          {/* DESKTOP TABS */}
-          {isPro && (
-          <div className="hidden md:flex relative mb-16 z-20 items-center justify-center">
-            <div className="flex items-center gap-1 bg-white/[0.03] p-1.5 border border-white/5 backdrop-blur-md shadow-2xl overflow-x-auto scrollbar-none max-w-full w-fit" style={{ borderRadius: "calc(var(--dashboard-radius) + 0.75rem)" }}>
-              {availableTabs.map((tab) => (
+          <nav aria-label={t("page.primaryNav")} className="relative z-20 mb-8 flex gap-1 overflow-x-auto border border-white/5 bg-white/[0.03] p-1.5" style={{ borderRadius: "calc(var(--dashboard-radius) + 0.5rem)" }}>
+            {([
+              ["home", t("page.tabHome")],
+              ["board", t("page.tabEditor")],
+              ["insights", t("page.tabInsights")],
+              ["more", t("page.tabMore")],
+            ] as const).map(([tab, label]) => {
+              const locked = tab === "insights" && !isPro && !profile.freeTrial?.canUseLastInsightsView;
+              const active = activeTab === tab || (tab === "more" && (activeTab === "projects" || activeTab === "domain" || activeTab === "subsites"));
+              return (
                 <button
                   key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-4 lg:px-8 py-3 text-[10px] font-black uppercase tracking-[0.18em] transition-all relative shrink-0 ${activeTab === tab ? 'text-black' : 'text-white/20 hover:text-white/60 hover:bg-white/[0.03]'}`}
-                  style={{ borderRadius: "calc(var(--dashboard-radius) + 0.25rem)" }}
+                  type="button"
+                  onClick={() => {
+                    if (locked) {
+                      setIsUpgradeModalOpen(true);
+                      return;
+                    }
+                    setActiveTab(tab);
+                  }}
+                  className={`min-h-11 shrink-0 rounded-xl px-4 text-[11px] font-black uppercase tracking-[0.14em] ${active ? "text-black" : "text-white/40"}`}
+                  style={active ? { background: profile.accentColor, color: getContrastColor(profile.accentColor) } : undefined}
                 >
-                  {activeTab === tab && (
-                    <motion.div
-                      layoutId="activeTabSel"
-                      className="absolute inset-0 bg-[var(--accent)] shadow-[0_0_20px_rgba(var(--accent-rgb),0.3)]"
-                      style={{ borderRadius: "calc(var(--dashboard-radius) + 0.25rem)" }}
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                    />
-                  )}
-                  <span className="relative z-10">{tab === 'board' ? t("page.tabEditor") : tab === 'projects' ? t("page.tabProjects") : tab === 'insights' ? t("page.tabInsights") : tab === 'subsites' ? t("page.tabSubsites") : tab === 'domain' ? t("page.tabDomain") : t("page.tabTransfer")}</span>
+                  {label}{locked ? " Pro" : ""}
                 </button>
-              ))}
-            </div>
-          </div>
-          )}
-
-          {/* MOBILE DROPDOWN */}
-          {isPro && (
-          <div className="md:hidden relative mb-10 z-30 px-4">
-             <button 
-                onClick={() => setIsTabMenuOpen(!isTabMenuOpen)}
-                className="w-full bg-white/[0.05] border border-white/10 p-5 flex items-center justify-between text-white group active:scale-95 transition-all"
-                style={{ borderRadius: "var(--dashboard-radius)" }}
-             >
-                <div className="flex items-center gap-3">
-                   <div className="w-10 h-10 rounded-xl bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)] border border-[var(--accent)]/20 shadow-[0_0_15px_rgba(var(--accent-rgb),0.2)]">
-                      {activeTab === 'board' ? <LayoutIcon size={18} /> :
-                       activeTab === 'projects' ? <Rocket size={18} /> :
-                       activeTab === 'insights' ? <Activity size={18} /> :
-                       activeTab === 'subsites' ? <Compass size={18} /> :
-                       activeTab === 'domain' ? <Globe size={18} /> : <ArrowUpRight size={18} />}
-                   </div>
-                   <div className="text-left">
-                      <span className="text-[10px] block font-black text-white/20 uppercase tracking-[0.2em] mb-0.5">{t("page.activeView")}</span>
-                      <span className="text-sm font-black uppercase tracking-widest">
-                        {activeTab === 'board' ? t("page.tabEditor") : activeTab === 'projects' ? t("page.tabProjects") : activeTab === 'insights' ? t("page.tabInsights") : activeTab === 'subsites' ? t("page.tabSubsites") : activeTab === 'domain' ? t("page.tabDomain") : t("page.tabTransfer")}
-                      </span>
-                   </div>
-                </div>
-                <ChevronDown size={20} className={`text-white/20 transition-transform duration-300 ${isTabMenuOpen ? 'rotate-180' : ''}`} />
-             </button>
-
-             <AnimatePresence>
-                {isTabMenuOpen && (
-                   <div className="absolute top-full left-4 right-4 mt-2 z-50">
-                      <motion.div 
-                         initial={{ opacity: 0 }} 
-                         animate={{ opacity: 1 }} 
-                         exit={{ opacity: 0 }} 
-                         className="fixed inset-0 bg-black/60 backdrop-blur-sm shadow-2xl" 
-                         onClick={() => setIsTabMenuOpen(false)} 
-                      />
-                      <motion.div
-                         initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                         animate={{ opacity: 1, scale: 1, y: 0 }}
-                         exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                         className="relative bg-[#121214] border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden backdrop-blur-xl p-3"
-                         style={{ borderRadius: "calc(var(--dashboard-radius) + 0.75rem)" }}
-                      >
-                         {availableTabs.map((tab) => (
-                            <button
-                               key={tab}
-                               onClick={() => { setActiveTab(tab); setIsTabMenuOpen(false); }}
-                               className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${activeTab === tab ? 'bg-[var(--accent)]/10 border border-[var(--accent)]/20' : 'hover:bg-white/5 border border-transparent'}`}
-                            >
-                               <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${activeTab === tab ? 'bg-[var(--accent)] text-black' : 'bg-white/5 text-white/30'}`}>
-                                  {tab === 'board' ? <LayoutIcon size={16} /> :
-                                   tab === 'projects' ? <Rocket size={16} /> :
-                                   tab === 'insights' ? <Activity size={16} /> :
-                                   tab === 'subsites' ? <Compass size={16} /> :
-                                   tab === 'domain' ? <Globe size={16} /> : <ArrowUpRight size={16} />}
-                               </div>
-                               <span className={`text-xs font-black uppercase tracking-[0.1em] ${activeTab === tab ? 'text-white' : 'text-white/40'}`}>
-                                  {tab === 'board' ? t("page.tabEditor") : tab === 'projects' ? t("page.tabProjects") : tab === 'insights' ? t("page.tabInsights") : tab === 'subsites' ? t("page.tabSubsites") : tab === 'domain' ? t("page.tabDomain") : t("page.tabTransfer")}
-                               </span>
-                               {activeTab === tab && <Check size={14} className="ml-auto text-[var(--accent)]" />}
-                            </button>
-                         ))}
-                      </motion.div>
-                   </div>
-                )}
-             </AnimatePresence>
-          </div>
-          )}
+              );
+            })}
+          </nav>
 
           <AnimatePresence mode="wait">
+            {activeTab === 'home' && (
+              <motion.div key="home" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} className="px-1">
+                <ProfileStudio
+                  profile={profile}
+                  blocks={selectedSubSiteId ? boardBlocks : profile.blocks.filter((block) => (block.board_index ?? 0) === (profile.publishedBoard ?? 0))}
+                  isSubSite={Boolean(selectedSubSiteId)}
+                  saveState={studioSave}
+                  copied={copied}
+                  onLayout={handleProfileLayout}
+                  onGlobalBox={handleLinkBoxStyle}
+                  onBoxStyle={handleStudioBox}
+                  onToggleVisible={handleStudioVisible}
+                  onReorder={handleStudioReorder}
+                  onBasics={handleStudioBasics}
+                  onAddProject={(title, link) => addBlock("project", { title, link, description: "" }, { silent: true })}
+                  onEdit={(block) => setEditingBlock(block)}
+                  onEditProfile={() => setIsProfileModalOpen(true)}
+                  onShare={() => { setShareCelebrate(false); setIsShareProfileOpen(true); }}
+                  onCopy={handleCopyUrl}
+                  onOpenGrid={() => setActiveTab("board")}
+                  onOpenStats={() => {
+                    if (!isPro && !profile.freeTrial?.canUseLastInsightsView) {
+                      setIsUpgradeModalOpen(true);
+                      return;
+                    }
+                    setActiveTab("insights");
+                  }}
+                  statsLocked={!profile.hasProAccess}
+                  onBackToMain={() => { void changeScope(() => setSelectedSubSiteId(null)); }}
+                  previewPath={selectedSubSiteId ? `/${profile.username}/${profile.subSites.find((site) => site.id === selectedSubSiteId)?.slug || ""}` : `/${profile.username}`}
+                  previewKey={previewKey}
+                />
+              </motion.div>
+            )}
             {activeTab === 'board' && (
               <motion.div key="board" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }}>
                 {/* Board presets switcher (Pro): hasta 3 boards, uno publicado. */}
@@ -2195,7 +2274,18 @@ export default function DashboardPage() {
               </motion.div>
             )}
 
-            {activeTab === 'projects' && (
+            {activeTab === 'more' && (
+              <motion.div key="more" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mx-auto mb-8 max-w-3xl px-2">
+                <p className="text-sm leading-relaxed text-white/60">{t("studio.moreIntro")}</p>
+                {!isPro && (
+                  <button type="button" onClick={() => setIsUpgradeModalOpen(true)} className="mt-4 min-h-11 rounded-xl border border-white/10 px-4 text-sm font-black text-white">
+                    {t("studio.proDomain")}
+                  </button>
+                )}
+              </motion.div>
+            )}
+
+            {(activeTab === 'projects' || activeTab === 'more') && (
               <motion.div key="projects" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} className="max-w-3xl mx-auto px-2">
                 <ProjectTracker
                   blocks={boardBlocks}
@@ -2227,7 +2317,7 @@ export default function DashboardPage() {
               </motion.div>
             )}
 
-            {activeTab === 'domain' && (
+            {(activeTab === 'domain' || (activeTab === 'more' && isPro)) && (
               <motion.div key="domain" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="max-w-5xl mx-auto space-y-8 md:space-y-12 px-4">
                 <DomainConnectionCard
                   domain={domain}
@@ -2245,7 +2335,7 @@ export default function DashboardPage() {
               </motion.div>
             )}
 
-            {activeTab === 'subsites' && (
+            {(activeTab === 'subsites' || (activeTab === 'more' && isPro)) && (
               <motion.div key="subsites" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-4xl mx-auto space-y-8 md:space-y-12 px-4">
                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                    <h3 className="text-2xl font-black text-white text-center sm:text-left">{t("page.yourProjects")}</h3>

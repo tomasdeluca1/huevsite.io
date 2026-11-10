@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { ProfileData, BlockType, PRESET_BORDER_RADIUS } from "@/lib/profile-types";
+import type { ProfileLayoutMode } from "@/lib/profile-layout";
 import { ColorPicker } from "./ColorPicker";
 import { BlockSelector } from "./BlockSelector";
 import { QuestPanel } from "./QuestPanel";
@@ -43,8 +44,9 @@ interface SidebarProps {
   autoSaveEnabled: boolean;
   toggleNewsletter: () => void;
   newsletterSubscribed: boolean;
-  activeTab: 'board' | 'projects' | 'insights' | 'subsites' | 'domain' | 'transfer';
-  setActiveTab: (tab: 'board' | 'projects' | 'insights' | 'subsites' | 'domain' | 'transfer') => void;
+  activeTab: 'home' | 'board' | 'projects' | 'insights' | 'subsites' | 'domain' | 'transfer' | 'more';
+  setActiveTab: (tab: 'home' | 'board' | 'projects' | 'insights' | 'subsites' | 'domain' | 'transfer' | 'more') => void;
+  onProfileLayoutChange: (layout: ProfileLayoutMode) => void;
   onShareUnlocked: (extraBlocks: number) => void;
   onShareProfile: () => void;
   visibleBlockCount?: number;
@@ -79,6 +81,7 @@ export function DashboardSidebar({
   newsletterSubscribed,
   activeTab,
   setActiveTab,
+  onProfileLayoutChange,
   onShareUnlocked,
   onShareProfile,
   visibleBlockCount
@@ -308,6 +311,51 @@ export function DashboardSidebar({
                 </button>
               </div>
             )}
+
+            <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+              <div className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-2.5">{t("sidebar.profileLayoutLabel")}</div>
+              <div className="grid grid-cols-2 gap-1.5">
+                {(["portfolio", "links"] as const).map((mode) => {
+                  const active = (profile.profileLayout || "portfolio") === mode;
+                  return (
+                    <button
+                      key={mode}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => onProfileLayoutChange(mode)}
+                      className={`min-h-11 rounded-xl text-[11px] font-black uppercase tracking-wide ${active ? "bg-[var(--accent)] text-black" : "bg-white/[0.03] text-white/50 border border-white/10"}`}
+                    >
+                      {mode === "portfolio" ? t("sidebar.layoutPortfolio") : t("sidebar.layoutLinks")}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <nav className="grid grid-cols-2 gap-1.5" aria-label={t("page.primaryNav")}>
+              {([
+                ["home", t("page.tabHome")],
+                ["board", t("page.tabEditor")],
+                ["insights", t("page.tabInsights")],
+                ["more", t("page.tabMore")],
+              ] as const).map(([tab, label]) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => {
+                    if (tab === "insights" && !isPro && !profile.freeTrial?.canUseLastInsightsView) {
+                      openModal(setIsUpgradeModalOpen);
+                      return;
+                    }
+                    setIsSidebarOpen(false);
+                    setActiveTab(tab);
+                  }}
+                  className={`min-h-11 rounded-xl px-2 text-[11px] font-black uppercase tracking-wide ${activeTab === tab ? "bg-white text-black" : "bg-white/[0.03] text-white/45"}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </nav>
 
             <BlockSelector
               onAdd={addBlock}

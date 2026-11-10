@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { linkBoxStyleSchema } from "@/lib/profile-layout";
 import { mcpProfileColumnSchema } from "@/lib/profile-schemas";
 import { SOCIAL_PLATFORMS } from "@/lib/social-platforms";
 
@@ -40,6 +41,7 @@ export const projectWriteSchema = z.object({
   imageMode: z.enum(["og", "favicon"]).optional(),
   showStatus: z.boolean().optional(),
   archived: z.boolean().optional(),
+  boxStyle: linkBoxStyleSchema.nullable().optional(),
 });
 
 export const createProjectInputSchema = projectWriteSchema;
@@ -84,4 +86,5 @@ export const PROJECT_DATA_KEYS = [
   "imageMode",
   "showStatus",
   "archived",
+  "boxStyle",
 ] as const;

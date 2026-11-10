@@ -22,7 +22,10 @@ export const FounderBatchEmail: React.FC<FounderBatchEmailProps> = ({
   nextPrice,
   unsubscribeUrl,
 }) => (
-  <EmailLayout previewText={`Quedan ${remaining} lugares Founder a $79. Después pasa a ${nextPrice}.`}>
+  <EmailLayout
+    previewText={`Quedan ${remaining} lugares Founder a $79. Después pasa a ${nextPrice}.`}
+    unsubscribeUrl={unsubscribeUrl}
+  >
     {/* HEADER */}
     <div
       style={{

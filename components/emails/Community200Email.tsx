@@ -21,7 +21,7 @@ export const Community200Email: React.FC<Community200EmailProps> = ({
   testimonialHref,
   unsubscribeUrl,
 }) => (
-  <EmailLayout previewText={`Somos ${memberCount} huevsites. Gracias por estar 🥚`}>
+  <EmailLayout previewText={`Somos ${memberCount} huevsites. Gracias por estar 🥚`} unsubscribeUrl={unsubscribeUrl}>
     {/* HERO */}
     <div
       style={{

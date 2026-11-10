@@ -15,7 +15,10 @@ export const VoteHuevsiteEmail: React.FC<VoteHuevsiteEmailProps> = ({
   launchUrl,
   unsubscribeUrl,
 }) => (
-  <EmailLayout previewText="huevsite está compitiendo en su propio Builders Hunt y la semana cierra el domingo. Tu voto lo define.">
+  <EmailLayout
+    previewText="huevsite está compitiendo en su propio Builders Hunt y la semana cierra el domingo. Tu voto lo define."
+    unsubscribeUrl={unsubscribeUrl}
+  >
     {/* HEADER */}
     <div
       style={{

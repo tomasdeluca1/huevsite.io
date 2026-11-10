@@ -4,7 +4,9 @@ import { Resend } from "resend";
 import { render } from "@react-email/render";
 import React from "react";
 import { ConnectSocialsEmail } from "@/components/emails/ConnectSocialsEmail";
-import { buildUnsubscribeUrl } from "@/lib/email-unsubscribe";
+import { emailFrom, emailReplyTo } from "@/lib/email-from";
+import { marketingUnsubscribe } from "@/lib/email-compliance";
+import { isEmailSuppressed, listSuppressedEmails } from "@/lib/email-suppression";
 import { listAllAuthUsers } from "@/lib/list-auth-users";
 
 export const dynamic = "force-dynamic";
@@ -86,11 +88,18 @@ export async function GET(request: NextRequest) {
       .select("id, username, name, community_digest_unsubscribed")
       .not("username", "is", null);
     const profMap = new Map((profs || []).map((p) => [p.id, p]));
+    const suppressed = await listSuppressedEmails(supabase);
 
     // Elegible = tiene perfil con username, no dado de baja, y SIN redes.
     const isEligible = (u: any) => {
       const p = profMap.get(u.id);
-      return u.email && p && !p.community_digest_unsubscribed && !hasSocials.has(u.id);
+      return (
+        u.email &&
+        p &&
+        !p.community_digest_unsubscribed &&
+        !isEmailSuppressed(suppressed, u.email) &&
+        !hasSocials.has(u.id)
+      );
     };
 
     const htmlTemplate = await render(
@@ -102,7 +111,7 @@ export async function GET(request: NextRequest) {
     );
 
     const subject = "🔗 Te falta conectar tus redes en huevsite";
-    const from = process.env.EMAIL_FROM || "hi@huevsite.studio";
+    const from = emailFrom();
 
     if (preview) {
       const authUsers = await getAuthUsers();
@@ -119,10 +128,11 @@ export async function GET(request: NextRequest) {
     }
 
     if (testEmail) {
+      const mail = marketingUnsubscribe("test");
       const html = htmlTemplate
         .replaceAll(NAME_MARKER, "builder")
-        .replaceAll(UNSUB_MARKER, buildUnsubscribeUrl("test"));
-      await resend.emails.send({ from, to: testEmail, subject, html });
+        .replaceAll(UNSUB_MARKER, mail.unsubscribeUrl);
+      await resend.emails.send({ from, replyTo: emailReplyTo(), to: testEmail, subject, html, headers: mail.headers });
       return NextResponse.json({ success: true, test: true, sentTo: testEmail });
     }
 
@@ -133,11 +143,12 @@ export async function GET(request: NextRequest) {
     for (const u of authUsers) {
       if (!isEligible(u)) continue;
       const p = profMap.get(u.id);
+      const mail = marketingUnsubscribe(u.id);
       const html = htmlTemplate
         .replaceAll(NAME_MARKER, greeting(p?.name, p?.username))
-        .replaceAll(UNSUB_MARKER, buildUnsubscribeUrl(u.id));
+        .replaceAll(UNSUB_MARKER, mail.unsubscribeUrl);
       try {
-        await resend.emails.send({ from, to: u.email, subject, html });
+        await resend.emails.send({ from, replyTo: emailReplyTo(), to: u.email, subject, html, headers: mail.headers });
         emailsSent++;
         await new Promise((r) => setTimeout(r, 100));
       } catch (err: any) {

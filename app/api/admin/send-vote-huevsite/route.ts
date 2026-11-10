@@ -4,7 +4,9 @@ import { Resend } from "resend";
 import { render } from "@react-email/render";
 import React from "react";
 import { VoteHuevsiteEmail } from "@/components/emails/VoteHuevsiteEmail";
-import { buildUnsubscribeUrl } from "@/lib/email-unsubscribe";
+import { emailFrom, emailReplyTo } from "@/lib/email-from";
+import { marketingUnsubscribe } from "@/lib/email-compliance";
+import { isEmailSuppressed, listSuppressedEmails } from "@/lib/email-suppression";
 import { listAllAuthUsers } from "@/lib/list-auth-users";
 
 export const dynamic = "force-dynamic";
@@ -50,7 +52,7 @@ export async function GET(request: NextRequest) {
     );
 
     const subject = "🚀 Lancé huevsite en Builders Hunt. ¿Me das tu voto?";
-    const from = process.env.EMAIL_FROM || "hi@huevsite.studio";
+    const from = emailFrom();
 
     const supabase = createSupabaseClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -61,10 +63,11 @@ export async function GET(request: NextRequest) {
       .select("id, username, community_digest_unsubscribed")
       .not("username", "is", null);
     const profMap = new Map((profs || []).map((p) => [p.id, p]));
+    const suppressed = await listSuppressedEmails(supabase);
 
     const isEligible = (u: { id: string; email?: string | null }) => {
       const p = profMap.get(u.id);
-      return !!u.email && !!p && !p.community_digest_unsubscribed;
+      return !!u.email && !!p && !p.community_digest_unsubscribed && !isEmailSuppressed(suppressed, u.email);
     };
 
     if (preview) {
@@ -81,8 +84,9 @@ export async function GET(request: NextRequest) {
     }
 
     if (testEmail) {
-      const html = htmlTemplate.replaceAll(UNSUB_MARKER, buildUnsubscribeUrl("test"));
-      await resend.emails.send({ from, to: testEmail, subject, html });
+      const mail = marketingUnsubscribe("test");
+      const html = htmlTemplate.replaceAll(UNSUB_MARKER, mail.unsubscribeUrl);
+      await resend.emails.send({ from, replyTo: emailReplyTo(), to: testEmail, subject, html, headers: mail.headers });
       return NextResponse.json({ success: true, test: true, sentTo: testEmail });
     }
 
@@ -92,9 +96,10 @@ export async function GET(request: NextRequest) {
     const errors: string[] = [];
     for (const u of authUsers) {
       if (!isEligible(u)) continue;
-      const html = htmlTemplate.replaceAll(UNSUB_MARKER, buildUnsubscribeUrl(u.id));
+      const mail = marketingUnsubscribe(u.id);
+      const html = htmlTemplate.replaceAll(UNSUB_MARKER, mail.unsubscribeUrl);
       try {
-        await resend.emails.send({ from, to: u.email!, subject, html });
+        await resend.emails.send({ from, replyTo: emailReplyTo(), to: u.email!, subject, html, headers: mail.headers });
         emailsSent++;
         await new Promise((r) => setTimeout(r, 100));
       } catch (err: any) {

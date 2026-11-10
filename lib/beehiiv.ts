@@ -91,9 +91,7 @@ export async function unsubscribeFromBeehiiv(email: string): Promise<SubscribeRe
   const pubId = process.env.BEEHIIV_PUBLICATION_ID;
 
   if (!apiKey || !pubId) {
-    if (process.env.NODE_ENV === "development") {
-      console.warn("[beehiiv] missing env vars — skipping unsubscribe");
-    }
+    console.warn("[beehiiv] missing BEEHIIV_API_KEY or BEEHIIV_PUBLICATION_ID, skipping unsubscribe");
     return { ok: false, error: "missing env" };
   }
 

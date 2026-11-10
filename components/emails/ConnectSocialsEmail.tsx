@@ -16,7 +16,10 @@ export const ConnectSocialsEmail: React.FC<ConnectSocialsEmailProps> = ({
   ctaHref,
   unsubscribeUrl,
 }) => (
-  <EmailLayout previewText="Tu huevsite no tiene tus redes — y es lo que hace que te sigan 🔗">
+  <EmailLayout
+    previewText="Tu huevsite no tiene tus redes — y es lo que hace que te sigan 🔗"
+    unsubscribeUrl={unsubscribeUrl}
+  >
     {/* HERO */}
     <div
       style={{

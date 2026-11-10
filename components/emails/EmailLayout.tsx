@@ -1,16 +1,19 @@
 import * as React from 'react';
 import { SITE_URL } from '@/lib/site-url';
 import { BRAND } from '@/lib/brand';
+import { CommercialEmailFooter } from './CommercialEmailFooter';
 
 interface EmailLayoutProps {
   children: React.ReactNode;
   previewText?: string;
+  /** Marketing, digest and blast mail. Adds identity, postal address and unsubscribe. */
+  unsubscribeUrl?: string;
 }
 
 // Shared shell for every transactional/marketing email. Dark branded card on a
 // black page, lime accent bar, real lowercase wordmark, comfortable body padding
 // and a richer footer. Inline styles + simple divs for email-client safety.
-export const EmailLayout: React.FC<EmailLayoutProps> = ({ children, previewText }) => (
+export const EmailLayout: React.FC<EmailLayoutProps> = ({ children, previewText, unsubscribeUrl }) => (
   <div
     style={{
       backgroundColor: BRAND.color.bg,
@@ -65,6 +68,7 @@ export const EmailLayout: React.FC<EmailLayoutProps> = ({ children, previewText 
         <div style={{ fontSize: '11px', color: '#3f3f46', marginTop: '14px' }}>
           Hecho con 🥚 por el equipo de huevsite
         </div>
+        {unsubscribeUrl ? <CommercialEmailFooter unsubscribeUrl={unsubscribeUrl} /> : null}
       </div>
     </div>
   </div>

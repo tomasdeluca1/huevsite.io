@@ -10,7 +10,10 @@ import {
   fillFounderMail1Html,
   founderMail1PreviewText,
 } from "@/components/emails/FounderMail1Email";
+import { emailFrom, emailReplyTo } from "@/lib/email-from";
+import { marketingUnsubscribe } from "@/lib/email-compliance";
 import { buildUnsubscribeUrl } from "@/lib/email-unsubscribe";
+import { listSuppressedEmails } from "@/lib/email-suppression";
 import {
   buildOwnerMatch,
   founderMail1Name,
@@ -29,22 +32,6 @@ export const maxDuration = 300;
 
 const SENT_KEY = "founder_nov26_mail1_sent";
 const THROTTLE_MS = 100;
-const FROM_DISPLAY_NAME = "Tomás de huevsite";
-const REPLY_TO = "tomidelu@huevsite.com";
-
-// Display name is fixed. The address is FOUNDER_MAIL_FROM_ADDRESS, then EMAIL_FROM,
-// then hi@huevsite.studio (the domain Resend has verified). A value that already
-// includes "Name <addr>" contributes only the address.
-function founderFromHeader(): string {
-  const raw = (
-    process.env.FOUNDER_MAIL_FROM_ADDRESS ||
-    process.env.EMAIL_FROM ||
-    "hi@huevsite.studio"
-  ).trim();
-  const bracketed = raw.match(/<([^<>]+)>/);
-  const address = (bracketed ? bracketed[1] : raw).trim();
-  return `${FROM_DISPLAY_NAME} <${address}>`;
-}
 
 // Constructed on send. `new Resend()` throws when the key is missing, and preview
 // must still render with no key and no send.
@@ -107,7 +94,7 @@ export async function GET(request: NextRequest) {
     }
 
     const subject = FOUNDER_MAIL1_SUBJECT;
-    const from = founderFromHeader();
+    const from = emailFrom();
 
     if (preview) {
       const supabase = createServiceRoleClient();
@@ -128,7 +115,7 @@ export async function GET(request: NextRequest) {
         seats,
         subject,
         from,
-        replyTo: REPLY_TO,
+        replyTo: emailReplyTo(),
         previewText: founderMail1PreviewText(seats.remaining),
         authUsers: audience.authUsers.length,
         eligibleRecipients: audience.eligible.length,
@@ -153,17 +140,18 @@ export async function GET(request: NextRequest) {
         .select("name")
         .eq("email", testEmail)
         .maybeSingle();
+      const mail = marketingUnsubscribe("test");
       const html = fillFounderMail1Html(htmlTemplate, {
         name: (profile?.name || "").trim(),
-        unsubscribeUrl: buildUnsubscribeUrl("test"),
+        unsubscribeUrl: mail.unsubscribeUrl,
       });
       const sent = await resend.emails.send({
         from,
-        replyTo: REPLY_TO,
+        replyTo: emailReplyTo(),
         to: testEmail,
         subject,
         html,
-        headers: listUnsubscribeHeaders(buildUnsubscribeUrl("test")),
+        headers: mail.headers,
       });
       if (sent.error) {
         return NextResponse.json({ error: sent.error.message }, { status: 502 });
@@ -214,19 +202,19 @@ export async function GET(request: NextRequest) {
     let emailsSent = 0;
     const errors: string[] = [];
     for (const recipient of audience.eligible) {
-      const unsubscribeUrl = buildUnsubscribeUrl(recipient.id);
+      const mail = marketingUnsubscribe(recipient.id);
       const html = fillFounderMail1Html(htmlTemplate, {
         name: recipient.name,
-        unsubscribeUrl,
+        unsubscribeUrl: mail.unsubscribeUrl,
       });
       try {
         const sent = await resend.emails.send({
           from,
-          replyTo: REPLY_TO,
+          replyTo: emailReplyTo(),
           to: recipient.email,
           subject,
           html,
-          headers: listUnsubscribeHeaders(unsubscribeUrl),
+          headers: mail.headers,
         });
         if (sent.error) throw new Error(sent.error.message);
         emailsSent++;
@@ -252,13 +240,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function listUnsubscribeHeaders(unsubscribeUrl: string): Record<string, string> {
-  return {
-    "List-Unsubscribe": `<${unsubscribeUrl}>`,
-    "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-  };
-}
-
 async function listProfiles(supabase: ReturnType<typeof createServiceRoleClient>): Promise<FounderMail1Profile[]> {
   const rows: FounderMail1Profile[] = [];
   const pageSize = 1000;
@@ -277,6 +258,7 @@ async function listProfiles(supabase: ReturnType<typeof createServiceRoleClient>
 
 async function loadAudience(supabase: ReturnType<typeof createServiceRoleClient>, startPage: number) {
   const profiles = await listProfiles(supabase);
+  const suppressed = await listSuppressedEmails(supabase);
   const profMap = new Map(profiles.map((profile) => [profile.id, profile]));
   const owner = buildOwnerMatch({
     adminEmails: process.env.ADMIN_EMAILS ?? "",
@@ -288,13 +270,14 @@ async function loadAudience(supabase: ReturnType<typeof createServiceRoleClient>
     no_email: 0,
     owner: 0,
     unsubscribed: 0,
+    suppressed: 0,
     lifetime: 0,
     pro: 0,
   };
   const eligible: { id: string; email: string; name: string }[] = [];
   for (const user of authUsers) {
     const profile = profMap.get(user.id);
-    const reason = founderMail1SkipReason(user, profile, owner);
+    const reason = founderMail1SkipReason(user, profile, owner, suppressed);
     if (reason) {
       excluded[reason] += 1;
       continue;

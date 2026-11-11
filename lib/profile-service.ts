@@ -5,6 +5,7 @@ import { getProfileBadges } from './profile-badges';
 import { getFreeTrialState, hasProAccess } from './pro-access';
 import { getCurrentWeek, getWeekString } from './showcase-service';
 import { createServiceRoleClient } from './supabase/service-role';
+import { sanitizeBlockData } from './safe-url';
 
 // Public-profile rendering uses the service-role client because:
 //   1) The /[username] page must work for anonymous visitors, and after
@@ -358,7 +359,9 @@ export const profileService = {
       newsletterSubscribed: profile.newsletter_subscribed === true,
       subSites: [], // Initially empty, filled by API if needed
       blocks: (blocks || []).map(b => {
-        const { id, type, order, col_span, row_span, visible, ...data } = b.data || {};
+        // Lo guardado antes del filtro de escritura (o por otra vía) no llega al HTML público
+        // con un javascript: adentro.
+        const { id, type, order, col_span, row_span, visible, ...data } = sanitizeBlockData(b.data || {});
         return {
           ...data,
           id: b.id,

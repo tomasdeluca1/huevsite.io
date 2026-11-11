@@ -4,9 +4,8 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-// Remote MCP (Streamable HTTP, stateless). Auth is a personal access token
-// in Authorization: Bearer. OAuth is not implemented: clients that can only
-// do the MCP OAuth dance need a follow-up authorization server.
+// Remote MCP (Streamable HTTP, stateless). Auth goes in Authorization: Bearer and is either a
+// personal access token (hvst_) or an OAuth 2.1 access token (hvsa_) issued by /api/oauth/*.
 async function respond(request: Request) {
   return handleMcpHttp(request);
 }

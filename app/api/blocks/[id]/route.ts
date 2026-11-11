@@ -5,6 +5,7 @@ import { scoreService } from '@/lib/score-service'
 import { checkAndPostWelcomeTweet } from '@/lib/twitter'
 import { hasProAccess } from '@/lib/pro-access'
 import { parseBlockViewFields } from '@/lib/mobile-order'
+import { sanitizeBlockData } from '@/lib/safe-url'
 
 export const dynamic = 'force-dynamic'
 
@@ -142,7 +143,7 @@ export async function PATCH(
 
     // Solo actualizar el JSONB si hay datos para él
     if (Object.keys(jsonData).length > 0) {
-      updateData.data = jsonData
+      updateData.data = sanitizeBlockData(jsonData)
     }
 
     if (Object.keys(updateData).length === 0) {

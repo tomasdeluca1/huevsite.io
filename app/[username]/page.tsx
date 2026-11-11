@@ -22,6 +22,7 @@ import { keywordsFor } from "@/lib/seo";
 import { getLocale } from "@/lib/locale";
 import { Logo } from "@/components/brand/Logo";
 import { LinksProfile } from "@/components/profile/LinksProfile";
+import { safeInternalPath } from "@/lib/safe-url";
 
 interface Props {
   params: { username: string };
@@ -120,7 +121,11 @@ export default async function ProfilePage({ params, searchParams }: Props) {
   const { username } = await params;
   const profile = await profileService.getProfile(username);
   const navigationOrigin = searchParams?.from;
-  const returnTo = searchParams?.return_to || (navigationOrigin === "feed" ? "/feed" : "/dashboard?tab=insights");
+  // return_to viene de la URL: sólo paths internos, nunca javascript: ni otro dominio.
+  const returnTo = safeInternalPath(
+    searchParams?.return_to,
+    navigationOrigin === "feed" ? "/feed" : "/dashboard?tab=insights"
+  );
   // Embed mode (?embed=1): chrome-less profile for iframing on other platforms
   // (e.g. nordelta.tech community cards). Hides nav + footer, keeps header/grid.
   const embed = searchParams?.embed === "1";

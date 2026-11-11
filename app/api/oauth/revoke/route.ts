@@ -1,5 +1,5 @@
 import { revokePresentedToken } from "@/lib/mcp/oauth/flow";
-import { oauthError, oauthJson, readOauthBody } from "@/lib/mcp/oauth/http-helpers";
+import { oauthError, oauthJson, oauthRateLimited, readOauthBody } from "@/lib/mcp/oauth/http-helpers";
 import { createSupabaseOAuthStore } from "@/lib/mcp/oauth/supabase";
 
 export const dynamic = "force-dynamic";
@@ -9,6 +9,8 @@ export function OPTIONS() {
 }
 
 export async function POST(request: Request) {
+  const limited = oauthRateLimited(request, "revoke");
+  if (limited) return limited;
   const params = await readOauthBody(request);
   const token = params.get("token");
   if (!token) return oauthError("invalid_request", "Falta token.");

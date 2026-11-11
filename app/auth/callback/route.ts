@@ -1,11 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
 import { subscribeToBeehiiv } from '@/lib/beehiiv'
 import { NextResponse, type NextRequest } from 'next/server'
+import { safeInternalPath } from '@/lib/safe-url'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/dashboard'
+  // `next` viaja en el link de login: si no es un path interno, `${origin}${next}` con
+  // next="@evil.com" o ".evil.com" redirige afuera con la sesión recién abierta.
+  const next = safeInternalPath(searchParams.get('next'), '/dashboard')
 
   console.log('// Auth Callback Triggered');
   console.log('// Code present:', !!code);

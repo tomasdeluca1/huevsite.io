@@ -18,6 +18,8 @@ import { OAUTH_SCOPE, sameResource } from "@/lib/mcp/oauth/metadata";
 export type StoredClient = ClientMetadata & { clientSecretHash: string | null };
 
 export type StoredCode = {
+  /** Id de la fila. También es la familia de los tokens que salen de este código. */
+  id: string;
   codeHash: string;
   clientId: string;
   userId: string;
@@ -56,6 +58,7 @@ export interface OAuthStore {
   getClient(clientId: string): Promise<StoredClient | null>;
   insertCode(code: StoredCode): Promise<void>;
   consumeCode(codeHash: string, now: Date): Promise<StoredCode | null>;
+  findCode(codeHash: string): Promise<StoredCode | null>;
   insertGrant(grant: StoredGrant): Promise<void>;
   getByAccessHash(hash: string): Promise<StoredGrant | null>;
   getByRefreshHash(hash: string): Promise<StoredGrant | null>;
@@ -112,6 +115,7 @@ export async function issueAuthorizationCode(
   const code = randomToken(CODE_PREFIX);
   await store.saveClient(input.client);
   await store.insertCode({
+    id: crypto.randomUUID(),
     codeHash: sha256(code),
     clientId: input.client.clientId,
     userId: input.userId,
@@ -144,8 +148,16 @@ export async function exchangeAuthorizationCode(
   if (!sameResource(input.resource, input.expectedResource)) {
     return { ok: false, error: "invalid_target", description: "El resource no es el MCP de huevsite." };
   }
-  const row = await store.consumeCode(sha256(input.code), input.now);
-  if (!row || row.clientId !== input.client.clientId || row.redirectUri !== input.redirectUri) {
+  const codeHash = sha256(input.code);
+  const row = await store.consumeCode(codeHash, input.now);
+  if (!row) {
+    // Un código que ya se canjeó y vuelve a aparecer es la señal de que alguien lo interceptó:
+    // se cae todo lo que ese código emitió (OAuth 2.1, sección 4.1.3).
+    const seen = await store.findCode(codeHash);
+    if (seen?.usedAt) await store.revokeFamily(seen.id, input.now);
+    return { ok: false, error: "invalid_grant", description: "El código no sirve." };
+  }
+  if (row.clientId !== input.client.clientId || row.redirectUri !== input.redirectUri) {
     return { ok: false, error: "invalid_grant", description: "El código no sirve." };
   }
   if (!pkceMatches(input.codeVerifier, row.codeChallenge)) {
@@ -156,7 +168,7 @@ export async function exchangeAuthorizationCode(
     client: input.client,
     scope: row.scope,
     resource: row.resource,
-    familyId: null,
+    familyId: row.id,
     now: input.now,
   });
   return { ok: true, token };

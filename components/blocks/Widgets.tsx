@@ -8,6 +8,7 @@ import { SOCIAL_PLATFORMS, SocialPlatformKey, resolveSquareLabel, resolveFollowU
 import { SOCIAL_ICONS, FallbackIcon } from "@/components/icons/SocialIcons";
 import { Download } from "lucide-react";
 import { useBlockPreview } from "@/lib/block-preview-context";
+import { safeHref } from "@/lib/safe-url";
 
 interface MetricProps {
   data: MetricBlockData;
@@ -185,7 +186,7 @@ export function CVBlock({ data, accentColor }: CVProps) {
       )}
       {data.fileUrl ? (
         <a
-          href={data.fileUrl}
+          href={safeHref(data.fileUrl)}
           target="_blank"
           rel="noopener noreferrer"
           className="absolute inset-0"

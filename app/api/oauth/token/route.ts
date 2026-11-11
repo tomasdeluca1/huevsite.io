@@ -1,5 +1,5 @@
 import { exchangeAuthorizationCode, exchangeRefreshToken } from "@/lib/mcp/oauth/flow";
-import { clientSecretFromRequest, oauthError, oauthJson, publicResource, readOauthBody, resolveOauthClient } from "@/lib/mcp/oauth/http-helpers";
+import { clientSecretFromRequest, oauthError, oauthJson, oauthRateLimited, publicResource, readOauthBody, resolveOauthClient } from "@/lib/mcp/oauth/http-helpers";
 import { createSupabaseOAuthStore } from "@/lib/mcp/oauth/supabase";
 
 export const dynamic = "force-dynamic";
@@ -9,6 +9,8 @@ export function OPTIONS() {
 }
 
 export async function POST(request: Request) {
+  const limited = oauthRateLimited(request, "token");
+  if (limited) return limited;
   const params = await readOauthBody(request);
   const auth = clientSecretFromRequest(request, params);
   const clientId = auth.clientId || params.get("client_id");

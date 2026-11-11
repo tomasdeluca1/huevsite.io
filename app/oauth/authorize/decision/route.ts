@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     return NextResponse.redirect(new URL(`/login?next=${encodeURIComponent(next)}`, request.url));
   }
 
-  const client = await resolveOauthClient(params.client_id).catch(() => null);
+  const client = await resolveOauthClient(params.client_id, { fetchFor: user.id }).catch(() => null);
   const redirectOk = !!client && redirectAllowed(params.redirect_uri, client.redirectUris);
   if (!client || !redirectOk) {
     return NextResponse.json({ error: "invalid_request" }, { status: 400 });

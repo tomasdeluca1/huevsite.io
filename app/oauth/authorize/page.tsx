@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Logo } from "@/components/brand/Logo";
 import { OAUTH_SCOPE, endpointsFromRequest, sameResource } from "@/lib/mcp/oauth/metadata";
 import { headers } from "next/headers";
-import { redirectAllowed, redirectHostLabel } from "@/lib/mcp/oauth/redirect";
+import { redirectAllowed, redirectHostLabel, redirectTrust } from "@/lib/mcp/oauth/redirect";
 import { resolveOauthClient } from "@/lib/mcp/oauth/http-helpers";
 
 export const dynamic = "force-dynamic";
@@ -49,7 +49,7 @@ export default async function AuthorizePage({
   const host = headerList.get("x-forwarded-host") || headerList.get("host") || "huevsite.io";
   const proto = headerList.get("x-forwarded-proto") || "https";
   const endpoints = endpointsFromRequest(new Request(`${proto}://${host}/oauth/authorize`));
-  const client = params.client_id ? await resolveOauthClient(params.client_id).catch(() => null) : null;
+  const client = params.client_id ? await resolveOauthClient(params.client_id, { fetchFor: user.id }).catch(() => null) : null;
   const redirectOk = !!client && redirectAllowed(params.redirect_uri, client.redirectUris);
   const resourceOk = !!params.resource && sameResource(params.resource, endpoints.resource);
   if (!client || !redirectOk || !resourceOk || params.response_type !== "code" || params.code_challenge_method !== "S256" || params.code_challenge.length < 43) {
@@ -62,6 +62,7 @@ export default async function AuthorizePage({
   }
 
   const backTo = redirectHostLabel(params.redirect_uri);
+  const trust = redirectTrust(params.redirect_uri);
   return (
     <main className="min-h-screen bg-[var(--bg)] px-4 py-16 text-white">
       <div className="mx-auto max-w-md rounded-[2rem] border border-white/10 bg-[#0A0A0A] p-8">
@@ -73,9 +74,28 @@ export default async function AuthorizePage({
         <p className="mt-4 text-sm leading-relaxed text-white/65">
           Va a poder leer y actualizar tu perfil, tus proyectos y tus lanzamientos. No manda mails ni publica en redes.
         </p>
-        <p className="mt-3 text-sm text-white/45">
-          Si permitís, te devolvemos a <span className="font-mono text-white/70">{backTo}</span>.
-        </p>
+        <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+          <p className="font-mono text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
+            El acceso se entrega en
+          </p>
+          <p className="mt-2 break-all font-mono text-lg font-black text-white">{backTo}</p>
+          {trust === "local" && (
+            <p className="mt-2 text-xs leading-relaxed text-white/50">
+              Es una app que corre en tu computadora.
+            </p>
+          )}
+        </div>
+        {trust === "unknown" && (
+          <div role="alert" className="mt-3 rounded-2xl border border-amber-400/40 bg-amber-400/10 p-4">
+            <p className="font-mono text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">
+              Destino sin verificar
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-amber-100/90">
+              El nombre de la app lo escribe quien la registró y huevsite no lo comprueba. Permití
+              sólo si vos arrancaste esta conexión y reconocés {backTo}. Ante la duda, cancelá.
+            </p>
+          </div>
+        )}
         <form method="POST" action="/oauth/authorize/decision" className="mt-8 flex gap-3">
           {Object.entries(params).map(([key, value]) => (
             <input key={key} type="hidden" name={key} value={value} />

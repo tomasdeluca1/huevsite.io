@@ -72,9 +72,31 @@ export function clientSecretFromRequest(request: Request, params: URLSearchParam
   };
 }
 
-export async function resolveOauthClient(clientId: string): Promise<StoredClient | null> {
+const tokenLimiter = rateLimit({ interval: 60 * 1000, uniqueTokenPerInterval: 5000 });
+const metadataLimiter = rateLimit({ interval: 10 * 60 * 1000, uniqueTokenPerInterval: 5000 });
+
+/** Tope por IP para los endpoints sin sesión (token y revoke). */
+export function oauthRateLimited(request: Request, bucket: "token" | "revoke"): Response | null {
+  const result = tokenLimiter.check(bucket === "token" ? 60 : 30, `${bucket}:${clientIp(request)}`);
+  if (result.success) return null;
+  return oauthJson(
+    { error: "slow_down", error_description: "Demasiados pedidos. Probá de nuevo en un minuto." },
+    429,
+    { "Retry-After": String(Math.max(1, Math.ceil((result.reset - Date.now()) / 1000))) }
+  );
+}
+
+/**
+ * `fetchFor` es quien dispara la búsqueda del documento de metadata de un client_id con forma
+ * de URL. Sin `fetchFor` sólo se usa lo guardado: el endpoint de token no tiene sesión, y un
+ * pedido anónimo no puede hacer que el server salga a buscar una URL elegida por quien llama.
+ * El cliente CIMD ya quedó guardado cuando el usuario dio el permiso.
+ */
+export async function resolveOauthClient(clientId: string, options: { fetchFor?: string } = {}): Promise<StoredClient | null> {
   const store = createSupabaseOAuthStore();
   if (isMetadataClientId(clientId)) {
+    if (!options.fetchFor) return store.getClient(clientId);
+    if (!metadataLimiter.check(30, `cimd:${options.fetchFor}`).success) return null;
     const fetched = await fetchClientMetadata(clientId);
     if (!fetched.ok) return null;
     return { ...fetched.client, clientSecretHash: null };
@@ -92,13 +114,14 @@ export async function registrationAllowed(request: Request): Promise<boolean> {
       .select("client_id", { count: "exact", head: true })
       .gte("created_at", since);
     if (error) {
+      // Sin poder contar, no se registra: el tope global es lo que frena un registro masivo.
       console.error("[oauth] register cap", error.message);
-      return true;
+      return false;
     }
     return (count || 0) < DCR_GLOBAL_PER_HOUR;
   } catch (error) {
     console.error("[oauth] register cap", error instanceof Error ? error.message : "error");
-    return true;
+    return false;
   }
 }
 

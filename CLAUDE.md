@@ -43,6 +43,8 @@ Same architecture as profile pages but fetches via `profileService.getSubSitePro
 
 **Score system**: `lib/score-service.ts` — builder score is recomputed after profile/block changes. Score affects showcase visibility (requires `builder_score >= 300` to appear in random showcase).
 
+**URLs que escribe el usuario** (`lib/safe-url.ts`): React 18 no bloquea `javascript:` en `href`, y cualquier script en el origen puede crear un token del MCP con la sesión del usuario. Por eso: todo link que salga de datos de un bloque pasa por `safeHref()` (o `withHuevsiteUtm` / `safeHttpUrl`), todo redirect o "volver a" que venga de la URL pasa por `safeInternalPath()`, y el JSON de un bloque pasa por `sanitizeBlockData()` al guardar y al leer para el perfil público. `scripts/verify-safe-url.ts` lo cubre.
+
 **OG Images**: `app/api/og/[username]/route.tsx` generates dynamic OG images per user.
 
 ### API Routes of Note

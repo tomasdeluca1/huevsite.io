@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dns from 'dns/promises';
+import { createClient } from '@/lib/supabase/server';
+import { rateLimit, getIdentifier } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -7,6 +9,11 @@ const VERCEL_TOKEN = process.env.VERCEL_TOKEN;
 const PROJECT_ID = process.env.VERCEL_PROJECT_ID;
 const TEAM_ID = process.env.VERCEL_TEAM_ID;
 const ACCEPTED_VERCEL_A_RECORDS = ['216.150.1.1', '76.76.21.21'];
+
+// Sólo un hostname público entra a la URL de la API de Vercel (que va con el token del
+// proyecto) y a las consultas DNS. Sin esto, "x?teamId=..." o "../otra-ruta" llegaban tal cual.
+const HOSTNAME = /^(?=.{4,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/;
+const limiter = rateLimit({ interval: 10 * 60_000, uniqueTokenPerInterval: 1000 });
 
 function isVercelCname(record: string) {
     return (
@@ -18,13 +25,25 @@ function isVercelCname(record: string) {
 
 export async function POST(req: NextRequest) {
     try {
-        const { domain } = await req.json();
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            return NextResponse.json({ isValid: false, error: 'No autorizado', message: 'No autorizado' }, { status: 401 });
+        }
+        if (!limiter.check(30, getIdentifier(req, user.id)).success) {
+            return NextResponse.json({ isValid: false, error: 'Demasiados intentos. Probá en unos minutos.', message: 'Demasiados intentos. Probá en unos minutos.' }, { status: 429 });
+        }
 
-        if (!domain) {
+        const { domain } = await req.json().catch(() => ({ domain: null }));
+
+        if (!domain || typeof domain !== 'string') {
             return NextResponse.json({ error: 'Dominio requerido' }, { status: 400 });
         }
 
-        const cleanDomain = domain.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").split('/')[0];
+        const cleanDomain = domain.trim().toLowerCase().replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").split('/')[0];
+        if (!HOSTNAME.test(cleanDomain)) {
+            return NextResponse.json({ isValid: false, error: 'Dominio inválido', message: 'Dominio inválido' }, { status: 400 });
+        }
 
         // 1. Verificar primero con Vercel API (más preciso)
         if (VERCEL_TOKEN && PROJECT_ID) {

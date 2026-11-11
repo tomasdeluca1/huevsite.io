@@ -16,6 +16,7 @@ function mapClient(row: Record<string, any>): StoredClient {
 
 function mapCode(row: Record<string, any>): StoredCode {
   return {
+    id: row.id,
     codeHash: row.code_hash,
     clientId: row.client_id,
     userId: row.user_id,
@@ -68,6 +69,7 @@ export function createSupabaseOAuthStore(): OAuthStore {
     },
     async insertCode(code) {
       const { error } = await db.from("oauth_authorization_codes").insert({
+        id: code.id,
         code_hash: code.codeHash,
         client_id: code.clientId,
         user_id: code.userId,
@@ -88,6 +90,11 @@ export function createSupabaseOAuthStore(): OAuthStore {
         .gt("expires_at", now.toISOString())
         .select("*")
         .maybeSingle();
+      if (error) throw new Error(error.message);
+      return data ? mapCode(data) : null;
+    },
+    async findCode(codeHash) {
+      const { data, error } = await db.from("oauth_authorization_codes").select("*").eq("code_hash", codeHash).maybeSingle();
       if (error) throw new Error(error.message);
       return data ? mapCode(data) : null;
     },

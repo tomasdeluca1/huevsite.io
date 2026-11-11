@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
+import { safeHref } from "@/lib/safe-url";
 import {
   MediaBlockData,
   CertificationBlockData,
@@ -170,7 +171,7 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
 
                   {hasExternalLink && (
                     <a
-                      href={externalLink}
+                      href={safeHref(externalLink)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="absolute top-6 right-6 p-4 rounded-2xl bg-black/60 backdrop-blur-md border border-white/20 text-white hover:bg-white hover:text-black transition-all flex items-center gap-2 font-bold text-sm shadow-xl"
@@ -192,7 +193,7 @@ export function MediaBlock({ data, accentColor }: { data: MediaBlockData; accent
                     </button>
                     {hasExternalLink && (
                       <a
-                        href={externalLink}
+                        href={safeHref(externalLink)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="w-full sm:w-auto px-10 py-4 rounded-2xl font-bold text-sm transition-all shadow-lg active:scale-95"
@@ -236,7 +237,7 @@ export function CertificationBlock({ data, accentColor }: { data: CertificationB
           </div>
           {data.link && (
             <a
-              href={data.link}
+              href={safeHref(data.link)}
               target="_blank"
               rel="noopener noreferrer"
               className="opacity-50 hover:opacity-100 transition-opacity"
@@ -311,7 +312,7 @@ export function CustomBlock({ data, accentColor }: { data: CustomBlockData; acce
       {data.link && (
         <div className="mt-6 pt-4 border-t border-[var(--border)] relative z-10">
           <a
-            href={data.link}
+            href={safeHref(data.link)}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-sm font-semibold transition-opacity hover:opacity-80"

@@ -7,6 +7,7 @@ import { checkAndPostWelcomeTweet } from '@/lib/twitter'
 import { hasProAccess } from '@/lib/pro-access'
 import { rateLimit, getIdentifier } from '@/lib/rate-limit'
 import { fetchGitHubStats, statsAreMeaningful } from '@/lib/github-service'
+import { sanitizeBlockData } from '@/lib/safe-url'
 
 const blockCreateSchema = z.object({
   type: z.string().min(1),
@@ -171,7 +172,7 @@ export async function POST(request: NextRequest) {
       order: body.order !== undefined ? body.order : newOrder,
       col_span: body.colSpan || 1,
       row_span: body.rowSpan || 1,
-      data: body.data,
+      data: sanitizeBlockData(body.data),
       visible: body.visible !== undefined ? body.visible : true,
       sub_site_id: body.sub_site_id || null,
       board_index: boardIndex,

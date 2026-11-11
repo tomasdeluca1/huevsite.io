@@ -69,3 +69,26 @@ export function redirectHostLabel(uri: string): string {
     return "la app";
   }
 }
+
+// Destinos de los clientes MCP que conocemos. El registro es abierto, así que cualquiera puede
+// anotarse como "Claude": lo único que no se puede falsificar es a dónde vuelve el código.
+const KNOWN_REDIRECT_HOSTS = new Set([
+  "claude.ai",
+  "claude.com",
+  "chatgpt.com",
+  "vscode.dev",
+  "insiders.vscode.dev",
+]);
+
+export type RedirectTrust = "known" | "local" | "unknown";
+
+export function redirectTrust(uri: string): RedirectTrust {
+  try {
+    const url = new URL(uri);
+    if (url.protocol === "https:" && !url.port && KNOWN_REDIRECT_HOSTS.has(url.hostname.toLowerCase())) return "known";
+    if (url.protocol === "http:" && isLoopback(url.hostname)) return "local";
+    return "unknown";
+  } catch {
+    return "unknown";
+  }
+}

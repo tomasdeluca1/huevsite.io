@@ -8,6 +8,10 @@ import { createSupabaseOAuthStore } from "@/lib/mcp/oauth/supabase";
 
 export const dynamic = "force-dynamic";
 
+// Esta ruta responde a un POST. Con el 307 por defecto el navegador repite el POST
+// contra el callback del cliente, que sólo acepta GET. El 303 lo convierte en GET.
+const SEE_OTHER = 303;
+
 function isBrowserSameOrigin(request: Request): boolean {
   const expected = new URL(request.url).origin;
   const origin = request.headers.get("origin");
@@ -30,7 +34,7 @@ function bounce(redirectUri: string, params: Record<string, string | undefined>)
   for (const [key, value] of Object.entries(params)) {
     if (value) target.searchParams.set(key, value);
   }
-  return NextResponse.redirect(target);
+  return NextResponse.redirect(target, SEE_OTHER);
 }
 
 export async function POST(request: Request) {
@@ -57,7 +61,7 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     const next = `/oauth/authorize?${new URLSearchParams(params).toString()}`;
-    return NextResponse.redirect(new URL(`/login?next=${encodeURIComponent(next)}`, request.url));
+    return NextResponse.redirect(new URL(`/login?next=${encodeURIComponent(next)}`, request.url), SEE_OTHER);
   }
 
   const client = await resolveOauthClient(params.client_id, { fetchFor: user.id }).catch(() => null);

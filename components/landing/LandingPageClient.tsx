@@ -12,7 +12,7 @@ import { LatamFlags } from "@/components/landing/LatamFlags";
 import { supabase } from "@/lib/supabase";
 import { PricingTiers } from "@/components/landing/PricingTiers";
 import { User } from "@supabase/supabase-js";
-import { Activity, Bot, Compass, Users, PlusCircle, Layout, Check, BookOpen, Globe, BarChart3, Loader2, ArrowRight, Sparkles, Zap, LayoutGrid, Eye, ChevronDown, ChevronUp, X, Trophy, TrendingUp, HeartHandshake, Rocket, ArrowBigUp, CalendarDays, ThumbsUp } from "lucide-react";
+import { Activity, Bot, Compass, PlusCircle, Layout, Check, BookOpen, Globe, BarChart3, Loader2, ArrowRight, Sparkles, Zap, LayoutGrid, Eye, ChevronDown, ChevronUp, X, Trophy, TrendingUp, HeartHandshake, Rocket, ArrowBigUp, CalendarDays, ThumbsUp } from "lucide-react";
 import type { LandingTestimonial } from "@/lib/testimonial-service";
 import type { Faq } from "@/lib/faq-service";
 import type { NetworkPulse } from "@/lib/showcase-service";
@@ -743,80 +743,6 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
       })()}
 
       <WinnerSection initialData={showcaseData} user={user} />
-
-      {/* COMMUNITIES — real communities that run on huevsite via the public API +
-          embed mode (?embed=1). Live: nordelta.tech. Coming soon: mardeldev, nexa.
-          The CTA points to the integration tutorial (/blog/api-publica-de-perfiles). */}
-      <section style={{ padding: 'var(--section-y) var(--section-x)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-          <div className="section-label" style={{ justifyContent: 'center' }}>{t("communitiesSectionLabel")}</div>
-          <h2 className="section-title text-center">{t("communitiesTitle")}</h2>
-          <p className="section-sub mx-auto text-center" style={{ marginBottom: '40px' }}>{t("communitiesSub")}</p>
-
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              { name: "nordelta.tech", desc: t("communitiesNordeltaDesc"), url: "https://nordelta.tech", live: true },
-              { name: "mardeldev", desc: t("communitiesMardeldevDesc"), url: null, live: false },
-              { name: "nexa", desc: t("communitiesNexaDesc"), url: null, live: false },
-            ].map((c) => {
-              const inner = (
-                <>
-                  <div className="flex items-center justify-between gap-3 mb-4">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--accent)]/10 text-[var(--accent)]">
-                      <Users size={20} />
-                    </div>
-                    <span className={`text-[9px] font-mono uppercase tracking-[0.18em] px-2.5 py-1 rounded-full border ${c.live ? "border-[var(--accent)]/30 text-[var(--accent)] bg-[var(--accent)]/5" : "border-white/10 text-white/35"}`}>
-                      {c.live ? (
-                        <span className="inline-flex items-center gap-1.5">
-                          <span className="relative flex h-1.5 w-1.5">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent)] opacity-75" />
-                            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-                          </span>
-                          {t("communitiesBadgeLive")}
-                        </span>
-                      ) : t("communitiesBadgeSoon")}
-                    </span>
-                  </div>
-                  <div className="text-base font-black tracking-tight text-white">{c.name}</div>
-                  <p className="mt-1.5 text-sm leading-6 text-[var(--text-dim)]">{c.desc}</p>
-                  {c.live && (
-                    <div className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-[0.18em] text-white/35 transition-colors group-hover:text-[var(--accent)]">
-                      {t("communitiesVisit")} <ArrowRight size={13} />
-                    </div>
-                  )}
-                </>
-              );
-              const base = "group rounded-[1.6rem] border border-white/8 bg-white/[0.025] p-5 text-left transition-all";
-              return c.url ? (
-                <a
-                  key={c.name}
-                  href={c.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={() => trackLandingEvent("landing_community_click", { community: c.name })}
-                  className={`${base} hover:-translate-y-0.5 hover:border-[var(--accent)]/30 hover:bg-white/[0.04]`}
-                >
-                  {inner}
-                </a>
-              ) : (
-                <div key={c.name} className={`${base} opacity-60`}>
-                  {inner}
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="text-center mt-8">
-            <Link
-              href="/blog/api-publica-de-perfiles"
-              onClick={() => trackLandingEvent("landing_community_connect_click", {})}
-              className="inline-flex items-center gap-1.5 text-xs font-mono text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
-            >
-              {t("communitiesCta")} <ArrowRight size={13} />
-            </Link>
-          </div>
-        </div>
-      </section>
 
       {/* TESTIMONIALS — social proof before the ask (Marc Lou #29). Hidden when empty. */}
       {testimonials.length > 0 && (

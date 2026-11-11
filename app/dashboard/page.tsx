@@ -823,6 +823,14 @@ export default function DashboardPage() {
   };
 
   const addBlock = async (type: BlockType, prefill?: Record<string, any>, opts?: { silent?: boolean }) => {
+    // Un solo hero por board: si ya hay uno, se abre ese en vez de duplicar la bio.
+    if (type === "hero") {
+      const existingHero = boardBlocks.find((b) => b.type === "hero" && b.visible);
+      if (existingHero) {
+        setEditingBlock(existingHero);
+        return;
+      }
+    }
     const newId = `temp-${type}-${Date.now()}`;
     const colSpan = type === "hero" || type === "ecosystem" ? 2 : (type === "github" || type === "project" ? 1 : 1);
     const rowSpan = type === "hero" || type === "ecosystem" ? 2 : (type === "github" || type === "project" ? 2 : 1);

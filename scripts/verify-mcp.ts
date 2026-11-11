@@ -10,7 +10,8 @@ import { handleMcpHttp, readRpcView } from "../lib/mcp/http";
 import { endpointsForIssuer, wwwAuthenticate } from "../lib/mcp/oauth/metadata";
 import { countUsableMcpTokens, isMcpTokenExpired, mcpTokenExpiresAt, parseMcpTokenTtl } from "../lib/mcp/token-expiry";
 import { createProjectInputSchema, updateProfileInputSchema, updateProjectInputSchema } from "../lib/mcp/schemas";
-import { announceLaunch, createProject, deleteProject, getMyProfile, listMyProjects, postUpdate, syncFromGithub, updateProfile, updateProject, MCP_TOOL_NAMES, MCP_TOOLS } from "../lib/mcp/tools";
+import { gridHoles, planTidy } from "../lib/mcp/layout";
+import { arrangeBlocks, announceLaunch, createProject, deleteProject, getMyProfile, listMyProjects, postUpdate, syncFromGithub, updateProfile, updateProject, MCP_TOOL_NAMES, MCP_TOOLS } from "../lib/mcp/tools";
 import { aiCatalog, MCP_CARD_DESCRIPTION, MCP_CARD_NAME, MCP_CARD_VERSION, mcpServerCard } from "../lib/mcp/discovery";
 import { PUBLISH_PROMPT, STARTER_PROMPT } from "../lib/mcp/guide";
 import { claudeConfig, cursorConfig, tokenConfig, vscodeConfig } from "../lib/mcp/install-links";
@@ -118,6 +119,12 @@ function memory(initial?: { profile?: McpProfile; blocks?: McpBlock[]; launches?
       const found = state.blocks.find((item) => item.id === blockId && item.user_id === userId && item.sub_site_id == null);
       if (!found) return null;
       found.data = data;
+      return found;
+    },
+    async updateBlockLayout(userId, blockId, patch) {
+      const found = state.blocks.find((item) => item.id === blockId && item.user_id === userId && item.sub_site_id == null);
+      if (!found) return null;
+      Object.assign(found, patch);
       return found;
     },
     async deleteProject(userId, blockId) {
@@ -303,6 +310,115 @@ async function run() {
   const synced = await syncFromGithub(memory(), USER, { force: true });
   ok("sync_from_github devuelve los bloques tocados", synced.ok && (synced.data.updated as { id: string }[])[0]?.id === "gh-1");
 
+  {
+  // arrange_blocks: el perfil que quedó con dos bios (dos hero visibles, un link vacío).
+  const id = (n: number) => `30000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+  const messy = () => [
+    block({ id: id(1), type: "hero", order: 0, col_span: 4, row_span: 3, data: { name: "Rafa", tagline: "t", description: "bio", roles: ["founder"], avatarUrl: "https://x/a.webp", status: "s", location: "BA" } }),
+    block({ id: id(2), type: "project", order: 1, col_span: 4, row_span: 4, data: { title: "Rumbo", link: "https://rumbo.ar" } }),
+    block({ id: id(3), type: "project", order: 2, visible: false, data: { title: "Nombre del proyecto" } }),
+    block({ id: id(4), type: "github", order: 3, col_span: 1, row_span: 3, data: { username: "rafa" } }),
+    block({ id: id(5), type: "social", order: 4, col_span: 2, row_span: 2, data: { links: [{ platform: "x", url: "https://x.com/r" }, { platform: "youtube", url: "" }] } }),
+    block({ id: id(6), type: "building", order: 5, col_span: 2, row_span: 3, data: { project: "Rumbo" } }),
+    block({ id: id(7), type: "hero", order: 6, col_span: 2, row_span: 2, data: { name: "Rafa", tagline: "t", description: "bio", avatarUrl: "https://x/a.webp" } }),
+    block({ id: id(8), type: "achievement", order: 7, col_span: 2, row_span: 1, data: { title: "RIA" } }),
+    block({ id: id(9), type: "writing", order: 8, col_span: 1, row_span: 1, data: { posts: [] } }),
+  ];
+  const proProfile = profile({ subscription_tier: "pro", pro_since: new Date().toISOString() });
+  const messyProfile = await getMyProfile(memory({ profile: proProfile, blocks: messy() }), USER);
+  const issues = messyProfile.ok ? ((messyProfile.data.grid as { issues: { code: string }[] }).issues.map((issue) => issue.code)) : [];
+  ok("get_my_profile marca el hero duplicado", issues.includes("duplicate_hero"), JSON.stringify(issues));
+  ok("get_my_profile marca links vacíos y huecos", issues.includes("empty_links") && issues.includes("grid_holes"), JSON.stringify(issues));
+
+  const tidyStore = memory({ profile: proProfile, blocks: messy() });
+  const tidied = await arrangeBlocks(tidyStore, USER, { tidy: true });
+  const after = await tidyStore.listMainBlocks(USER);
+  const visibleAfter = after.filter((item) => item.visible).sort((a, b) => a.order - b.order);
+  ok("tidy deja un solo hero visible", visibleAfter.filter((item) => item.type === "hero").length === 1, JSON.stringify(tidied));
+  ok("tidy se queda con el hero más completo", after.find((item) => item.id === id(1))?.visible === true && after.find((item) => item.id === id(7))?.visible === false);
+  ok("tidy pone el hero primero", visibleAfter[0]?.type === "hero");
+  ok("tidy no deja huecos en la grilla", gridHoles(visibleAfter) === 0, JSON.stringify(visibleAfter.map((item) => [item.type, item.col_span, item.row_span])));
+  ok("tidy usa anchos de 1, 2 o 4", visibleAfter.every((item) => [1, 2, 4].includes(item.col_span)));
+  ok("tidy saca el link vacío", ((after.find((item) => item.id === id(5))?.data.links as unknown[]) || []).length === 1);
+  ok("tidy no borra nada", after.length === messy().length);
+  const tidiedIssues = tidied.ok ? (tidied.data.grid as { issues: { code: string }[] }).issues.map((issue) => issue.code) : ["fail"];
+  ok("después de tidy no quedan problemas de grilla", !tidiedIssues.includes("duplicate_hero") && !tidiedIssues.includes("grid_holes"), JSON.stringify(tidiedIssues));
+  const again = await arrangeBlocks(tidyStore, USER, { tidy: true });
+  ok("tidy es idempotente", again.ok && (again.data.changed as unknown[]).length === 0, JSON.stringify(again.ok && again.data.changed));
+
+  const keepStore = memory({ profile: proProfile, blocks: messy() });
+  await arrangeBlocks(keepStore, USER, { tidy: true, keep_sizes: true });
+  const kept = (await keepStore.listMainBlocks(USER)).filter((item) => item.visible).sort((a, b) => a.order - b.order);
+  ok("keep_sizes respeta el ancho elegido y no deja huecos", kept.find((item) => item.id === id(2))?.col_span === 4 && gridHoles(kept) === 0);
+
+  // Varios tamaños al azar: tidy nunca deja huecos.
+  const types = ["project", "github", "metric", "stack", "writing", "achievement", "media", "certification", "custom"];
+  let seed = 7;
+  const rand = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648);
+  let everyLayoutClean = true;
+  for (let round = 0; round < 200; round++) {
+    const blocks = [block({ id: id(100), type: "hero", order: 0 })];
+    const count = 1 + Math.floor(rand() * 14);
+    for (let i = 0; i < count; i++) {
+      blocks.push(block({ id: id(101 + i), type: types[Math.floor(rand() * types.length)], order: i + 1, col_span: 1 + Math.floor(rand() * 4), row_span: 1 + Math.floor(rand() * 3) }));
+    }
+    for (const keepSizes of [false, true]) {
+      const plan = planTidy(blocks, { keepSizes });
+      const laid = blocks.map((item) => ({ ...item, ...(plan.layout.get(item.id) || {}) })).filter((item) => item.visible).sort((a, b) => a.order - b.order);
+      if (gridHoles(laid) !== 0 || gridHoles(laid, 2) !== 0) everyLayoutClean = false;
+    }
+  }
+  ok("tidy no deja huecos con 200 perfiles al azar (4 y 2 columnas)", everyLayoutClean);
+
+  const manualStore = memory({ profile: proProfile, blocks: messy() });
+  const twoHeroes = await arrangeBlocks(manualStore, USER, { blocks: [{ id: id(1), visible: true }] });
+  ok("arrange_blocks no deja dos hero visibles", !twoHeroes.ok && twoHeroes.error === "duplicate_hero");
+  const resized = await arrangeBlocks(manualStore, USER, { blocks: [{ id: id(7), visible: false }, { id: id(2), col_span: 2, row_span: 2 }] });
+  const resizedBlock = (await manualStore.listMainBlocks(USER)).find((item) => item.id === id(2));
+  ok("arrange_blocks redimensiona a mano", resized.ok && resizedBlock?.col_span === 2 && resizedBlock?.row_span === 2);
+  const foreign = await arrangeBlocks(manualStore, USER, { blocks: [{ id: id(999), visible: false }] });
+  ok("arrange_blocks no toca bloques ajenos", !foreign.ok && foreign.error === "not_found");
+  const nothing = await arrangeBlocks(manualStore, USER, {});
+  ok("arrange_blocks sin tidy ni blocks no hace nada", !nothing.ok && nothing.error === "invalid");
+
+  const freeFull = memory({
+    blocks: [
+      block({ id: id(50), type: "hero", order: 0 }),
+      ...[1, 2, 3, 4].map((n) => block({ id: id(50 + n), type: "project", order: n })),
+      block({ id: id(60), type: "metric", order: 9, visible: false }),
+    ],
+  });
+  const overLimit = await arrangeBlocks(freeFull, USER, { blocks: [{ id: id(60), visible: true }] });
+  ok("arrange_blocks respeta el cupo al mostrar un bloque", !overLimit.ok && overLimit.error === "limit");
+
+  const dryStore = memory({ profile: proProfile, blocks: messy() });
+  const dryTool = MCP_TOOLS.find((tool) => tool.name === "arrange_blocks")!;
+  const dry = await dryTool.handler(dryStore, USER, { tidy: true, dry_run: true });
+  const untouched = (await dryStore.listMainBlocks(USER)).filter((item) => item.type === "hero" && item.visible).length;
+  ok("arrange_blocks con dry_run no guarda", dry.ok && dry.data.dry_run === true && untouched === 2);
+  const dryPreview = dry.ok ? (dry.data.preview as { grid: { blocks: { type: string; visible: boolean }[] } }).grid.blocks : [];
+  ok("el dry_run de arrange_blocks muestra un solo hero", dryPreview.filter((item) => item.type === "hero" && item.visible).length === 1);
+
+  // Encuadre de la foto.
+  const focusStore = memory({ blocks: [block({ id: id(70), type: "hero", data: { avatarUrl: "https://x/a.webp" } })] });
+  const focused = await updateProfile(focusStore, USER, { image_focus: { x: 30, y: 20, zoom: 1.5 } });
+  const heroFocus = (await focusStore.listMainBlocks(USER))[0].data.avatarFocus as { x: number; zoom: number } | undefined;
+  ok("update_profile guarda el encuadre en el hero", focused.ok && heroFocus?.x === 30 && heroFocus?.zoom === 1.5);
+  const badFocus = await updateProfile(focusStore, USER, { image_focus: { x: 30, y: 20, zoom: 9 } });
+  ok("update_profile rechaza un zoom fuera de rango", !badFocus.ok && badFocus.error === "invalid");
+
+  // Si hay un hero oculto antes que el visible, la bio se edita en el visible.
+  const hiddenFirst = memory({
+    blocks: [
+      block({ id: id(80), type: "hero", order: 0, visible: false, data: { description: "vieja" } }),
+      block({ id: id(81), type: "hero", order: 1, data: { description: "actual" } }),
+    ],
+  });
+  await updateProfile(hiddenFirst, USER, { bio: "nueva" });
+  const heroes = await hiddenFirst.listMainBlocks(USER);
+  ok("update_profile edita el hero visible", heroes.find((item) => item.id === id(81))?.data.description === "nueva" && heroes.find((item) => item.id === id(80))?.data.description === "vieja");
+  }
+
   const serverStore = memory({
     blocks: [block({ id: "10000000-0000-4000-8000-000000000001", type: "hero", data: { description: "hola" } })],
   });
@@ -326,7 +442,7 @@ async function run() {
   }), { userId: USER, store: serverStore, audit: async () => {} });
   const toolsBody = await listedTools.json();
   const names = (toolsBody?.result?.tools || []).map((tool: { name: string }) => tool.name).sort();
-  ok("el servidor publica las 9 tools", JSON.stringify(names) === JSON.stringify([...MCP_TOOL_NAMES].sort()), JSON.stringify(names));
+  ok("el servidor publica las 10 tools", JSON.stringify(names) === JSON.stringify([...MCP_TOOL_NAMES].sort()), JSON.stringify(names));
 
   let audited = "";
   const called = await dispatchMcp(new Request("https://huevsite.io/api/mcp", {

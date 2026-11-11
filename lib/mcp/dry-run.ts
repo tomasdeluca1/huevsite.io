@@ -1,4 +1,4 @@
-import type { McpBlock, McpProfile, McpStore, ToolOutcome } from "@/lib/mcp/types";
+import type { McpBlock, McpLayoutPatch, McpProfile, McpStore, ToolOutcome } from "@/lib/mcp/types";
 
 // dry_run: el tool corre su lógica de siempre (validación, cupo, dueño) contra
 // un store que lee la base real y guarda las escrituras en memoria. El agente
@@ -11,6 +11,7 @@ export type DryRunStore = McpStore & { writes: DryRunWrite[] };
 export function dryRunStore(real: McpStore): DryRunStore {
   let profilePatch: Record<string, unknown> = {};
   const blockData = new Map<string, Record<string, unknown>>();
+  const blockLayout = new Map<string, McpLayoutPatch>();
   const inserted: McpBlock[] = [];
   const deleted = new Set<string>();
   const writes: DryRunWrite[] = [];
@@ -19,7 +20,8 @@ export function dryRunStore(real: McpStore): DryRunStore {
   const overlay = (blocks: McpBlock[]): McpBlock[] => [
     ...blocks
       .filter((block) => !deleted.has(block.id))
-      .map((block) => (blockData.has(block.id) ? { ...block, data: blockData.get(block.id)! } : block)),
+      .map((block) => (blockData.has(block.id) ? { ...block, data: blockData.get(block.id)! } : block))
+      .map((block) => (blockLayout.has(block.id) ? { ...block, ...blockLayout.get(block.id)! } : block)),
     ...inserted.filter((block) => !deleted.has(block.id)),
   ];
 
@@ -43,7 +45,14 @@ export function dryRunStore(real: McpStore): DryRunStore {
       const added = inserted.filter(
         (block) => !deleted.has(block.id) && block.visible && block.board_index === boardIndex
       ).length;
-      return (await real.countVisibleMainBlocks(userId, boardIndex)) - removed + added;
+      const toggled = (await real.listMainBlocks(userId))
+        .filter((block) => !deleted.has(block.id) && (block.board_index ?? 0) === boardIndex)
+        .reduce((sum, block) => {
+          const next = blockLayout.get(block.id)?.visible;
+          if (next === undefined || next === block.visible) return sum;
+          return sum + (next ? 1 : -1);
+        }, 0);
+      return (await real.countVisibleMainBlocks(userId, boardIndex)) - removed + added + toggled;
     },
     async insertBlock(userId, input) {
       seq += 1;
@@ -75,6 +84,15 @@ export function dryRunStore(real: McpStore): DryRunStore {
       else blockData.set(blockId, data);
       writes.push({ op: "update", target: `block:${current.type}:${blockId}`, fields: changed });
       return { ...current, data };
+    },
+    async updateBlockLayout(userId, blockId, patch) {
+      const current = overlay(await real.listMainBlocks(userId)).find((block) => block.id === blockId);
+      if (!current) return null;
+      const pending = inserted.find((block) => block.id === blockId);
+      if (pending) Object.assign(pending, patch);
+      else blockLayout.set(blockId, { ...(blockLayout.get(blockId) || {}), ...patch });
+      writes.push({ op: "update", target: `block:${current.type}:${blockId}`, fields: Object.keys(patch) });
+      return { ...current, ...patch };
     },
     async deleteProject(userId, blockId) {
       const current = overlay(await real.listMainBlocks(userId)).find(

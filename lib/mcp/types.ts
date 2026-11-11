@@ -50,6 +50,13 @@ export type McpNewBlock = {
   rowSpan: number;
 };
 
+export type McpLayoutPatch = {
+  order?: number;
+  col_span?: number;
+  row_span?: number;
+  visible?: boolean;
+};
+
 export interface McpStore {
   getProfile(userId: string): Promise<McpProfile | null>;
   updateProfile(userId: string, patch: Record<string, unknown>): Promise<void>;
@@ -57,6 +64,7 @@ export interface McpStore {
   countVisibleMainBlocks(userId: string, boardIndex: number): Promise<number>;
   insertBlock(userId: string, input: McpNewBlock): Promise<McpBlock>;
   updateBlockData(userId: string, blockId: string, data: Record<string, unknown>): Promise<McpBlock | null>;
+  updateBlockLayout(userId: string, blockId: string, patch: McpLayoutPatch): Promise<McpBlock | null>;
   deleteProject(userId: string, blockId: string): Promise<boolean>;
   insertActivity(userId: string, type: string, data: Record<string, unknown>): Promise<{ id: string; created_at: string }>;
   createLaunch(blockId: string, userId: string, week: string, isPro: boolean): Promise<CreateLaunchResult>;

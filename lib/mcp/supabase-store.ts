@@ -173,6 +173,27 @@ export function createSupabaseMcpStore(): McpStore {
       return row ? mapBlock(row) : null;
     },
 
+    async updateBlockLayout(userId, blockId, patch) {
+      const row: Record<string, unknown> = {};
+      for (const key of ["order", "col_span", "row_span", "visible"] as const) {
+        if (patch[key] !== undefined) row[key] = patch[key];
+      }
+      if (Object.keys(row).length === 0) return null;
+      const { data, error } = await db
+        .from("blocks")
+        .update(row)
+        .eq("id", blockId)
+        .eq("user_id", userId)
+        .is("sub_site_id", null)
+        .select("*")
+        .maybeSingle();
+      if (error) {
+        console.error("[mcp] updateBlockLayout", error.message);
+        throw new Error("No se pudo acomodar el bloque.");
+      }
+      return data ? mapBlock(data) : null;
+    },
+
     async deleteProject(userId, blockId) {
       const { data, error } = await db
         .from("blocks")

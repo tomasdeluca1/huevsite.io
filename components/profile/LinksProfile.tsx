@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import { ChevronDown, Globe, Link2, Send } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { buildLinksLayout, type LayoutBlock } from "@/lib/link-layout";
+import { avatarFocusStyle } from "@/lib/avatar-focus";
 import type { LinkBoxStyle } from "@/lib/profile-layout";
 import { getContrastColor } from "@/lib/profile-types";
 import { trackClick } from "@/components/analytics/AnalyticsTracker";
@@ -141,6 +142,8 @@ export function LinksProfile({
 }: Props) {
   const t = useTranslations("profileLinks");
   const { buttons, socials } = buildLinksLayout(blocks, globalStyle);
+  // El encuadre de la foto vive en el hero; la vista links usa el mismo.
+  const heroFocus = (blocks.find((b) => b.type === "hero" && b.visible !== false) as { avatarFocus?: unknown } | undefined)?.avatarFocus;
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [copied, setCopied] = useState(false);
   const ink = getContrastColor(accentColor);
@@ -300,7 +303,7 @@ export function LinksProfile({
 
       <div className="mx-auto mb-4 h-24 w-24 overflow-hidden rounded-full border-2 border-white/80 bg-white/10">
         {avatarUrl ? (
-          <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+          <img src={avatarUrl} alt="" className="h-full w-full object-cover" style={avatarFocusStyle(heroFocus)} />
         ) : (
           <span className="grid h-full w-full place-items-center text-2xl font-black text-white">
             {(displayName || username || "?").slice(0, 1).toUpperCase()}

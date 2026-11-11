@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { avatarFocusSchema } from "@/lib/avatar-focus";
 import { linkBoxStyleSchema } from "@/lib/profile-layout";
 import { mcpProfileColumnSchema } from "@/lib/profile-schemas";
 import { SOCIAL_PLATFORMS } from "@/lib/social-platforms";
@@ -32,6 +33,10 @@ export const updateProfileInputSchema = mcpProfileColumnSchema.extend({
   stack: mcpStackSchema.optional(),
   // Override profilePatchSchema's z.string().url(), which allows javascript: and data:.
   image: httpUrl.optional(),
+  // Encuadre de la foto en el hero: x/y 0-100 (punto que queda al centro), zoom 1-3.
+  image_focus: avatarFocusSchema
+    .optional()
+    .describe("Encuadre de la foto de perfil: x e y de 0 a 100 (el punto de la foto que queda al centro del círculo) y zoom de 1 a 3."),
 });
 
 export const projectWriteSchema = z.object({
@@ -78,6 +83,31 @@ export const announceLaunchInputSchema = z.object({
 export const syncGithubInputSchema = z.object({
   block_id: z.string().uuid().optional(),
   force: z.boolean().optional(),
+});
+
+export const arrangeBlocksInputSchema = z.object({
+  tidy: z
+    .boolean()
+    .optional()
+    .describe("true: arma un layout prolijo. Oculta bloques duplicados (por ejemplo dos hero con la misma bio), saca links vacíos, ordena (perfil, en qué estoy, proyectos, prueba, contacto) y acomoda los tamaños para que la grilla no tenga huecos."),
+  keep_sizes: z
+    .boolean()
+    .optional()
+    .describe("Con tidy: respeta el ancho y alto que eligió la persona en vez de usar el tamaño base de cada tipo."),
+  blocks: z
+    .array(
+      z.object({
+        id: z.string().uuid(),
+        order: z.number().int().min(0).max(500).optional(),
+        col_span: z.number().int().min(1).max(4).optional(),
+        row_span: z.number().int().min(1).max(4).optional(),
+        visible: z.boolean().optional(),
+      })
+    )
+    .max(60)
+    .optional()
+    .describe("Cambios a mano por bloque (ids de get_my_profile.grid.blocks). Se aplican después de tidy y lo pisan."),
+  dry_run: dryRun,
 });
 
 export const emptyInputSchema = z.object({}).strict();

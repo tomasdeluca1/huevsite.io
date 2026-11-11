@@ -164,6 +164,7 @@ export interface HeroBlockData extends BaseBlock {
   status: string;
   location: string;
   showBio?: boolean; // default true: show the bio (description) on the public profile
+  avatarFocus?: { x: number; y: number; zoom: number }; // encuadre de la foto, ver lib/avatar-focus.ts
 }
 
 export interface BuildingBlockData extends BaseBlock {

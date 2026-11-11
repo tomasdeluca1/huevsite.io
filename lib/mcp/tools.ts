@@ -2,11 +2,13 @@ import { isValidCountry } from "@/lib/countries";
 import { isCreateEcho, isPublicProjectBlock } from "@/lib/avances-builders";
 import { compareWeeks, currentLaunchWeek } from "@/lib/launch-week";
 import { runDryRun } from "@/lib/mcp/dry-run";
+import { applyPatch, boardBlocks, layoutView, planTidy, type LayoutPatch } from "@/lib/mcp/layout";
 import { effectiveBlockLimit, launchPlanIsPro } from "@/lib/mcp/limits";
 import { hasProAccess } from "@/lib/pro-access";
 import {
   PROJECT_DATA_KEYS,
   announceLaunchInputSchema,
+  arrangeBlocksInputSchema,
   createProjectInputSchema,
   deleteProjectInputSchema,
   emptyInputSchema,
@@ -42,8 +44,11 @@ function mainBlocks(blocks: McpBlock[]): McpBlock[] {
   return blocks.filter((block) => block.sub_site_id == null);
 }
 
+// Prefiere el bloque visible del tipo: si hay uno oculto antes en la grilla
+// (un hero duplicado que se ocultó), las ediciones tienen que ir al que se ve.
 function findTyped(blocks: McpBlock[], type: string): McpBlock | undefined {
-  return mainBlocks(blocks).find((block) => block.type === type);
+  const ofType = mainBlocks(blocks).filter((block) => block.type === type);
+  return ofType.find((block) => block.visible) || ofType[0];
 }
 
 function projectView(block: McpBlock) {
@@ -131,6 +136,7 @@ export async function getMyProfile(store: McpStore, userId: string): Promise<Too
       link_box_style: profile.link_box_style || "pill",
       border_radius: profile.border_radius,
       image: profile.image,
+      image_focus: heroData.avatarFocus ?? null,
       builder_score: profile.builder_score || 0,
       plan: launchPlanIsPro(profile) ? "pro" : "free",
       has_pro_access: hasProAccess(profile),
@@ -142,6 +148,7 @@ export async function getMyProfile(store: McpStore, userId: string): Promise<Too
         block_limit: limit,
         published_board: boardIndexOf(profile),
       },
+      grid: layoutView(boardBlocks(blocks, boardIndexOf(profile))),
     },
   };
 }
@@ -180,6 +187,7 @@ export async function updateProfile(store: McpStore, userId: string, raw: unknow
   if (input.image !== undefined) heroPatch.avatarUrl = input.image || "";
   if (input.bio !== undefined) heroPatch.description = input.bio;
   if (input.roles !== undefined) heroPatch.roles = input.roles;
+  if (input.image_focus !== undefined) heroPatch.avatarFocus = input.image_focus;
   const needsHero = !findTyped(blocks, "hero") && Object.keys(heroPatch).length > 0;
   const needsSocial = !!input.links && !findTyped(blocks, "social");
   const needsStack = !!input.stack && !findTyped(blocks, "stack");
@@ -250,7 +258,7 @@ export async function updateProfile(store: McpStore, userId: string, raw: unknow
   }
 
   await store.insertActivity(userId, "profile_update", {
-    updatedFields: Object.keys({ ...columnPatch, ...(input.bio !== undefined ? { bio: true } : {}), ...(input.links ? { links: true } : {}), ...(input.stack ? { stack: true } : {}) }),
+    updatedFields: Object.keys({ ...columnPatch, ...(input.bio !== undefined ? { bio: true } : {}), ...(input.image_focus !== undefined ? { image_focus: true } : {}), ...(input.links ? { links: true } : {}), ...(input.stack ? { stack: true } : {}) }),
     source: "mcp",
   });
   await store.recomputeScore(userId);
@@ -424,6 +432,71 @@ export async function announceLaunch(store: McpStore, userId: string, raw: unkno
   };
 }
 
+export async function arrangeBlocks(store: McpStore, userId: string, raw: unknown): Promise<ToolOutcome> {
+  const parsed = arrangeBlocksInputSchema.safeParse(raw ?? {});
+  if (!parsed.success) return toolError("invalid", parsed.error.issues.map((issue) => issue.message).join(" "));
+  const input = parsed.data;
+  if (!input.tidy && !(input.blocks && input.blocks.length > 0)) {
+    return toolError("invalid", "Mandá tidy: true o una lista de blocks para acomodar.");
+  }
+  const profile = await loadProfile(store, userId);
+  if ("ok" in profile) return profile;
+  const boardIndex = boardIndexOf(profile);
+  const board = boardBlocks(await store.listMainBlocks(userId), boardIndex);
+  const byId = new Map(board.map((block) => [block.id, block]));
+
+  const plan = input.tidy ? planTidy(board, { keepSizes: input.keep_sizes === true }) : { layout: new Map<string, LayoutPatch>(), data: new Map<string, Record<string, unknown>>(), notes: [] as string[] };
+  for (const change of input.blocks || []) {
+    if (!byId.has(change.id)) return toolError("not_found", `No encontramos el bloque ${change.id} en tu perfil publicado.`);
+    const { id, ...patch } = change;
+    const clean = Object.fromEntries(Object.entries(patch).filter(([, value]) => value !== undefined)) as LayoutPatch;
+    plan.layout.set(id, { ...(plan.layout.get(id) || {}), ...clean });
+  }
+
+  // Cómo queda: el cupo de bloques visibles y un solo hero visible.
+  const after = board.map((block) => applyPatch(block, plan.layout.get(block.id)));
+  const visibleAfter = after.filter((block) => block.visible);
+  const turnedOn = after.filter((block) => block.visible && !byId.get(block.id)!.visible).length;
+  const limit = effectiveBlockLimit(profile);
+  if (turnedOn > 0 && visibleAfter.length > limit) {
+    return toolError("limit", `Límite de bloques alcanzado (${limit}).`);
+  }
+  if (visibleAfter.filter((block) => block.type === "hero").length > 1) {
+    return toolError("duplicate_hero", "Quedarían dos bloques de perfil visibles. Ocultá uno.");
+  }
+
+  const changed: Array<{ id: string; type: string; fields: string[] }> = [];
+  for (const [id, patch] of Array.from(plan.layout.entries())) {
+    const current = byId.get(id)!;
+    const diff = Object.fromEntries(
+      Object.entries(patch).filter(([key, value]) => current[key as keyof LayoutPatch] !== value)
+    ) as LayoutPatch;
+    if (Object.keys(diff).length === 0) continue;
+    await store.updateBlockLayout(userId, id, diff);
+    changed.push({ id, type: current.type, fields: Object.keys(diff) });
+  }
+  for (const [id, data] of Array.from(plan.data.entries())) {
+    await store.updateBlockData(userId, id, data);
+    const entry = changed.find((item) => item.id === id);
+    if (entry) entry.fields.push("data");
+    else changed.push({ id, type: byId.get(id)!.type, fields: ["data"] });
+  }
+
+  if (changed.length > 0) {
+    await store.insertActivity(userId, "profile_update", { updatedFields: ["block_layout"], source: "mcp" });
+    await store.recomputeScore(userId);
+  }
+  const fresh = boardBlocks(await store.listMainBlocks(userId), boardIndex);
+  return {
+    ok: true,
+    data: {
+      changed,
+      notes: plan.notes,
+      grid: layoutView(fresh),
+    },
+  };
+}
+
 export async function syncFromGithub(store: McpStore, userId: string, raw: unknown): Promise<ToolOutcome> {
   const parsed = syncGithubInputSchema.safeParse(raw ?? {});
   if (!parsed.success) return toolError("invalid", parsed.error.issues.map((issue) => issue.message).join(" "));
@@ -461,7 +534,8 @@ export type McpToolName =
   | "delete_project"
   | "post_update"
   | "announce_launch"
-  | "sync_from_github";
+  | "sync_from_github"
+  | "arrange_blocks";
 
 export const MCP_TOOL_NAMES: McpToolName[] = [
   "get_my_profile",
@@ -473,6 +547,7 @@ export const MCP_TOOL_NAMES: McpToolName[] = [
   "post_update",
   "announce_launch",
   "sync_from_github",
+  "arrange_blocks",
 ];
 
 export const MCP_TOOLS: Array<{
@@ -483,13 +558,13 @@ export const MCP_TOOLS: Array<{
 }> = [
   {
     name: "get_my_profile",
-    description: "Devuelve el perfil del dueño del token: headline, bio, links, stack, proyectos, profile_layout, link_box_style y el cupo de bloques. No lee perfiles ajenos.",
+    description: "Devuelve el perfil del dueño del token: headline, bio, links, stack, proyectos, profile_layout, link_box_style, el cupo de bloques y grid (todos los bloques del perfil publicado con orden y tamaño, más los problemas que encontró: bloques duplicados, huecos en la grilla, textos de ejemplo, links vacíos). No lee perfiles ajenos.",
     inputSchema: emptyInputSchema,
     handler: (store, userId) => getMyProfile(store, userId),
   },
   {
     name: "update_profile",
-    description: "Actualiza el perfil propio. Acepta name, tagline (headline), bio, location, country, roles, available, github_handle, accent_color, layout, image, border_radius, profile_layout (portfolio o links), link_box_style (pill, card, compact, featured o expandable), links y stack. Usa los mismos límites que el dashboard. No cambia username, email, dominio ni la newsletter. Con dry_run: true devuelve cómo quedaría sin guardar nada.",
+    description: "Actualiza el perfil propio. Acepta name, tagline (headline), bio, location, country, roles, available, github_handle, accent_color, layout, image, border_radius, profile_layout (portfolio o links), link_box_style (pill, card, compact, featured o expandable), links, stack e image_focus (encuadre de la foto: x, y de 0 a 100 y zoom de 1 a 3). Usa los mismos límites que el dashboard. No cambia username, email, dominio ni la newsletter. Con dry_run: true devuelve cómo quedaría sin guardar nada.",
     inputSchema: updateProfileInputSchema,
     handler: withDryRun((store, userId, args) => updateProfile(store, userId, args)),
   },
@@ -528,6 +603,12 @@ export const MCP_TOOLS: Array<{
     description: "Lanza un proyecto en Builders Hunt, en la semana actual o en una futura si el plan es Pro. Free: un lanzamiento por mes calendario. El proyecto necesita un link http(s).",
     inputSchema: announceLaunchInputSchema,
     handler: (store, userId, args) => announceLaunch(store, userId, args),
+  },
+  {
+    name: "arrange_blocks",
+    description: "Acomoda la grilla del perfil publicado. Con tidy: true oculta bloques duplicados (por ejemplo dos hero con la misma bio), saca links vacíos del bloque de redes, ordena los bloques y ajusta tamaños para que no queden huecos. Con blocks podés mover, redimensionar (col_span 1-4, row_span 1-4) u ocultar/mostrar bloques puntuales. No borra nada: lo duplicado queda oculto. Con dry_run: true devuelve cómo quedaría sin guardar.",
+    inputSchema: arrangeBlocksInputSchema,
+    handler: withDryRun((store, userId, args) => arrangeBlocks(store, userId, args)),
   },
   {
     name: "sync_from_github",

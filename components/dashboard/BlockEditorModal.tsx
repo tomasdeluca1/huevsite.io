@@ -6,6 +6,7 @@ import { X, Save, Sparkles, Search, Github, GripVertical, RefreshCw, Loader2, Im
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { ImageUpload } from "@/components/dashboard/ImageUpload";
+import { AvatarFramer } from "@/components/dashboard/AvatarFramer";
 import { FileUpload } from "@/components/dashboard/FileUpload";
 import { SOCIAL_PLATFORMS, SocialPlatformKey, buildSocialUrl, getUrlPreview } from "@/lib/social-platforms";
 import { BoxStylePicker } from "@/components/dashboard/BoxStylePicker";
@@ -193,6 +194,13 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                 {t("blockEditor.hero.avatarHint")}
               </p>
             </div>
+            {formData.avatarUrl && (
+              <AvatarFramer
+                src={formData.avatarUrl}
+                value={formData.avatarFocus}
+                onChange={(focus) => handleChange("avatarFocus", focus)}
+              />
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <div className="section-label !text-[9px] px-1">{t("blockEditor.hero.nameLabel")}</div>

@@ -155,6 +155,31 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Un solo hero visible por perfil (o sub-sitio) y board: dos heros dejan dos
+    // bios iguales en el perfil público.
+    if (body.type === 'hero') {
+      const countHeroes = (withBoard: boolean) => {
+        let q = supabase
+          .from('blocks')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('type', 'hero')
+          .eq('visible', true)
+        q = targetSubSiteId ? q.eq('sub_site_id', targetSubSiteId) : q.is('sub_site_id', null)
+        return withBoard ? q.eq('board_index', boardIndex) : q
+      }
+      let { count: heroCount, error: heroError } = await countHeroes(true)
+      if (heroError && /board_index/i.test(heroError.message || '')) {
+        ({ count: heroCount } = await countHeroes(false))
+      }
+      if ((heroCount || 0) > 0) {
+        return NextResponse.json(
+          { error: 'Ya tenés un bloque de perfil. Editá ese en vez de sumar otro.', code: 'hero_exists' },
+          { status: 409 }
+        )
+      }
+    }
+
     // Obtener el último order para asignar uno nuevo
     const { data: lastBlock } = await supabase
       .from('blocks')

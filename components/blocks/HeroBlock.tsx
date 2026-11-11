@@ -7,6 +7,7 @@ import { BadgeCheck, Trophy } from "lucide-react";
 import { HeroBlockData, ProfileBadge, getContrastColor } from "@/lib/profile-types";
 import { useBlockPreview } from "@/lib/block-preview-context";
 import { BadgeItem } from "@/components/profile/BadgeItem";
+import { avatarFocusStyle } from "@/lib/avatar-focus";
 
 interface Props {
   data: HeroBlockData;
@@ -77,7 +78,7 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
               }}
             >
               {avatarUrl ? (
-                <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
+                <img src={avatarUrl} alt={name} className="w-full h-full object-cover" style={avatarFocusStyle(data.avatarFocus)} />
               ) : (
                 <span className="text-sm">{name.charAt(0).toUpperCase()}</span>
               )}
@@ -134,7 +135,7 @@ export function HeroBlock({ data, accentColor, subscriptionTier, isWinner = fals
               }}
             >
               {avatarUrl ? (
-                <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
+                <img src={avatarUrl} alt={name} className="w-full h-full object-cover" style={avatarFocusStyle(data.avatarFocus)} />
               ) : (
                 <span className="text-lg md:text-xl lg:text-2xl">{name.charAt(0).toUpperCase()}</span>
               )}

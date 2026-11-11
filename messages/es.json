@@ -507,7 +507,11 @@
         "locationLabel": "// ubicación",
         "showBioLabel": "Mostrar la bio en el perfil",
         "showBioHint": "Recomendamos dejarla prendida: en pocos segundos, es lo que le dice a quien te escanea qué hacés.",
-        "locationPlaceholder": "Buenos Aires"
+        "locationPlaceholder": "Buenos Aires",
+        "framingLabel": "// encuadre",
+        "zoomLabel": "zoom",
+        "framingHint": "arrastrá la foto para acomodarla",
+        "framingReset": "centrar"
       },
       "project": {
         "previewLabel": "Preview del Proyecto",

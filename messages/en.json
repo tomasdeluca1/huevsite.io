@@ -507,7 +507,11 @@
         "locationLabel": "// location",
         "showBioLabel": "Show the bio on the profile",
         "showBioHint": "We recommend leaving it on: in a few seconds, it's what tells whoever scans you what you do.",
-        "locationPlaceholder": "Buenos Aires"
+        "locationPlaceholder": "Buenos Aires",
+        "framingLabel": "// framing",
+        "zoomLabel": "zoom",
+        "framingHint": "drag the photo to position it",
+        "framingReset": "reset"
       },
       "project": {
         "previewLabel": "Project Preview",

@@ -3,10 +3,12 @@ export const STARTER_PROMPT = `Soy tu editor de huevsite. huevsite es tu perfil 
 Seguí este orden:
 1. Llamá get_my_profile antes de proponer nada.
 2. Si falta bio, proyectos, links, stack o ubicación, preguntame.
-3. Proponé mejoras concretas, en corto.
-4. Antes de pedirme el sí, llamá la escritura con dry_run: true y mostrame cómo quedaría.
-5. No escribas hasta que yo diga que sí. Recién ahí repetí la llamada sin dry_run.
-6. Al final, ofrecé publicar un avance con post_update.
+3. Mirá grid.issues: si hay bloques duplicados, huecos o textos de ejemplo, proponé arreglarlo con arrange_blocks (tidy: true).
+4. Proponé mejoras concretas, en corto.
+5. Antes de pedirme el sí, llamá la escritura con dry_run: true y mostrame cómo quedaría.
+6. No escribas hasta que yo diga que sí. Recién ahí repetí la llamada sin dry_run.
+7. Si sumaste bloques, cerrá con arrange_blocks tidy para que la grilla quede prolija.
+8. Al final, ofrecé publicar un avance con post_update.
 
 No borres un proyecto si yo no lo confirmo.`;
 
@@ -22,7 +24,9 @@ Proponé los cambios y esperá un sí antes de escribir con update_profile, crea
 profile_layout es portfolio (grilla) o links (bio con botones). El default es portfolio.
 link_box_style es el formato global de esos botones: pill, card, compact, featured o expandable.
 boxStyle en un proyecto pisa ese formato. null vuelve al global.
-update_profile, create_project, update_project, delete_project y post_update aceptan dry_run: true: corren las mismas validaciones, devuelven cómo quedaría y no guardan nada. Usalo para mostrar la vista previa antes de pedir el sí.
+get_my_profile trae grid: los bloques del perfil con orden y tamaño, y grid.issues con lo que está desprolijo. Para acomodar la grilla usá arrange_blocks: tidy true arregla duplicados, huecos y orden; blocks mueve o redimensiona bloques puntuales. Después de crear bloques, ofrecé arrange_blocks tidy.
+image_focus en update_profile encuadra la foto de perfil (x, y de 0 a 100; zoom de 1 a 3).
+update_profile, create_project, update_project, delete_project, post_update y arrange_blocks aceptan dry_run: true: corren las mismas validaciones, devuelven cómo quedaría y no guardan nada. Usalo para mostrar la vista previa antes de pedir el sí.
 Después ofrecé post_update para un avance en público.
 delete_project solo si te pasan confirm true. No mandes mails ni publiques en redes.
 Si el cliente lista prompts, ofrecé armar_mi_perfil y publicar_avance.`;

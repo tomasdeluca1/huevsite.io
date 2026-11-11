@@ -45,6 +45,8 @@ Same architecture as profile pages but fetches via `profileService.getSubSitePro
 
 **URLs que escribe el usuario** (`lib/safe-url.ts`): React 18 no bloquea `javascript:` en `href`, y cualquier script en el origen puede crear un token del MCP con la sesión del usuario. Por eso: todo link que salga de datos de un bloque pasa por `safeHref()` (o `withHuevsiteUtm` / `safeHttpUrl`), todo redirect o "volver a" que venga de la URL pasa por `safeInternalPath()`, y el JSON de un bloque pasa por `sanitizeBlockData()` al guardar y al leer para el perfil público. `scripts/verify-safe-url.ts` lo cubre.
 
+**Panel de actividad** (`/admin/actividad`): línea de tiempo de todo lo que pasa (altas, ediciones, pagos, visitas, MCP). Las fuentes son la lista `SOURCES` de `lib/admin-activity.ts`; una tabla nueva se suma ahí con su columna de fecha, su columna de usuario y un `toDraft`. Lee con service-role, así que la página llama a `requireAdmin()` antes de consultar.
+
 **OG Images**: `app/api/og/[username]/route.tsx` generates dynamic OG images per user.
 
 ### API Routes of Note

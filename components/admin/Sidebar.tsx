@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
+  Activity,
   LayoutDashboard,
   Mic,
   MessageSquare,
@@ -26,6 +27,7 @@ type NavItem = {
 
 const NAV: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/actividad", label: "Actividad", icon: Activity },
   { href: "/admin/interviews", label: "Interviews", icon: Mic },
   { href: "/admin/feedback", label: "Feedback", icon: MessageSquare },
   { href: "/admin/showcase", label: "Showcase", icon: Trophy },

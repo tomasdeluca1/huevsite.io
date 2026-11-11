@@ -249,6 +249,13 @@ export function profileOgUrl(username: string): string {
   return `${AVANCES_SITE}/api/og/${encodeURIComponent(username)}`;
 }
 
+// Imagen del post de IG: 4:5, centrada en el proyecto (ver app/api/og/avance).
+export function avanceIgImageUrl(blockId: string, kind: SourceType, launchId?: string): string {
+  const params = new URLSearchParams({ kind });
+  if (launchId) params.set("launch", launchId);
+  return `${AVANCES_SITE}/api/og/avance/${encodeURIComponent(blockId)}?${params.toString()}`;
+}
+
 export function launchShareUrl(id: string, week: string | null): string {
   const params = new URLSearchParams({ launch: id });
   if (week && /^\d{4}-W\d{2}$/.test(week)) params.set("week", week);
@@ -291,7 +298,7 @@ export function launchCandidate(launch: LaunchRow, block: PublicBlock, profile: 
     title: publicProjectTitle(block.data),
     description: publicProjectDescription(block.data),
     url: launchShareUrl(launch.id, launch.launch_week),
-    imageUrl: launchOgUrl(launch.id),
+    imageUrl: avanceIgImageUrl(block.id, "launch", launch.id),
     featured: !!launch.featured,
     upvoteCount: launch.upvote_count || 0,
     at,
@@ -312,7 +319,7 @@ export function projectCandidate(block: PublicBlock, profile: PublicProfile): Av
     title: publicProjectTitle(block.data),
     description: publicProjectDescription(block.data),
     url: profileUrl(profile.username),
-    imageUrl: profileOgUrl(profile.username),
+    imageUrl: avanceIgImageUrl(block.id, "new_project"),
     featured: false,
     upvoteCount: 0,
     at: block.created_at,
@@ -338,7 +345,7 @@ export function updateCandidate(activity: ActivityRow, block: PublicBlock, profi
     title: publicProjectTitle(block.data),
     description: publicProjectDescription(block.data),
     url: profileUrl(profile.username),
-    imageUrl: profileOgUrl(profile.username),
+    imageUrl: avanceIgImageUrl(block.id, "update"),
     featured: false,
     upvoteCount: 0,
     at: activity.created_at,

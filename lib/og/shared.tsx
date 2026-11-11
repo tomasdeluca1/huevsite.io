@@ -25,6 +25,7 @@
 import { BRAND } from "@/lib/brand";
 import { getContrastColor } from "@/lib/profile-types";
 import { hiResFaviconUrl } from "@/lib/favicon";
+import { isPublicProjectBlock } from "@/lib/avances-builders";
 import { LOGO_DATA_URI, LOGO_HEIGHT, LOGO_WIDTH } from "@/lib/og/logo-data";
 
 export const OG_SIZE = { width: 1200, height: 630 };
@@ -516,6 +517,96 @@ export async function fetchLaunchOg(launchId: string): Promise<LaunchOg | null> 
       imageUrl,
       upvotes: launch.upvote_count || 0,
       week: launch.launch_week,
+      username: prof.username,
+      name: prof.name || prof.username,
+      avatar: prof.image || null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export type AvanceOg = {
+  kind: "launch" | "new_project" | "update";
+  title: string;
+  description: string;
+  note: string;
+  status: string;
+  stack: string[];
+  link: string;
+  imageUrl: string | null;
+  imageMode: string;
+  upvotes: number;
+  username: string;
+  name: string;
+  avatar: string | null;
+};
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Datos de la imagen de IG de un avance. Solo bloques públicos: visible, del
+// perfil principal, proyecto o building, no archivado. Lo mismo que puede
+// elegir el cron, así la URL no sirve para espiar un bloque oculto.
+export async function fetchAvanceOg(
+  blockId: string,
+  kind: AvanceOg["kind"],
+  launchId: string | null
+): Promise<AvanceOg | null> {
+  if (!UUID.test(blockId)) return null;
+  const c = restCreds();
+  if (!c) return null;
+  try {
+    const bRes = await fetch(
+      `${c.baseUrl}/rest/v1/blocks?id=eq.${blockId}&select=user_id,type,data,visible,sub_site_id&limit=1`,
+      { headers: c.headers, cache: "no-store" }
+    );
+    const [block] = bRes.ok ? ((await bRes.json()) as any[]) : [];
+    if (!block || !isPublicProjectBlock(block)) return null;
+
+    const [pRes, lRes] = await Promise.all([
+      fetch(`${c.baseUrl}/rest/v1/profiles?id=eq.${block.user_id}&select=username,name,image&limit=1`, {
+        headers: c.headers,
+        cache: "no-store",
+      }),
+      kind === "launch" && launchId && UUID.test(launchId)
+        ? fetch(`${c.baseUrl}/rest/v1/project_launches?id=eq.${launchId}&block_id=eq.${blockId}&select=upvote_count&limit=1`, {
+            headers: c.headers,
+            cache: "no-store",
+          })
+        : Promise.resolve(null),
+    ]);
+    const [prof] = pRes.ok ? ((await pRes.json()) as any[]) : [];
+    if (!prof?.username) return null;
+    const [launch] = lRes && lRes.ok ? ((await lRes.json()) as any[]) : [];
+
+    const d = block.data || {};
+    const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+    const link = /^https?:\/\//i.test(str(d.link)) ? str(d.link) : "";
+
+    // Un bloque building no tiene captura propia: si un proyecto visible de la
+    // misma persona apunta al mismo link, se usa la captura de ese proyecto.
+    let imageUrl = str(d.imageUrl) || null;
+    if (!imageUrl && link) {
+      const sRes = await fetch(
+        `${c.baseUrl}/rest/v1/blocks?user_id=eq.${block.user_id}&type=eq.project&visible=eq.true&sub_site_id=is.null&select=data&limit=30`,
+        { headers: c.headers, cache: "no-store" }
+      );
+      const siblings = sRes.ok ? ((await sRes.json()) as any[]) : [];
+      const same = (a: string, b: string) => a.replace(/\/+$/, "").toLowerCase() === b.replace(/\/+$/, "").toLowerCase();
+      const match = siblings.find((row) => row?.data?.imageMode !== "favicon" && str(row?.data?.imageUrl) && same(str(row?.data?.link), link));
+      imageUrl = match ? str(match.data.imageUrl) : null;
+    }
+    return {
+      kind,
+      title: str(d.title) || str(d.project) || "Proyecto",
+      description: str(d.description),
+      note: str(d.publicUpdate?.text),
+      status: block.type === "building" ? "building" : str(d.status),
+      stack: Array.isArray(d.stack) ? d.stack.filter((t: unknown) => typeof t === "string" && t.trim()).map((t: string) => t.trim()) : [],
+      link,
+      imageUrl,
+      imageMode: str(d.imageMode),
+      upvotes: launch?.upvote_count || 0,
       username: prof.username,
       name: prof.name || prof.username,
       avatar: prof.image || null,

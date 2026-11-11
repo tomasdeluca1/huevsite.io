@@ -6,8 +6,15 @@
 import { spawnSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { DURATION, FPS, SOUNDS } from "../src/edit.mjs";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+// EDIT=<módulo con DURATION/FPS/SOUNDS> y OUT=<nombre sin extensión> permiten sonorizar otro corte.
+// Sin variables, se comporta igual que siempre: src/edit.mjs → public/audio/master.wav.
+const editUrl = process.env.EDIT
+  ? pathToFileURL(path.resolve(process.env.EDIT)).href
+  : new URL("../src/edit.mjs", import.meta.url).href;
+const { DURATION, FPS, SOUNDS } = await import(editUrl);
+const OUT = process.env.OUT ?? "master";
 
 const SR = 48000;
 const seconds = DURATION / FPS;
@@ -152,7 +159,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dir = path.join(root, "public", "audio");
 mkdirSync(dir, { recursive: true });
 const rawPath = path.join(dir, "raw.wav");
-const outPath = path.join(dir, "master.wav");
+const outPath = path.join(dir, `${OUT}.wav`);
 writeFileSync(rawPath, wav(pcm, SR));
 
 const norm = spawnSync(

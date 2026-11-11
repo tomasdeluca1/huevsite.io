@@ -6,6 +6,9 @@
   "scripts": {
     "snapshot": "node scripts/snapshot.mjs",
     "audio": "node scripts/synthesize-audio.mjs",
+    "audio:mcp": "EDIT=src/mcp/timeline.ts OUT=mcp-sfx node scripts/synthesize-audio.mjs",
+    "render:mcp:vertical": "remotion render src/index.ts McpVertical out/mcp-vertical.mp4 --codec=h264 --crf=18 --concurrency=2",
+    "render:mcp:landscape": "remotion render src/index.ts McpLandscape out/mcp-landscape.mp4 --codec=h264 --crf=18 --concurrency=2",
     "studio": "remotion studio src/index.ts",
     "render:vertical": "remotion render src/index.ts Vertical out/vertical.mp4 --codec=h264 --crf=18 --concurrency=2",
     "render:landscape": "remotion render src/index.ts Landscape out/landscape.mp4 --codec=h264 --crf=18 --concurrency=2",

@@ -13,6 +13,7 @@ function getServiceRoleClient() {
   );
 }
 import { buildOnboardingBlocks } from "@/lib/onboarding-utils";
+import { normalizeBlockData } from "@/lib/social-url";
 import {
   dedupeImportedLinks,
   ensureAbsoluteUrl,
@@ -318,6 +319,11 @@ export async function POST(request: NextRequest) {
             }
           : {},
     }));
+
+    for (const row of blocksToInsert) {
+      const normalized = normalizeBlockData(row.type, row.data, "drop");
+      if (normalized.ok) row.data = normalized.data as typeof row.data;
+    }
 
     if (blocksToInsert.length > 0) {
       const { error: insertError } = await supabase.from("blocks").insert(blocksToInsert);

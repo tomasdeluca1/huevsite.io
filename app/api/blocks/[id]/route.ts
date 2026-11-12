@@ -6,6 +6,7 @@ import { checkAndPostWelcomeTweet } from '@/lib/twitter'
 import { hasProAccess } from '@/lib/pro-access'
 import { parseBlockViewFields } from '@/lib/mobile-order'
 import { sanitizeBlockData } from '@/lib/safe-url'
+import { normalizeBlockData } from '@/lib/social-url'
 
 export const dynamic = 'force-dynamic'
 
@@ -143,7 +144,11 @@ export async function PATCH(
 
     // Solo actualizar el JSONB si hay datos para él
     if (Object.keys(jsonData).length > 0) {
-      updateData.data = sanitizeBlockData(jsonData)
+      const normalizedData = normalizeBlockData(existingBlock.type, sanitizeBlockData(jsonData), "strict")
+      if (!normalizedData.ok) {
+        return NextResponse.json({ error: normalizedData.error }, { status: 400 })
+      }
+      updateData.data = normalizedData.data
     }
 
     if (Object.keys(updateData).length === 0) {

@@ -1,103 +1,135 @@
+import { normalizeSocialInput } from "@/lib/social-url";
+
+function canonicalOrEmpty(platform: string, handle: string): string {
+  const result = normalizeSocialInput(platform, handle);
+  return result.ok ? result.url : "";
+}
+
 export const SOCIAL_PLATFORMS = {
   twitter: {
     label: "Twitter / X",
     short: "X",
-    placeholder: "@usuario",
-    buildUrl: (h: string) => `https://x.com/${h.replace("@", "")}`,
+    placeholder: "@usuario o link",
+    buildUrl: (h: string) => canonicalOrEmpty("twitter", h),
     icon: "𝕏",
     brandColor: "#ffffff",
   },
   github: {
     label: "GitHub",
     short: "GITHUB",
-    placeholder: "usuario",
-    buildUrl: (h: string) => `https://github.com/${h}`,
+    placeholder: "usuario o link",
+    buildUrl: (h: string) => canonicalOrEmpty("github", h),
     icon: "⬡",
     brandColor: "#ffffff",
   },
   linkedin: {
     label: "LinkedIn",
     short: "LINKEDIN",
-    placeholder: "in/usuario",
-    buildUrl: (h: string) => `https://linkedin.com/in/${h.replace(/^in\//, "")}`,
+    placeholder: "in/usuario o company/empresa",
+    buildUrl: (h: string) => canonicalOrEmpty("linkedin", h),
     icon: "in",
     brandColor: "#0A66C2",
   },
   discord: {
     label: "Discord",
     short: "DISCORD",
-    placeholder: "usuario",
-    buildUrl: (h: string) => `https://discord.com/users/${h}`,
+    placeholder: "usuario o discord.gg/…",
+    buildUrl: (h: string) => canonicalOrEmpty("discord", h),
     icon: "💬",
     brandColor: "#5865F2",
   },
   farcaster: {
     label: "Farcaster",
     short: "FARCAST",
-    placeholder: "@usuario",
-    buildUrl: (h: string) => `https://warpcast.com/${h.replace("@", "")}`,
+    placeholder: "@usuario o link",
+    buildUrl: (h: string) => canonicalOrEmpty("farcaster", h),
     icon: "f",
     brandColor: "#855AF2",
   },
   telegram: {
     label: "Telegram",
     short: "TELEGRAM",
-    placeholder: "@usuario",
-    buildUrl: (h: string) => `https://t.me/${h.replace("@", "")}`,
+    placeholder: "@usuario o link",
+    buildUrl: (h: string) => canonicalOrEmpty("telegram", h),
     icon: "✈",
     brandColor: "#26A5E4",
   },
   youtube: {
     label: "YouTube",
     short: "YOUTUBE",
-    placeholder: "@canal",
-    buildUrl: (h: string) => `https://youtube.com/@${h.replace("@", "")}`,
+    placeholder: "@canal, /channel/, /c/ o /user/",
+    buildUrl: (h: string) => canonicalOrEmpty("youtube", h),
     icon: "▶",
     brandColor: "#FF0000",
   },
   twitch: {
     label: "Twitch",
     short: "TWITCH",
-    placeholder: "usuario",
-    buildUrl: (h: string) => `https://twitch.tv/${h}`,
+    placeholder: "usuario o link",
+    buildUrl: (h: string) => canonicalOrEmpty("twitch", h),
     icon: "🎮",
     brandColor: "#9146FF",
   },
   website: {
     label: "Web propia",
     short: "WEB",
-    placeholder: "https://...",
-    buildUrl: (h: string) => h,
+    placeholder: "https://tusitio.com",
+    buildUrl: (h: string) => canonicalOrEmpty("website", h),
     icon: "🔗",
     brandColor: "#ffffff",
   },
   instagram: {
     label: "Instagram",
     short: "INSTA",
-    placeholder: "usuario",
-    buildUrl: (h: string) => `https://instagram.com/${h.replace("@", "")}`,
+    placeholder: "@usuario o link",
+    buildUrl: (h: string) => canonicalOrEmpty("instagram", h),
     icon: "📸",
     brandColor: "#E4405F",
+  },
+  tiktok: {
+    label: "TikTok",
+    short: "TIKTOK",
+    placeholder: "@usuario o link",
+    buildUrl: (h: string) => canonicalOrEmpty("tiktok", h),
+    icon: "♪",
+    brandColor: "#FE2C55",
+  },
+  threads: {
+    label: "Threads",
+    short: "THREADS",
+    placeholder: "@usuario o link",
+    buildUrl: (h: string) => canonicalOrEmpty("threads", h),
+    icon: "@",
+    brandColor: "#ffffff",
+  },
+  bluesky: {
+    label: "Bluesky",
+    short: "BLUESKY",
+    placeholder: "usuario.bsky.social",
+    buildUrl: (h: string) => canonicalOrEmpty("bluesky", h),
+    icon: "☁",
+    brandColor: "#1185FE",
+  },
+  email: {
+    label: "Email",
+    short: "MAIL",
+    placeholder: "tu@mail.com",
+    buildUrl: (h: string) => canonicalOrEmpty("email", h),
+    icon: "✉",
+    brandColor: "#ffffff",
   },
 } as const;
 
 export type SocialPlatformKey = keyof typeof SOCIAL_PLATFORMS;
 
 export function buildSocialUrl(platform: string, handle: string): string {
-  const p = SOCIAL_PLATFORMS[platform as SocialPlatformKey];
-  if (!p || !handle.trim()) return "";
-  return p.buildUrl(handle.trim());
+  return canonicalOrEmpty(platform, handle);
 }
 
 export function getUrlPreview(platform: string, handle: string): string {
-  const url = buildSocialUrl(platform, handle);
-  if (!url) return "";
-  try {
-    const u = new URL(url);
-    return u.hostname.replace("www.", "") + u.pathname;
-  } catch {
-    return url;
-  }
+  const result = normalizeSocialInput(platform, handle);
+  if (!result.ok) return "";
+  return result.url.replace(/^https?:\/\//, "").replace(/^mailto:/, "");
 }
 
 type SocialLinkLike = { platform: string; url?: string; label?: string };
@@ -153,19 +185,12 @@ export function resolveSquareLabel(
  * el resto abre el perfil tal cual (https, nunca esquemas app://).
  */
 export function resolveFollowUrl(link: SocialLinkLike): string {
-  const raw = (link.url || "").trim();
-  if (link.platform === "twitter") {
-    const u = parseUrl(raw);
-    if (u && /^(www\.)?(x|twitter)\.com$/i.test(u.hostname)) {
-      const handle = u.pathname.split("/").filter(Boolean)[0]?.replace(/^@/, "");
-      const reserved = new Set(["intent", "i", "home", "share", "search", "explore", "hashtag"]);
-      if (handle && /^\w{1,15}$/.test(handle) && !reserved.has(handle.toLowerCase())) {
-        return `https://x.com/intent/follow?screen_name=${handle}`;
-      }
-    }
+  const result = normalizeSocialInput(link.platform, link.url || "");
+  if (!result.ok) return "";
+  if (result.platform === "twitter") {
+    return `https://x.com/intent/follow?screen_name=${result.handle}`;
   }
-  if (!raw || /^(https?:|mailto:)/i.test(raw)) return raw;
-  return `https://${raw}`;
+  return result.url;
 }
 
 const COMPACT_URL_MAX = 16;

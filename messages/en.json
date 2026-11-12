@@ -546,7 +546,11 @@
       },
       "social": {
         "linksLabel": "// social links — drag to reorder",
-        "handlePlaceholder": "handle",
+        "hint": "Paste a username, @username, or the full link. We'll clean it up.",
+        "handlePlaceholder": "username or link",
+        "preview": "This is how it'll look: {url}",
+        "saveBlocked": "Fix the marked links before saving.",
+        "removeLink": "Remove link",
         "addLink": "+ Add another network"
       },
       "community": {

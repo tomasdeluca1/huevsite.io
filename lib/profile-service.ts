@@ -6,6 +6,7 @@ import { getFreeTrialState, hasProAccess } from './pro-access';
 import { getCurrentWeek, getWeekString } from './showcase-service';
 import { createServiceRoleClient } from './supabase/service-role';
 import { sanitizeBlockData } from './safe-url';
+import { canonicalGithubUsername, readSocialLinks } from './social-url';
 
 // Public-profile rendering uses the service-role client because:
 //   1) The /[username] page must work for anonymous visitors, and after
@@ -322,7 +323,7 @@ export const profileService = {
       displayName: profile.name || profile.username,
       tagline: profile.tagline || "",
       avatarUrl: profile.image || "",
-      githubHandle: profile.github_handle || "",
+      githubHandle: canonicalGithubUsername(profile.github_handle) || "",
       accentColor: getAdjustedAccentColor(profile.accent_color as any),
       subscriptionTier: (() => {
         if (profile.subscription_tier === 'pro' || !!profile.pro_since) return 'pro';
@@ -362,6 +363,12 @@ export const profileService = {
         // Lo guardado antes del filtro de escritura (o por otra vía) no llega al HTML público
         // con un javascript: adentro.
         const { id, type, order, col_span, row_span, visible, ...data } = sanitizeBlockData(b.data || {});
+        if (b.type === "social" && Array.isArray((data as { links?: unknown }).links)) {
+          (data as { links: unknown }).links = readSocialLinks((data as { links?: unknown }).links);
+        }
+        if (b.type === "github" && typeof (data as { username?: unknown }).username === "string") {
+          (data as { username: string }).username = canonicalGithubUsername((data as { username: string }).username) || "";
+        }
         return {
           ...data,
           id: b.id,

@@ -5,6 +5,7 @@ import { runDryRun } from "@/lib/mcp/dry-run";
 import { applyPatch, boardBlocks, layoutView, planTidy, type LayoutPatch } from "@/lib/mcp/layout";
 import { effectiveBlockLimit, launchPlanIsPro } from "@/lib/mcp/limits";
 import { hasProAccess } from "@/lib/pro-access";
+import { canonicalGithubUsername, readSocialLinks } from "@/lib/social-url";
 import {
   PROJECT_DATA_KEYS,
   announceLaunchInputSchema,
@@ -129,7 +130,9 @@ export async function getMyProfile(store: McpStore, userId: string): Promise<Too
       country: profile.country,
       roles: profile.roles || [],
       available: profile.available === true,
-      github_handle: profile.github_handle,
+      github_handle: profile.github_handle
+        ? canonicalGithubUsername(profile.github_handle) || profile.github_handle
+        : profile.github_handle,
       accent_color: profile.accent_color,
       layout: profile.layout,
       profile_layout: profile.profile_layout === "links" ? "links" : "portfolio",
@@ -140,7 +143,7 @@ export async function getMyProfile(store: McpStore, userId: string): Promise<Too
       builder_score: profile.builder_score || 0,
       plan: launchPlanIsPro(profile) ? "pro" : "free",
       has_pro_access: hasProAccess(profile),
-      links: Array.isArray(socialData.links) ? socialData.links : [],
+      links: readSocialLinks(socialData.links),
       stack: Array.isArray(stackData.items) ? stackData.items : [],
       projects: blocks.filter((block) => block.type === "project").map(projectView),
       limits: {

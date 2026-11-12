@@ -6,6 +6,7 @@ import { GitHubBlockData } from "@/lib/profile-types";
 import { useEffect, useState } from "react";
 import { useBlockPreview } from "@/lib/block-preview-context";
 import { ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
+import { canonicalGithubUsername } from "@/lib/social-url";
 
 interface Props {
   data: GitHubBlockData;
@@ -38,7 +39,8 @@ export function GitHubBlock({ data, accentColor }: Props) {
   const locale = useLocale();
 
   const stats = data.stats || { stars: 0, repos: 0, followers: 0 };
-  const username = data.username || "usuario";
+  const githubUser = canonicalGithubUsername(data.username);
+  const username = githubUser || data.username || "usuario";
 
   // A 1-row-tall block can't fit the full layout (stats + month navigator + the
   // 7-row aspect-square heatmap overflow ~2 tracks), so it would balloon past
@@ -107,8 +109,9 @@ export function GitHubBlock({ data, accentColor }: Props) {
       animate={{ opacity: 1 }}
       className="huevsite-block block-github h-full flex flex-col justify-between relative group"
     >
+      {githubUser && (
       <a
-        href={`https://github.com/${username}`}
+        href={`https://github.com/${githubUser}`}
         target="_blank"
         rel="noopener noreferrer"
         className="absolute top-4 right-4 p-2 rounded-lg bg-black/40 text-[var(--text-muted)] hover:text-white hover:bg-black/60 transition-all opacity-0 group-hover:opacity-100 backdrop-blur-md z-10"
@@ -117,6 +120,7 @@ export function GitHubBlock({ data, accentColor }: Props) {
       >
         <ExternalLink size={14} />
       </a>
+      )}
 
       <div>
         <div className="block-label mb-4 uppercase tracking-[0.2em]">GITHUB</div>

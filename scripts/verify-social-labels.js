@@ -34,7 +34,7 @@ eq('nunca vacío ni undefined', resolveSquareLabel({ platform: '', url: '' }), '
 eq('twitter -> intent de seguir', resolveFollowUrl({ platform: 'twitter', url: 'https://x.com/tomas' }), 'https://x.com/intent/follow?screen_name=tomas');
 eq('twitter.com con @ y query', resolveFollowUrl({ platform: 'twitter', url: 'https://twitter.com/@tomas?s=20' }), 'https://x.com/intent/follow?screen_name=tomas');
 eq('twitter con url rara queda igual', resolveFollowUrl({ platform: 'twitter', url: 'https://x.com/intent/follow?screen_name=a' }), 'https://x.com/intent/follow?screen_name=a');
-eq('instagram sin intent', resolveFollowUrl({ platform: 'instagram', url: 'https://instagram.com/t' }), 'https://instagram.com/t');
+eq('instagram sin intent', resolveFollowUrl({ platform: 'instagram', url: 'https://instagram.com/t' }), 'https://www.instagram.com/t');
 eq('sin esquema se completa con https', resolveFollowUrl({ platform: 'github', url: 'github.com/t' }), 'https://github.com/t');
 eq('nunca app://', /^https?:|^mailto:/.test(resolveFollowUrl({ platform: 'linkedin', url: 'linkedin.com/in/x' })), true);
 

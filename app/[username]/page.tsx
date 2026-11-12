@@ -259,7 +259,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
         ...profile.blocks
           .filter((b) => b.type === "social")
           .flatMap((b: any) => ((b.links ?? b.data?.links ?? []) as any[]).map((l) => l?.url)),
-      ].filter((url): url is string => typeof url === "string" && /^https?:\/\//.test(url))
+      ].filter((url): url is string => typeof url === "string" && /^(https?:|mailto:)/.test(url))
     )
   );
 

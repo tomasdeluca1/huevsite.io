@@ -8,6 +8,7 @@ import { hasProAccess } from '@/lib/pro-access'
 import { rateLimit, getIdentifier } from '@/lib/rate-limit'
 import { fetchGitHubStats, statsAreMeaningful } from '@/lib/github-service'
 import { sanitizeBlockData } from '@/lib/safe-url'
+import { normalizeBlockData } from '@/lib/social-url'
 
 const blockCreateSchema = z.object({
   type: z.string().min(1),
@@ -191,13 +192,18 @@ export async function POST(request: NextRequest) {
 
     const newOrder = lastBlock ? lastBlock.order + 1 : 0
 
+    const normalizedData = normalizeBlockData(body.type, sanitizeBlockData(body.data), "strict")
+    if (!normalizedData.ok) {
+      return NextResponse.json({ error: normalizedData.error }, { status: 400 })
+    }
+
     const insertData: any = {
       user_id: user.id,
       type: body.type,
       order: body.order !== undefined ? body.order : newOrder,
       col_span: body.colSpan || 1,
       row_span: body.rowSpan || 1,
-      data: sanitizeBlockData(body.data),
+      data: normalizedData.data,
       visible: body.visible !== undefined ? body.visible : true,
       sub_site_id: body.sub_site_id || null,
       board_index: boardIndex,

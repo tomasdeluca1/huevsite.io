@@ -195,6 +195,10 @@ ok("profile_layout solo acepta portfolio o links", updateProfileInputSchema.safe
 ok("link_box_style rechaza un valor raro", updateProfileInputSchema.safeParse({ link_box_style: "neon" }).success === false);
 ok("boxStyle del proyecto acepta featured", updateProjectInputSchema.safeParse({ project_id: "10000000-0000-4000-8000-000000000004", boxStyle: "featured" }).success === true);
 ok("un link que no es http se rechaza", updateProfileInputSchema.safeParse({ links: [{ platform: "website", url: "javascript:alert(1)" }] }).success === false);
+const peeledLink = updateProfileInputSchema.safeParse({ links: [{ platform: "linkedin", url: "https://linkedin.com/in/https://www.linkedin.com/in/x/" }] });
+ok("el MCP aplana el LinkedIn concatenado", peeledLink.success === true && peeledLink.success && peeledLink.data.links?.[0]?.url === "https://www.linkedin.com/in/x");
+const peeledGithub = updateProfileInputSchema.safeParse({ github_handle: "https://github.com/octocat" });
+ok("el MCP guarda el usuario de GitHub, no la URL", peeledGithub.success === true && peeledGithub.success && peeledGithub.data.github_handle === "octocat");
 ok("una imagen javascript se rechaza", updateProfileInputSchema.safeParse({ image: "javascript:alert(1)" }).success === false);
 ok("un data URI de imagen se rechaza", updateProfileInputSchema.safeParse({ image: "data:image/png;base64,aaaa" }).success === false);
 ok("una imagen https pasa", updateProfileInputSchema.safeParse({ image: "https://ada.dev/me.png" }).success === true);

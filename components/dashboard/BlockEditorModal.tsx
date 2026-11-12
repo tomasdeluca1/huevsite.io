@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence, Reorder } from "framer-motion";
 import { BlockData, EcosystemBlockData, getContrastColor } from "@/lib/profile-types";
-import { X, Save, Sparkles, Search, Github, GripVertical, RefreshCw, Loader2, ImageDown } from "lucide-react";
+import { X, Save, Sparkles, Search, Github, GripVertical, RefreshCw, Loader2, ImageDown, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { ImageUpload } from "@/components/dashboard/ImageUpload";
@@ -19,10 +19,11 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   onSave: (updatedBlock: BlockData) => void;
+  onRequestDelete?: () => void;
   accentColor?: string;
 }
 
-export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor = "#C8FF00" }: Props) {
+export function BlockEditorModal({ block, isOpen, onClose, onSave, onRequestDelete, accentColor = "#C8FF00" }: Props) {
   const t = useTranslations("dashboard");
   const [formData, setFormData] = useState<any>(block);
   const [mounted, setMounted] = useState(false);
@@ -1298,10 +1299,21 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
               {renderSizeControls()}
             </div>
 
-            <div className="p-4 md:p-6 border-t border-[var(--border)] bg-[var(--surface)] flex gap-4 shrink-0 pb-8 md:pb-6">
+            <div className="p-4 md:p-6 border-t border-[var(--border)] bg-[var(--surface)] shrink-0 pb-8 md:pb-6 space-y-3">
+              {block.type === "project" && onRequestDelete && (
+                <button
+                  type="button"
+                  onClick={onRequestDelete}
+                  className="flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-red-500/30 bg-red-500/10 text-sm font-bold text-red-400"
+                >
+                  <Trash2 size={16} />
+                  {t("blockEditor.project.delete")}
+                </button>
+              )}
+              <div className="flex gap-4">
               <button
                 onClick={onClose}
-                className="px-6 md:px-8 py-4 rounded-2xl font-bold text-sm md:text-base text-[var(--text-muted)] hover:text-white hover:bg-white/5 transition-all"
+                className="min-h-11 px-6 md:px-8 py-4 rounded-2xl font-bold text-sm md:text-base text-[var(--text-muted)] hover:text-white hover:bg-white/5 transition-all"
               >
                 {t("blockEditor.cancel")}
               </button>
@@ -1313,6 +1325,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, accentColor =
                 <Save size={18} />
                 {t("blockEditor.save")}
               </button>
+              </div>
             </div>
           </motion.div>
         </div>

@@ -19,7 +19,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useTranslations } from "next-intl";
-import { Copy, Check, Eye, EyeOff, GripVertical, Pencil, Share2 } from "lucide-react";
+import { Copy, Check, Eye, EyeOff, GripVertical, Pencil, Share2, Trash2 } from "lucide-react";
 import type { BlockData, ProfileData } from "@/lib/profile-types";
 import { getContrastColor } from "@/lib/profile-types";
 import { LINK_BOX_STYLES, type LinkBoxStyle, type ProfileLayoutMode } from "@/lib/profile-layout";
@@ -43,6 +43,7 @@ interface Props {
   onReorder: (orderedIds: string[]) => void;
   onBasics: (patch: { displayName: string; tagline: string }) => void;
   onAddProject: (title: string, link: string) => void;
+  onDeleteProject: (block: BlockData) => void;
   onEdit: (block: BlockData) => void;
   onEditProfile: () => void;
   onShare: () => void;
@@ -113,6 +114,7 @@ export function ProfileStudio(props: Props) {
     onReorder,
     onBasics,
     onAddProject,
+    onDeleteProject,
     onEdit,
     onEditProfile,
     onShare,
@@ -365,6 +367,16 @@ export function ProfileStudio(props: Props) {
                         >
                           <Pencil size={16} />
                         </button>
+                        {row.type === "project" && (
+                          <button
+                            type="button"
+                            onClick={() => onDeleteProject(block)}
+                            aria-label={t("deleteProject")}
+                            className="grid h-11 w-11 place-items-center rounded-xl text-red-400 hover:bg-red-500/10"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
                       </SortableRow>
                     );
                   })}

@@ -249,6 +249,11 @@ async function run() {
   const listed = await listMyProjects(base, USER);
   ok("list_my_projects no incluye el de otro ni el sub-site", listed.ok && (listed.data.projects as { id: string }[]).length === 1 && (listed.data.projects as { id: string }[])[0].id === "10000000-0000-4000-8000-000000000002");
 
+  const foreignDelete = await deleteProject(base, USER, { project_id: "10000000-0000-4000-8000-000000000099", confirm: true });
+  ok("delete_project no borra el de otro", !foreignDelete.ok && foreignDelete.error === "not_found" && !base.deleted.includes("10000000-0000-4000-8000-000000000099"));
+  const subSiteDelete = await deleteProject(base, USER, { project_id: "10000000-0000-4000-8000-000000000098", confirm: true });
+  ok("delete_project no borra un proyecto de sub-site", !subSiteDelete.ok && subSiteDelete.error === "not_found" && base.deleted.length === 0);
+
   const full = memory({
     blocks: [0, 1, 2, 3, 4].map((index) => block({ id: `full-${index}`, type: "project", data: { title: `P${index}` } })),
   });

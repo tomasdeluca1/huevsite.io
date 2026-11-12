@@ -45,27 +45,30 @@ export function SortableBlock({ id, block, children, onRemove, onEdit, onResize,
       className={`${getColSpanClass(block.col_span)} ${getRowSpanClass(block.row_span)} relative group rounded-[var(--radius-lg)]`}
     >
       {/* OVERLAY CONTROLS */}
-      <div className="absolute top-3 right-3 flex gap-2 z-[60] opacity-0 group-hover:opacity-100 transition-all transform translate-y-1 group-hover:translate-y-0">
+      <div className="absolute top-3 right-3 flex gap-2 z-[60] opacity-100 transition-all [@media(hover:hover)_and_(min-width:768px)]:opacity-0 [@media(hover:hover)_and_(min-width:768px)]:translate-y-1 [@media(hover:hover)_and_(min-width:768px)]:group-hover:opacity-100 [@media(hover:hover)_and_(min-width:768px)]:group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:translate-y-0">
         <button
           onClick={() => onEdit(block)}
-          className="p-2 rounded-lg bg-[var(--surface2)] border border-[var(--border-bright)] hover:border-[var(--accent)] transition-all text-[var(--accent)] backdrop-blur-md shadow-lg"
+          className="grid min-h-11 min-w-11 place-items-center rounded-lg bg-[var(--surface2)] border border-[var(--border-bright)] hover:border-[var(--accent)] transition-all text-[var(--accent)] backdrop-blur-md shadow-lg md:min-h-0 md:min-w-0 md:p-2"
           title={t("sortableBlock.edit")}
+          aria-label={t("sortableBlock.edit")}
         >
           <Pencil size={16} />
         </button>
         {onHide && (
           <button
             onClick={() => onHide(id)}
-            className="p-2 rounded-lg bg-[var(--surface2)] border border-[var(--border-bright)] hover:border-amber-500/50 transition-all text-white/50 hover:text-amber-400 backdrop-blur-md shadow-lg"
+            className="grid min-h-11 min-w-11 place-items-center rounded-lg bg-[var(--surface2)] border border-[var(--border-bright)] hover:border-amber-500/50 transition-all text-white/50 hover:text-amber-400 backdrop-blur-md shadow-lg md:min-h-0 md:min-w-0 md:p-2"
             title={t("sortableBlock.hide")}
+            aria-label={t("sortableBlock.hide")}
           >
             <EyeOff size={16} />
           </button>
         )}
         <button
           onClick={() => onRemove(id)}
-          className="p-2 rounded-lg bg-red-500/10 border border-red-500/30 hover:bg-red-500 hover:text-white transition-all text-red-500 backdrop-blur-md shadow-lg"
+          className="grid min-h-11 min-w-11 place-items-center rounded-lg bg-red-500/10 border border-red-500/30 hover:bg-red-500 hover:text-white transition-all text-red-500 backdrop-blur-md shadow-lg md:min-h-0 md:min-w-0 md:p-2"
           title={t("sortableBlock.remove")}
+          aria-label={t("sortableBlock.remove")}
         >
           <Trash2 size={16} />
         </button>
@@ -73,7 +76,7 @@ export function SortableBlock({ id, block, children, onRemove, onEdit, onResize,
 
       {/* RESIZE CONTROLS (BOTTOM RIGHT) */}
       {onResize && (
-        <div className="absolute bottom-3 right-3 flex flex-col gap-1 z-[60] opacity-0 group-hover:opacity-100 transition-all transform translate-y-1 group-hover:translate-y-0">
+        <div className="absolute bottom-3 right-3 flex flex-col gap-1 z-[60] opacity-100 transition-all [@media(hover:hover)_and_(min-width:768px)]:opacity-0 [@media(hover:hover)_and_(min-width:768px)]:translate-y-1 [@media(hover:hover)_and_(min-width:768px)]:group-hover:opacity-100 [@media(hover:hover)_and_(min-width:768px)]:group-hover:translate-y-0 group-focus-within:opacity-100">
           <div className="flex items-center bg-[var(--surface)]/80 backdrop-blur-md border border-[var(--border-bright)] rounded-lg overflow-hidden shadow-lg">
             <button
               onClick={() => onResize(id, Math.max(1, block.col_span - 1), block.row_span)}
@@ -107,7 +110,7 @@ export function SortableBlock({ id, block, children, onRemove, onEdit, onResize,
       <div
         {...attributes}
         {...listeners}
-        className="absolute top-3 left-3 p-2 cursor-grab active:cursor-grabbing z-[60] opacity-0 group-hover:opacity-100 transition-all transform -translate-y-1 group-hover:translate-y-0 text-[var(--text-muted)] hover:text-white bg-[var(--surface)]/50 rounded-lg backdrop-blur-md"
+        className="absolute top-3 left-3 grid min-h-11 min-w-11 cursor-grab place-items-center active:cursor-grabbing z-[60] opacity-100 transition-all text-[var(--text-muted)] hover:text-white bg-[var(--surface)]/50 rounded-lg backdrop-blur-md md:min-h-0 md:min-w-0 md:p-2 [@media(hover:hover)_and_(min-width:768px)]:opacity-0 [@media(hover:hover)_and_(min-width:768px)]:-translate-y-1 [@media(hover:hover)_and_(min-width:768px)]:group-hover:opacity-100 [@media(hover:hover)_and_(min-width:768px)]:group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:translate-y-0"
       >
         <GripVertical size={18} />
       </div>

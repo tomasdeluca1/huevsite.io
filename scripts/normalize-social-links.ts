@@ -113,6 +113,7 @@ export async function normalizeStoredSocialLinks(supabase: SupabaseClient, apply
       for (const problem of plan.unfixable) {
         report.unfixable.push({ ...problem, username, blockId: block.id, before: clip(problem.before) });
       }
+      // plan.links trae los canónicos y, sin tocarlos, los que no se pudieron arreglar.
       if (apply && plan.changed) {
         const { error } = await supabase
           .from("blocks")

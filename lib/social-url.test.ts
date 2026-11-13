@@ -8,6 +8,7 @@ import {
   planSocialLinks,
   readSocialLinks,
   socialDraftsBlockSave,
+  type NormalizeSuccess,
 } from "./social-url";
 
 function urlOf(platform: string, raw: string): string {
@@ -136,6 +137,9 @@ test("variantes de X, LinkedIn, GitHub, YouTube, Instagram, TikTok, Threads, Blu
     ["email", "mailto:hola@mail.com?subject=hey", "mailto:hola@mail.com"],
     ["website", "hola@mail.com", "mailto:hola@mail.com"],
     ["discord", "https://discord.gg/huev", "https://discord.gg/huev"],
+    ["discord", "https://discord.com/invite/huev", "https://discord.gg/huev"],
+    ["discord", "https://discord.com/users/12345678901234567", "https://discord.com/users/12345678901234567"],
+    ["discord", "user.name", "https://discord.com/users/user.name"],
     ["telegram", "@canalhuev", "https://t.me/canalhuev"],
     ["twitch", "https://twitch.tv/ana_tv/", "https://www.twitch.tv/ana_tv"],
     ["farcaster", "https://warpcast.com/ana", "https://warpcast.com/ana"],
@@ -202,4 +206,133 @@ test("un link que ya es canónico no se marca como cambio", () => {
   assert.equal(plan.changed, false);
   assert.equal(plan.fixed.length, 0);
   assert.equal(plan.unfixable.length, 0);
+});
+
+test("un invite de Discord sigue siendo invite en la segunda pasada", () => {
+  const inputs = [
+    "https://discord.gg/huev",
+    "https://discord.com/invite/huev",
+    "http://discord.gg/huev/",
+    "https://www.discord.com/invite/huev?event=1",
+    "discord.gg/huev",
+  ];
+  for (const raw of inputs) {
+    const once = normalizeSocialInput("discord", raw);
+    assert.equal(once.ok, true, raw);
+    if (!once.ok) continue;
+    assert.equal(once.url, "https://discord.gg/huev", raw);
+    assert.equal(once.url.includes("/users/"), false, raw);
+    const fromUrl = normalizeSocialInput(once.platform, once.url);
+    const fromHandle = normalizeSocialInput(once.platform, once.handle);
+    assert.deepEqual(fromUrl, once, `url ${raw}`);
+    assert.deepEqual(fromHandle, once, `handle ${raw}`);
+  }
+
+  // Lo que dejó la primera versión: handle = código, url = invite.
+  const legacy = planSocialLinks([
+    { platform: "discord", handle: "huev", url: "https://discord.gg/huev" },
+    { platform: "discord", handle: "huev", url: "https://discord.com/invite/huev" },
+    { platform: "discord", handle: "huev", url: "https://discord.com/users/huev" },
+  ]);
+  assert.deepEqual(
+    legacy.links.map((link) => link.url),
+    ["https://discord.gg/huev", "https://discord.gg/huev", "https://discord.com/users/huev"],
+  );
+  const again = planSocialLinks(legacy.links);
+  assert.equal(again.changed, false);
+  assert.deepEqual(
+    again.links.map((link) => link.url),
+    legacy.links.map((link) => link.url),
+  );
+});
+
+test("normalizar dos veces es igual a una, en cada plataforma", () => {
+  const samples: Array<[string, string]> = [
+    ["twitter", "@Jack"],
+    ["twitter", "https://twitter.com/jack/"],
+    ["twitter", "https://x.com/intent/follow?screen_name=jack"],
+    ["linkedin", "pela"],
+    ["linkedin", "company/huevsite"],
+    ["linkedin", "school/huevsite"],
+    ["linkedin", "https://ar.linkedin.com/in/pela/?trk=public"],
+    ["github", "https://github.com/Octocat/"],
+    ["youtube", "@Canal.Viejo"],
+    ["youtube", "https://www.youtube.com/channel/UC1234567890123456789012"],
+    ["youtube", "https://youtube.com/c/CanalViejo"],
+    ["youtube", "https://www.youtube.com/user/CanalViejo/"],
+    ["instagram", "@ana.builds"],
+    ["instagram", "ana.builds"],
+    ["tiktok", "@ana.builds"],
+    ["tiktok", "https://www.tiktok.com/@ana.builds"],
+    ["threads", "@ana.builds"],
+    ["threads", "https://www.threads.com/@ana.builds/"],
+    ["bluesky", "@Ana.Bsky.Social"],
+    ["bluesky", "did:plc:abcdefghijklmnopqrstuvwx"],
+    ["website", "https://ejemplo.com/ruta?x=1"],
+    ["website", "example.com"],
+    ["website", "http://ejemplo.com"],
+    ["website", "hola@mail.com"],
+    ["email", "Hola@Mail.com"],
+    ["email", "mailto:hola@mail.com?subject=hey"],
+    ["discord", "https://discord.gg/huev"],
+    ["discord", "https://discord.com/invite/huev"],
+    ["discord", "user.name"],
+    ["discord", "https://discord.com/users/12345678901234567"],
+    ["telegram", "https://t.me/s/canalhuev"],
+    ["telegram", "@canalhuev"],
+    ["twitch", "https://twitch.tv/ana_tv/"],
+    ["farcaster", "https://farcaster.xyz/ana"],
+    ["farcaster", "https://warpcast.com/ana"],
+  ];
+  for (const [platform, raw] of samples) {
+    const once = normalizeSocialInput(platform, raw);
+    assert.equal(once.ok, true, `${platform} ${raw} ${once.ok ? "" : once.error}`);
+    if (!once.ok) continue;
+    assertRoundTrip(once, `${platform} ${raw}`);
+    const first = planSocialLinks([{ platform, url: raw, handle: raw }]);
+    assert.equal(first.unfixable.length, 0, `${platform} ${raw}`);
+    const second = planSocialLinks(first.links);
+    assert.equal(second.changed, false, `${platform} ${raw}`);
+    assert.equal(second.fixed.length, 0, `${platform} ${raw}`);
+    assert.deepEqual(second.links, first.links, `${platform} ${raw}`);
+  }
+});
+
+function assertRoundTrip(once: NormalizeSuccess, label: string) {
+  const fromUrl = normalizeSocialInput(once.platform, once.url);
+  const fromHandle = normalizeSocialInput(once.platform, once.handle);
+  assert.deepEqual(fromUrl, once, `url ${label}`);
+  assert.deepEqual(fromHandle, once, `handle ${label}`);
+}
+
+test("el plan del backfill conserva el link que no puede normalizar", () => {
+  const broken = {
+    platform: "twitter",
+    url: "https://x.com/jack/status/1",
+    handle: "jack/status/1",
+    label: "post",
+  };
+  const plan = planSocialLinks([
+    { platform: "github", handle: "octocat ", url: "https://github.com/octocat" },
+    broken,
+  ]);
+  assert.equal(plan.changed, true);
+  assert.equal(plan.fixed.length, 1);
+  assert.equal(plan.unfixable.length, 1);
+  assert.equal(plan.unfixable[0]?.platform, "twitter");
+  assert.equal(plan.unfixable[0]?.reason.length > 0, true);
+  assert.equal(plan.links.length, 2);
+  assert.equal(plan.links[0]?.url, "https://github.com/octocat");
+  assert.deepEqual(plan.links[1], broken);
+
+  const onlyBroken = planSocialLinks([broken]);
+  assert.equal(onlyBroken.changed, false);
+  assert.deepEqual(onlyBroken.links, [broken]);
+  assert.equal(onlyBroken.unfixable.length, 1);
+  assert.deepEqual(readSocialLinks([broken]), []);
+
+  const again = planSocialLinks(plan.links);
+  assert.equal(again.changed, false);
+  assert.deepEqual(again.links[1], broken);
+  assert.equal(again.links[0]?.url, "https://github.com/octocat");
 });

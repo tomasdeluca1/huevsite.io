@@ -1,4 +1,5 @@
 import type { McpBlock } from "@/lib/mcp/types";
+import { readSocialLinks } from "@/lib/social-url";
 
 // Layout de la grilla del perfil público. En escritorio la grilla es de 4
 // columnas con grid-auto-flow: dense; en tablet, 2; en celular, 1 (ahí todo se
@@ -116,8 +117,7 @@ function contentScore(block: McpBlock): number {
 }
 
 function usableLinks(value: unknown): Record<string, unknown>[] {
-  if (!Array.isArray(value)) return [];
-  return value.map(rec).filter((link) => str(link.url) !== "");
+  return readSocialLinks(value).map((link) => ({ ...link }));
 }
 
 function duplicateKey(block: McpBlock): string | null {

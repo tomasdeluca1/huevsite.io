@@ -8,7 +8,8 @@ import { createPortal } from "react-dom";
 import { ImageUpload } from "@/components/dashboard/ImageUpload";
 import { AvatarFramer } from "@/components/dashboard/AvatarFramer";
 import { FileUpload } from "@/components/dashboard/FileUpload";
-import { SOCIAL_PLATFORMS, SocialPlatformKey, buildSocialUrl, getUrlPreview } from "@/lib/social-platforms";
+import { SocialLinkEditor, socialLinksBlockSave } from "@/components/dashboard/SocialLinkEditor";
+import { canonicalGithubUsername, commitSocialLinks } from "@/lib/social-url";
 import { BoxStylePicker } from "@/components/dashboard/BoxStylePicker";
 import { parseBoxStyleOverride } from "@/lib/profile-layout";
 import { AIRewriteButton } from "@/components/dashboard/AIRewriteButton";
@@ -150,15 +151,15 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, onRequestDele
     if (block.type === 'project' && typeof dataToSave.stack === 'string') {
       dataToSave.stack = dataToSave.stack.split(',').map((s: string) => s.trim()).filter((s: string) => s);
     }
-    // Asegurar que las URLs sociales estén construidas desde el handle y limpiar IDs de drag
     if (block.type === 'social' && Array.isArray(dataToSave.links)) {
-      dataToSave.links = dataToSave.links.map((l: any) => {
-        const { _dragId, ...rest } = l;
-        return {
-          ...rest,
-          url: l.url || buildSocialUrl(l.platform, l.handle || ""),
-        };
-      });
+      const committed = commitSocialLinks(dataToSave.links);
+      if (!committed.ok) return;
+      dataToSave.links = committed.links;
+    }
+    if (block.type === 'github' && typeof dataToSave.username === 'string' && dataToSave.username.trim()) {
+      const username = canonicalGithubUsername(dataToSave.username);
+      if (!username) return;
+      dataToSave.username = username;
     }
 
     if (block.type === 'community' && Array.isArray(dataToSave.communities)) {
@@ -178,6 +179,13 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, onRequestDele
     onSave(dataToSave);
     onClose();
   };
+
+  const saveBlocked =
+    (block.type === "social" && socialLinksBlockSave(formData.links)) ||
+    (block.type === "github" &&
+      typeof formData.username === "string" &&
+      formData.username.trim() !== "" &&
+      !canonicalGithubUsername(formData.username));
 
   const renderFields = () => {
     switch (block.type) {
@@ -504,104 +512,11 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, onRequestDele
         );
       case "social":
         return (
-          <div className="space-y-6">
-            <div className="section-label !text-[9px] px-1 translate-y-2 opacity-50">{t("blockEditor.social.linksLabel")}</div>
-            <Reorder.Group axis="y" values={formData.links || []} onReorder={(newLinks) => handleChange("links", newLinks)} className="space-y-3 pt-4">
-              {(formData.links || []).map((linkObj: any, index: number) => {
-                const platform = linkObj.platform || "twitter";
-                const platformConfig = SOCIAL_PLATFORMS[platform as SocialPlatformKey];
-                const handle = linkObj.handle || "";
-                const preview = handle ? getUrlPreview(platform, handle) : "";
-
-                return (
-                  <Reorder.Item
-                    key={linkObj._dragId}
-                    value={linkObj}
-                    whileDrag={{ scale: 1.02, boxShadow: "0 20px 40px rgba(0,0,0,0.4)" }}
-                    className="space-y-3 p-4 bg-black/20 rounded-2xl border border-white/5 relative group/item sortable-item"
-                  >
-                    <div className="flex justify-between items-center mb-1">
-                      <div className="flex items-center gap-2">
-                        <div className="drag-handle p-1.5 -ml-1 text-white/20 group-hover/item:text-white/40 transition-colors bg-white/5 rounded-lg">
-                          <GripVertical size={14} />
-                        </div>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-[var(--accent)]" style={{ color: accentColor }}>
-                          {platformConfig?.label || platform}
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const newLinks = [...formData.links];
-                          newLinks.splice(index, 1);
-                          handleChange("links", newLinks);
-                        }}
-                        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-500 transition-all"
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <select
-                        value={platform}
-                        onChange={(e) => {
-                          const newLinks = [...formData.links];
-                          newLinks[index] = { ...newLinks[index], platform: e.target.value, handle: "", url: "", favicon: undefined };
-                          handleChange("links", newLinks);
-                        }}
-                        className="w-full p-3 rounded-xl bg-black/40 border border-white/5 focus:border-[var(--accent)] outline-none transition-all text-sm font-medium"
-                      >
-                        {Object.entries(SOCIAL_PLATFORMS).map(([key, cfg]) => (
-                          <option key={key} value={key}>{cfg.label}</option>
-                        ))}
-                      </select>
-                      <div className="relative">
-                        <input
-                          value={handle}
-                          onChange={(e) => {
-                            const newHandle = e.target.value;
-                            const newLinks = [...formData.links];
-                            const url = buildSocialUrl(platform, newHandle);
-                            let favicon = newLinks[index].favicon;
-                            if (platform === "website" && newHandle.trim()) {
-                              try {
-                                const domain = new URL(newHandle.startsWith('http') ? newHandle : `https://${newHandle}`).hostname;
-                                favicon = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
-                              } catch { /* invalid URL, skip favicon */ }
-                            } else if (platform !== "website") {
-                              favicon = undefined;
-                            }
-                            newLinks[index] = {
-                              ...newLinks[index],
-                              handle: newHandle,
-                              url,
-                              favicon,
-                            };
-                            handleChange("links", newLinks);
-                          }}
-                          className="w-full p-3 rounded-xl bg-black/40 border border-white/5 focus:border-[var(--accent)] outline-none transition-all font-mono text-sm"
-                          placeholder={platformConfig?.placeholder ?? t("blockEditor.social.handlePlaceholder")}
-                        />
-                      </div>
-                    </div>
-                    {preview && (
-                      <p className="text-[10px] text-[var(--text-muted)] font-mono px-1 opacity-50 italic">
-                        {preview}
-                      </p>
-                    )}
-                  </Reorder.Item>
-                );
-              })}
-            </Reorder.Group>
-            <button
-              type="button"
-              onClick={() => handleChange("links", [...(formData.links || []), { platform: "twitter", handle: "", url: "", label: "", _dragId: Math.random().toString(36).substr(2, 9) }])}
-              className="w-full p-3 rounded-xl border border-dashed border-[var(--border-bright)] text-[var(--text-muted)] hover:text-white hover:border-[var(--accent)] transition-all text-sm"
-            >
-              {t("blockEditor.social.addLink")}
-            </button>
-          </div>
+          <SocialLinkEditor
+            links={formData.links || []}
+            onChange={(next) => handleChange("links", next)}
+            accentColor={accentColor}
+          />
         );
       case "community":
         return (
@@ -1300,6 +1215,11 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, onRequestDele
             </div>
 
             <div className="p-4 md:p-6 border-t border-[var(--border)] bg-[var(--surface)] shrink-0 pb-8 md:pb-6 space-y-3">
+              {saveBlocked && (
+                <p role="alert" className="text-[11px] leading-relaxed text-red-300">
+                  {t("blockEditor.social.saveBlocked")}
+                </p>
+              )}
               {block.type === "project" && onRequestDelete && (
                 <button
                   type="button"
@@ -1319,7 +1239,8 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, onRequestDele
               </button>
               <button
                 onClick={handleSave}
-                className="flex-1 py-4 px-6 rounded-2xl font-bold flex items-center justify-center gap-2 text-sm md:text-base whitespace-nowrap transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+                disabled={saveBlocked}
+                className="flex-1 py-4 px-6 rounded-2xl font-bold flex items-center justify-center gap-2 text-sm md:text-base whitespace-nowrap transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed"
                 style={{ backgroundColor: accentColor, color: getContrastColor(accentColor) }}
               >
                 <Save size={18} />

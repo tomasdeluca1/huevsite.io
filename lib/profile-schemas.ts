@@ -1,5 +1,23 @@
 import { z } from "zod";
 import { linkBoxStyleSchema, profileLayoutSchema } from "@/lib/profile-layout";
+import { normalizeSocialInput } from "@/lib/social-url";
+
+const githubHandleSchema = z
+  .string()
+  .max(300)
+  .superRefine((value, ctx) => {
+    if (!value.trim()) return;
+    const result = normalizeSocialInput("github", value);
+    if (!result.ok) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: result.error });
+    }
+  })
+  .transform((value) => {
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+    const result = normalizeSocialInput("github", trimmed);
+    return result.ok ? result.handle : trimmed;
+  });
 
 // Same object the dashboard PATCH /api/profile validates against.
 // accent_color and border_radius land in a public <style> tag, so the
@@ -16,7 +34,7 @@ export const profilePatchSchema = z.object({
   roles: z.array(z.string()).optional(),
   location: z.string().max(100).optional(),
   available: z.boolean().optional(),
-  github_handle: z.string().max(50).optional(),
+  github_handle: githubHandleSchema.optional(),
   image: z.string().url().or(z.literal("")).optional(),
   has_seen_update_feb25: z.boolean().optional(),
   custom_domain: z.string().max(253).optional(),

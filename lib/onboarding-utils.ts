@@ -1,4 +1,5 @@
 import { BlockData } from "@/lib/profile-types";
+import { canonicalGithubUsername, readSocialLinks } from "@/lib/social-url";
 import {
   extractGitHubProfileUsername,
   type ImportedLinktreeLink,
@@ -94,10 +95,12 @@ export function buildOnboardingBlocks({
   const stackItems = state.githubData?.topLanguages?.slice(0, 5) || [];
   const linktreeLinks = sanitizeImportedLinks(state.linktreeData?.links || []);
   const githubHandle =
-    state.githubHandle ||
-    state.githubData?.username ||
-    linktreeLinks.map((link) => extractGitHubProfileUsername(link.url)).find(Boolean) ||
-    undefined;
+    canonicalGithubUsername(
+      state.githubHandle ||
+        state.githubData?.username ||
+        linktreeLinks.map((link) => extractGitHubProfileUsername(link.url)).find(Boolean) ||
+        ""
+    ) || undefined;
 
   const socialSourceLinks = dedupeByUrl(
     linktreeLinks.filter(
@@ -107,11 +110,13 @@ export function buildOnboardingBlocks({
     )
   );
 
-  const socialLinks = socialSourceLinks.slice(0, 5).map((link) => ({
-    platform: link.platform,
-    url: link.url,
-    label: link.title,
-  }));
+  const socialLinks = readSocialLinks(
+    socialSourceLinks.slice(0, 5).map((link) => ({
+      platform: link.platform,
+      url: link.url,
+      label: link.title,
+    }))
+  );
 
   const writingLinks = linktreeLinks.filter((link) => link.category === "writing").slice(0, 4);
   const mediaLinks = linktreeLinks.filter((link) => link.category === "media").slice(0, 2);

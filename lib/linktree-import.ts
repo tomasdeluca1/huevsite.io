@@ -38,7 +38,12 @@ const PLATFORM_HOSTS: Array<{ match: RegExp; platform: SocialPlatformKey }> = [
   { match: /(^|\.)t\.me$/i, platform: "telegram" },
   { match: /(^|\.)telegram\.me$/i, platform: "telegram" },
   { match: /(^|\.)warpcast\.com$/i, platform: "farcaster" },
+  { match: /(^|\.)farcaster\.xyz$/i, platform: "farcaster" },
   { match: /(^|\.)twitch\.tv$/i, platform: "twitch" },
+  { match: /(^|\.)tiktok\.com$/i, platform: "tiktok" },
+  { match: /(^|\.)threads\.net$/i, platform: "threads" },
+  { match: /(^|\.)threads\.com$/i, platform: "threads" },
+  { match: /(^|\.)bsky\.app$/i, platform: "bluesky" },
 ];
 
 export function ensureAbsoluteUrl(input: string) {
@@ -49,6 +54,7 @@ export function ensureAbsoluteUrl(input: string) {
 
 export function classifyLinkPlatform(url: string): ImportedLinktreeLink["platform"] {
   try {
+    if (/^mailto:/i.test(url.trim())) return "email";
     const hostname = new URL(ensureAbsoluteUrl(url)).hostname.replace(/^www\./, "");
     const matched = PLATFORM_HOSTS.find(({ match }) => match.test(hostname));
     return matched?.platform || "website";

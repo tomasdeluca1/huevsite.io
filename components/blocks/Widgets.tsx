@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { MetricBlockData, SocialBlockData, CVBlockData, getContrastColor } from "@/lib/profile-types";
 import { SOCIAL_PLATFORMS, SocialPlatformKey, resolveSquareLabel, resolveFollowUrl, compactUrl } from "@/lib/social-platforms";
+import { readSocialLinks } from "@/lib/social-url";
 import { SOCIAL_ICONS, FallbackIcon } from "@/components/icons/SocialIcons";
 import { Download } from "lucide-react";
 import { useBlockPreview } from "@/lib/block-preview-context";
@@ -48,7 +49,7 @@ interface SocialProps {
 export function SocialBlock({ data, accentColor }: SocialProps) {
   const isPreview = useBlockPreview();
   const t = useTranslations('blocks');
-  const links = (data.links || []).filter(l => l.url);
+  const links = readSocialLinks(data.links || []);
   const visibleLinks = isPreview ? links.slice(0, 3) : links;
   const severalWebsites = links.filter(l => l.platform === "website").length > 1;
 

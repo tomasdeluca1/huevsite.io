@@ -1,4 +1,5 @@
-import { SOCIAL_PLATFORMS, type SocialPlatformKey, buildSocialUrl } from "@/lib/social-platforms";
+import { SOCIAL_PLATFORMS, type SocialPlatformKey } from "@/lib/social-platforms";
+import { canonicalGithubUsername, normalizeStoredLink } from "@/lib/social-url";
 import {
   type LinkBoxStyle,
   parseBoxStyleOverride,
@@ -12,6 +13,9 @@ const SQUARE_PLATFORMS = new Set([
   "instagram",
   "youtube",
   "tiktok",
+  "threads",
+  "bluesky",
+  "email",
   "discord",
   "telegram",
   "twitch",
@@ -118,7 +122,9 @@ export function platformFromUrl(value: string | undefined): string | null {
   if (host === "discord.com" || host === "discord.gg") return "discord";
   if (host === "t.me" || host === "telegram.me" || host === "telegram.org") return "telegram";
   if (host === "twitch.tv") return "twitch";
-  if (host === "warpcast.com") return "farcaster";
+  if (host === "warpcast.com" || host === "farcaster.xyz") return "farcaster";
+  if (host === "threads.net" || host === "threads.com") return "threads";
+  if (host === "bsky.app") return "bluesky";
   return null;
 }
 
@@ -136,16 +142,14 @@ export function isSocialSquare(platform: string | undefined, url?: string): bool
 function platformLabel(platform: string): string {
   const known = SOCIAL_PLATFORMS[platform as SocialPlatformKey];
   if (known) return known.short;
-  if (platform === "tiktok") return "TIKTOK";
   return platform.toUpperCase().slice(0, 8);
 }
 
 function socialHref(link: { platform?: string; url?: string; handle?: string }): string | undefined {
-  const direct = safeHttpUrl(link.url);
-  if (direct) return direct;
-  const handle = (link.handle || "").trim();
-  if (!handle || !link.platform) return undefined;
-  return safeHttpUrl(buildSocialUrl(link.platform, handle));
+  const normalized = normalizeStoredLink(link);
+  if (!normalized.ok) return undefined;
+  if (normalized.link.url.startsWith("mailto:")) return normalized.link.url;
+  return safeHttpUrl(normalized.link.url);
 }
 
 function sorted(blocks: LayoutBlock[]): LayoutBlock[] {
@@ -179,10 +183,11 @@ export function buildLinksLayout(blocks: LayoutBlock[], globalStyle: unknown): {
 
     if (block.type === "social" && Array.isArray(block.links)) {
       block.links.forEach((link, index) => {
+        const normalized = normalizeStoredLink(link);
         const href = socialHref(link);
-        if (!href) return;
-        const detected = platformFromUrl(href);
-        const platform = (link.platform || detected || "website").toLowerCase();
+        if (!href || !normalized.ok) return;
+        const detected = platformFromUrl(href.startsWith("mailto:") ? undefined : href);
+        const platform = (normalized.link.platform || detected || "website").toLowerCase();
         if (isSocialSquare(platform, href)) {
           pushSocial(block.id, detected && SQUARE_PLATFORMS.has(detected) ? detected : platform, href);
           return;
@@ -200,7 +205,7 @@ export function buildLinksLayout(blocks: LayoutBlock[], globalStyle: unknown): {
     }
 
     if (block.type === "github") {
-      const username = (block.username || "").trim().replace(/^@/, "");
+      const username = canonicalGithubUsername(block.username);
       const href = safeHttpUrl(username ? `https://github.com/${username}` : "");
       if (href) pushSocial(block.id, "github", href);
       continue;

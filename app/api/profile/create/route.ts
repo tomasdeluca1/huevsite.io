@@ -8,6 +8,7 @@ import { scoreService } from '@/lib/score-service'
 import { isValidAccentColor } from '@/lib/profile-types'
 import { isReservedUsername } from '@/lib/reserved-usernames'
 import { isValidCountry } from '@/lib/countries'
+import { canonicalGithubUsername, normalizeBlockData } from '@/lib/social-url'
 
 export const dynamic = 'force-dynamic'
 
@@ -142,7 +143,7 @@ export async function POST(request: NextRequest) {
     // Crear perfil
     const hasImportedLinktree = !!body.linktreeData?.links?.length
     const selectedLayout = selectOnboardingLayout(body.username)
-    const githubHandle = body.githubHandle || body.githubData?.username || inferredGitHubHandle || null
+    const githubHandle = canonicalGithubUsername(body.githubHandle || body.githubData?.username || inferredGitHubHandle || "")
 
     const { data: profile, error: profileError } = await adminSupabase
       .from('profiles')
@@ -256,6 +257,11 @@ export async function POST(request: NextRequest) {
                         }
                       : {},
     }))
+
+    for (const row of blocksToInsert) {
+      const normalized = normalizeBlockData(row.type, row.data, "drop")
+      if (normalized.ok) row.data = normalized.data as typeof row.data
+    }
 
     if (blocksToInsert.length > 0) {
       const { error: blocksError } = await adminSupabase

@@ -549,7 +549,11 @@
       },
       "social": {
         "linksLabel": "// links sociales — arrastrá para reordenar",
-        "handlePlaceholder": "handle",
+        "hint": "Pegá el usuario, @usuario o el link completo. Lo acomodamos nosotros.",
+        "handlePlaceholder": "usuario o link",
+        "preview": "Va a quedar así: {url}",
+        "saveBlocked": "Corregí los links marcados antes de guardar.",
+        "removeLink": "Quitar link",
         "addLink": "+ Agregar otra red"
       },
       "community": {

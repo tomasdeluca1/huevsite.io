@@ -2,20 +2,37 @@ import { z } from "zod";
 import { avatarFocusSchema } from "@/lib/avatar-focus";
 import { linkBoxStyleSchema } from "@/lib/profile-layout";
 import { mcpProfileColumnSchema } from "@/lib/profile-schemas";
-import { SOCIAL_PLATFORMS } from "@/lib/social-platforms";
-
-const platformKeys = Object.keys(SOCIAL_PLATFORMS) as [string, ...string[]];
+import { normalizeStoredLink } from "@/lib/social-url";
 
 const httpUrl = z
   .string()
   .max(500)
   .refine((value) => value === "" || /^https?:\/\//i.test(value), "El link tiene que empezar con http:// o https://");
 
-export const mcpSocialLinkSchema = z.object({
-  platform: z.enum(platformKeys),
-  url: z.string().trim().min(1).max(500).refine((value) => /^https?:\/\//i.test(value), "La URL tiene que empezar con http:// o https://"),
-  label: z.string().max(80).optional(),
-});
+export const mcpSocialLinkSchema = z
+  .object({
+    platform: z.string().trim().min(1).max(40),
+    url: z.string().trim().min(1).max(500),
+    handle: z.string().max(500).optional(),
+    label: z.string().max(80).optional(),
+  })
+  .superRefine((link, ctx) => {
+    const result = normalizeStoredLink(link);
+    if (!result.ok && result.code !== "empty") {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: result.error });
+    }
+  })
+  .transform((link) => {
+    const result = normalizeStoredLink(link);
+    if (!result.ok) return { platform: link.platform, url: link.url, ...(link.label ? { label: link.label } : {}) };
+    return {
+      platform: result.link.platform,
+      url: result.link.url,
+      handle: result.link.handle,
+      ...(link.label ? { label: link.label } : {}),
+      ...(result.link.favicon ? { favicon: result.link.favicon } : {}),
+    };
+  });
 
 export const mcpStackSchema = z.array(z.string().trim().min(1).max(40)).max(40);
 

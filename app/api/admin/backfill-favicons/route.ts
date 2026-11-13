@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/admin-auth";
+import { readSocialLinks } from "@/lib/social-url";
 
 export const dynamic = "force-dynamic";
 
@@ -38,8 +39,9 @@ export async function POST(request: NextRequest) {
       const links = block.data?.links;
       if (!Array.isArray(links)) continue;
 
-      let changed = false;
-      const updatedLinks = links.map((link: any) => {
+      const normalized = readSocialLinks(links);
+      let changed = JSON.stringify(normalized) !== JSON.stringify(links);
+      const updatedLinks = normalized.map((link) => {
         if (link.platform === "website" && link.url && !link.favicon) {
           const favicon = getFaviconUrl(link.url);
           if (favicon) {

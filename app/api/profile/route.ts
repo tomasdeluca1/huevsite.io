@@ -271,6 +271,10 @@ export async function PATCH(request: NextRequest) {
       updateData.email = null
     }
 
+    if (updateData.github_handle !== undefined) {
+      updateData.github_handle = parsed.data.github_handle ? parsed.data.github_handle : null
+    }
+
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json(
         { error: 'No hay datos para actualizar' },

@@ -11,6 +11,7 @@ import { createTypefullyDraft, getTypefullyDraftUrl } from "@/lib/typefully";
 import { WinnerEmail } from "@/components/emails/WinnerEmail";
 import { sendRenderedEmail } from "@/lib/email";
 import { emailFrom, emailReplyTo } from "@/lib/email-from";
+import { canonicalGithubUsername, readSocialLinks } from "@/lib/social-url";
 import { InterviewNotificationEmail } from "@/components/emails/InterviewNotificationEmail";
 
 // Shared content pipeline used by:
@@ -130,11 +131,12 @@ export function synthesizeAnswersFromProfile(
     mainProject.tagline
   );
 
+  const githubUser = canonicalGithubUsername(profile.github_handle);
   const stackItems = Array.isArray(stack.items) ? stack.items.join(", ") : "";
   const projectsStack = pickStr(
     stackItems,
     Array.isArray(mainProject.stack) ? mainProject.stack.join(", ") : "",
-    profile.github_handle ? `Stack visible en GitHub @${profile.github_handle}` : ""
+    githubUser ? `Stack visible en GitHub @${githubUser}` : ""
   );
 
   const projectsBiggestChallenge = pickStr(
@@ -160,12 +162,12 @@ export function synthesizeAnswersFromProfile(
     .filter(Boolean)
     .join("\n");
 
-  const socialLinks = Array.isArray(social.links) ? social.links : [];
-  const twitter = socialLinks.find((l: any) => l.platform === "twitter");
+  const socialLinks = readSocialLinks(social.links);
+  const twitter = socialLinks.find((l) => l.platform === "twitter");
   const quickfireWhereToFind = [
     `huevsite.io/${profile.username}`,
-    twitter?.url || (twitter?.handle ? `https://x.com/${twitter.handle}` : ""),
-    profile.github_handle ? `github.com/${profile.github_handle}` : "",
+    twitter?.url || "",
+    githubUser ? `github.com/${githubUser}` : "",
   ]
     .filter(Boolean)
     .join(" · ");

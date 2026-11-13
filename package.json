@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "test": "npx tsx --test lib/social-url.test.ts",
-    "verify": "node scripts/verify-i18n-keys.js && npx tsx scripts/verify-social-labels.js && npx tsx scripts/verify-mobile-order.js && npx tsx scripts/verify-og-meta.js && npx tsx scripts/verify-brand-tokens.js && npx tsx scripts/verify-brand-assets.js && npx tsx scripts/verify-avances-builders.ts && npx tsx scripts/verify-email-compliance.ts && npx tsx scripts/verify-mcp.ts && npx tsx scripts/verify-mcp-oauth.ts && npx tsx scripts/verify-link-layout.ts && npx tsx scripts/verify-safe-url.ts && npx tsx --test lib/social-url.test.ts"
+    "verify": "node scripts/verify-i18n-keys.js && npx tsx scripts/verify-social-labels.js && npx tsx scripts/verify-mobile-order.js && npx tsx scripts/verify-og-meta.js && npx tsx scripts/verify-brand-tokens.js && npx tsx scripts/verify-brand-assets.js && npx tsx scripts/verify-avances-builders.ts && npx tsx scripts/verify-email-compliance.ts && npx tsx scripts/verify-mcp.ts && npx tsx scripts/verify-mcp-oauth.ts && npx tsx scripts/verify-link-layout.ts && npx tsx scripts/verify-safe-url.ts && npx tsx scripts/verify-project-delete.ts && npx tsx --test lib/social-url.test.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",
@@ -24,6 +24,7 @@
     "@supabase/supabase-js": "^2.97.0",
     "@tailwindcss/typography": "^0.5.19",
     "@types/canvas-confetti": "^1.9.0",
+    "@vercel/functions": "^3.11.2",
     "@vercel/og": "^0.11.1",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.0",

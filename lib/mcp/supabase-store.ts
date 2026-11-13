@@ -2,6 +2,7 @@ import { createLaunch } from "@/lib/launch-service";
 import { syncGitHubBlocks } from "@/lib/github-sync";
 import { scoreService } from "@/lib/score-service";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
+import { revalidatePublicProfile } from "@/lib/revalidate-public-profile";
 import type { McpBlock, McpNewBlock, McpProfile, McpStore } from "@/lib/mcp/types";
 
 const PROFILE_COLS =
@@ -207,7 +208,12 @@ export function createSupabaseMcpStore(): McpStore {
         console.error("[mcp] deleteProject", error.message);
         throw new Error("No se pudo borrar el proyecto.");
       }
-      return (data || []).length > 0;
+      const removed = (data || []).length > 0;
+      if (removed) {
+        const { data: profile } = await db.from("profiles").select("username").eq("id", userId).maybeSingle();
+        await revalidatePublicProfile(profile?.username ?? null);
+      }
+      return removed;
     },
 
     async insertActivity(userId, type, data) {

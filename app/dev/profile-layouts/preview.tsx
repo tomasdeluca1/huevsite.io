@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { ProfileGrid } from "@/components/profile/ProfileGrid";
 import { LinksProfile } from "@/components/profile/LinksProfile";
 import { ProfileStudio } from "@/components/dashboard/ProfileStudio";
+import { ConfirmDeleteDialog } from "@/components/dashboard/ConfirmDeleteDialog";
 import { applyLinkOrder } from "@/lib/link-layout";
 import type { LinkBoxStyle, ProfileLayoutMode } from "@/lib/profile-layout";
 import type { BlockData, ProfileData } from "@/lib/profile-types";
@@ -120,8 +122,12 @@ function fixture(mixed: boolean): ProfileData {
 }
 
 export function LayoutPreview({ view }: { view: string }) {
+  const t = useTranslations("dashboard.page");
   const [profile, setProfile] = useState(() => fixture(view === "mix"));
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const mixed = view === "mix";
+  const deleting = profile.blocks.find((block) => block.id === deletingId);
+  const deletingTitle = deleting && deleting.type === "project" ? deleting.title : "";
 
   if (view === "portfolio") {
     return (
@@ -186,6 +192,7 @@ export function LayoutPreview({ view }: { view: string }) {
               ],
             }))
           }
+          onDeleteProject={(block) => setDeletingId(block.id)}
           onEdit={() => {}}
           onEditProfile={() => {}}
           onShare={() => {}}
@@ -196,6 +203,18 @@ export function LayoutPreview({ view }: { view: string }) {
           onBackToMain={() => {}}
           previewPath="/alice"
           previewKey={profile.blocks.length}
+        />
+        <ConfirmDeleteDialog
+          open={!!deleting}
+          title={t("deleteProjectConfirmTitle")}
+          body={t("deleteProjectConfirmBody", { title: deletingTitle || t("deleteProjectFallback") })}
+          cancelLabel={t("cancel")}
+          confirmLabel={t("deleteProject")}
+          onCancel={() => setDeletingId(null)}
+          onConfirm={() => {
+            setProfile((prev) => ({ ...prev, blocks: prev.blocks.filter((block) => block.id !== deletingId) }));
+            setDeletingId(null);
+          }}
         />
       </main>
     );

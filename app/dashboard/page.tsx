@@ -70,6 +70,7 @@ import { BadgeItem } from "@/components/profile/BadgeItem";
 import { ProFeatureTour } from "@/components/dashboard/ProFeatureTour";
 import { TrialExpiredBlockChooser } from "@/components/dashboard/TrialExpiredBlockChooser";
 import { ProfileStudio } from "@/components/dashboard/ProfileStudio";
+import { ConfirmDeleteDialog } from "@/components/dashboard/ConfirmDeleteDialog";
 import { applyLinkOrder } from "@/lib/link-layout";
 import { parseLinkBoxStyle, parseProfileLayout, type LinkBoxStyle, type ProfileLayoutMode } from "@/lib/profile-layout";
 
@@ -95,6 +96,7 @@ export default function DashboardPage() {
   const [isMcpOpen, setIsMcpOpen] = useState(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
+  const [isDeletePending, setIsDeletePending] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isScoreInfoOpen, setIsScoreInfoOpen] = useState(false);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
@@ -656,19 +658,19 @@ export default function DashboardPage() {
     }
   };
 
-  const removeBlock = async (id: string) => {
+  const removeBlock = async (id: string): Promise<boolean> => {
     if (!id.startsWith('temp-')) {
       try {
         const response = await fetch(`/api/blocks/${id}`, { method: 'DELETE' });
         if (!response.ok) {
           const errorData = await response.json();
           alert(t("page.errorDeleteBlock", { error: errorData.error || t("page.errorUnknown") }));
-          return;
+          return false;
         }
       } catch (error) {
         console.error('Error deleting block:', error);
         alert(t("page.errorNetworkDeleteBlock"));
-        return;
+        return false;
       }
     }
 
@@ -679,6 +681,18 @@ export default function DashboardPage() {
         blocks: prev.blocks.filter(b => b.id !== id)
       };
     });
+    setEditingBlock((current) => (current?.id === id ? null : current));
+    setPreviewKey((key) => key + 1);
+    setLastSaved(new Date());
+    return true;
+  };
+
+  const confirmDeleteBlock = async () => {
+    if (!isDeletingId || isDeletePending) return;
+    setIsDeletePending(true);
+    const ok = await removeBlock(isDeletingId);
+    setIsDeletePending(false);
+    if (ok) setIsDeletingId(null);
   };
 
   const BLOCK_TYPE_LABELS: Record<string, string> = {
@@ -2054,6 +2068,7 @@ export default function DashboardPage() {
                   onReorder={handleStudioReorder}
                   onBasics={handleStudioBasics}
                   onAddProject={(title, link) => addBlock("project", { title, link, description: "" }, { silent: true })}
+                  onDeleteProject={(block) => setIsDeletingId(block.id)}
                   onEdit={(block) => setEditingBlock(block)}
                   onEditProfile={() => setIsProfileModalOpen(true)}
                   onShare={() => { setShareCelebrate(false); setIsShareProfileOpen(true); }}
@@ -2179,6 +2194,7 @@ export default function DashboardPage() {
                         onDragEnd={handleMobileDragEnd}
                         sensors={sensors}
                         onViewChange={isPro ? handleViewChange : undefined}
+                        onDeleteProject={(id) => setIsDeletingId(id)}
                       />
                     </div>
                     <div className="w-full lg:w-auto lg:shrink-0 flex justify-center">
@@ -2261,13 +2277,26 @@ export default function DashboardPage() {
                               <p className="text-[10px] text-white/25 font-mono uppercase">{block.type}</p>
                             </div>
                           </div>
+                          <div className="flex shrink-0 items-center gap-2">
                           <button
                             onClick={() => restoreBlock(block.id)}
-                            className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold border border-white/10 hover:border-[var(--accent)]/50 hover:text-[var(--accent)] text-white/40 transition-all"
+                            className="flex min-h-11 items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold border border-white/10 hover:border-[var(--accent)]/50 hover:text-[var(--accent)] text-white/40 transition-all"
                           >
                             <Eye size={13} />
                             {t("page.show")}
                           </button>
+                          {block.type === "project" && (
+                            <button
+                              type="button"
+                              onClick={() => setIsDeletingId(block.id)}
+                              aria-label={t("page.deleteProject")}
+                              className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3 text-[11px] font-bold text-red-400"
+                            >
+                              <Trash2 size={13} />
+                              {t("page.delete")}
+                            </button>
+                          )}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -2300,6 +2329,7 @@ export default function DashboardPage() {
                   onUpdateBlock={updateBlock}
                   onEdit={(b) => setEditingBlock(b)}
                   onAddProject={(prefill) => addBlock("project", prefill)}
+                  onDeleteProject={(id) => setIsDeletingId(id)}
                   accentColor={profile.accentColor}
                   subscriptionTier={profile.subscriptionTier}
                 />
@@ -2418,7 +2448,12 @@ export default function DashboardPage() {
           block={editingBlock} 
           isOpen={!!editingBlock} 
           onClose={() => setEditingBlock(null)} 
-          onSave={updateBlock} 
+          onSave={updateBlock}
+          onRequestDelete={editingBlock.type === "project" ? () => {
+            const id = editingBlock.id;
+            setEditingBlock(null);
+            setIsDeletingId(id);
+          } : undefined}
           accentColor={profile?.accentColor || "#C8FF00"} 
         />
       )}
@@ -2449,7 +2484,27 @@ export default function DashboardPage() {
         initialRoles={(profile.roles as Role[] | null) || []}
         onComplete={handleOnboardingComplete}
       />
-      <AnimatePresence>{isDeletingId && <div className="fixed inset-0 z-[500] flex items-center justify-center p-4"><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setIsDeletingId(null)} /><motion.div initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }} className="relative w-full max-w-sm bg-[var(--surface)] border border-red-500/30 rounded-[2rem] shadow-2xl p-8 z-[510] text-center"><div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-6 text-red-500"><Trash2 size={32} /></div><h3 className="text-2xl font-black mb-3 text-white">{t("page.deleteBlockConfirmTitle")}</h3><p className="text-[var(--text-dim)] mb-8 text-sm leading-relaxed">{t("page.actionCannotBeUndone")}</p><div className="flex gap-3"><button onClick={() => setIsDeletingId(null)} className="flex-1 py-3.5 rounded-2xl bg-[var(--surface2)] font-bold text-sm text-white">{t("page.cancel")}</button><button onClick={() => { removeBlock(isDeletingId); setIsDeletingId(null); }} className="flex-1 py-3.5 rounded-2xl bg-red-500 font-bold text-sm text-white transition-all">{t("page.delete")}</button></div></motion.div></div>}</AnimatePresence>
+      {(() => {
+        const deletingBlock = profile.blocks.find((block) => block.id === isDeletingId);
+        const deletingProject = deletingBlock?.type === "project";
+        const projectTitle = deletingProject && "title" in deletingBlock ? deletingBlock.title : "";
+        return (
+          <ConfirmDeleteDialog
+            open={!!isDeletingId}
+            title={deletingProject ? t("page.deleteProjectConfirmTitle") : t("page.deleteBlockConfirmTitle")}
+            body={deletingProject
+              ? t("page.deleteProjectConfirmBody", { title: projectTitle || t("page.deleteProjectFallback") })
+              : t("page.actionCannotBeUndone")}
+            cancelLabel={t("page.cancel")}
+            confirmLabel={deletingProject ? t("page.deleteProject") : t("page.delete")}
+            pending={isDeletePending}
+            onCancel={() => {
+              if (!isDeletePending) setIsDeletingId(null);
+            }}
+            onConfirm={confirmDeleteBlock}
+          />
+        );
+      })()}
       <ProfileEditModal
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}

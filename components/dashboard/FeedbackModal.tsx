@@ -26,7 +26,12 @@ export function FeedbackModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
       const res = await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content, category, screenshotUrl: screenshotUrl || null }),
+        body: JSON.stringify({
+          content,
+          category,
+          screenshotUrl: screenshotUrl || null,
+          pageUrl: window.location.href,
+        }),
       });
 
       if (res.ok) {

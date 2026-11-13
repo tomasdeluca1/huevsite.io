@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import type { BlockData, ProjectBlockData, ProjectStatus } from "@/lib/profile-types";
 import {
   PROJECT_STATUS_ORDER,
@@ -19,19 +19,20 @@ interface Props {
   onUpdateBlock: (block: BlockData) => void;
   onEdit: (block: BlockData) => void;
   onAddProject: (prefill?: Partial<ProjectBlockData>) => void;
+  onDeleteProject: (id: string) => void;
   accentColor?: string;
   subscriptionTier?: "free" | "pro";
 }
 
-export function ProjectTracker({ blocks, onUpdateBlock, onEdit, onAddProject, accentColor, subscriptionTier }: Props) {
+export function ProjectTracker({ blocks, onUpdateBlock, onEdit, onAddProject, onDeleteProject, accentColor, subscriptionTier }: Props) {
   const t = useTranslations("dashboard.projects");
   const [addOpen, setAddOpen] = useState(false);
   const [launchTarget, setLaunchTarget] = useState<{ id: string; title: string } | null>(null);
   const [launchedToast, setLaunchedToast] = useState(false);
 
-  const projects = blocks
-    .filter((b): b is ProjectBlockData => b.type === "project")
-    .filter((p) => !p.archived);
+  const allProjects = blocks.filter((b): b is ProjectBlockData => b.type === "project");
+  const projects = allProjects.filter((p) => !p.archived);
+  const archived = allProjects.filter((p) => p.archived);
 
   const statusLabel = (s: ProjectStatus) =>
     t(s === "idea" ? "status.idea" : s === "building" ? "status.building" : "status.launched");
@@ -78,7 +79,7 @@ export function ProjectTracker({ blocks, onUpdateBlock, onEdit, onAddProject, ac
     </>
   );
 
-  if (projects.length === 0) {
+  if (projects.length === 0 && archived.length === 0) {
     return (
       <div className="space-y-6">
         <div className="flex justify-end">{addButton}</div>
@@ -107,7 +108,7 @@ export function ProjectTracker({ blocks, onUpdateBlock, onEdit, onAddProject, ac
                 const alreadyLaunched = !!p.launch;
                 return (
                   <div key={p.id}>
-                  <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
+                  <div className="flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-semibold text-white">{p.title}</div>
                       <div className="text-xs text-white/40">
@@ -170,9 +171,17 @@ export function ProjectTracker({ blocks, onUpdateBlock, onEdit, onAddProject, ac
 
                     <button
                       onClick={() => onEdit(p)}
-                      className="shrink-0 rounded-lg border border-white/10 px-2 py-1 text-xs text-white/60 hover:text-white"
+                      className="shrink-0 min-h-11 rounded-lg border border-white/10 px-3 text-xs text-white/60 hover:text-white"
                     >
                       {t("edit")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onDeleteProject(p.id)}
+                      aria-label={t("delete")}
+                      className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3 text-xs font-bold text-red-400"
+                    >
+                      <Trash2 size={14} /> {t("delete")}
                     </button>
                   </div>
                   <LaunchBadgeCard blockId={p.id} />
@@ -183,6 +192,35 @@ export function ProjectTracker({ blocks, onUpdateBlock, onEdit, onAddProject, ac
           </div>
         );
       })}
+      {archived.length > 0 && (
+        <div>
+          <h3 className="text-xs font-bold uppercase tracking-widest text-white/40 mb-2">
+            {t("archivedSection")} · {archived.length}
+          </h3>
+          <div className="space-y-2">
+            {archived.map((p) => (
+              <div key={p.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-semibold text-white/70">{p.title}</div>
+                </div>
+                <button
+                  onClick={() => onEdit(p)}
+                  className="shrink-0 min-h-11 rounded-lg border border-white/10 px-3 text-xs text-white/60 hover:text-white"
+                >
+                  {t("edit")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onDeleteProject(p.id)}
+                  className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3 text-xs font-bold text-red-400"
+                >
+                  <Trash2 size={14} /> {t("delete")}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       {modal}
     </div>
   );

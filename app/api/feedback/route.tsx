@@ -4,6 +4,7 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { FeedbackEmail } from "@/components/emails/FeedbackEmail";
 import { emailFrom, emailReplyTo } from "@/lib/email-from";
+import { feedbackPageUrl, feedbackPlan, scheduleFeedbackWebhook } from "@/lib/feedback-webhook";
 
 function getServiceRoleClient() {
   return createSupabaseClient(
@@ -26,6 +27,41 @@ async function isAdmin() {
   return profile?.username === 'tomi_delu';
 }
 
+type FeedbackActor = {
+  username?: string | null;
+  subscription_tier?: string | null;
+  is_lifetime?: boolean | null;
+};
+
+async function loadFeedbackActor(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string
+): Promise<FeedbackActor | null> {
+  try {
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const admin = getServiceRoleClient();
+      const { data, error } = await admin
+        .from("profiles")
+        .select("username, subscription_tier, is_lifetime")
+        .eq("id", userId)
+        .maybeSingle();
+      if (!error) return data;
+    }
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("username, subscription_tier")
+      .eq("id", userId)
+      .maybeSingle();
+    if (!error) return data;
+  } catch {
+    // Logged below. The forward still goes out with plan "unknown".
+  }
+
+  console.error("[feedback-webhook] profile lookup failed");
+  return null;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient();
@@ -35,16 +71,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    const { content, category = 'general', screenshotUrl = null } = await req.json();
+    const { content, category = 'general', screenshotUrl = null, pageUrl = null } = await req.json();
 
     if (!content) {
       return NextResponse.json({ error: "El contenido es requerido" }, { status: 400 });
     }
 
-    // 1. Guardar en Base de Datos
+    const feedbackId = crypto.randomUUID();
+    const createdAt = new Date().toISOString();
+
+    // 1. Guardar en Base de Datos. El id y created_at se fijan acá: el usuario
+    // no puede hacer SELECT de su fila (RLS), y el webhook necesita ambos.
     const { error: dbError } = await supabase
       .from("feedbacks")
       .insert({
+        id: feedbackId,
+        created_at: createdAt,
         user_id: user.id,
         user_email: user.email,
         content,
@@ -81,6 +123,24 @@ export async function POST(req: NextRequest) {
         console.error("Resend email error:", emailError);
       }
     }
+
+    // 3. Reenviar al webhook, después de guardar y del mail. No bloquea la
+    // respuesta: waitUntil mantiene el POST (timeout 5s) y un fallo solo se loguea.
+    const page_url = feedbackPageUrl(pageUrl) ?? feedbackPageUrl(req.headers.get("referer"));
+    const message = typeof content === "string" ? content : String(content);
+    scheduleFeedbackWebhook(async () => {
+      const actor = await loadFeedbackActor(supabase, user.id);
+      const handle = typeof actor?.username === "string" ? actor.username.trim() : "";
+      return {
+        message,
+        page_url,
+        user_handle: handle || null,
+        user_id: user.id,
+        plan: feedbackPlan(actor),
+        created_at: createdAt,
+        feedback_id: feedbackId,
+      };
+    });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

@@ -13,7 +13,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, EyeOff } from "lucide-react";
+import { GripVertical, EyeOff, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { BlockData } from "@/lib/profile-types";
 
@@ -26,6 +26,8 @@ interface Props {
   sensors: SensorDescriptor<SensorOptions>[];
   /** Solo se pasa con acceso Pro (mismo criterio que onHide): sin esto no hay selector. */
   onViewChange?: (id: string, view: ViewOption) => void;
+  /** Borra un proyecto (el padre muestra el diálogo de confirmación). */
+  onDeleteProject?: (id: string) => void;
 }
 
 type ViewOption = "both" | "desktop" | "mobile";
@@ -40,7 +42,7 @@ function blockTitle(b: BlockData): string {
   return String(x.title || x.name || x.project || x.label || x.username || "").trim();
 }
 
-function Row({ block, label, onViewChange }: { block: BlockData; label: string; onViewChange?: Props["onViewChange"] }) {
+function Row({ block, label, onViewChange, onDeleteProject }: { block: BlockData; label: string; onViewChange?: Props["onViewChange"]; onDeleteProject?: Props["onDeleteProject"] }) {
   const t = useTranslations("dashboard");
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: block.id });
   const title = blockTitle(block);
@@ -74,6 +76,16 @@ function Row({ block, label, onViewChange }: { block: BlockData; label: string; 
           </p>
         )}
       </div>
+      {block.type === "project" && onDeleteProject && (
+        <button
+          type="button"
+          onClick={() => onDeleteProject(block.id)}
+          aria-label={t("page.deleteProject")}
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-red-500/30 bg-red-500/10 text-red-400"
+        >
+          <Trash2 size={16} />
+        </button>
+      )}
       {onViewChange && (
         <div role="group" aria-label={t("page.visibleOnLabel")} className="basis-full flex gap-1 pl-7">
           {VIEW_OPTIONS.map((o) => (
@@ -94,14 +106,14 @@ function Row({ block, label, onViewChange }: { block: BlockData; label: string; 
 }
 
 /** Lista lateral reordenable (@dnd-kit) con el orden que ve un celular. */
-export function MobileOrderList({ blocks, typeLabels, onDragEnd, sensors, onViewChange }: Props) {
+export function MobileOrderList({ blocks, typeLabels, onDragEnd, sensors, onViewChange, onDeleteProject }: Props) {
   const t = useTranslations("dashboard");
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
       <SortableContext items={blocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
         <ol aria-label={t("page.mobileOrderListLabel")} className="flex flex-col gap-2">
           {blocks.map((b) => (
-            <Row key={b.id} block={b} label={typeLabels[b.type] || b.type} onViewChange={onViewChange} />
+            <Row key={b.id} block={b} label={typeLabels[b.type] || b.type} onViewChange={onViewChange} onDeleteProject={onDeleteProject} />
           ))}
         </ol>
       </SortableContext>

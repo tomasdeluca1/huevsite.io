@@ -7,6 +7,7 @@ import { hasProAccess } from '@/lib/pro-access'
 import { parseBlockViewFields } from '@/lib/mobile-order'
 import { sanitizeBlockData } from '@/lib/safe-url'
 import { normalizeBlockData } from '@/lib/social-url'
+import { revalidatePublicProfile } from '@/lib/revalidate-public-profile'
 
 export const dynamic = 'force-dynamic'
 
@@ -243,7 +244,7 @@ export async function DELETE(
     // Primero verificar que existe y pertenece al usuario
     const { data: existingBlock, error: fetchError } = await supabase
       .from('blocks')
-      .select('id, user_id')
+      .select('id, user_id, sub_site_id')
       .eq('id', blockId)
       .eq('user_id', user.id)
       .maybeSingle()
@@ -278,6 +279,14 @@ export async function DELETE(
         { status: 500 }
       )
     }
+
+    const [ownerResult, siteResult] = await Promise.all([
+      supabase.from('profiles').select('username').eq('id', user.id).maybeSingle(),
+      existingBlock.sub_site_id
+        ? supabase.from('sub_sites').select('slug').eq('id', existingBlock.sub_site_id).eq('user_id', user.id).maybeSingle()
+        : Promise.resolve({ data: null as { slug?: string } | null }),
+    ])
+    await revalidatePublicProfile(ownerResult.data?.username, siteResult.data?.slug ?? null)
 
     // Recompute score
     await scoreService.recomputeScore(user.id);

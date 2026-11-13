@@ -392,8 +392,11 @@ function segments(url: URL): string[] {
     });
 }
 
+// Un usuario con punto (ana.builds, user.name) no es un link.
+// Hace falta un esquema o una barra, query o hash para tratarlo como URL.
 function looksLikeUrl(value: string): boolean {
-  return /^https?:\/\//i.test(value) || /^[a-z0-9.-]+\.[a-z]{2,}(?:[/:?#]|$)/i.test(value);
+  if (/^https?:\/\//i.test(value)) return true;
+  return /^[a-z0-9.-]+\.[a-z]{2,}[/:?#]/i.test(value);
 }
 
 function success(platform: SocialPlatformId, url: string, handle: string): NormalizeSuccess {
@@ -684,24 +687,43 @@ function parseWebsite(value: string): NormalizeResult {
   return success("website", href, href);
 }
 
+const DISCORD_USER = /^[\w.]{2,32}$/;
+
+function discordInviteUrl(url: string): boolean {
+  const parsed = tryUrl(url);
+  if (!parsed) return false;
+  const segs = segments(parsed);
+  if (hostIs(parsed, "discord.gg")) return Boolean(segs[0]);
+  return hostIs(parsed, "discord.com") && segs[0]?.toLowerCase() === "invite" && Boolean(segs[1]);
+}
+
+function discordUser(user: string): NormalizeResult {
+  const name = user.replace(/^@/, "");
+  if (!DISCORD_USER.test(name)) return fail("invalid", "discord");
+  return success("discord", `https://discord.com/users/${name}`, name);
+}
+
+// El handle del invite es la URL canónica. Un código pelado se lee como
+// usuario (discord.com/users/…) y la pasada siguiente perdería el invite.
+function discordInvite(code: string): NormalizeResult {
+  if (!code || /[/?#\s]/.test(code)) return fail("invalid", "discord");
+  const url = `https://discord.gg/${code}`;
+  return success("discord", url, url);
+}
+
 function parseDiscord(value: string): NormalizeResult {
   const loose = value.trim();
-  if (!looksLikeUrl(loose)) {
-    if (!/^[\w.]{2,32}$/.test(loose.replace(/^@/, ""))) return fail("invalid", "discord");
-    const user = loose.replace(/^@/, "");
-    return success("discord", `https://discord.com/users/${user}`, user);
-  }
+  if (!looksLikeUrl(loose)) return discordUser(loose);
   const url = tryUrl(loose);
   if (!url || (url.protocol !== "http:" && url.protocol !== "https:")) return fail("invalid", "discord");
   const foreign = rejectForeign("discord", url);
   if (foreign) return foreign;
   const segs = segments(url);
-  if (hostIs(url, "discord.gg") && segs[0]) {
-    return success("discord", `https://discord.gg/${segs[0]}`, segs[0]);
-  }
-  if (hostIs(url, "discord.com") && (segs[0] === "invite" || segs[0] === "users") && segs[1]) {
-    if (segs[0] === "invite") return success("discord", `https://discord.gg/${segs[1]}`, segs[1]);
-    return success("discord", `https://discord.com/users/${segs[1]}`, segs[1]);
+  if (hostIs(url, "discord.gg") && segs[0]) return discordInvite(segs[0]);
+  const head = segs[0]?.toLowerCase();
+  if (hostIs(url, "discord.com") && (head === "invite" || head === "users") && segs[1]) {
+    if (head === "invite") return discordInvite(segs[1]);
+    return discordUser(segs[1]);
   }
   return fail("not_profile", "discord");
 }
@@ -833,25 +855,37 @@ export function normalizeStoredLink(link: StoredLink):
     return fail("empty", id);
   }
   let last: NormalizeFailure = fail("invalid", canonicalPlatformId(link.platform) ?? "website");
+  const successes: NormalizeSuccess[] = [];
   for (const attempt of attempts) {
     const result = normalizeSocialInput(link.platform, attempt);
-    if (result.ok) {
-      const label = cleanLabel(link.label);
-      const favicon = cleanFavicon(result.platform, link.favicon, result.url);
-      return {
-        ok: true,
-        link: {
-          platform: result.platform,
-          url: result.url,
-          handle: result.handle,
-          ...(label ? { label } : {}),
-          ...(favicon ? { favicon } : {}),
-        },
-      };
-    }
-    if (result.code !== "empty") last = result;
+    if (result.ok) successes.push(result);
+    else if (result.code !== "empty") last = result;
   }
-  return last;
+  const result = pickStoredResult(successes);
+  if (!result) return last;
+  const label = cleanLabel(link.label);
+  const favicon = cleanFavicon(result.platform, link.favicon, result.url);
+  return {
+    ok: true,
+    link: {
+      platform: result.platform,
+      url: result.url,
+      handle: result.handle,
+      ...(label ? { label } : {}),
+      ...(favicon ? { favicon } : {}),
+    },
+  };
+}
+
+// El handle se prueba primero (el usuario pudo pegar la URL buena y el campo
+// url quedó con el prefijo duplicado). La excepción es un invite de Discord
+// ya guardado: su handle es solo el código y, leído solo, parece un usuario.
+function pickStoredResult(successes: NormalizeSuccess[]): NormalizeSuccess | null {
+  if (!successes.length) return null;
+  const invite = successes.find((item) => item.platform === "discord" && discordInviteUrl(item.url));
+  const user = successes.find((item) => item.platform === "discord" && item.url.includes("/users/"));
+  if (invite && user) return invite;
+  return successes[0];
 }
 
 export function linkDraft(link: StoredLink): string {
@@ -913,7 +947,8 @@ export interface SocialLinkProblem {
 
 export interface SocialLinksPlan {
   changed: boolean;
-  links: CanonicalSocialLink[];
+  // Canónicos, y en su lugar original los que no se pudieron convertir.
+  links: Array<CanonicalSocialLink | StoredLink>;
   fixed: SocialLinkFix[];
   unfixable: SocialLinkProblem[];
 }
@@ -928,7 +963,7 @@ export function planSocialLinks(links: unknown): SocialLinksPlan {
   if (!Array.isArray(links)) {
     return { changed: false, links: [], fixed: [], unfixable: [] };
   }
-  const next: CanonicalSocialLink[] = [];
+  const next: Array<CanonicalSocialLink | StoredLink> = [];
   const fixed: SocialLinkFix[] = [];
   const unfixable: SocialLinkProblem[] = [];
   let changed = false;
@@ -944,12 +979,14 @@ export function planSocialLinks(links: unknown): SocialLinksPlan {
         changed = true;
         continue;
       }
+      // Se reporta y se deja igual. El perfil público lo esconde al leer;
+      // --apply no tiene que borrarlo de la base.
       unfixable.push({
         platform: typeof link.platform === "string" ? link.platform : "",
         before: beforeText(link),
         reason: result.error,
       });
-      changed = true;
+      next.push(link);
       continue;
     }
     next.push(result.link);

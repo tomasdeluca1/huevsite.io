@@ -7,7 +7,8 @@ import { useTranslations, useLocale } from "next-intl";
 import LocaleToggle from "@/components/LocaleToggle";
 import { DiscoveryHeader } from "@/components/discovery/DiscoveryHeader";
 import { WinnerSection } from "@/components/landing/WinnerSection";
-import { BuilderSpotlightCard } from "@/components/landing/BuilderSpotlightCard";
+import { CommunityWallHero } from "@/components/landing/CommunityWallHero";
+import type { CommunityWall } from "@/lib/community-wall";
 import { LatamFlags } from "@/components/landing/LatamFlags";
 import { supabase } from "@/lib/supabase";
 import { PricingTiers } from "@/components/landing/PricingTiers";
@@ -37,13 +38,15 @@ interface LandingPageClientProps {
   /** Query string de UTMs para el login de vuelta. */
   utm?: string;
   attribution?: CheckoutAttribution | null;
+  /** El muro del hero: fotos de la comunidad, los más activos primero. */
+  communityWall?: CommunityWall;
 }
 
 type HeroVariant = "claim" | "social" | "product";
 /** T1 experiment: identity-challenge H1 (control) vs outcome-focused H1. */
 export type HeroAbVariant = "identity" | "outcome";
 
-export default function LandingPageClient({ showcaseData, testimonials = [], faqs = [], founderVideoUrl = "", founderQuote = "", activeThisWeek = 0, networkPulse, heroAbVariant = "identity", founderOffer, utm, attribution }: LandingPageClientProps) {
+export default function LandingPageClient({ showcaseData, testimonials = [], faqs = [], founderVideoUrl = "", founderQuote = "", activeThisWeek = 0, networkPulse, heroAbVariant = "identity", founderOffer, utm, attribution, communityWall = { total: 0, builders: [] } }: LandingPageClientProps) {
   const t = useTranslations("landing");
   const tNav = useTranslations("nav");
   const tFooter = useTranslations("footer");
@@ -325,62 +328,44 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
         )}
       </AnimatePresence>
 
-      {/* HERO */}
-      <section className="hero">
-        <div className={`hero-shell ${(user && heroVariant !== "product") ? "hero-shell--solo" : "hero-shell--with-claim"}`}>
-          <div className="hero-copy">
-            <div className="badge">
-              {/* Prime slot: the network's liveness beats a static tagline (falls
-                  back to the eyebrow when the number would read weak). */}
-              {activeThisWeek >= 10 ? (
-                <>
-                  <span className="dot" />
-                  <span>{t("heroActiveBuilders", { count: fmtNum(Math.round(activeThisWeek / 10) * 10) })}</span>
-                </>
-              ) : (
-                <>
-                  <span className="dot"></span>
-                  {currentHero.eyebrow}
-                </>
-              )}
-              <LatamFlags />
-            </div>
+      {/* HERO — el muro de la comunidad, como la imagen al compartir la home */}
+      <CommunityWallHero
+        builders={communityWall.builders}
+        onBuilderClick={(username) => trackLandingEvent("landing_wall_click", { username })}
+      >
+        <div className="flex items-center gap-2 font-mono text-[12px] font-bold uppercase tracking-[0.2em] text-[var(--accent)]">
+          <span className="h-[7px] w-[7px] rounded-full bg-[var(--accent)] shadow-[0_0_10px_var(--accent)]" />
+          {t("wallEyebrow")}
+        </div>
+        <h1 className="text-balance text-[clamp(38px,6.6vw,76px)] font-extrabold leading-[0.98] tracking-[-0.045em] text-white">
+          {communityWall.total > 0
+            ? t.rich("wallTitle", { count: fmtNum(communityWall.total), accent: (chunks) => <span className="text-[var(--accent)]">{chunks}</span> })
+            : t("wallTitleFallback")}
+        </h1>
 
-            <h1 className="text-center xl:text-left leading-[1.05]">
-              {currentHero.title}
-            </h1>
+        {user && (
+          <div className="flex flex-wrap items-center justify-center gap-3.5">
+            <Link
+              href={currentHero.primaryHref}
+              className="btn btn-accent !px-8 !py-4 text-base"
+              onClick={() => trackLandingEvent("landing_hero_primary_click", { variant: heroVariant, href: currentHero.primaryHref })}
+            >
+              {currentHero.primaryLabel}
+            </Link>
+            <Link
+              href={currentHero.secondaryHref}
+              className="btn btn-ghost !px-6 !py-4 text-sm"
+              onClick={() => trackLandingEvent("landing_hero_secondary_click", { variant: heroVariant, href: currentHero.secondaryHref })}
+            >
+              {currentHero.secondaryLabel}
+            </Link>
+          </div>
+        )}
 
-            <p className="text-center xl:text-left mx-auto xl:mx-0">{currentHero.description}</p>
-
-            {/* Logged-in users skip the claim bar (they already own a URL), so they
-                get the explicit primary/secondary button pair instead. */}
-            {user && (
-              <div className="hero-ctas flex justify-center xl:justify-start items-center flex-wrap gap-3.5">
-                <Link
-                  href={currentHero.primaryHref}
-                  className="btn btn-accent !px-8 !py-4 text-base"
-                  onClick={() => trackLandingEvent("landing_hero_primary_click", { variant: heroVariant, href: currentHero.primaryHref })}
-                >
-                  {currentHero.primaryLabel}
-                </Link>
-                <Link
-                  href={currentHero.secondaryHref}
-                  className="btn btn-ghost !px-6 !py-4 text-sm"
-                  onClick={() => trackLandingEvent("landing_hero_secondary_click", { variant: heroVariant, href: currentHero.secondaryHref })}
-                >
-                  {currentHero.secondaryLabel}
-                </Link>
-              </div>
-            )}
-
-            {/* Live username claim — the highest-intent hook on the page: a typed
-                username means the visitor already owns the URL in their head. For
-                guests this IS the primary CTA (no redundant green button above it).
-                Validates in real time against /api/username/check. */}
             {!user && (
-              <div className="mt-2 mb-9 w-full max-w-[440px] mx-auto xl:mx-0 flex flex-col items-center xl:items-start gap-3">
+              <div className="w-full max-w-[440px] mx-auto flex flex-col items-center gap-3">
                 <div
-                  className={`flex w-full items-center rounded-2xl border bg-black/30 overflow-hidden transition-colors ${
+                  className={`flex w-full items-center rounded-2xl border bg-[#0e0e0f]/95 overflow-hidden transition-colors ${
                     claimStatus === "available"
                       ? "border-[var(--accent)]/50"
                       : claimStatus === "taken" || claimStatus === "invalid"
@@ -419,7 +404,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
                   <div className="text-[11px] font-mono text-red-300/80">{t("claimInvalid")}</div>
                 )}
                 {claimStatus === "taken" && (
-                  <div className="flex flex-wrap items-center justify-center xl:justify-start gap-1.5">
+                  <div className="flex flex-wrap items-center justify-center gap-1.5">
                     <span className="text-[11px] font-mono text-red-300/80">{t("claimTaken")}</span>
                     {claimSuggestions.map((suggestion) => (
                       <button
@@ -446,90 +431,9 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
               </div>
             )}
 
-            <div className="social-proof">
-              <div className="avatars">
-                {(() => {
-                  const pool = [
-                    ...(showcaseData.randoms || []),
-                    ...(showcaseData.winners?.map((w: any) => w.user).filter(Boolean) || []),
-                  ];
-                  const withImage = pool.filter((p: any) => p?.image).slice(0, 5);
-                  const slots = Array.from({ length: 5 }, (_, i) => withImage[i] ?? null);
-                  const fallbackLetters = ["F", "M", "S", "L", "P"];
-                  const fallbackClasses = ["a1", "a2", "a3", "a4", "a5"];
-                  return slots.map((p, i) =>
-                    p?.image ? (
-                      <div key={i} className="avatar" style={{ padding: 0, overflow: "hidden" }}>
-                        <img src={p.image} alt={p.name || p.username} className="w-full h-full object-cover" />
-                      </div>
-                    ) : (
-                      <div key={i} className={`avatar ${fallbackClasses[i]}`}>{fallbackLetters[i]}</div>
-                    )
-                  );
-                })()}
-              </div>
-              {/* Round to NEAREST 10 — flooring understated our own proof (188 → "+180"). */}
-              <span className="social-proof-text">{t.rich("socialProof", { count: fmtNum(Math.round((showcaseData.total_builders || 50) / 10) * 10), strong: (chunks) => <strong>{chunks}</strong> })}</span>
-            </div>
-          </div>
+      </CommunityWallHero>
 
-          {(
-            <div className="hero-product-preview">
-              <div className="hpp-badge">
-                <Eye size={12} />
-                {t("heroPreviewBadge")}
-              </div>
-              {heroProfiles.length > 0 ? (
-                <BuilderSpotlightCard builders={heroProfiles} />
-              ) : (
-                <div className="hpp-card">
-                  <div className="hpp-header">
-                    <div className="hpp-avatar">B</div>
-                    <div className="hpp-info">
-                      <div className="hpp-name">{t("heroFallbackName")}</div>
-                      <div className="hpp-role">{t("heroFallbackRole")}</div>
-                    </div>
-                    <div className="hpp-score">847 pts</div>
-                  </div>
-                  <div className="hpp-tagline">{t("heroFallbackTagline")}</div>
-                  <div className="hpp-grid">
-                    <div className="hpp-block hpp-block--span2">
-                      <div className="hpp-block-label">{t("heroFallbackBuildingLabel")}</div>
-                      <div className="hpp-block-title">{t("heroFallbackBuildingTitle")}</div>
-                      <div className="hpp-block-tech">Next.js · Supabase · TypeScript</div>
-                    </div>
-                    <div className="hpp-block hpp-block--accent">
-                      <div className="hpp-block-label">{t("heroFallbackScoreLabel")}</div>
-                      <div className="hpp-block-num">847</div>
-                    </div>
-                    <div className="hpp-block">
-                      <div className="hpp-block-label">{t("heroFallbackStackLabel")}</div>
-                      <div className="hpp-stack-tags">
-                        <span>React</span><span>Node</span><span>Figma</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="hpp-url">
-                    <span className="hpp-url-prefix">huevsite.io/</span>
-                    <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{t("heroFallbackUsername")}</span>
-                  </div>
-                </div>
-              )}
-              <div className="hpp-metrics">
-                <div className="hpp-metric">
-                  <strong>~3 min</strong>
-                  <span>{t("heroMetricPublish")}</span>
-                </div>
-                <div className="hpp-metric">
-                  <strong>{t("heroMetricFreeValue")}</strong>
-                  <span>{t("heroMetricFreeLabel")}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-        </div>
-
+      <section style={{ padding: '0 var(--section-x)' }} className="flex justify-center">
         <div className="w-full max-w-6xl mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {contentPath.map((item) => {
             const Icon = item.icon;

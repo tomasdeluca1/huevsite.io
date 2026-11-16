@@ -12,6 +12,7 @@ import { canonical, keywordsFor } from "@/lib/seo";
 import { ORGANIZATION_ID, WEBSITE_ID } from "@/lib/structured-data";
 import { getLocale } from "@/lib/locale";
 import { getFounderSeats } from "@/lib/founder-seats";
+import { getCommunityWall } from "@/lib/community-wall";
 import { resolveFounderOffer } from "@/lib/founder-offer";
 import { attributionFromSearchParams, attributionToQuery } from "@/lib/checkout-attribution";
 
@@ -258,7 +259,7 @@ export default async function LandingPage({
       ? "identity"
       : "outcome";
 
-  const [data, testimonials, faqs, settings, activeThisWeek, networkPulse, founderSeats] = await Promise.all([
+  const [data, testimonials, faqs, settings, activeThisWeek, networkPulse, founderSeats, communityWall] = await Promise.all([
     getShowcaseData(),
     getFeaturedTestimonials(),
     getPublishedFaqs(),
@@ -266,6 +267,7 @@ export default async function LandingPage({
     getActiveBuildersThisWeek(),
     getNetworkPulse(),
     getFounderSeats(),
+    getCommunityWall(),
   ]);
 
   // FAQPage schema from the admin-managed FAQs; falls back to the static one
@@ -319,6 +321,7 @@ export default async function LandingPage({
         founderOffer={resolveFounderOffer(founderSeats)}
         utm={attributionToQuery(attributionFromSearchParams(searchParams))}
         attribution={attributionFromSearchParams(searchParams)}
+        communityWall={communityWall}
       />
     </>
   );

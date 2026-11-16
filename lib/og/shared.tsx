@@ -636,9 +636,8 @@ export async function countBuilders(): Promise<number | null> {
 
 /* ---------- Muro de la comunidad (OG de la home) ---------- */
 
-// Usernames que nunca salen en imágenes de comunidad (lo pidieron, o la ficha de
-// la persona lo indica). El motivo vive fuera del repo, en la biblia.
-export const COMMUNITY_IMAGE_EXCLUDED = new Set<string>(["raafaromera"]);
+import { COMMUNITY_IMAGE_EXCLUDED } from "@/lib/community-exclusions";
+export { COMMUNITY_IMAGE_EXCLUDED };
 
 /**
  * Fotos de perfil de los builders más activos: los que más bloques editaron en

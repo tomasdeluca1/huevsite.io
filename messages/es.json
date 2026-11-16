@@ -1687,7 +1687,14 @@
     "finalCtaSecondary": "Ver ejemplos primero",
     "finalCtaMetaNoCard": "Sin tarjeta de crédito",
     "finalCtaMetaReady": "Listo en 3 minutos",
-    "finalCtaMetaByBuilders": "Hecho por y para builders"
+    "finalCtaMetaByBuilders": "Hecho por y para builders",
+    "wallLabel": "La comunidad de huevsite",
+    "wallEyebrow": "link in bio para builders",
+    "wallTitle": "<accent>{count} builders</accent> ya tienen su huevsite.",
+    "wallTitleFallback": "Tu portfolio de builder en un link.",
+    "wallViewProfile": "Ver perfil",
+    "wallScore": "{score} pts",
+    "wallProjects": "{n, plural, =0 {sin proyectos} one {# proyecto} other {# proyectos}}"
   },
   "pricing": {
     "pageMetaTitle": "Precios — Portfolio para builders desde $0 | huevsite.io",

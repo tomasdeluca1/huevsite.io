@@ -1687,7 +1687,14 @@
     "finalCtaSecondary": "See examples first",
     "finalCtaMetaNoCard": "No credit card",
     "finalCtaMetaReady": "Live in 3 minutes",
-    "finalCtaMetaByBuilders": "Built by and for builders"
+    "finalCtaMetaByBuilders": "Built by and for builders",
+    "wallLabel": "The huevsite community",
+    "wallEyebrow": "link in bio for builders",
+    "wallTitle": "<accent>{count} builders</accent> already have their huevsite.",
+    "wallTitleFallback": "Your builder portfolio in one link.",
+    "wallViewProfile": "View profile",
+    "wallScore": "{score} pts",
+    "wallProjects": "{n, plural, =0 {no projects} one {# project} other {# projects}}"
   },
   "pricing": {
     "pageMetaTitle": "Pricing — Builder portfolio from $0 | huevsite.io",

@@ -1694,7 +1694,9 @@
     "wallTitleFallback": "Tu portfolio de builder en un link.",
     "wallViewProfile": "Ver perfil",
     "wallScore": "{score} pts",
-    "wallProjects": "{n, plural, =0 {sin proyectos} one {# proyecto} other {# proyectos}}"
+    "wallProjects": "{n, plural, =0 {sin proyectos} one {# proyecto} other {# proyectos}}",
+    "wallWinner": "Builder de la Semana",
+    "wallShowing": "{n} perfiles en el muro"
   },
   "pricing": {
     "pageMetaTitle": "Precios — Portfolio para builders desde $0 | huevsite.io",

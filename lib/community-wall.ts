@@ -10,6 +10,8 @@ export type WallBuilder = {
   score: number;
   projects: number;
   active: boolean;
+  /** Fue Builder de la Semana alguna vez: va en el anillo de adentro. */
+  winner: boolean;
 };
 
 export type CommunityWall = { total: number; builders: WallBuilder[] };
@@ -37,7 +39,7 @@ async function load(): Promise<CommunityWall> {
   const supabase = createServiceRoleClient();
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-  const [countRes, profiles, recent, projects] = await Promise.all([
+  const [countRes, profiles, recent, projects, winners] = await Promise.all([
     supabase.from("profiles").select("id", { count: "exact", head: true }).not("username", "is", null),
     allRows<{ id: string; username: string; name: string | null; image: string | null; tagline: string | null; builder_score: number | null }>((from, to) =>
       supabase.from("profiles").select("id, username, name, image, tagline, builder_score").not("username", "is", null).not("image", "is", null).range(from, to)
@@ -46,7 +48,9 @@ async function load(): Promise<CommunityWall> {
     allRows<{ user_id: string }>((from, to) =>
       supabase.from("blocks").select("user_id").eq("type", "project").eq("visible", true).is("sub_site_id", null).range(from, to)
     ),
+    allRows<{ user_id: string }>((from, to) => supabase.from("showcase_winners").select("user_id").range(from, to)),
   ]);
+  const winnerIds = new Set(winners.map((w) => w.user_id));
 
   const activity = new Map<string, number>();
   for (const r of recent) activity.set(r.user_id, (activity.get(r.user_id) ?? 0) + 1);
@@ -55,8 +59,11 @@ async function load(): Promise<CommunityWall> {
 
   const builders = profiles
     .filter((p) => p.image && /^https?:\/\//i.test(p.image) && !COMMUNITY_IMAGE_EXCLUDED.has(p.username.toLowerCase()))
+    // Primero los Builders de la Semana (anillo de adentro), después por actividad.
     .sort((a, b) =>
-      (activity.get(b.id) ?? 0) - (activity.get(a.id) ?? 0) || (b.builder_score ?? 0) - (a.builder_score ?? 0)
+      Number(winnerIds.has(b.id)) - Number(winnerIds.has(a.id)) ||
+      (activity.get(b.id) ?? 0) - (activity.get(a.id) ?? 0) ||
+      (b.builder_score ?? 0) - (a.builder_score ?? 0)
     )
     .map((p) => ({
       username: p.username,
@@ -66,6 +73,7 @@ async function load(): Promise<CommunityWall> {
       score: p.builder_score ?? 0,
       projects: projectCount.get(p.id) ?? 0,
       active: activity.has(p.id),
+      winner: winnerIds.has(p.id),
     }));
 
   return { total: countRes.count ?? builders.length, builders };
@@ -80,6 +88,6 @@ export const getCommunityWall = unstable_cache(
       return { total: 0, builders: [] };
     }
   },
-  ["community-wall-v1"],
+  ["community-wall-v2"],
   { revalidate: 3600 }
 );

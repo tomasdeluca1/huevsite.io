@@ -1,32 +1,28 @@
 // Renders the home OG (the same tree as app/opengraph-image.tsx) to a PNG.
-// `public/opengraph-image.png` is the brand-only frame: schema and the login /
-// linktree cards point at it, so it must not carry a winner accent.
+// `public/opengraph-image.png` is the static copy: schema and the login /
+// linktree cards point at it.
 //
 //   npx tsx --tsconfig scripts/tsconfig.json scripts/render-brand-og.ts
-//   npx tsx --tsconfig scripts/tsconfig.json scripts/render-brand-og.ts --winner /tmp/home-og-winner.png
-import { writeFileSync } from "node:fs";
+//   npx tsx --tsconfig scripts/tsconfig.json scripts/render-brand-og.ts /tmp/home-og.png
+import { readFileSync, writeFileSync } from "node:fs";
 import { ImageResponse } from "next/og";
-import { homeOgElement } from "../app/opengraph-image";
+import { homeOgElement, HOME_OG_FONTS, type OgFont } from "../app/opengraph-image";
 import { OG_SIZE } from "../lib/og/shared";
 
-const args = process.argv.slice(2);
-const withWinner = args.includes("--winner");
-const file = args.find((a) => a.endsWith(".png")) ?? "public/opengraph-image.png";
+const file = process.argv.slice(2).find((a) => a.endsWith(".png")) ?? "public/opengraph-image.png";
 
-const el = homeOgElement(
-  withWinner
-    ? {
-        username: "ada",
-        name: "Ada Builder",
-        image: null,
-        tagline: "Shippeo en público, con métricas reales.",
-        accent_color: "#FF2D95",
-      }
-    : null
-);
+const fonts: OgFont[] = HOME_OG_FONTS.map((f) => {
+  const buf = readFileSync(`public/fonts/${f.file}`);
+  return {
+    name: f.name,
+    data: buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer,
+    weight: f.weight,
+    style: "normal",
+  };
+});
 
 async function main() {
-  const res = new ImageResponse(el, { ...OG_SIZE });
+  const res = new ImageResponse(homeOgElement(), { ...OG_SIZE, fonts });
   const buf = Buffer.from(await res.arrayBuffer());
   writeFileSync(file, buf);
   console.log(`${file} ${buf.length}`);

@@ -4,7 +4,6 @@ import { getTranslations } from "next-intl/server";
 import { getShowcaseData, getActiveBuildersThisWeek, getNetworkPulse } from "@/lib/showcase-service";
 import LandingPageClient from "@/components/landing/LandingPageClient";
 import { SITE_URL } from "@/lib/site-url";
-import { fetchCurrentWinner } from "@/lib/og/shared";
 import { getFeaturedTestimonials } from "@/lib/testimonial-service";
 import { getPublishedFaqs } from "@/lib/faq-service";
 import { getSiteSettings } from "@/lib/site-settings-service";
@@ -18,20 +17,18 @@ import { attributionFromSearchParams, attributionToQuery } from "@/lib/checkout-
 
 export const dynamic = "force-dynamic";
 
-// The home OG image renders the current Builder de la Semana, which changes
-// weekly. Next stamps the image route with a 1-year immutable Cache-Control and
-// a file-content-hash URL that does NOT change when the winner changes — so the
-// CDN and social platforms (Twitter/LinkedIn) keep serving last week's image.
-// Fix: version the og:image URL by the current winner's username, so a new
-// winner ⇒ a new URL ⇒ every cache fetches the fresh image. The immutable cache
-// now works FOR us — each winner's image stays frozen at its own stable URL.
+// The home OG image (app/opengraph-image.tsx) is static product art. Next
+// stamps the image route with a 1-year immutable Cache-Control, and X/LinkedIn
+// cache by URL, so the og:image URL carries a version: bump OG_VERSION whenever
+// the image changes or social platforms keep showing the old one.
+const OG_VERSION = "producto-1";
+
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("landing");
   const locale = await getLocale();
   const OG_TITLE = t("metaTitle");
   const OG_DESCRIPTION = t("metaDescription");
-  const winner = await fetchCurrentWinner().catch(() => null);
-  const v = encodeURIComponent(winner?.username || "huevsite");
+  const v = OG_VERSION;
   return {
     title: OG_TITLE,
     description: OG_DESCRIPTION,
@@ -77,9 +74,8 @@ const organizationSchema = {
     width: 512,
     height: 512,
   },
-  // Static brand frame (logo + lime on #050505). Social cards use the
-  // winner-versioned /opengraph-image route from generateMetadata.
-  image: "https://huevsite.io/opengraph-image.png?v=brand",
+  // Static copy of the home OG (scripts/render-brand-og.ts).
+  image: "https://huevsite.io/opengraph-image.png?v=producto-1",
   description:
     "Red social y plataforma de portfolios para builders, desarrolladores, diseñadores y founders de todo el mundo.",
   slogan: "Mostrá lo que buildeás.",

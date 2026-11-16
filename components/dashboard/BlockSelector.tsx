@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { Plus, X, Layout as LayoutIcon, MessageSquare, Rocket, Github, Star, Layers, Users, BookOpen, Sparkles, FileText, Image, Award, Trophy, PenTool, Globe, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
-import { BlockType, MAX_FREE_BLOCKS, MAX_PRO_BLOCKS, isDarkColor } from "@/lib/profile-types";
+import { BlockType, MAX_FREE_BLOCKS, MAX_PRO_BLOCKS, isDarkColor, getContrastColor } from "@/lib/profile-types";
 import { UpgradeModal } from "@/components/dashboard/UpgradeModal";
 import { ShareModal } from "@/components/dashboard/ShareModal";
 
@@ -18,9 +18,12 @@ interface BlockSelectorProps {
   twitterShareUnlocked?: boolean;
   extraBlocksFromShare?: number;
   onShareUnlocked?: (extraBlocks: number) => void;
+  /** Solo el botón, para la barra de herramientas del dashboard. */
+  compact?: boolean;
 }
 
 export function BlockSelector({
+  compact = false,
   onAdd,
   accentColor,
   currentBlockCount,
@@ -101,8 +104,27 @@ export function BlockSelector({
     setIsOpen(false);
   };
 
+  const trigger = compact ? (
+    <button
+      type="button"
+      onClick={() => setIsOpen(!isOpen)}
+      className="flex min-h-10 items-center gap-2 rounded-xl px-4 text-[13px] font-extrabold"
+      style={{ backgroundColor: accentColor, color: getContrastColor(accentColor) }}
+    >
+      <Plus size={16} strokeWidth={2.6} />
+      {t("shell.addBlock")}
+      {subscriptionTier !== "pro" && (
+        <span className="rounded-md bg-black/15 px-1.5 py-0.5 font-mono text-[10.5px] font-bold tabular-nums">
+          {currentBlockCount}/{effectiveLimit}
+        </span>
+      )}
+    </button>
+  ) : null;
+
   return (
     <div className="relative">
+      {trigger}
+      {!compact && (<>
       <div className="flex items-center justify-between mb-2">
         <div className="text-[9px] font-mono text-[var(--text-muted)] uppercase tracking-[0.1em]">
           {t("blockSelector.blockCount", { current: currentBlockCount, max: effectiveLimit })}
@@ -158,6 +180,7 @@ export function BlockSelector({
         {isOpen ? <X size={20} /> : <Plus size={20} />}
         {isOpen ? t("blockSelector.close") : t("blockSelector.addBlock")}
       </button>
+      </>)}
 
       {mounted && createPortal(
         <AnimatePresence>

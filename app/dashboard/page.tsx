@@ -19,7 +19,7 @@ import {
 import {
   Save, Eye, EyeOff, Layout as LayoutIcon, Settings, LogOut, Plus, Sparkles, MessageSquare,
   Activity, Compass, Trash2, Copy, Check, Trophy, ArrowUpRight, BadgeCheck, ArrowLeft, Lock, Globe, ChevronRight,
-  Globe2, AlertCircle, SendHorizontal, ChevronDown, X, Rocket
+  Globe2, AlertCircle, SendHorizontal, ChevronDown, X, Rocket, Palette
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
@@ -48,13 +48,16 @@ import Link from "next/link";
 import { DiscoveryHeader } from "@/components/discovery/DiscoveryHeader";
 import { createClient } from "@/lib/supabase/client";
 import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
-import { BadgeSnippetCard } from "@/components/dashboard/BadgeSnippetCard";
 import { TestimonialNudgeToast } from "@/components/dashboard/TestimonialNudgeToast";
 import { UpgradeModal } from "@/components/dashboard/UpgradeModal";
-import { DashboardSidebar } from "@/components/dashboard/Sidebar";
+import { DashboardBar, MobileTabBar, type DashboardTab, type SaveState } from "@/components/dashboard/shell/DashboardBar";
+import { ProLine } from "@/components/dashboard/shell/ProLine";
+import { DesignPanel } from "@/components/dashboard/shell/DesignPanel";
+import { ScopeSelector } from "@/components/dashboard/shell/ScopeSelector";
+import { EcosystemStrip } from "@/components/dashboard/shell/EcosystemStrip";
+import { StatsTab } from "@/components/dashboard/shell/StatsTab";
+import { SettingsTab, type SettingsSection } from "@/components/dashboard/shell/SettingsTab";
 import { ShareProfileModal } from "@/components/share/ShareProfileModal";
-import { JingleVoteModal } from "@/components/jingle/JingleVoteModal";
-import type { JingleChoice } from "@/lib/jingles";
 import { InsightsTab } from "@/components/dashboard/InsightsTab";
 import { CreateSubSiteModal } from "@/components/dashboard/CreateSubSiteModal";
 import { ProfileEditModal } from "@/components/dashboard/ProfileEditModal";
@@ -105,8 +108,6 @@ export default function DashboardPage() {
   const [isLinktreeRefactorOpen, setIsLinktreeRefactorOpen] = useState(false);
   const [isShareProfileOpen, setIsShareProfileOpen] = useState(false);
   const [shareCelebrate, setShareCelebrate] = useState(false);
-  const [showJingle, setShowJingle] = useState(false);
-  const [jingleVote, setJingleVote] = useState<JingleChoice | null>(null);
   const [isClaimingTrial, setIsClaimingTrial] = useState(false);
   const [trialBannerDismissed, setTrialBannerDismissed] = useState(false);
   const [blockChooserResolved, setBlockChooserResolved] = useState(false);
@@ -128,22 +129,23 @@ export default function DashboardPage() {
   // Board preset que se está editando en el dashboard (0-2). Arranca en el publicado.
   const [selectedBoardIndex, setSelectedBoardIndex] = useState<number>(0);
   const [isPublishingBoard, setIsPublishingBoard] = useState(false);
-  const [autoSaveEnabled, setAutoSaveEnabled] = useState(() => (typeof window !== "undefined" ? localStorage.getItem("huevsite_autosave") === "true" : false));
+  // Guarda siempre solo: el botón Guardar y su interruptor quedaron de antes.
+  const autoSaveEnabled = true;
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedVersionRef = useRef<string>("");
+  const justLoadedRef = useRef(true);
   // Solo en la primera carga alineamos el board editado con el publicado; en
   // refetches posteriores respetamos el board que el usuario está editando.
   const boardInitRef = useRef(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [badgesCollapsed, setBadgesCollapsed] = useState(true);
-  const [activeTab, setActiveTab] = useState<'home' | 'board' | 'projects' | 'insights' | 'subsites' | 'domain' | 'transfer' | 'more'>('home');
+  const [tab, setTab] = useState<DashboardTab>("profile");
+  const [profileView, setProfileView] = useState<"grid" | "projects">("grid");
+  const [settingsSection, setSettingsSection] = useState<SettingsSection | null>(null);
+  const [isDesignOpen, setIsDesignOpen] = useState(false);
   const [studioSave, setStudioSave] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [previewKey, setPreviewKey] = useState(0);
   const [domain, setDomain] = useState("");
-  const [transferEmail, setTransferEmail] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [verificationResult, setVerificationResult] = useState<{ isValid: boolean; message: string; needsTxtVerification?: boolean; txtRecord?: { host: string; value: string } } | null>(null);
-  const [isTabMenuOpen, setIsTabMenuOpen] = useState(false);
   // Vista del tablero: 'mobile' muestra la lista de orden de celular + iframe.
   const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop');
   // true si el orden de celular cambió y todavía no se guardó (handleSave lo manda).
@@ -151,7 +153,6 @@ export default function DashboardPage() {
   // Orden de celular tal como estaba al empezar a editarlo (por id), para poder descartar.
   const mobileSnapshotRef = useRef<Map<string, number | null> | null>(null);
   const supabase = createClient();
-  const referralsSectionRef = useRef<HTMLDivElement | null>(null);
   const isPro = profile?.hasProAccess === true;
 
   const normalizeDomainInput = (value: string) =>
@@ -442,52 +443,26 @@ export default function DashboardPage() {
     fetchProfile();
   }, []);
 
+  // Las pestañas viejas (?tab=home|board|projects|insights|more|domain|subsites|transfer
+  // y ?scrollTo=referrals) siguen llegando desde mails, avisos y /referrals: cada una
+  // cae en su lugar nuevo.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const tab = params.get("tab");
-    if (!tab) return;
-    if (tab === "home" || tab === "board" || tab === "more" || tab === "projects") {
-      setActiveTab(tab);
-      return;
-    }
+    const legacy = params.get("tab");
+    if (params.get("scrollTo") === "referrals") { setTab("settings"); setSettingsSection("referrals"); return; }
+    if (!legacy) return;
+    if (legacy === "insights" || legacy === "stats") setTab("stats");
+    else if (legacy === "projects") { setTab("profile"); setProfileView("projects"); }
+    else if (legacy === "more" || legacy === "settings") setTab("settings");
+    else if (legacy === "domain") { setTab("settings"); setSettingsSection("domain"); }
+    else if (legacy === "subsites") { setTab("settings"); setSettingsSection("subsites"); }
+    else setTab("profile");
+  }, []);
 
-    if (tab === "insights" && (isPro || profile?.freeTrial?.canUseLastInsightsView)) {
-      setActiveTab("insights");
-      return;
-    }
-
-    if (tab && PRO_ONLY_TABS.includes(tab as typeof PRO_ONLY_TABS[number]) && isPro) {
-      setActiveTab(tab as typeof PRO_ONLY_TABS[number]);
-    }
-  }, [isPro, profile?.freeTrial?.canUseLastInsightsView]);
-
-  useEffect(() => {
-    if (!profile) return;
-    const allowed = new Set<string>(["home", "board", "more", "projects"]);
-    if (isPro || profile.freeTrial?.canUseLastInsightsView) allowed.add("insights");
-    if (isPro) {
-      allowed.add("domain");
-      allowed.add("subsites");
-      allowed.add("transfer");
-    }
-    if (!allowed.has(activeTab)) setActiveTab("home");
-  }, [activeTab, isPro, profile]);
-
-  useEffect(() => {
-    if (!profile) return;
-    if (activeTab !== "board") return;
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("scrollTo") !== "referrals") return;
-
-    const timer = window.setTimeout(() => {
-      referralsSectionRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }, 250);
-
-    return () => window.clearTimeout(timer);
-  }, [profile, activeTab]);
+  const goTab = (next: DashboardTab) => {
+    if (next !== "settings") setSettingsSection(null);
+    setTab(next);
+  };
 
   // Fetch blocks when switching sub-sites
   useEffect(() => {
@@ -790,28 +765,6 @@ export default function DashboardPage() {
     setIsShareProfileOpen(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, profile?.username, profile?.displayName, profile?.avatarUrl, profile?.tagline, visibleBlocks.length]);
-
-  // Jingle vote: once the user is loaded, fetch their vote. Show the modal once
-  // if they haven't voted and haven't snoozed it this session.
-  useEffect(() => {
-    if (loading || !profile?.username) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch("/api/jingle-vote");
-        if (!res.ok || cancelled) return;
-        const data = await res.json();
-        const vote = (data?.myVote ?? null) as JingleChoice | null;
-        setJingleVote(vote);
-        const snoozed = typeof window !== "undefined" && sessionStorage.getItem("huevsite_jingle_snoozed");
-        if (!vote && !snoozed) setShowJingle(true);
-      } catch {
-        /* ignore */
-      }
-    })();
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, profile?.username]);
 
   const handleBlockChooserConfirm = async (keepBlockIds: string[]) => {
     if (!profile) return;
@@ -1574,9 +1527,11 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    if (!profile || loading || !autoSaveEnabled) return;
+    if (!profile || loading || !autoSaveEnabled) { justLoadedRef.current = true; return; }
     const { builderScore, ...content } = profile;
     const currentVersion = JSON.stringify(content);
+    // Lo que llega del servidor ya está guardado: es el punto de partida, no un cambio.
+    if (justLoadedRef.current) { justLoadedRef.current = false; lastSavedVersionRef.current = currentVersion; return; }
     if (currentVersion === lastSavedVersionRef.current) return;
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
@@ -1685,11 +1640,6 @@ export default function DashboardPage() {
     markStudio(ok);
   };
 
-  const toggleAutoSave = () => {
-    const newVal = !autoSaveEnabled;
-    setAutoSaveEnabled(newVal);
-    localStorage.setItem("huevsite_autosave", String(newVal));
-  };
 
   const toggleNewsletter = async () => {
     if (!profile) return;
@@ -1723,626 +1673,323 @@ export default function DashboardPage() {
 
   if (!profile) return null;
 
+  const currentSubSite = selectedSubSiteId ? profile.subSites.find((s) => s.id === selectedSubSiteId) : null;
+  const profilePath = currentSubSite ? `/${profile.username}/${currentSubSite.slug}` : `/${profile.username}`;
+  const canSeeInsights = isPro || profile.freeTrial?.canUseLastInsightsView === true;
+  const isLinksLayout = profile.profileLayout === "links";
+  const saveState: SaveState =
+    isSaving || studioSave === "saving" ? "saving" :
+    studioSave === "error" ? "error" :
+    lastSaved || studioSave === "saved" ? "saved" : "idle";
+  const openSubsite = (id: string) => {
+    void changeScope(() => setSelectedSubSiteId(id)).then((ok) => { if (ok) { setProfileView("grid"); setTab("profile"); } });
+  };
+  const designPanel = (
+    <DesignPanel
+      profile={profile}
+      isPro={isPro}
+      onColor={handleColorChange}
+      onRadius={handleBorderRadiusChange}
+      onLayout={handleProfileLayout}
+      onGlobalBox={handleLinkBoxStyle}
+      onEcosystem={handleShowEcosystemChange}
+      onUpgrade={() => setIsUpgradeModalOpen(true)}
+    />
+  );
+
   return (
-    <div className="h-screen flex flex-col bg-[var(--bg)] font-display overflow-hidden">
-      {/* Unified product top nav (same bar as the discovery pages) */}
+    <div className="flex h-screen flex-col overflow-hidden bg-[var(--bg)] font-display">
+      <style dangerouslySetInnerHTML={{
+        __html: `:root { --accent: ${profile.accentColor}; --accent-dim: ${profile.accentColor}1f; --btn-border: ${isDarkColor(profile.accentColor) ? 'rgba(255,255,255,0.15)' : 'transparent'}; --dashboard-radius: ${profile.borderRadius || '1.5rem'}; --radius-xl: ${profile.borderRadius || '1.5rem'}; }`
+      }} />
       <DiscoveryHeader currentUserId={profile?.id} username={profile?.username} />
 
-      {/* MOBILE: open the editing sidebar */}
-      <div className="md:hidden flex items-center justify-end px-4 py-2 bg-[var(--surface)] border-b border-[var(--border)]">
-        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} aria-label="Editar" className="p-2 rounded-xl bg-[var(--surface2)] border border-[var(--border)] text-[var(--accent)]"><Settings size={20} /></button>
-      </div>
-
-      {/* Editor row: editing sidebar + board canvas */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
-
-      <AnimatePresence>
-        {isSidebarOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/80 backdrop-blur-md z-[200] md:hidden" onClick={() => setIsSidebarOpen(false)} />
-        )}
-      </AnimatePresence>
-
-        <DashboardSidebar
+      <main className="custom-scrollbar relative min-h-0 flex-1 overflow-y-auto pb-24 md:pb-0">
+        <DashboardBar
+          tab={tab}
+          onTab={goTab}
+          statsLocked={!canSeeInsights}
+          saveState={saveState}
+          profilePath={profilePath}
+          accentColor={profile.accentColor}
+          onShare={() => { setShareCelebrate(false); setIsShareProfileOpen(true); }}
+        />
+        <ProLine
           profile={profile}
-          selectedSubSiteId={selectedSubSiteId}
-          setSelectedSubSiteId={(id: string | null) => changeScope(() => setSelectedSubSiteId(id))}
-        isSidebarOpen={isSidebarOpen}
-        setIsSidebarOpen={setIsSidebarOpen}
-        isSaving={isSaving}
-        copied={copied}
-        handleCopyUrl={handleCopyUrl}
-        handleLogout={handleLogout}
-        setIsProfileModalOpen={setIsProfileModalOpen}
-        setIsScoreInfoOpen={setIsScoreInfoOpen}
-        setIsCreateSubSiteOpen={setIsCreateSubSiteOpen}
-          setIsUpgradeModalOpen={setIsUpgradeModalOpen}
-          setIsFeedbackOpen={setIsFeedbackOpen}
-          setIsMcpOpen={setIsMcpOpen}
-          setIsDeleteAccountOpen={setIsDeleteAccountOpen}
-          setIsLinktreeRefactorOpen={setIsLinktreeRefactorOpen}
-          setTempProfileData={setTempProfileData}
-          addBlock={addBlock}
-        handleColorChange={handleColorChange}
-        onProfileLayoutChange={handleProfileLayout}
-        handleBorderRadiusChange={handleBorderRadiusChange}
-        handleShowEcosystemChange={handleShowEcosystemChange}
-        toggleAutoSave={toggleAutoSave}
-        autoSaveEnabled={autoSaveEnabled}
-        toggleNewsletter={toggleNewsletter}
-        newsletterSubscribed={profile.newsletterSubscribed === true}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        onShareUnlocked={(extraBlocks) => {
-          setProfile(prev => prev ? { ...prev, twitterShareUnlocked: true, extraBlocksFromShare: extraBlocks } : null);
-        }}
-        onShareProfile={() => { setShareCelebrate(false); setIsShareProfileOpen(true); }}
-        visibleBlockCount={visibleBlocks.length}
-      />
+          isPro={isPro}
+          claiming={isClaimingTrial}
+          onClaim={handleClaimFreeTrial}
+          onUpgrade={() => setIsUpgradeModalOpen(true)}
+          onOpenStats={() => goTab("stats")}
+        />
 
-      <main className={`flex-1 min-w-0 h-full overflow-y-auto p-4 md:px-8 lg:px-10 relative z-0 custom-scrollbar ${
-        isPro
-          ? 'pt-6 md:pb-8 md:pt-6 lg:pb-10 lg:pt-8'
-          : 'md:pb-8 md:pt-0 lg:pb-10'
-      }`}>
-        <style dangerouslySetInnerHTML={{
-          __html: `:root { --accent: ${profile.accentColor}; --accent-dim: ${profile.accentColor}1f; --btn-border: ${isDarkColor(profile.accentColor) ? 'rgba(255,255,255,0.15)' : 'transparent'}; --dashboard-radius: ${profile.borderRadius || '1.5rem'}; --radius-xl: ${profile.borderRadius || '1.5rem'}; }`
-        }} />
-        <div className="absolute top-0 right-0 w-full lg:w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(var(--accent-rgb),0.03)_0%,transparent_70%)] pointer-events-none" />
-
-        <div className="max-w-[1600px] mx-auto relative">
-          <div className="absolute inset-x-6 top-0 h-24 md:h-32 bg-[radial-gradient(circle,rgba(var(--accent-rgb),0.12)_0%,transparent_72%)] blur-3xl pointer-events-none opacity-70" />
-          {!isPro && profile.freeTrial?.eligible && (
-            <div className="relative z-20 mt-6 md:mt-8 mb-6 border border-[var(--accent)]/20 bg-[linear-gradient(135deg,rgba(200,255,0,0.12),rgba(255,255,255,0.02))] p-5 md:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.18)]" style={{ borderRadius: "var(--dashboard-radius)" }}>
-              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent)]">{t("page.trialEligibleBadge")}</div>
-                  <h3 className="mt-2 text-xl font-black text-white">{t("page.trialEligibleTitle")}</h3>
-                  <p className="mt-2 max-w-2xl text-sm text-white/65">
-                    {t("page.trialEligibleDescription")}
-                  </p>
-                </div>
-                <button
-                  onClick={handleClaimFreeTrial}
-                  disabled={isClaimingTrial}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl px-6 py-4 text-sm font-black text-black transition-all disabled:opacity-60"
-                  style={{ backgroundColor: profile.accentColor, color: getContrastColor(profile.accentColor) }}
-                >
-                  {isClaimingTrial ? <Sparkles size={16} className="animate-spin" /> : <BadgeCheck size={16} />}
-                  {t("page.claimFreeTrial")}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {profile.freeTrial?.active && profile.subscriptionTier !== 'pro' && !trialBannerDismissed && (
-            <div className="relative z-20 mb-6 border border-white/10 bg-white/[0.03] p-5 md:p-6" style={{ borderRadius: "var(--dashboard-radius)" }}>
-              <button
-                onClick={() => setTrialBannerDismissed(true)}
-                className="absolute top-3 right-3 w-7 h-7 rounded-xl flex items-center justify-center bg-white/5 border border-white/10 text-white/30 hover:text-white hover:bg-white/10 transition-all"
-              >
-                <X size={14} />
-              </button>
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent)]">{t("page.trialActiveBadge")}</div>
-                  <h3 className="mt-2 text-lg font-black text-white">{t("page.trialActiveTitle")}</h3>
-                  <p className="mt-1 text-sm text-white/60">
-                    {t("page.trialActiveDescription", { days: profile.freeTrial.daysRemaining })}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setActiveTab("insights")}
-                    className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white/80 transition-all hover:bg-white/10"
-                  >
-                    {t("page.viewInsights")}
-                  </button>
-                  <button
-                    onClick={() => setIsUpgradeModalOpen(true)}
-                    className="rounded-2xl px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-black"
-                    style={{ backgroundColor: profile.accentColor, color: getContrastColor(profile.accentColor) }}
-                  >
-                    {t("page.continueInPro")}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {!isPro && profile.freeTrial?.canUseLastInsightsView && !profile.freeTrial?.active && (
-            <div className="relative z-20 mb-6 border border-white/10 bg-white/[0.03] p-5 md:p-6" style={{ borderRadius: "var(--dashboard-radius)" }}>
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent)]">{t("page.lastViewBadge")}</div>
-                  <h3 className="mt-2 text-lg font-black text-white">{t("page.lastViewTitle")}</h3>
-                  <p className="mt-1 text-sm text-white/60">
-                    {t("page.lastViewDescription")}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setActiveTab("insights")}
-                    className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white/80 transition-all hover:bg-white/10"
-                  >
-                    {t("page.viewLastTime")}
-                  </button>
-                  <button
-                    onClick={() => setIsUpgradeModalOpen(true)}
-                    className="rounded-2xl px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-black"
-                    style={{ backgroundColor: profile.accentColor, color: getContrastColor(profile.accentColor) }}
-                  >
-                    {t("page.continueWithPro")}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <header className="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-6 lg:gap-8 mb-8 md:mb-12 items-center lg:text-left text-center px-2 md:px-0 relative z-[999]">
-          <div className="w-full md:w-auto relative">
-            <TwitterWarning blocks={profile.blocks} isSubSite={Boolean(selectedSubSiteId)} onAddTwitter={() => {
-              const socialBlock = profile.blocks.find(b => b.type === 'social');
-              if (socialBlock) {
-                setEditingBlock(socialBlock);
-              } else {
-                addBlock('social');
-              }
-            }} />
-            <div className="mb-3 hidden md:block"><div className="section-label">// dashboard / {activeTab}</div></div>
-            <h2 className="text-3xl md:text-4xl xl:text-5xl font-[950] tracking-tighter leading-[0.94] text-balance">
-              {activeTab === 'home' ? <>{t("page.headingHomePrefix")} <span style={{ color: profile.accentColor }}>{t("page.headingHomeWord")}</span>.</> :
-               activeTab === 'more' ? <>{t("page.headingMorePrefix")} <span style={{ color: profile.accentColor }}>{t("page.headingMoreWord")}</span>.</> :
-               activeTab === 'board' ? <>{t("page.headingBoardPrefix")} <span style={{ color: profile.accentColor }}>{selectedSubSiteId ? (profile.subSites.find(s => s.id === selectedSubSiteId)?.title || t("page.boardFallback")) : "huevsite"}</span>.</> :
-               activeTab === 'insights' ? <>{t("page.headingInsightsPrefix")} <span style={{ color: profile.accentColor }}>{t("page.headingInsightsWord")}</span>.</> :
-               activeTab === 'domain' ? <>{t("page.headingDomainPrefix")} <span style={{ color: profile.accentColor }}>{t("page.headingDomainWord")}</span>.</> :
-               activeTab === 'subsites' ? <>{t("page.headingSubsitesPrefix")} <span style={{ color: profile.accentColor }}>{t("page.headingSubsitesWord")}</span>.</> :
-               activeTab === 'projects' ? <>{t("page.headingProjectsPrefix")} <span style={{ color: profile.accentColor }}>{t("page.headingProjectsWord")}</span>.</> :
-               <>{t("page.headingTransferPrefix")} <span style={{ color: profile.accentColor }}>{t("page.headingTransferWord")}</span>.</>}
-            </h2>
-          </div>
-          {activeTab === 'board' && (
-            <div className="grid grid-cols-2 gap-3 w-full lg:w-auto lg:flex lg:items-center">
-              <Link href={selectedSubSiteId ? `/${profile.username}/${profile.subSites.find(s => s.id === selectedSubSiteId)?.slug}` : `/${profile.username}`} target="_blank" className="btn-premium flex items-center justify-center gap-2 py-3 px-5 lg:px-6 rounded-2xl bg-white/[0.03] border border-white/10 text-white font-bold text-sm transition-all hover:bg-white/5 hover:border-white/20 min-w-0"><Eye size={18} className="text-white/40 shrink-0" /><span>{t("page.view")}</span></Link>
-              <button onClick={handleSave} disabled={isSaving} className="btn-premium flex items-center justify-center gap-2 py-3 px-6 lg:px-10 rounded-2xl text-black font-[900] text-sm transition-all shadow-xl min-w-0" style={{ backgroundColor: profile.accentColor, color: getContrastColor(profile.accentColor) }}>
-                {isSaving ? <Sparkles size={18} className="animate-spin" /> : <Save size={18} />}<span>{isSaving ? t("page.saving") : t("page.save")}</span>
-              </button>
-            </div>
-          )}
-          </header>
-        </div>
-
-        <div className="max-w-[1600px] mx-auto pb-32">
-          {/* Badges */}
-          {(() => {
-            const earnedBadges = (profile.badges || []);
-            const earnedCount = earnedBadges.length;
-            const totalCount = ALL_BADGE_KEYS.length;
-            return (
-              <div className="mb-8 px-2 md:px-0">
-                <div
-                  className="border border-white/[0.06] overflow-hidden"
-                  style={{ background: "rgba(255,255,255,0.015)", borderRadius: "var(--dashboard-radius)" }}
-                >
-                  {/* Toggle header */}
-                  <button
-                    onClick={() => setBadgesCollapsed(c => !c)}
-                    className="w-full flex items-center gap-3 px-5 py-4 group hover:bg-white/[0.02] transition-colors"
-                  >
-                    {/* Label + count */}
-                    <span className="text-[10px] font-black text-white/25 uppercase tracking-[0.22em] shrink-0">{t("page.badges")}</span>
-                    <span className="text-[9px] font-black text-white/15 font-mono shrink-0">{earnedCount}/{totalCount}</span>
-
-                    {/* Mini badges — always visible, earned first */}
-                    <div className="flex items-center gap-1.5 flex-1 overflow-hidden">
-                      {ALL_BADGE_KEYS.map((key) => {
-                        const earned = earnedBadges.some((b) => b.key === key);
-                        const badge = { key, ...BADGE_CATALOG[key] };
-                        return (
-                          <motion.div
-                            key={key}
-                            animate={{ opacity: earned ? 1 : (badgesCollapsed ? 0.2 : 0), scale: earned ? 1 : (badgesCollapsed ? 0.8 : 0), width: badgesCollapsed ? "auto" : 0 }}
-                            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                            className="shrink-0 overflow-hidden"
-                            style={{ originX: 0 }}
-                          >
-                            <BadgeItem badge={badge} earned={earned} size="sm" />
-                          </motion.div>
-                        );
-                      })}
-                    </div>
-
-                    <ChevronDown
-                      size={14}
-                      className={`shrink-0 text-white/20 group-hover:text-white/40 transition-transform duration-300 ${badgesCollapsed ? "" : "rotate-180"}`}
-                    />
-                  </button>
-
-                  {/* Expandable content */}
-                  <AnimatePresence initial={false}>
-                    {!badgesCollapsed && (
-                      <motion.div
-                        key="badge-content"
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                        className="overflow-hidden"
-                      >
-                        <div className="px-5 pb-5 border-t border-white/[0.04]">
-                          <div className="flex flex-wrap gap-x-6 gap-y-5 pt-5">
-                            {ALL_BADGE_KEYS.map((key) => {
-                              const earned = earnedBadges.some((b) => b.key === key);
-                              const badge = { key, ...BADGE_CATALOG[key] };
-                              return <BadgeItem key={key} badge={badge} earned={earned} size="md" />;
-                            })}
-                          </div>
-
-                          {/* Builder de la Semana embeddable badge (winners only; self-hides) */}
-                          <div className="mt-5">
-                            <BadgeSnippetCard username={profile.username} />
-                          </div>
-
-                          {/* Referral link */}
-                          {profile.referralCode && (
-                            <div className="mt-5 pt-4 border-t border-white/[0.05] flex items-center justify-between gap-4">
-                              <div className="min-w-0">
-                                <div className="text-[9px] font-black text-white/25 uppercase tracking-[0.22em] mb-0.5">{t("page.yourReferralLink")}</div>
-                                <div className="text-[11px] text-white/40 font-mono truncate">
-                                  huevsite.io/login?ref=<span className="text-white/60">{profile.referralCode}</span>
-                                </div>
-                              </div>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigator.clipboard.writeText(`https://huevsite.io/login?ref=${profile.referralCode}`);
-                                  setReferralCopied(true);
-                                  setTimeout(() => setReferralCopied(false), 2000);
-                                }}
-                                className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.06] transition-all text-[10px] font-black uppercase tracking-[0.12em] text-white/50 hover:text-white/80"
-                              >
-                                {referralCopied ? <Check size={12} className="text-[var(--accent)]" /> : <Copy size={12} />}
-                                {referralCopied ? t("page.copied") : t("page.copy")}
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </div>
-            );
-          })()}
-
-          <button
-            onClick={() => setIsFeedbackOpen(true)}
-            className="fixed bottom-5 right-5 z-[180] flex items-center gap-2 border border-white/10 bg-[#09090b]/90 px-4 py-3 text-[11px] font-black uppercase tracking-[0.16em] text-white shadow-[0_20px_50px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-all hover:border-[var(--accent)]/30 hover:text-[var(--accent)]"
-            style={{ borderRadius: "calc(var(--dashboard-radius) + 0.5rem)" }}
-          >
-            <MessageSquare size={16} />
-            {t("page.feedback")}
-          </button>
-
-          <nav aria-label={t("page.primaryNav")} className="relative z-20 mb-8 flex gap-1 overflow-x-auto border border-white/5 bg-white/[0.03] p-1.5" style={{ borderRadius: "calc(var(--dashboard-radius) + 0.5rem)" }}>
-            {([
-              ["home", t("page.tabHome")],
-              ["board", t("page.tabEditor")],
-              ["insights", t("page.tabInsights")],
-              ["more", t("page.tabMore")],
-            ] as const).map(([tab, label]) => {
-              const locked = tab === "insights" && !isPro && !profile.freeTrial?.canUseLastInsightsView;
-              const active = activeTab === tab || (tab === "more" && (activeTab === "projects" || activeTab === "domain" || activeTab === "subsites"));
-              return (
-                <button
-                  key={tab}
-                  type="button"
-                  onClick={() => {
-                    if (locked) {
-                      setIsUpgradeModalOpen(true);
-                      return;
-                    }
-                    setActiveTab(tab);
-                  }}
-                  className={`min-h-11 shrink-0 rounded-xl px-4 text-[11px] font-black uppercase tracking-[0.14em] ${active ? "text-black" : "text-white/40"}`}
-                  style={active ? { background: profile.accentColor, color: getContrastColor(profile.accentColor) } : undefined}
-                >
-                  {label}{locked ? " Pro" : ""}
-                </button>
-              );
-            })}
-          </nav>
-
-          <AnimatePresence mode="wait">
-            {activeTab === 'home' && (
-              <motion.div key="home" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} className="px-1">
-                <ProfileStudio
-                  profile={profile}
-                  blocks={selectedSubSiteId ? boardBlocks : profile.blocks.filter((block) => (block.board_index ?? 0) === (profile.publishedBoard ?? 0))}
-                  isSubSite={Boolean(selectedSubSiteId)}
-                  saveState={studioSave}
-                  copied={copied}
-                  onLayout={handleProfileLayout}
-                  onGlobalBox={handleLinkBoxStyle}
-                  onBoxStyle={handleStudioBox}
-                  onToggleVisible={handleStudioVisible}
-                  onReorder={handleStudioReorder}
-                  onBasics={handleStudioBasics}
-                  onAddProject={(title, link) => addBlock("project", { title, link, description: "" }, { silent: true })}
-                  onDeleteProject={(block) => setIsDeletingId(block.id)}
-                  onEdit={(block) => setEditingBlock(block)}
-                  onEditProfile={() => setIsProfileModalOpen(true)}
-                  onShare={() => { setShareCelebrate(false); setIsShareProfileOpen(true); }}
-                  onCopy={handleCopyUrl}
-                  onOpenGrid={() => setActiveTab("board")}
-                  onOpenStats={() => {
-                    if (!isPro && !profile.freeTrial?.canUseLastInsightsView) {
-                      setIsUpgradeModalOpen(true);
-                      return;
-                    }
-                    setActiveTab("insights");
-                  }}
-                  statsLocked={!profile.hasProAccess}
-                  onBackToMain={() => { void changeScope(() => setSelectedSubSiteId(null)); }}
-                  previewPath={selectedSubSiteId ? `/${profile.username}/${profile.subSites.find((site) => site.id === selectedSubSiteId)?.slug || ""}` : `/${profile.username}`}
-                  previewKey={previewKey}
-                />
-              </motion.div>
-            )}
-            {activeTab === 'board' && (
-              <motion.div key="board" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }}>
-                {/* Board presets switcher (Pro): hasta 3 boards, uno publicado. */}
-                <div className="mb-5 flex flex-wrap items-center gap-2">
-                  <span className="text-[9px] font-black uppercase tracking-[0.18em] text-white/30 mr-1">// {t("page.boards")}</span>
-                  {[0, 1, 2].map((i) => {
-                    const isSelected = selectedBoardIndex === i;
-                    const isPublished = (profile.publishedBoard ?? 0) === i;
-                    const locked = !isPro && i !== (profile.publishedBoard ?? 0);
-                    const name = profile.boardNames?.[String(i)] || t("page.boardDefaultName", { n: i + 1 });
-                    return (
+        <div className="mx-auto max-w-[1600px] px-4 pb-16 pt-6 md:px-8 md:pt-8 lg:px-10">
+          {tab === "profile" && (
+            <div className="flex gap-8">
+              <div className="flex min-w-0 flex-1 flex-col gap-5">
+                {/* Qué estás editando + cómo lo ves + agregar */}
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <ScopeSelector
+                    profile={profile}
+                    isPro={isPro}
+                    selectedSubSiteId={selectedSubSiteId}
+                    onSelect={(id) => { void changeScope(() => setSelectedSubSiteId(id)); }}
+                    onCreate={() => setIsCreateSubSiteOpen(true)}
+                    onUpgrade={() => setIsUpgradeModalOpen(true)}
+                  />
+                  <div className="flex rounded-xl border border-white/10 bg-white/[0.03] p-1" role="group" aria-label={t("shell.viewLabel")}>
+                    {(["grid", "projects"] as const).map((view) => (
                       <button
-                        key={i}
-                        onClick={() => locked ? setIsUpgradeModalOpen(true) : changeScope(() => setSelectedBoardIndex(i))}
-                        className="group relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all border"
-                        style={{
-                          backgroundColor: isSelected ? "var(--accent)" : "rgba(255,255,255,0.03)",
-                          color: isSelected ? "#000" : (locked ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.7)"),
-                          borderColor: isSelected ? "transparent" : "rgba(255,255,255,0.08)",
-                        }}
-                        title={locked ? t("page.multipleBoardsArePro") : name}
+                        key={view}
+                        type="button"
+                        aria-pressed={profileView === view}
+                        onClick={() => setProfileView(view)}
+                        className={`min-h-8 rounded-lg px-3 text-[12.5px] font-bold transition-colors ${profileView === view ? "bg-white/[0.08] text-white" : "text-white/45 hover:text-white"}`}
                       >
-                        {locked && <Lock size={11} />}
-                        <span>{name}</span>
-                        {isPublished && (
-                          <span
-                            className="inline-flex h-1.5 w-1.5 rounded-full"
-                            style={{ backgroundColor: isSelected ? "#000" : profile.accentColor }}
-                            title={t("page.published")}
-                          />
-                        )}
+                        {view === "projects" ? t("shell.viewProjects") : isLinksLayout && !selectedSubSiteId ? t("shell.viewList") : t("shell.viewGrid")}
                       </button>
-                    );
-                  })}
-                  {isPro && (profile.publishedBoard ?? 0) !== selectedBoardIndex && (
-                    <button
-                      onClick={() => publishBoard(selectedBoardIndex)}
-                      disabled={isPublishingBoard}
-                      className="px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-wider border border-[var(--accent)]/40 text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-all disabled:opacity-50"
-                    >
-                      {isPublishingBoard ? t("page.publishing") : t("page.publishThisBoard")}
-                    </button>
-                  )}
-                  {isPro && (profile.publishedBoard ?? 0) === selectedBoardIndex && (
-                    <span className="px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-[var(--accent)]/60">
-                      ● {t("page.live")}
-                    </span>
-                  )}
-                </div>
-                <div className="mb-4 flex items-center gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/10 w-fit" role="group" aria-label={t("page.viewToggleLabel")}>
-                  {(['desktop', 'mobile'] as const).map((mode) => (
-                    <button
-                      key={mode}
-                      type="button"
-                      onClick={() => setViewMode(mode)}
-                      aria-pressed={viewMode === mode}
-                      className={`px-4 py-2 min-h-[40px] rounded-lg text-[11px] font-black uppercase tracking-wider transition-all ${viewMode === mode ? "text-black" : "text-white/50 hover:text-white"}`}
-                      style={viewMode === mode ? { backgroundColor: profile.accentColor, color: getContrastColor(profile.accentColor) } : undefined}
-                    >
-                      {mode === 'desktop' ? t("page.viewDesktop") : t("page.viewMobile")}
-                    </button>
-                  ))}
-                </div>
-                <div className="mb-6 md:mb-8 flex items-center justify-between gap-4 px-1">
-                  <p className="text-[11px] text-white/30 font-medium">
-                    {viewMode === 'mobile' ? t("page.mobileHint") : t("page.boardHint")}
-                  </p>
-                  <div className="hidden md:flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/25 shrink-0">
-                    <span className="inline-flex h-2 w-2 rounded-full" style={{ backgroundColor: profile.accentColor }} />
-                    {t("page.blockCount", { count: visibleBlocks.length })}{hiddenBlocks.length > 0 && isPro ? ` · ${t("page.hiddenCount", { count: hiddenBlocks.length })}` : ""}
+                    ))}
                   </div>
-                </div>
-
-                {mobileDirty && (
-                  <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-amber-300/20 bg-amber-300/[0.06] px-3 py-2">
-                    <p className="text-[11px] text-amber-200/90 font-medium">{t("page.mobileUnsaved")}</p>
-                    <button
-                      type="button"
-                      onClick={discardMobileOrder}
-                      className="px-3 py-2 min-h-[40px] rounded-lg text-[11px] font-black uppercase tracking-wider border border-white/15 text-white/70 hover:text-white hover:border-white/30 transition-all"
-                    >
-                      {t("page.mobileDiscard")}
-                    </button>
-                  </div>
-                )}
-
-                {viewMode === 'mobile' && (
-                  <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
-                    <div className="w-full lg:flex-1 min-w-0">
-                      {!hasMobileOrder(boardBlocks) ? (
-                        <p className="mb-3 text-[11px] text-white/40 font-medium">{t("page.mobileFollowsDesktop")}</p>
-                      ) : (
+                  {profileView === "grid" && !(isLinksLayout && !selectedSubSiteId) && (
+                    <div className="flex rounded-xl border border-white/10 bg-white/[0.03] p-1" role="group" aria-label={t("page.viewToggleLabel")}>
+                      {(["desktop", "mobile"] as const).map((mode) => (
                         <button
+                          key={mode}
                           type="button"
-                          onClick={resetMobileOrder}
-                          className="mb-3 px-3 py-2 min-h-[40px] rounded-xl text-[11px] font-black uppercase tracking-wider border border-white/15 text-white/60 hover:text-white hover:border-white/30 transition-all"
+                          aria-pressed={viewMode === mode}
+                          onClick={() => setViewMode(mode)}
+                          className={`min-h-8 rounded-lg px-3 text-[12.5px] font-bold transition-colors ${viewMode === mode ? "bg-white/[0.08] text-white" : "text-white/45 hover:text-white"}`}
                         >
-                          {t("page.mobileReset")}
+                          {mode === "desktop" ? t("page.viewDesktop") : t("page.viewMobile")}
                         </button>
-                      )}
-                      <MobileOrderList
-                        blocks={sortForMobile(mobileListBlocks)}
-                        typeLabels={BLOCK_TYPE_LABELS}
-                        onDragEnd={handleMobileDragEnd}
-                        sensors={sensors}
-                        onViewChange={isPro ? handleViewChange : undefined}
-                        onDeleteProject={(id) => setIsDeletingId(id)}
-                      />
-                    </div>
-                    <div className="w-full lg:w-auto lg:shrink-0 flex justify-center">
-                      <MobilePreviewFrame
-                        path={(() => {
-                          const site = selectedSubSiteId ? profile.subSites.find((s: any) => s.id === selectedSubSiteId) : null;
-                          return site?.slug ? `/${profile.username}/${site.slug}` : `/${profile.username}`;
-                        })()}
-                        reloadKey={lastSaved ? lastSaved.getTime() : 0}
-                        notPublished={!selectedSubSiteId && (profile.publishedBoard ?? 0) !== selectedBoardIndex}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {viewMode === 'desktop' && (
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                  <SortableContext items={visibleBlocks.map(b => b.id)} strategy={rectSortingStrategy}>
-                    <div className="dashboard-board-grid huevsite-grid min-h-[560px] md:min-h-[620px] p-3 sm:p-6 lg:p-8 xl:p-10 border border-dashed border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.008))] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]" style={{ borderRadius: "calc(var(--dashboard-radius) + 0.5rem)" }}>
-                      {visibleBlocks.length === 0 ? (
-                        <div className="col-span-full flex flex-col items-center justify-center py-40 text-center text-white/20 font-bold uppercase tracking-widest text-sm">
-                          <Plus className="mb-4 opacity-30" size={40} />
-                          {t("page.addFirstBlock")}
-                        </div>
-                      ) : (
-                        visibleBlocks.map((block) => (
-                          <SortableBlock
-                            key={block.id}
-                            id={block.id}
-                            block={block}
-                            onRemove={(id) => setIsDeletingId(id)}
-                            onEdit={(b) => setEditingBlock(b)}
-                            onResize={(id, colSpan, rowSpan) => updateBlock({ ...block, col_span: colSpan, row_span: rowSpan })}
-                            onHide={isPro ? hideBlock : undefined}
-                          >
-                            {renderBlockContent(block)}
-                          </SortableBlock>
-                        ))
-                      )}
-                    </div>
-                  </SortableContext>
-                </DndContext>
-                )}
-
-                {/* El bloque no aparece en la lista de celular: decimos por qué y dónde quedan los sub-sitios */}
-                {viewMode === 'mobile' && desktopOnlyTypeBlocks.length > 0 && (
-                  <p className="mt-4 text-[11px] text-white/40 font-medium">
-                    {t("page.desktopOnlyTypeNote", { types: desktopOnlyTypeBlocks.map(b => BLOCK_TYPE_LABELS[b.type] || b.type).join(", ") })}
-                  </p>
-                )}
-
-                {/* En celular no hay panel de ocultos: avisamos dónde se restauran */}
-                {viewMode === 'mobile' && isPro && hiddenBlocks.length > 0 && (
-                  <p className="mt-4 text-[11px] text-white/40 font-medium">
-                    {t("page.hiddenBlocksMobileNote", { count: hiddenBlocks.length })}
-                  </p>
-                )}
-
-                {/* Hidden blocks panel — Pro only (solo con el tablero de escritorio a la vista) */}
-                {viewMode === 'desktop' && isPro && hiddenBlocks.length > 0 && (
-                  <div className="mt-8 p-5 md:p-6 border border-dashed border-white/10 bg-white/[0.015]" style={{ borderRadius: "calc(var(--dashboard-radius) + 0.5rem)" }}>
-                    <div className="flex items-center gap-2.5 mb-4">
-                      <EyeOff size={14} className="text-white/30" />
-                      <span className="text-[11px] font-black uppercase tracking-[0.15em] text-white/30">
-                        {t("page.hiddenBlocks")}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {hiddenBlocks.map((block) => (
-                        <div
-                          key={block.id}
-                          className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-[var(--accent)]/30 transition-all group"
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-8 h-8 rounded-lg bg-white/[0.05] flex items-center justify-center shrink-0">
-                              <EyeOff size={14} className="text-white/20" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-bold text-white/60 truncate">{BLOCK_TYPE_LABELS[block.type] || block.type}</p>
-                              <p className="text-[10px] text-white/25 font-mono uppercase">{block.type}</p>
-                            </div>
-                          </div>
-                          <div className="flex shrink-0 items-center gap-2">
-                          <button
-                            onClick={() => restoreBlock(block.id)}
-                            className="flex min-h-11 items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold border border-white/10 hover:border-[var(--accent)]/50 hover:text-[var(--accent)] text-white/40 transition-all"
-                          >
-                            <Eye size={13} />
-                            {t("page.show")}
-                          </button>
-                          {block.type === "project" && (
-                            <button
-                              type="button"
-                              onClick={() => setIsDeletingId(block.id)}
-                              aria-label={t("page.deleteProject")}
-                              className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3 text-[11px] font-bold text-red-400"
-                            >
-                              <Trash2 size={13} />
-                              {t("page.delete")}
-                            </button>
-                          )}
-                          </div>
-                        </div>
                       ))}
                     </div>
+                  )}
+                  <div className="flex-1" />
+                  <button
+                    type="button"
+                    onClick={() => setIsDesignOpen(true)}
+                    className="flex min-h-10 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 text-[13px] font-bold text-white/80 transition-colors hover:border-white/20 hover:text-white xl:hidden"
+                  >
+                    <Palette size={15} /> {t("shell.design")}
+                  </button>
+                  <BlockSelector
+                    compact
+                    onAdd={addBlock}
+                    accentColor={profile.accentColor}
+                    currentBlockCount={visibleBlocks.length}
+                    subscriptionTier={isPro ? "pro" : profile.subscriptionTier}
+                    username={profile.username}
+                    twitterShareUnlocked={profile.twitterShareUnlocked}
+                    extraBlocksFromShare={profile.extraBlocksFromShare}
+                    onShareUnlocked={(extraBlocks) => setProfile(prev => prev ? { ...prev, twitterShareUnlocked: true, extraBlocksFromShare: extraBlocks } : null)}
+                  />
+                </div>
+
+                {/* Boards (Pro): hasta 3 versiones del perfil, una publicada */}
+                {isPro && profileView === "grid" && !selectedSubSiteId && (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="mr-1 font-mono text-[10.5px] uppercase tracking-[0.18em] text-white/35">{t("shell.boardsLabel")}</span>
+                    {[0, 1, 2].map((i) => {
+                      const isSelected = selectedBoardIndex === i;
+                      const isPublished = (profile.publishedBoard ?? 0) === i;
+                      const name = profile.boardNames?.[String(i)] || t("page.boardDefaultName", { n: i + 1 });
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => changeScope(() => setSelectedBoardIndex(i))}
+                          aria-pressed={isSelected}
+                          className={`flex min-h-8 items-center gap-1.5 rounded-lg border px-3 text-[12px] font-bold transition-colors ${isSelected ? "border-white/20 bg-white/[0.08] text-white" : "border-white/[0.06] text-white/50 hover:text-white"}`}
+                        >
+                          {name}
+                          {isPublished && <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" title={t("page.published")} />}
+                        </button>
+                      );
+                    })}
+                    {(profile.publishedBoard ?? 0) !== selectedBoardIndex ? (
+                      <button
+                        type="button"
+                        onClick={() => publishBoard(selectedBoardIndex)}
+                        disabled={isPublishingBoard}
+                        className="ml-1 min-h-8 rounded-lg border border-[var(--accent)]/40 px-3 text-[12px] font-bold text-[var(--accent)] transition-colors hover:bg-[var(--accent)]/10 disabled:opacity-50"
+                      >
+                        {isPublishingBoard ? t("page.publishing") : t("page.publishThisBoard")}
+                      </button>
+                    ) : (
+                      <span className="ml-1 font-mono text-[10.5px] uppercase tracking-[0.16em] text-[var(--accent)]/70">● {t("page.live")}</span>
+                    )}
                   </div>
                 )}
 
-                {/* Visible también para Pros: /referrals manda acá con ?scrollTo=referrals
-                    y el reward (referral_reward_expires_at) les extiende la cobertura igual. */}
-                <div ref={referralsSectionRef} className="mt-12 max-w-[1200px] mx-auto scroll-mt-28">
-                   <ReferralDashboard profile={profile} />
-                </div>
-              </motion.div>
-            )}
+                <TwitterWarning blocks={profile.blocks} isSubSite={Boolean(selectedSubSiteId)} onAddTwitter={() => {
+                  const socialBlock = profile.blocks.find(b => b.type === 'social');
+                  if (socialBlock) setEditingBlock(socialBlock); else addBlock('social');
+                }} />
 
-            {activeTab === 'more' && (
-              <motion.div key="more" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mx-auto mb-8 max-w-3xl px-2">
-                <p className="text-sm leading-relaxed text-white/60">{t("studio.moreIntro")}</p>
-                {!isPro && (
-                  <button type="button" onClick={() => setIsUpgradeModalOpen(true)} className="mt-4 min-h-11 rounded-xl border border-white/10 px-4 text-sm font-black text-white">
-                    {t("studio.proDomain")}
-                  </button>
+                {!selectedSubSiteId && profile.publicEcosystemEligible === true && profile.subSites.length > 0 && profileView === "grid" && (
+                  <EcosystemStrip profile={profile} onOpen={openSubsite} onToggle={handleShowEcosystemChange} />
                 )}
-              </motion.div>
-            )}
 
-            {(activeTab === 'projects' || activeTab === 'more') && (
-              <motion.div key="projects" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} className="max-w-3xl mx-auto px-2">
-                <ProjectTracker
-                  blocks={boardBlocks}
-                  onUpdateBlock={updateBlock}
-                  onEdit={(b) => setEditingBlock(b)}
-                  onAddProject={(prefill) => addBlock("project", prefill)}
-                  onDeleteProject={(id) => setIsDeletingId(id)}
-                  accentColor={profile.accentColor}
-                  subscriptionTier={profile.subscriptionTier}
-                />
-              </motion.div>
-            )}
+                {profileView === "projects" && (
+                  <div className="mx-auto w-full max-w-3xl">
+                    <ProjectTracker
+                      blocks={boardBlocks}
+                      onUpdateBlock={updateBlock}
+                      onEdit={(b) => setEditingBlock(b)}
+                      onAddProject={(prefill) => addBlock("project", prefill)}
+                      onDeleteProject={(id) => setIsDeletingId(id)}
+                      accentColor={profile.accentColor}
+                      subscriptionTier={profile.subscriptionTier}
+                    />
+                  </div>
+                )}
 
-            {activeTab === 'insights' && (
-              <motion.div key="insights" initial={{ opacity: 0, scale: 0.99 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.99 }} className="max-w-5xl mx-auto px-2">
+                {profileView === "grid" && isLinksLayout && !selectedSubSiteId && (
+                  <ProfileStudio
+                    embedded
+                    profile={profile}
+                    blocks={profile.blocks.filter((block) => (block.board_index ?? 0) === (profile.publishedBoard ?? 0))}
+                    isSubSite={false}
+                    saveState={studioSave}
+                    copied={copied}
+                    onLayout={handleProfileLayout}
+                    onGlobalBox={handleLinkBoxStyle}
+                    onBoxStyle={handleStudioBox}
+                    onToggleVisible={handleStudioVisible}
+                    onReorder={handleStudioReorder}
+                    onBasics={handleStudioBasics}
+                    onAddProject={(title, link) => addBlock("project", { title, link, description: "" }, { silent: true })}
+                    onDeleteProject={(block) => setIsDeletingId(block.id)}
+                    onEdit={(block) => setEditingBlock(block)}
+                    onEditProfile={() => {
+                      const hero = boardBlocks.find((b) => b.type === "hero" && b.visible !== false);
+                      if (hero) setEditingBlock(hero); else setIsProfileModalOpen(true);
+                    }}
+                    onShare={() => { setShareCelebrate(false); setIsShareProfileOpen(true); }}
+                    onCopy={handleCopyUrl}
+                    onOpenGrid={() => setProfileView("grid")}
+                    onOpenStats={() => goTab("stats")}
+                    statsLocked={!profile.hasProAccess}
+                    onBackToMain={() => { void changeScope(() => setSelectedSubSiteId(null)); }}
+                    previewPath={profilePath}
+                    previewKey={previewKey}
+                  />
+                )}
+
+                {profileView === "grid" && !(isLinksLayout && !selectedSubSiteId) && (
+                  <>
+                    <p className="text-[12.5px] text-white/35">{viewMode === "mobile" ? t("page.mobileHint") : t("page.boardHint")}</p>
+
+                    {viewMode === "mobile" && (
+                      <div className="flex flex-col items-start gap-6 lg:flex-row lg:gap-8">
+                        <div className="w-full min-w-0 lg:flex-1">
+                          {!hasMobileOrder(boardBlocks) ? (
+                            <p className="mb-3 text-[12px] font-medium text-white/40">{t("page.mobileFollowsDesktop")}</p>
+                          ) : (
+                            <button type="button" onClick={resetMobileOrder} className="mb-3 min-h-10 rounded-xl border border-white/15 px-3 text-[12px] font-bold text-white/60 transition-colors hover:border-white/30 hover:text-white">
+                              {t("page.mobileReset")}
+                            </button>
+                          )}
+                          <MobileOrderList
+                            blocks={sortForMobile(mobileListBlocks)}
+                            typeLabels={BLOCK_TYPE_LABELS}
+                            onDragEnd={handleMobileDragEnd}
+                            sensors={sensors}
+                            onViewChange={isPro ? handleViewChange : undefined}
+                            onDeleteProject={(id) => setIsDeletingId(id)}
+                          />
+                          {desktopOnlyTypeBlocks.length > 0 && (
+                            <p className="mt-4 text-[12px] font-medium text-white/40">
+                              {t("page.desktopOnlyTypeNote", { types: desktopOnlyTypeBlocks.map(b => BLOCK_TYPE_LABELS[b.type] || b.type).join(", ") })}
+                            </p>
+                          )}
+                          {isPro && hiddenBlocks.length > 0 && (
+                            <p className="mt-4 text-[12px] font-medium text-white/40">{t("page.hiddenBlocksMobileNote", { count: hiddenBlocks.length })}</p>
+                          )}
+                        </div>
+                        <div className="flex w-full justify-center lg:w-auto lg:shrink-0">
+                          <MobilePreviewFrame
+                            path={profilePath}
+                            reloadKey={lastSaved ? lastSaved.getTime() : 0}
+                            notPublished={!selectedSubSiteId && (profile.publishedBoard ?? 0) !== selectedBoardIndex}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {viewMode === "desktop" && (
+                      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                        <SortableContext items={visibleBlocks.map(b => b.id)} strategy={rectSortingStrategy}>
+                          <div className="dashboard-board-grid huevsite-grid min-h-[560px] rounded-[calc(var(--dashboard-radius)+0.5rem)] border border-dashed border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.008))] p-3 sm:p-6 lg:p-8">
+                            {visibleBlocks.length === 0 ? (
+                              <div className="col-span-full flex flex-col items-center justify-center py-40 text-center text-sm font-bold uppercase tracking-widest text-white/25">
+                                <Plus className="mb-4 opacity-40" size={36} />
+                                {t("page.addFirstBlock")}
+                              </div>
+                            ) : (
+                              visibleBlocks.map((block) => (
+                                <SortableBlock
+                                  key={block.id}
+                                  id={block.id}
+                                  block={block}
+                                  onRemove={(id) => setIsDeletingId(id)}
+                                  onEdit={(b) => setEditingBlock(b)}
+                                  onResize={(id, colSpan, rowSpan) => updateBlock({ ...block, col_span: colSpan, row_span: rowSpan })}
+                                  onHide={isPro ? hideBlock : undefined}
+                                >
+                                  {renderBlockContent(block)}
+                                </SortableBlock>
+                              ))
+                            )}
+                          </div>
+                        </SortableContext>
+                      </DndContext>
+                    )}
+
+                    {viewMode === "desktop" && isPro && hiddenBlocks.length > 0 && (
+                      <section className="rounded-[22px] border border-dashed border-white/10 bg-white/[0.015] p-4">
+                        <h3 className="mb-3 flex items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.18em] text-white/40">
+                          <EyeOff size={12} /> {t("page.hiddenBlocks")} · {hiddenBlocks.length}
+                        </h3>
+                        <div className="flex flex-wrap gap-2">
+                          {hiddenBlocks.map((block) => (
+                            <div key={block.id} className="flex items-center gap-1 rounded-xl border border-white/[0.08] bg-white/[0.03] py-1 pl-3 pr-1">
+                              <span className="mr-1 text-[13px] font-semibold text-white/65">{BLOCK_TYPE_LABELS[block.type] || block.type}</span>
+                              <button type="button" onClick={() => restoreBlock(block.id)} className="flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-[12px] font-bold text-white/55 transition-colors hover:bg-white/[0.06] hover:text-[var(--accent)]">
+                                <Eye size={13} /> {t("page.show")}
+                              </button>
+                              {block.type === "project" && (
+                                <button type="button" onClick={() => setIsDeletingId(block.id)} aria-label={t("page.deleteProject")} className="grid h-9 w-9 place-items-center rounded-lg text-red-400/80 transition-colors hover:bg-red-500/10">
+                                  <Trash2 size={13} />
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    )}
+                  </>
+                )}
+              </div>
+
+              <aside className="sticky top-24 hidden h-fit w-[290px] shrink-0 rounded-[24px] border border-white/[0.08] bg-white/[0.02] p-5 xl:block" aria-label={t("shell.design")}>
+                <h2 className="mb-4 text-[15px] font-extrabold tracking-tight text-white">{t("shell.design")}</h2>
+                {designPanel}
+              </aside>
+            </div>
+          )}
+
+          {tab === "stats" && (
+            <StatsTab
+              profile={profile}
+              canSeeInsights={canSeeInsights}
+              insights={
                 <InsightsTab
                   accentColor={profile.accentColor}
                   blocks={profile.blocks}
                   subscriptionTier={profile.subscriptionTier}
-                  onOptimizeBoard={() => setActiveTab('board')}
+                  onOptimizeBoard={() => goTab("profile")}
                   onLastTrialViewConsumed={() => {
                     setProfile((prev) => prev ? {
                       ...prev,
@@ -2352,96 +1999,78 @@ export default function DashboardPage() {
                     } : prev);
                   }}
                 />
-              </motion.div>
-            )}
+              }
+              visibleBlockCount={visibleBlocks.length}
+              claiming={isClaimingTrial}
+              onClaimTrial={!isPro && profile.freeTrial?.eligible ? handleClaimFreeTrial : undefined}
+              onUpgrade={() => setIsUpgradeModalOpen(true)}
+              onScoreInfo={() => setIsScoreInfoOpen(true)}
+              onAddBlock={(type) => { goTab("profile"); addBlock(type); }}
+              onEditProfile={() => setIsProfileModalOpen(true)}
+              onShare={() => { setShareCelebrate(false); setIsShareProfileOpen(true); }}
+            />
+          )}
 
-            {(activeTab === 'domain' || (activeTab === 'more' && isPro)) && (
-              <motion.div key="domain" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="max-w-5xl mx-auto space-y-8 md:space-y-12 px-4">
+          {tab === "settings" && (
+            <SettingsTab
+              profile={profile}
+              isPro={isPro}
+              initialSection={settingsSection}
+              domainCard={
                 <DomainConnectionCard
                   domain={domain}
                   currentDomain={profile.customDomain}
                   domainGuide={domainGuide}
                   verifying={verifying}
                   verificationResult={verificationResult}
-                  onDomainChange={(value) => {
-                    setDomain(value);
-                    setVerificationResult(null);
-                  }}
+                  onDomainChange={(value) => { setDomain(value); setVerificationResult(null); }}
                   onSave={() => handleUpdateDomain(domain)}
                   onVerify={handleVerify}
                 />
-              </motion.div>
-            )}
-
-            {(activeTab === 'subsites' || (activeTab === 'more' && isPro)) && (
-              <motion.div key="subsites" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-4xl mx-auto space-y-8 md:space-y-12 px-4">
-                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                   <h3 className="text-2xl font-black text-white text-center sm:text-left">{t("page.yourProjects")}</h3>
-                   <button onClick={() => setIsCreateSubSiteOpen(true)} className="flex items-center justify-center gap-2 bg-[var(--accent)]/10 text-[var(--accent)] px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[var(--accent)] hover:text-black transition-all">
-                     <Plus size={16} /> {t("page.createSubSite")}
-                   </button>
-                 </div>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {profile.subSites.length === 0 ? (
-                      <div className="col-span-full py-20 text-center bg-white/[0.01] border border-dashed border-white/5" style={{ borderRadius: "calc(var(--dashboard-radius) + 0.75rem)" }}>
-                        <p className="text-white/20 font-black uppercase text-[10px] tracking-[0.2em]">{t("page.noSubSites")}</p>
-                      </div>
-                    ) : (
-                      profile.subSites.map(site => (
-                        <div key={site.id} className="p-5 md:p-6 bg-white/[0.02] border border-white/5 flex items-center justify-between group" style={{ borderRadius: "calc(var(--dashboard-radius) + 0.5rem)" }}>
-                          <div className="flex items-center gap-3 md:gap-4 min-w-0">
-                            <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center shrink-0 overflow-hidden">
-                              {site.avatarUrl ? <img src={site.avatarUrl} className="w-full h-full object-cover" /> : <Globe2 size={24} className="text-white/20" />}
-                            </div>
-                            <div className="min-w-0">
-                              <h4 className="text-sm font-black text-white truncate">{site.title}</h4>
-                              <p className="text-[10px] font-mono text-white/30 truncate">/{site.slug}</p>
-                            </div>
-                          </div>
-                          <div className="flex gap-2 shrink-0">
-                             <button onClick={async () => { if (await changeScope(() => setSelectedSubSiteId(site.id))) setActiveTab('board'); }} className="p-2.5 md:p-3 rounded-xl bg-white/5 hover:bg-[var(--accent)] hover:text-black transition-all">
-                               <LayoutIcon size={16} />
-                             </button>
-                             <button onClick={() => handleDeleteSubSite(site.id)} className="p-2.5 md:p-3 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all">
-                               <Trash2 size={16} />
-                             </button>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                 </div>
-              </motion.div>
-            )}
-
-            {activeTab === 'transfer' && (
-              <motion.div key="transfer" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="max-w-xl mx-auto space-y-12 text-center relative px-4 py-10">
-                <div className="absolute inset-0 bg-black/40 backdrop-blur-[4px] z-10 rounded-[2.5rem] md:rounded-[3.5rem] flex items-center justify-center border border-white/10">
-                   <div className="bg-[#09090b] p-8 md:p-12 rounded-[2.5rem] border border-white/5 shadow-2xl scale-100 md:scale-110">
-                      <Lock size={40} className="mx-auto mb-6 text-[var(--accent)] opacity-40" />
-                      <h4 className="text-xl md:text-2xl font-black text-white mb-2 uppercase tracking-tighter">{t("page.featureDisabled")}</h4>
-                      <p className="text-white/40 text-[10px] font-bold font-mono uppercase tracking-widest">{t("page.comingSoonForPro")}</p>
-                   </div>
-                </div>
-                <div className="space-y-4 filter blur-md pointer-events-none">
-                  <h3 className="text-3xl font-[950] tracking-tighter text-white">{t("page.transferProjectTitle")}</h3>
-                  <p className="text-white/40 text-sm">{t("page.transferProjectDescription")}</p>
-                </div>
-                <div className="space-y-6 filter blur-md pointer-events-none">
-                  <div className="relative">
-                    <SendHorizontal className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20" />
-                    <input disabled value={transferEmail} placeholder={t("page.transferEmailPlaceholder")} className="w-full bg-white/[0.03] border border-white/10 rounded-[2.5rem] pl-16 pr-8 py-6 text-xl font-bold" />
-                  </div>
-                  <button disabled className="w-full py-6 rounded-[2rem] bg-white/10 text-white/20 font-black uppercase tracking-widest">{t("page.confirmTransfer")}</button>
-                </div>
-                <div className="p-6 rounded-3xl bg-amber-500/5 border border-amber-500/10 text-amber-500/60 text-[10px] font-bold italic flex items-center gap-3 filter blur-md pointer-events-none">
-                  <AlertCircle size={16} /> {t("page.transferIrreversible")}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              }
+              referrals={<ReferralDashboard profile={profile} />}
+              onUpgrade={() => setIsUpgradeModalOpen(true)}
+              onEditAccount={() => { void changeScope(() => setSelectedSubSiteId(null)).then((ok) => { if (ok) setIsProfileModalOpen(true); }); }}
+              onLinktree={() => setIsLinktreeRefactorOpen(true)}
+              onLogout={handleLogout}
+              onCreateSubsite={() => setIsCreateSubSiteOpen(true)}
+              onOpenSubsite={openSubsite}
+              onDeleteSubsite={handleDeleteSubSite}
+              onMcp={() => setIsMcpOpen(true)}
+              onNewsletter={toggleNewsletter}
+              onFeedback={() => setIsFeedbackOpen(true)}
+              onDeleteAccount={() => setIsDeleteAccountOpen(true)}
+            />
+          )}
         </div>
       </main>
-      </div>
+
+      <MobileTabBar tab={tab} onTab={goTab} statsLocked={!canSeeInsights} accentColor={profile.accentColor} />
+
+      {/* Diseño en pantallas chicas: cajón desde la derecha */}
+      <AnimatePresence>
+        {isDesignOpen && (
+          <div className="fixed inset-0 z-[220] xl:hidden">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setIsDesignOpen(false)} />
+            <motion.aside
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              className="absolute inset-y-0 right-0 flex w-[min(340px,92vw)] flex-col border-l border-white/10 bg-[#0b0b0c]"
+              aria-label={t("shell.design")}
+            >
+              <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-4">
+                <h2 className="text-[15px] font-extrabold tracking-tight text-white">{t("shell.design")}</h2>
+                <button type="button" onClick={() => setIsDesignOpen(false)} aria-label={t("shell.closeDesign")} className="grid h-9 w-9 place-items-center rounded-lg text-white/50 hover:bg-white/[0.06] hover:text-white">
+                  <X size={16} />
+                </button>
+              </div>
+              <div className="custom-scrollbar flex-1 overflow-y-auto p-5">{designPanel}</div>
+            </motion.aside>
+          </div>
+        )}
+      </AnimatePresence>
 
       {editingBlock && (
         <BlockEditorModal 
@@ -2568,26 +2197,13 @@ export default function DashboardPage() {
         celebrate={shareCelebrate}
       />
 
-      <JingleVoteModal
-        isOpen={showJingle}
-        onClose={() => {
-          setShowJingle(false);
-          if (!jingleVote && typeof window !== "undefined") {
-            sessionStorage.setItem("huevsite_jingle_snoozed", "1");
-          }
-        }}
-        accentColor={profile.accentColor}
-        initialVote={jingleVote}
-        onVoted={(choice) => setJingleVote(choice)}
-      />
-
       <ProFeatureTour
         isOpen={isProTourOpen}
         onClose={() => setIsProTourOpen(false)}
         accentColor={profile.accentColor}
         onFinish={() => {
           setIsProTourOpen(false);
-          setActiveTab("insights");
+          goTab("stats");
         }}
       />
 
@@ -2608,7 +2224,7 @@ export default function DashboardPage() {
         />
       )}
 
-      <TestimonialNudgeToast username={profile.username} />
+      {!isProTourOpen && <TestimonialNudgeToast username={profile.username} />}
     </div>
   );
 }

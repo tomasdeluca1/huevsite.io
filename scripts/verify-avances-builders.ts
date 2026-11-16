@@ -227,6 +227,8 @@ const bAna = block({ id: "block-ana", user_id: ana.id, data: { title: "Nave", de
   check("el candidato no arrastra email ni insights", !!built && !blob.includes("secreto@interno.test") && !blob.includes("insights") && !blob.includes("visits"));
   check("titulo publico, sin inventar", built?.title === "Nave");
   check("sin descripcion privada", built?.description === "Sale hoy");
+  check("un proyecto con el título de ejemplo no se publica", projectCandidate({ ...bAna, data: { ...bAna.data, title: "Nombre del proyecto" } }, ana) === null);
+  check("un proyecto sin título no se publica", projectCandidate({ ...bAna, data: { ...bAna.data, title: "  " } }, ana) === null);
   const projectImage = (url: string | undefined) => !!url && isHuevsiteOgUrl(url) && url.includes(`/api/og/avance/${bAna.id}`);
   check("la imagen de IG de un proyecto nuevo es la del proyecto, no la del perfil", projectImage(built?.imageUrl) && built!.imageUrl.includes("kind=new_project"));
   check("la imagen de IG de un avance es la del proyecto", projectImage(realUpdate?.imageUrl) && realUpdate!.imageUrl.includes("kind=update"));

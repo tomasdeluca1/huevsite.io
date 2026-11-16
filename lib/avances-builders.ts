@@ -230,6 +230,17 @@ export function isCreateEcho(blockCreatedAt: string, activityCreatedAt: string):
   return Math.abs(activity - created) < CREATE_ECHO_MS;
 }
 
+// Títulos de relleno que pone el dashboard al crear un bloque. Un proyecto que
+// todavía los tiene no está cargado: no se publica.
+const PLACEHOLDER_TITLES = new Set(["nombre del proyecto", "mi proyecto nuevo", "project name", "my new project"]);
+
+export function isPlaceholderProject(data: { title?: unknown; project?: unknown } | null | undefined): boolean {
+  const title = typeof data?.title === "string" ? data.title.trim() : "";
+  const project = typeof data?.project === "string" ? data.project.trim() : "";
+  const main = (title || project).toLowerCase();
+  return main === "" || PLACEHOLDER_TITLES.has(main);
+}
+
 export function publicProjectTitle(data: { title?: unknown; project?: unknown } | null | undefined): string {
   const title = typeof data?.title === "string" ? data.title.trim() : "";
   const project = typeof data?.project === "string" ? data.project.trim() : "";
@@ -285,6 +296,7 @@ export function launchCandidate(launch: LaunchRow, block: PublicBlock, profile: 
   if (launch.user_id !== profile.id || block.user_id !== profile.id) return null;
   if (block.id !== launch.block_id) return null;
   if (!isPublicProjectBlock(block)) return null;
+  if (isPlaceholderProject(block.data)) return null;
   const name = displayName(profile);
   if (!name || !profile.username) return null;
   const at = launch.launched_at || launch.created_at;
@@ -308,6 +320,7 @@ export function launchCandidate(launch: LaunchRow, block: PublicBlock, profile: 
 export function projectCandidate(block: PublicBlock, profile: PublicProfile): AvanceCandidate | null {
   if (block.user_id !== profile.id) return null;
   if (!isPublicProjectBlock(block)) return null;
+  if (isPlaceholderProject(block.data)) return null;
   const name = displayName(profile);
   if (!name || !profile.username || !block.created_at) return null;
   return {
@@ -333,6 +346,7 @@ export function updateCandidate(activity: ActivityRow, block: PublicBlock, profi
   const blockId = activity.data?.blockId;
   if (typeof blockId !== "string" || blockId !== block.id) return null;
   if (!isPublicProjectBlock(block)) return null;
+  if (isPlaceholderProject(block.data)) return null;
   if (isCreateEcho(block.created_at, activity.created_at)) return null;
   const name = displayName(profile);
   if (!name || !profile.username) return null;

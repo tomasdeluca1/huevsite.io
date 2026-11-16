@@ -54,6 +54,9 @@ interface Props {
   onBackToMain: () => void;
   previewPath: string;
   previewKey: number;
+  /** Dentro del dashboard de pestañas: compartir, stats, formato y estilo
+   *  global de links ya viven en la barra, Estadísticas y el panel Diseño. */
+  embedded?: boolean;
 }
 
 function SortableRow({
@@ -125,6 +128,7 @@ export function ProfileStudio(props: Props) {
     onBackToMain,
     previewPath,
     previewKey,
+    embedded = false,
   } = props;
 
   const hero = blocks.find((block) => block.type === "hero");
@@ -143,7 +147,7 @@ export function ProfileStudio(props: Props) {
   }, [initialName, initialBio]);
 
   useEffect(() => {
-    if (!profile.hasProAccess) return;
+    if (embedded || !profile.hasProAccess) return;
     let cancelled = false;
     fetch("/api/analytics/insights?range=7")
       .then((res) => (res.ok ? res.json() : null))
@@ -157,7 +161,7 @@ export function ProfileStudio(props: Props) {
     return () => {
       cancelled = true;
     };
-  }, [profile.hasProAccess, profile.id]);
+  }, [embedded, profile.hasProAccess, profile.id]);
 
   useEffect(() => {
     if (name === initialName && bio === initialBio) return;
@@ -208,6 +212,7 @@ export function ProfileStudio(props: Props) {
 
   const editor = (
     <div className="space-y-5">
+      {!embedded && (<>
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
@@ -284,6 +289,7 @@ export function ProfileStudio(props: Props) {
       {layout === "links" && (
         <BoxStylePicker value={globalBox} onChange={(value) => value && onGlobalBox(value)} />
       )}
+      </>)}
 
       <div className="grid gap-3 sm:grid-cols-[auto_1fr] sm:items-center">
         <button type="button" onClick={onEditProfile} className="mx-auto h-16 w-16 overflow-hidden rounded-2xl border border-white/10 bg-white/5 sm:mx-0">
@@ -422,9 +428,11 @@ export function ProfileStudio(props: Props) {
         </>
       )}
 
-      <button type="button" onClick={onOpenGrid} className="text-sm font-bold text-white/50 underline-offset-4 hover:text-white hover:underline">
-        {t("openGrid")}
-      </button>
+      {!embedded && (
+        <button type="button" onClick={onOpenGrid} className="text-sm font-bold text-white/50 underline-offset-4 hover:text-white hover:underline">
+          {t("openGrid")}
+        </button>
+      )}
     </div>
   );
 

@@ -633,3 +633,82 @@ export async function countBuilders(): Promise<number | null> {
     return null;
   }
 }
+
+/* ---------- Muro de la comunidad (OG de la home) ---------- */
+
+// Usernames que nunca salen en imágenes de comunidad (lo pidieron, o la ficha de
+// la persona lo indica). El motivo vive fuera del repo, en la biblia.
+export const COMMUNITY_IMAGE_EXCLUDED = new Set<string>(["raafaromera"]);
+
+/**
+ * Fotos de perfil de los builders más activos: los que más bloques editaron en
+ * los últimos 30 días. Si no alcanzan, completa con los de score >= 300 (la
+ * regla de la vitrina). Solo perfiles con usuario y foto, sin excluidos.
+ * Devuelve URLs ya pasadas por el proxy a JPEG, la más activa primero.
+ */
+export async function fetchActiveBuilderAvatars(n: number, size: number): Promise<string[]> {
+  const c = restCreds();
+  if (!c) return [];
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  try {
+    const [actRes, profRes] = await Promise.all([
+      fetch(`${c.baseUrl}/rest/v1/blocks?select=user_id&updated_at=gte.${encodeURIComponent(since)}&limit=20000`, { headers: c.headers, cache: "no-store" }),
+      fetch(`${c.baseUrl}/rest/v1/profiles?select=id,username,image,builder_score&username=not.is.null&image=not.is.null&limit=5000`, { headers: c.headers, cache: "no-store" }),
+    ]);
+    if (!actRes.ok || !profRes.ok) return [];
+    const activity = new Map<string, number>();
+    for (const row of (await actRes.json()) as Array<{ user_id: string }>) {
+      activity.set(row.user_id, (activity.get(row.user_id) ?? 0) + 1);
+    }
+    const profiles = ((await profRes.json()) as Array<{ id: string; username: string; image: string | null; builder_score: number | null }>)
+      .filter((p) => p.image && !COMMUNITY_IMAGE_EXCLUDED.has(p.username.toLowerCase()));
+    const score = (p: { builder_score: number | null }) => p.builder_score ?? 0;
+    const active = profiles
+      .filter((p) => activity.has(p.id))
+      .sort((a, b) => activity.get(b.id)! - activity.get(a.id)! || score(b) - score(a));
+    const fill = profiles.filter((p) => !activity.has(p.id) && score(p) >= 300).sort((a, b) => score(b) - score(a));
+    return [...active, ...fill]
+      .slice(0, n)
+      .map((p) => safeAvatarUrl(p.image, size))
+      .filter((u): u is string => Boolean(u));
+  } catch {
+    return [];
+  }
+}
+
+// Baja cada imagen y la pasa a data URI. Una foto que no carga se descarta en
+// vez de romper la imagen entera (Satori falla si una <img> remota no responde).
+export async function inlineImages(urls: string[], timeoutMs = 8000, concurrency = 12): Promise<string[]> {
+  // De a `concurrency` por vez: todas juntas saturan el proxy y se vencen.
+  const results: Array<string | null> = new Array(urls.length).fill(null);
+  let next = 0;
+  const worker = async () => {
+    while (next < urls.length) {
+      const i = next++;
+      results[i] = await inlineOne(urls[i], timeoutMs);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(concurrency, urls.length) }, worker));
+  return results.filter((r): r is string => Boolean(r));
+}
+
+async function inlineOne(url: string, timeoutMs: number): Promise<string | null> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { signal: ctrl.signal });
+    if (!res.ok) return null;
+    const type = res.headers.get("content-type") || "image/jpeg";
+    if (!type.startsWith("image/")) return null;
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    let bin = "";
+    for (let i = 0; i < bytes.length; i += 0x8000) {
+      bin += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + 0x8000)));
+    }
+    return `data:${type};base64,${btoa(bin)}`;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}

@@ -21,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
       description: t("metaDescription"),
       url: `${SITE_URL}/linktree`,
       type: "website",
-      images: [{ url: "/opengraph-image.png?v=producto-1", width: 1200, height: 630 }],
+      images: [{ url: "/opengraph-image.png?v=comunidad-1", width: 1200, height: 630 }],
     },
     twitter: {
       card: "summary_large_image",

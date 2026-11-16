@@ -1,6 +1,13 @@
 import { ImageResponse } from "next/og";
 import { BRAND } from "@/lib/brand";
-import { OG_SIZE, OG_CONTENT_TYPE, OgLogo } from "@/lib/og/shared";
+import {
+  OG_SIZE,
+  OG_CONTENT_TYPE,
+  OgLogo,
+  countBuilders,
+  fetchActiveBuilderAvatars,
+  inlineImages,
+} from "@/lib/og/shared";
 import { SITE_URL } from "@/lib/site-url";
 
 export const runtime = "edge";
@@ -8,32 +15,26 @@ export const runtime = "edge";
 // en producción todavía no tiene las nuevas.
 export const dynamic = "force-dynamic";
 
-export const alt = "huevsite.io: el link que mandás cuando te preguntan en qué andás";
+export const alt = "huevsite.io: los builders de la comunidad y su link in bio";
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 
-// La imagen al compartir la home habla del producto: el copy a la izquierda y
-// un perfil de ejemplo armado con los bloques reales del perfil a la derecha.
-// Es estática (no consulta la base), así que nunca queda vieja. Si cambia el
-// diseño o el texto, subí el `?v=` de app/page.tsx para que X y LinkedIn la
-// vuelvan a pedir. El Builder de la Semana tiene su imagen en
-// /builders-de-la-semana.
+// La imagen al compartir la home es la comunidad: un muro con las fotos de los
+// builders más activos de los últimos 30 días, apagado, y al centro el logo, el
+// número de builders y la URL. Todo lo que hay que leer está dentro del cuadrado
+// central de 630px, que es lo que muestran WhatsApp y otros lectores en chico.
+// La URL de la imagen se versiona por semana en app/page.tsx, así el muro se
+// renueva cada lunes en X y LinkedIn. El Builder de la Semana tiene su imagen
+// en /builders-de-la-semana.
 //
 // Copy aprobado por Tomás el 16-nov-2026 (pasó por /biblia, ledger
-// 2026-11-16-huevsite-og-home-copy).
-const EYEBROW = "link in bio para builders";
-const HEADLINE = "El link que mandás cuando te preguntan";
-const HEADLINE_ACCENT = "en qué andás.";
-const SUB = "Tus proyectos y tu GitHub en un perfil que armás en 3 minutos.";
-const CTA = "Armá el tuyo";
+// 2026-11-16-huevsite-og-home-copy, opción 7; la 3 cuando no hay número).
 
 const C = BRAND.color;
 
-// Safe zone: nada importante a menos de SAFE_X de los costados ni de SAFE_Y de
-// arriba y abajo. X recorta la tarjeta a 2:1 (15px arriba y abajo) y varias
-// apps redondean las esquinas; con estos márgenes no se come nada.
-const SAFE_X = 72;
-const SAFE_Y = 60;
+// Safe zone: el texto vive en x 300-900, dentro del cuadrado central (285-915)
+// y lejos del recorte de X a 2:1 (15px arriba y abajo). Las fotos del borde
+// pueden cortarse: son fondo.
 const DISPLAY = "Bricolage";
 const MONO = "JetBrainsMono";
 
@@ -62,277 +63,123 @@ async function loadFonts(): Promise<OgFont[] | undefined> {
   }
 }
 
-/* ---------- El perfil de ejemplo (los bloques de components/blocks) ---------- */
+/* ---------- El muro ---------- */
 
-const BLOCK = {
-  display: "flex",
-  flexDirection: "column" as const,
-  background: "rgba(17,17,17,0.85)",
-  border: "1px solid rgba(255,255,255,0.08)",
-  borderRadius: 28,
-  padding: 22,
-};
+const TILE = 88;
+const GAP = 12;
+const COLS = 12;
+const ROWS = 7;
+const X0 = (1200 - (COLS * TILE + (COLS - 1) * GAP)) / 2;
+const Y0 = (630 - (ROWS * TILE + (ROWS - 1) * GAP)) / 2;
+// El óvalo negro del centro. Las fotos que quedan abajo no se piden.
+const HOLE = { rx: 330, ry: 205 };
 
-function BlockLabel({ children, live = false }: { children: string; live?: boolean }) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 7,
-        marginBottom: 10,
-        fontFamily: MONO,
-        fontWeight: 700,
-        fontSize: 11,
-        letterSpacing: 1.5,
-        textTransform: "uppercase",
-        color: C.textMuted,
-      }}
-    >
-      {live ? (
-        <div style={{ display: "flex", width: 8, height: 8, borderRadius: 999, background: C.accent, boxShadow: `0 0 10px ${C.accent}` }} />
-      ) : null}
-      {children}
-    </div>
-  );
-}
+type Tile = { x: number; y: number; d: number };
 
-function Stat({ value, label, color = C.textStrong }: { value: string; label: string; color?: string }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column" }}>
-      <div style={{ display: "flex", fontSize: 26, fontWeight: 800, letterSpacing: -0.8, color }}>{value}</div>
-      <div style={{ display: "flex", fontSize: 9, letterSpacing: 1.6, textTransform: "uppercase", color: C.textMuted }}>{label}</div>
-    </div>
-  );
-}
+// Las casillas visibles, de la más cercana al centro a la más lejana: la foto
+// del builder más activo queda pegada al texto.
+export const WALL_TILES: Tile[] = (() => {
+  const tiles: Tile[] = [];
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const x = X0 + c * (TILE + GAP);
+      const y = Y0 + r * (TILE + GAP);
+      const dx = (x + TILE / 2 - 600) / HOLE.rx;
+      const dy = (y + TILE / 2 - 315) / HOLE.ry;
+      const d = dx * dx + dy * dy;
+      if (d >= 1) tiles.push({ x, y, d });
+    }
+  }
+  return tiles.sort((a, b) => a.d - b.d);
+})();
 
-function Bar({ pct }: { pct: number }) {
-  return (
-    <div style={{ display: "flex", marginTop: "auto", height: 6, borderRadius: 999, background: "rgba(255,255,255,0.05)" }}>
-      <div style={{ display: "flex", width: `${pct}%`, height: 6, borderRadius: 999, background: C.accent }} />
-    </div>
-  );
-}
+export type HomeOgData = { count: number | null; avatars: string[] };
 
-function SampleProfile() {
-  return (
-    <div style={{ position: "absolute", right: SAFE_X, top: SAFE_Y, width: 500, display: "flex", flexDirection: "column", gap: 16 }}>
-      {/* hero */}
-      <div style={{ ...BLOCK, height: 140, flexDirection: "row", alignItems: "center", gap: 20, padding: "24px 28px" }}>
-        <div
-          style={{
-            display: "flex",
-            width: 78,
-            height: 78,
-            borderRadius: 999,
-            border: `2px solid ${C.accent}`,
-            boxShadow: `0 0 24px rgba(200,255,0,0.35)`,
-            background: "linear-gradient(145deg, #2b2b2e, #141416)",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 32,
-            fontWeight: 800,
-            color: C.textDim,
-          }}
-        >
-          T
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <div style={{ display: "flex", fontSize: 30, fontWeight: 800, letterSpacing: -0.9, color: C.textStrong }}>Tu nombre</div>
-          <div style={{ display: "flex", fontFamily: MONO, fontWeight: 700, fontSize: 13, color: C.accent }}>huevsite.io/tuusuario</div>
-          <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
-                padding: "3px 10px",
-                borderRadius: 999,
-                fontSize: 11,
-                fontWeight: 800,
-                background: C.accentDim,
-                border: `1px solid ${C.accentMid}`,
-                color: C.accent,
-              }}
-            >
-              <div style={{ display: "flex", width: 5, height: 5, borderRadius: 999, background: C.accent }} />
-              construyendo
-            </div>
-            <div
-              style={{
-                display: "flex",
-                padding: "3px 10px",
-                borderRadius: 999,
-                fontSize: 11,
-                fontWeight: 800,
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                color: C.textMuted,
-              }}
-            >
-              indie hacker
-            </div>
-          </div>
-        </div>
+export function homeOgElement({ count, avatars }: HomeOgData) {
+  const headline =
+    count && count > 0 ? (
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center" }}>
+        <span style={{ color: C.accent }}>{count} builders</span>
+        <span>&nbsp;ya tienen su huevsite.</span>
       </div>
+    ) : (
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center" }}>Tu portfolio de builder en un link.</div>
+    );
 
-      <div style={{ display: "flex", gap: 16 }}>
-        {/* building now */}
-        <div style={{ ...BLOCK, width: 242, height: 354 }}>
-          <BlockLabel live>building now</BlockLabel>
-          <div style={{ display: "flex", fontSize: 23, fontWeight: 800, letterSpacing: -0.5, color: C.accent, marginBottom: 8 }}>
-            SaaS en progreso
-          </div>
-          <div style={{ display: "flex", fontSize: 14, lineHeight: 1.5, color: C.textDim, marginBottom: 14 }}>
-            Lo que estás shippeando esta semana.
-          </div>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              flex: 1,
-              gap: 10,
-              padding: "26px 22px",
-              borderRadius: 16,
-              border: "1px solid rgba(255,255,255,0.08)",
-              background: "linear-gradient(160deg, #1d2410, #101112 60%)",
-              marginBottom: 14,
-            }}
-          >
-            <div style={{ display: "flex", width: "70%", height: 14, borderRadius: 6, background: "rgba(200,255,0,0.35)" }} />
-            <div style={{ display: "flex", width: "100%", height: 9, borderRadius: 6, background: "rgba(255,255,255,0.10)" }} />
-            <div style={{ display: "flex", width: "85%", height: 9, borderRadius: 6, background: "rgba(255,255,255,0.07)" }} />
-          </div>
-          <div style={{ display: "flex", gap: 6 }}>
-            {["Next.js", "Supabase"].map((t) => (
-              <div
-                key={t}
-                style={{
-                  display: "flex",
-                  fontFamily: MONO,
-                  fontWeight: 700,
-                  fontSize: 11,
-                  padding: "3px 8px",
-                  borderRadius: 4,
-                  background: "rgba(255,255,255,0.05)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  color: C.textDim,
-                }}
-              >
-                {t}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 16, width: 242 }}>
-          {/* github */}
-          <div style={{ ...BLOCK, height: 156 }}>
-            <BlockLabel>github</BlockLabel>
-            <div style={{ display: "flex", gap: 20 }}>
-              <Stat value="128" label="stars" />
-              <Stat value="34" label="repos" color={C.accent} />
-              <Stat value="210" label="follows" color={C.blue} />
-            </div>
-            <Bar pct={68} />
-          </div>
-          {/* score */}
-          <div style={{ ...BLOCK, height: 182 }}>
-            <BlockLabel>builder score</BlockLabel>
-            <div style={{ display: "flex", fontSize: 50, fontWeight: 800, letterSpacing: -2, color: C.textStrong }}>742</div>
-            <Bar pct={74} />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export function homeOgElement() {
   return (
-    <div
-      style={{
-        width: "100%",
-        height: "100%",
-        display: "flex",
-        position: "relative",
-        background: C.bg,
-        color: C.textStrong,
-        fontFamily: DISPLAY,
-      }}
-    >
+    <div style={{ width: "100%", height: "100%", display: "flex", position: "relative", background: C.bg, color: C.textStrong, fontFamily: DISPLAY }}>
+      {WALL_TILES.map((tile, i) => {
+        const src = avatars[i];
+        const common = {
+          position: "absolute" as const,
+          left: tile.x,
+          top: tile.y,
+          width: TILE,
+          height: TILE,
+          borderRadius: 999,
+        };
+        return src ? (
+          <img key={i} src={src} width={TILE} height={TILE} style={{ ...common, objectFit: "cover", opacity: 0.6, border: "2px solid rgba(255,255,255,0.08)" }} />
+        ) : (
+          <div key={i} style={{ ...common, display: "flex", background: C.surface2, border: `1px solid ${C.border}`, opacity: 0.6 }} />
+        );
+      })}
+
+      {/* El óvalo: negro sólido con un borde difuso que apaga las fotos de alrededor. */}
       <div
         style={{
           position: "absolute",
-          inset: 0,
+          left: 600 - HOLE.rx,
+          top: 315 - HOLE.ry,
+          width: HOLE.rx * 2,
+          height: HOLE.ry * 2,
           display: "flex",
-          backgroundImage: "radial-gradient(rgba(255,255,255,0.05) 1.4px, transparent 1.4px)",
-          backgroundSize: "34px 34px",
+          borderRadius: "50%",
+          background: C.bg,
+          boxShadow: `0 0 60px 30px ${C.bg}`,
         }}
       />
+
       <div
         style={{
           position: "absolute",
-          left: 700,
-          top: -60,
-          width: 620,
-          height: 620,
+          left: 300,
+          width: 600,
+          top: 0,
+          bottom: 0,
           display: "flex",
-          backgroundImage: "radial-gradient(circle, rgba(200,255,0,0.10), transparent 65%)",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 26,
+          textAlign: "center",
         }}
-      />
-
-      <SampleProfile />
-
-      <div style={{ position: "absolute", left: SAFE_X, top: SAFE_Y, bottom: SAFE_Y, width: 520, display: "flex", flexDirection: "column" }}>
-        <OgLogo height={38} />
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", gap: 22 }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              fontFamily: MONO,
-              fontWeight: 700,
-              fontSize: 14,
-              letterSpacing: 2.5,
-              textTransform: "uppercase",
-              color: C.accent,
-            }}
-          >
-            <div style={{ display: "flex", width: 8, height: 8, borderRadius: 999, background: C.accent, boxShadow: `0 0 10px ${C.accent}` }} />
-            {EYEBROW}
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", fontSize: 52, lineHeight: 1.0, fontWeight: 800, letterSpacing: -2.3 }}>
-            <div style={{ display: "flex", flexWrap: "wrap" }}>{HEADLINE}</div>
-            <div style={{ display: "flex", color: C.accent }}>{HEADLINE_ACCENT}</div>
-          </div>
-          <div style={{ display: "flex", fontSize: 23, lineHeight: 1.38, fontWeight: 400, color: C.textDim, maxWidth: 480 }}>{SUB}</div>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
-          <div
-            style={{
-              display: "flex",
-              padding: "14px 24px",
-              borderRadius: 14,
-              background: C.accent,
-              color: C.bg,
-              fontSize: 19,
-              fontWeight: 800,
-            }}
-          >
-            {CTA}
-          </div>
-          <div style={{ display: "flex", fontFamily: MONO, fontWeight: 700, fontSize: 15, color: C.textMuted }}>
-            huevsite.io/<span style={{ color: C.textStrong }}>tuusuario</span>
-          </div>
+      >
+        <OgLogo height={40} />
+        <div style={{ display: "flex", fontSize: 58, lineHeight: 1.02, fontWeight: 800, letterSpacing: -2.4 }}>{headline}</div>
+        <div style={{ display: "flex", fontFamily: MONO, fontWeight: 700, fontSize: 19, color: C.textMuted }}>
+          huevsite.io/<span style={{ color: C.textStrong }}>tuusuario</span>
         </div>
       </div>
     </div>
   );
+}
+
+export async function fetchHomeOgData(): Promise<HomeOgData> {
+  const [count, urls] = await Promise.all([
+    countBuilders().catch(() => null),
+    // Se piden de más: algunas fotos no cargan y no queremos huecos en el muro.
+    fetchActiveBuilderAvatars(Math.ceil(WALL_TILES.length * 1.5), TILE).catch(() => [] as string[]),
+  ]);
+  const avatars = (await inlineImages(urls).catch(() => [] as string[])).slice(0, WALL_TILES.length);
+  return { count, avatars };
 }
 
 export default async function Image() {
-  const fonts = await loadFonts();
-  return new ImageResponse(homeOgElement(), { ...size, ...(fonts ? { fonts } : {}) });
+  const [fonts, data] = await Promise.all([loadFonts(), fetchHomeOgData().catch(() => ({ count: null, avatars: [] }))]);
+  try {
+    return new ImageResponse(homeOgElement(data), { ...size, ...(fonts ? { fonts } : {}) });
+  } catch {
+    return new ImageResponse(homeOgElement({ count: data.count, avatars: [] }), { ...size, ...(fonts ? { fonts } : {}) });
+  }
 }

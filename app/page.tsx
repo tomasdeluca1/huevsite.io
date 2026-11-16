@@ -17,18 +17,28 @@ import { attributionFromSearchParams, attributionToQuery } from "@/lib/checkout-
 
 export const dynamic = "force-dynamic";
 
-// The home OG image (app/opengraph-image.tsx) is static product art. Next
-// stamps the image route with a 1-year immutable Cache-Control, and X/LinkedIn
-// cache by URL, so the og:image URL carries a version: bump OG_VERSION whenever
-// the image changes or social platforms keep showing the old one.
-const OG_VERSION = "producto-1";
+// The home OG image (app/opengraph-image.tsx) is the community wall: the most
+// active builders of the last 30 days. Next stamps the image route with a
+// 1-year immutable Cache-Control, and X/LinkedIn cache by URL, so the og:image
+// URL carries the ISO week: the wall refreshes every Monday and stays stable
+// within the week. Bump OG_DESIGN when the design changes.
+const OG_DESIGN = "comunidad";
+
+function isoWeek(date = new Date()): string {
+  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  const day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const week = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  return `${d.getUTCFullYear()}-w${String(week).padStart(2, "0")}`;
+}
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("landing");
   const locale = await getLocale();
   const OG_TITLE = t("metaTitle");
   const OG_DESCRIPTION = t("metaDescription");
-  const v = OG_VERSION;
+  const v = `${OG_DESIGN}-${isoWeek()}`;
   return {
     title: OG_TITLE,
     description: OG_DESCRIPTION,
@@ -75,7 +85,7 @@ const organizationSchema = {
     height: 512,
   },
   // Static copy of the home OG (scripts/render-brand-og.ts).
-  image: "https://huevsite.io/opengraph-image.png?v=producto-1",
+  image: "https://huevsite.io/opengraph-image.png?v=comunidad-1",
   description:
     "Red social y plataforma de portfolios para builders, desarrolladores, diseñadores y founders de todo el mundo.",
   slogan: "Mostrá lo que buildeás.",

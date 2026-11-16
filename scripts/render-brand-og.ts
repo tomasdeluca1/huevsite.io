@@ -2,11 +2,15 @@
 // `public/opengraph-image.png` is the static copy: schema and the login /
 // linktree cards point at it.
 //
+// Con las variables de Supabase cargadas trae el muro real; sin ellas sale el
+// muro vacío.
+//
+//   set -a; source .env.local; set +a
 //   npx tsx --tsconfig scripts/tsconfig.json scripts/render-brand-og.ts
 //   npx tsx --tsconfig scripts/tsconfig.json scripts/render-brand-og.ts /tmp/home-og.png
 import { readFileSync, writeFileSync } from "node:fs";
 import { ImageResponse } from "next/og";
-import { homeOgElement, HOME_OG_FONTS, type OgFont } from "../app/opengraph-image";
+import { homeOgElement, fetchHomeOgData, HOME_OG_FONTS, type OgFont } from "../app/opengraph-image";
 import { OG_SIZE } from "../lib/og/shared";
 
 const file = process.argv.slice(2).find((a) => a.endsWith(".png")) ?? "public/opengraph-image.png";
@@ -22,7 +26,9 @@ const fonts: OgFont[] = HOME_OG_FONTS.map((f) => {
 });
 
 async function main() {
-  const res = new ImageResponse(homeOgElement(), { ...OG_SIZE, fonts });
+  const data = await fetchHomeOgData();
+  console.log(`builders ${data.count} · fotos ${data.avatars.length}`);
+  const res = new ImageResponse(homeOgElement(data), { ...OG_SIZE, fonts });
   const buf = Buffer.from(await res.arrayBuffer());
   writeFileSync(file, buf);
   console.log(`${file} ${buf.length}`);

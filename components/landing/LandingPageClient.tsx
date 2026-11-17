@@ -511,7 +511,7 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
           }
           if (cells.length === 0) return null;
           return (
-            <div style={{ maxWidth: '1100px', margin: '0 auto' }} className="mt-10">
+            <div style={{ maxWidth: '1100px', margin: '40px auto 0' }}>
               <div className={`grid gap-3 ${
                 cells.length >= 4 ? "sm:grid-cols-2 lg:grid-cols-4" :
                 cells.length === 3 ? "sm:grid-cols-3" :

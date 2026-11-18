@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
-import { getShowcaseData, getActiveBuildersThisWeek, getNetworkPulse } from "@/lib/showcase-service";
+import { getShowcaseData, getActiveBuildersThisWeek, getNetworkPulse, getAllWinners, getPublishedProjectCount } from "@/lib/showcase-service";
 import LandingPageClient from "@/components/landing/LandingPageClient";
 import { SITE_URL } from "@/lib/site-url";
 import { getFeaturedTestimonials } from "@/lib/testimonial-service";
@@ -259,7 +259,7 @@ export default async function LandingPage({
       ? "identity"
       : "outcome";
 
-  const [data, testimonials, faqs, settings, activeThisWeek, networkPulse, founderSeats, communityWall] = await Promise.all([
+  const [data, testimonials, faqs, settings, activeThisWeek, networkPulse, founderSeats, communityWall, winners, projectCount] = await Promise.all([
     getShowcaseData(),
     getFeaturedTestimonials(),
     getPublishedFaqs(),
@@ -268,6 +268,8 @@ export default async function LandingPage({
     getNetworkPulse(),
     getFounderSeats(),
     getCommunityWall(),
+    getAllWinners().catch(() => []),
+    getPublishedProjectCount(),
   ]);
 
   // FAQPage schema from the admin-managed FAQs; falls back to the static one
@@ -322,6 +324,8 @@ export default async function LandingPage({
         utm={attributionToQuery(attributionFromSearchParams(searchParams))}
         attribution={attributionFromSearchParams(searchParams)}
         communityWall={communityWall}
+        winners={winners}
+        projectCount={projectCount}
       />
     </>
   );

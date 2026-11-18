@@ -269,3 +269,18 @@ export async function getAllWinners(): Promise<WinnerHistoryItem[]> {
       builderScore: (w.user.builder_score || 0) as number,
     }));
 }
+
+/** Proyectos visibles en perfiles (bloques "project"). 0 si la consulta falla. */
+export async function getPublishedProjectCount(): Promise<number> {
+  try {
+    const supabase = createServiceRoleClient();
+    const { count, error } = await supabase
+      .from("blocks")
+      .select("id", { count: "exact", head: true })
+      .eq("type", "project")
+      .eq("visible", true);
+    return error ? 0 : count ?? 0;
+  } catch {
+    return 0;
+  }
+}

@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations, useLocale } from "next-intl";
 import LocaleToggle from "@/components/LocaleToggle";
 import { DiscoveryHeader } from "@/components/discovery/DiscoveryHeader";
-import { WinnerSection } from "@/components/landing/WinnerSection";
+import { CommunityValue } from "@/components/landing/CommunityValue";
 import { CommunityWallHero } from "@/components/landing/CommunityWallHero";
 import type { CommunityWall } from "@/lib/community-wall";
 import { LatamFlags } from "@/components/landing/LatamFlags";
@@ -17,7 +17,7 @@ import { User } from "@supabase/supabase-js";
 import { Activity, Compass, PlusCircle, Layout, Check, BookOpen, Globe, BarChart3, Loader2, ArrowRight, Sparkles, Zap, LayoutGrid, Eye, ChevronDown, ChevronUp, X, Trophy, TrendingUp, HeartHandshake, Rocket, ArrowBigUp, CalendarDays, ThumbsUp } from "lucide-react";
 import type { LandingTestimonial } from "@/lib/testimonial-service";
 import type { Faq } from "@/lib/faq-service";
-import type { NetworkPulse } from "@/lib/showcase-service";
+import type { NetworkPulse, WinnerHistoryItem } from "@/lib/showcase-service";
 import { toEmbedUrl } from "@/lib/site-settings-service";
 import { trackEvent, HERO_VARIANT_KEY } from "@/lib/track";
 import type { FounderOffer } from "@/lib/founder-offer";
@@ -41,13 +41,17 @@ interface LandingPageClientProps {
   attribution?: CheckoutAttribution | null;
   /** El muro del hero: fotos de la comunidad, los más activos primero. */
   communityWall?: CommunityWall;
+  /** Builders de la Semana, el más reciente primero. */
+  winners?: WinnerHistoryItem[];
+  /** Proyectos visibles en perfiles. */
+  projectCount?: number;
 }
 
 type HeroVariant = "claim" | "social" | "product";
 /** T1 experiment: identity-challenge H1 (control) vs outcome-focused H1. */
 export type HeroAbVariant = "identity" | "outcome";
 
-export default function LandingPageClient({ showcaseData, testimonials = [], faqs = [], founderVideoUrl = "", founderQuote = "", activeThisWeek = 0, networkPulse, heroAbVariant = "identity", founderOffer, utm, attribution, communityWall = { total: 0, builders: [] } }: LandingPageClientProps) {
+export default function LandingPageClient({ showcaseData, testimonials = [], faqs = [], founderVideoUrl = "", founderQuote = "", activeThisWeek = 0, networkPulse, heroAbVariant = "identity", founderOffer, utm, attribution, communityWall = { total: 0, builders: [] }, winners = [], projectCount = 0 }: LandingPageClientProps) {
   const t = useTranslations("landing");
   const tNav = useTranslations("nav");
   const tFooter = useTranslations("footer");
@@ -133,27 +137,6 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
     secondaryHref: string;
     secondaryLabel: string;
   }>;
-
-  const contentPath = [
-    {
-      href: "/explore",
-      label: t("contentPathExploreLabel"),
-      copy: t("contentPathExploreCopy"),
-      icon: Compass,
-    },
-    {
-      href: "/feed",
-      label: t("contentPathFeedLabel"),
-      copy: t("contentPathFeedCopy"),
-      icon: Activity,
-    },
-    {
-      href: "/leaderboard",
-      label: t("contentPathLeaderboardLabel"),
-      copy: t("contentPathLeaderboardCopy"),
-      icon: Trophy,
-    },
-  ];
 
   const currentHero = heroExperiment[heroVariant];
   const normalizedClaim = claimInput.trim().toLowerCase();
@@ -441,88 +424,6 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
           </p>
         </div>
 
-        {(() => {
-          const cells: ReactNode[] = [];
-          if ((networkPulse?.top3?.length ?? 0) >= 3) {
-            cells.push(
-              <Link key="rank" href="/leaderboard" className="group rounded-[1.6rem] border border-white/8 bg-white/[0.025] p-5 transition-all hover:-translate-y-0.5 hover:border-[var(--accent)]/30 hover:bg-white/[0.04]">
-                <div className="mb-4 flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.18em] text-[var(--accent)]">
-                  <Trophy size={13} /> {t("pulseRankingLabel")}
-                </div>
-                <div className="space-y-2.5">
-                  {networkPulse!.top3.map((b, i) => (
-                    <div key={b.username} className="flex items-center gap-3">
-                      <span className="w-4 text-xs font-black text-white/30">#{i + 1}</span>
-                      {b.image ? (
-                        <img src={b.image} alt={b.name || b.username} className="h-7 w-7 rounded-full object-cover" />
-                      ) : (
-                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-[11px] font-bold">{(b.name || b.username).charAt(0).toUpperCase()}</div>
-                      )}
-                      <span className="min-w-0 flex-1 truncate text-sm font-bold text-white">{b.name || b.username}</span>
-                      <span className="text-xs font-mono text-[var(--accent)]">{fmtNum(b.builder_score)} pts</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-4 text-xs font-mono text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors">{t("pulseRankingCta")}</div>
-              </Link>
-            );
-          }
-          if (activeThisWeek >= 5) {
-            cells.push(
-              <Link key="active" href="/feed" className="group flex flex-col justify-between rounded-[1.6rem] border border-white/8 bg-white/[0.025] p-5 transition-all hover:-translate-y-0.5 hover:border-[var(--accent)]/30 hover:bg-white/[0.04]">
-                <div className="mb-4 flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.18em] text-[var(--accent)]">
-                  <Activity size={13} /> {t("pulseActiveLabel")}
-                </div>
-                <div>
-                  <div className="text-4xl font-black tracking-tight text-white">{fmtNum(activeThisWeek)}</div>
-                  <div className="mt-1 text-sm text-[var(--text-dim)]">{t("pulseActiveDesc")}</div>
-                </div>
-                <div className="mt-4 text-xs font-mono text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors">{t("pulseActiveCta")}</div>
-              </Link>
-            );
-          }
-          if ((networkPulse?.newThisWeek ?? 0) >= 5) {
-            cells.push(
-              <Link key="new" href="/explore" className="group flex flex-col justify-between rounded-[1.6rem] border border-white/8 bg-white/[0.025] p-5 transition-all hover:-translate-y-0.5 hover:border-[var(--accent)]/30 hover:bg-white/[0.04]">
-                <div className="mb-4 flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.18em] text-[var(--accent)]">
-                  <TrendingUp size={13} /> {t("pulseGrowthLabel")}
-                </div>
-                <div>
-                  <div className="text-4xl font-black tracking-tight text-white">+{networkPulse!.newThisWeek}</div>
-                  <div className="mt-1 text-sm text-[var(--text-dim)]">{t("pulseGrowthDesc")}</div>
-                </div>
-                <div className="mt-4 text-xs font-mono text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors">{t("pulseGrowthCta")}</div>
-              </Link>
-            );
-          }
-          if ((networkPulse?.endorsementsTotal ?? 0) >= 50) {
-            cells.push(
-              <Link key="endorse" href="/explore" className="group flex flex-col justify-between rounded-[1.6rem] border border-white/8 bg-white/[0.025] p-5 transition-all hover:-translate-y-0.5 hover:border-[var(--accent)]/30 hover:bg-white/[0.04]">
-                <div className="mb-4 flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.18em] text-[var(--accent)]">
-                  <HeartHandshake size={13} /> {t("pulseEndorseLabel")}
-                </div>
-                <div>
-                  <div className="text-4xl font-black tracking-tight text-white">+{fmtNum(networkPulse!.endorsementsTotal)}</div>
-                  <div className="mt-1 text-sm text-[var(--text-dim)]">{t("pulseEndorseDesc")}</div>
-                </div>
-                <div className="mt-4 text-xs font-mono text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors">{t("pulseEndorseCta")}</div>
-              </Link>
-            );
-          }
-          if (cells.length === 0) return null;
-          return (
-            <div style={{ maxWidth: '1100px', margin: '40px auto 0' }}>
-              <div className={`grid gap-3 ${
-                cells.length >= 4 ? "sm:grid-cols-2 lg:grid-cols-4" :
-                cells.length === 3 ? "sm:grid-cols-3" :
-                cells.length === 2 ? "sm:grid-cols-2 max-w-3xl mx-auto" :
-                "max-w-md mx-auto"
-              }`}>
-                {cells}
-              </div>
-            </div>
-          );
-        })()}
       </section>
 
       {/* CÓMO FUNCIONA — el portfolio builder en 3 pasos. La preview de la
@@ -589,163 +490,17 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
         </div>
       </section>
 
-      {/* LA COMUNIDAD TE DA — Builder de la Semana (WinnerSection), el feed de
-          lanzamientos (Builders Hunt) y las salidas para seguir explorando. */}
-      <section style={{ padding: 'var(--section-y) var(--section-x) 0 var(--section-x)' }}>
-        <div style={{ maxWidth: '900px', margin: '0 auto' }} className="text-center">
-          <div className="section-label" style={{ justifyContent: 'center' }}>{t("communityGivesLabel")}</div>
-          <h2 className="section-title text-center mx-auto">{t("communityGivesTitle")}</h2>
-        </div>
-      </section>
-
-      <WinnerSection initialData={showcaseData} user={user} />
-
-      {/* BUILDERS HUNT — the new flagship: a weekly launch feed where builders
-          ship projects and the community upvotes. Surfaces /feed as a reason to
-          join. The right-side card is an illustrative sample (mirrors the real
-          feed UI), consistent with the hero preview pattern. */}
-      <section style={{ padding: 'var(--section-y) var(--section-x) 0' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-14">
-            {/* Copy */}
-            <div className="text-center lg:text-left">
-              <div className="section-label text-center lg:text-left">{t("bhSectionLabel")}</div>
-              <h2 className="section-title">
-                {t("bhTitleLine1")} <span style={{ color: 'var(--accent)' }}>{t("bhTitleAccent")}</span>
-              </h2>
-              <p className="section-sub mx-auto lg:mx-0">{t("bhSub")}</p>
-
-              <div className="mt-7 flex flex-col gap-4 text-left">
-                {[
-                  { icon: Rocket, title: t("bhPoint1Title"), desc: t("bhPoint1Desc") },
-                  { icon: ThumbsUp, title: t("bhPoint2Title"), desc: t("bhPoint2Desc") },
-                  { icon: CalendarDays, title: t("bhPoint3Title"), desc: t("bhPoint3Desc") },
-                ].map((p) => {
-                  const Icon = p.icon;
-                  return (
-                    <div key={p.title} className="flex items-start gap-3.5">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--accent)]/10 text-[var(--accent)]">
-                        <Icon size={16} />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-sm font-black tracking-tight text-white">{p.title}</div>
-                        <p className="mt-0.5 text-sm leading-6 text-[var(--text-dim)]">{p.desc}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* CTA hierarchy: the converting action (launch → signup) gets the
-                  accent button; browsing the feed is the ghost secondary. */}
-              <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3">
-                <Link
-                  href={user ? "/dashboard" : "/login"}
-                  onClick={() => trackLandingEvent("landing_builders_hunt_primary_click", { href: user ? "/dashboard" : "/login" })}
-                  className="btn btn-accent !px-7 !py-3.5 text-base w-full sm:w-auto"
-                >
-                  {t("bhPrimaryCta")}
-                </Link>
-                <Link
-                  href="/feed"
-                  onClick={() => trackLandingEvent("landing_builders_hunt_secondary_click", { href: "/feed" })}
-                  className="btn btn-ghost !px-6 !py-3.5 text-sm w-full sm:w-auto"
-                >
-                  {t("bhSecondaryCta")}
-                </Link>
-              </div>
-            </div>
-
-            {/* Illustrative launch list (mirrors the feed UI) */}
-            <div className="relative w-full max-w-[440px] mx-auto lg:mx-0 lg:ml-auto">
-              <div className="hpp-badge mb-3 justify-center lg:justify-start">
-                <Eye size={12} />
-                {t("bhCardBadge")}
-              </div>
-              <div className="rounded-[1.6rem] border border-white/10 bg-[var(--surface)] p-4 sm:p-5 shadow-2xl shadow-black/40">
-                <div className="mb-3.5 flex items-center justify-between gap-3 border-b border-white/[0.07] pb-3.5">
-                  <div className="flex min-w-0 items-center gap-2.5">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--accent)]/[0.12] text-[var(--accent)]">
-                      <Rocket size={15} />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="truncate text-[13px] font-black tracking-tight text-white">{t("bhCardTitle")}</div>
-                      <div className="truncate text-[10px] font-mono text-[var(--text-muted)]">{t("bhCardSubtitle")}</div>
-                    </div>
-                  </div>
-                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--accent)]/30 bg-[var(--accent)]/5 px-2.5 py-1 text-[9px] font-mono uppercase tracking-[0.15em] text-[var(--accent)]">
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent)] opacity-75" />
-                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-                    </span>
-                    {t("bhCardLive")}
-                  </span>
-                </div>
-
-                <div className="flex flex-col gap-2.5">
-                  {[
-                    { emoji: "🚀", name: t("bhCardYouName"), tag: t("bhCardYouTag"), votes: "47", you: true },
-                    { emoji: "🛠️", name: t("bhEx2Name"), tag: t("bhEx2Tag"), votes: "29", you: false },
-                    { emoji: "⚡", name: t("bhEx3Name"), tag: t("bhEx3Tag"), votes: "18", you: false },
-                  ].map((r, i) => (
-                    <div
-                      key={r.name}
-                      className={`flex items-center gap-2.5 sm:gap-3 rounded-xl border p-2.5 ${
-                        r.you ? "border-[var(--accent)]/40 bg-[var(--accent)]/[0.06]" : "border-white/[0.07] bg-white/[0.02]"
-                      }`}
-                    >
-                      <span className="w-3.5 shrink-0 text-center text-xs font-black text-white/30">{i + 1}</span>
-                      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-base ${r.you ? "bg-[var(--accent)]" : "bg-white/[0.06]"}`}>
-                        {r.emoji}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-[13px] font-bold text-white">{r.name}</div>
-                        <div className="truncate text-[11px] text-[var(--text-muted)]">{r.tag}</div>
-                      </div>
-                      <div
-                        className={`flex shrink-0 flex-col items-center justify-center rounded-lg border px-2.5 py-1 ${
-                          r.you
-                            ? "border-[var(--accent)]/50 bg-[var(--accent)]/15 text-[var(--accent)]"
-                            : "border-white/10 bg-white/[0.03] text-[var(--text-dim)]"
-                        }`}
-                      >
-                        <ArrowBigUp size={15} className={r.you ? "fill-[var(--accent)]" : ""} />
-                        <span className="text-[11px] font-black leading-none">{r.votes}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Salidas para seguir explorando la comunidad: feed, ranking, perfiles. */}
-      <section style={{ padding: '0 var(--section-x)' }} className="flex justify-center">
-        <div className="w-full max-w-6xl mt-8 grid gap-3 sm:grid-cols-3">
-          {contentPath.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => trackLandingEvent("landing_content_path_click", { variant: heroVariant, href: item.href })}
-                className="group rounded-[1.6rem] border border-white/8 bg-white/[0.025] px-5 py-5 text-left transition-all hover:-translate-y-0.5 hover:border-[var(--accent)]/30 hover:bg-white/[0.04]"
-              >
-                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--accent)]/10 text-[var(--accent)]">
-                  <Icon size={18} />
-                </div>
-                <div className="text-sm font-black tracking-tight text-white">{item.label}</div>
-                <p className="mt-2 text-sm leading-6 text-[var(--text-dim)]">{item.copy}</p>
-                <div className="mt-4 text-[11px] font-mono uppercase tracking-[0.18em] text-white/35 transition-colors group-hover:text-[var(--accent)]">
-                  {t("contentPathFollow")}
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
+      {/* LA COMUNIDAD TE DA — la vuelta completa: publicás, te ven, te votan,
+          te destacan. Cifras reales + Builder de la Semana, Builders Hunt y score. */}
+      <CommunityValue
+        totalBuilders={communityWall.total}
+        projectCount={projectCount}
+        activeThisWeek={activeThisWeek}
+        winners={winners}
+        networkPulse={networkPulse}
+        loggedIn={!!user}
+        onTrack={(event, payload) => trackLandingEvent(event, payload ?? {})}
+      />
 
       {/* TESTIMONIALS — social proof before the ask (Marc Lou #29). Hidden when empty. */}
       {testimonials.length > 0 && (

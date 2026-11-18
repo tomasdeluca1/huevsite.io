@@ -13,6 +13,8 @@ import { LatamFlags } from "@/components/landing/LatamFlags";
 import { BuilderSpotlightCard } from "@/components/landing/BuilderSpotlightCard";
 import { supabase } from "@/lib/supabase";
 import { PricingTiers } from "@/components/landing/PricingTiers";
+import { ProShowcase } from "@/components/landing/ProShowcase";
+import { TestimonialsWall } from "@/components/landing/TestimonialsWall";
 import { User } from "@supabase/supabase-js";
 import { Activity, Compass, PlusCircle, Layout, Check, BookOpen, Globe, BarChart3, Loader2, ArrowRight, Sparkles, Zap, LayoutGrid, Eye, ChevronDown, ChevronUp, X, Trophy, TrendingUp, HeartHandshake, Rocket, ArrowBigUp, CalendarDays, ThumbsUp } from "lucide-react";
 import type { LandingTestimonial } from "@/lib/testimonial-service";
@@ -502,116 +504,20 @@ export default function LandingPageClient({ showcaseData, testimonials = [], faq
         onTrack={(event, payload) => trackLandingEvent(event, payload ?? {})}
       />
 
-      {/* TESTIMONIALS — social proof before the ask (Marc Lou #29). Hidden when empty. */}
-      {testimonials.length > 0 && (
-        <section style={{ padding: 'var(--section-y) var(--section-x)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-          <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-            <div className="section-label" style={{ justifyContent: 'center' }}>{t("testimonialsSectionLabel")}</div>
-            <h2 className="section-title text-center">{t("testimonialsTitle")}</h2>
-            {/* Adaptive: 1 → centered card, 2 → pair, 3+ → grid (never a lonely card). */}
-            <div className={`mt-10 ${
-              testimonials.length === 1
-                ? "max-w-2xl mx-auto"
-                : testimonials.length === 2
-                ? "grid sm:grid-cols-2 gap-4 max-w-3xl mx-auto"
-                : "grid sm:grid-cols-2 lg:grid-cols-3 gap-4"
-            }`}>
-              {testimonials.map((t) => (
-                <div key={t.id} className="flex flex-col bg-white/[0.02] border border-white/5 rounded-2xl p-6">
-                  <p className="text-sm text-[var(--text-dim)] leading-relaxed flex-1">“{t.quote}”</p>
-                  <a href={`/${t.username}`} className="flex items-center gap-3 mt-5 group">
-                    {t.avatarUrl ? (
-                      <img src={t.avatarUrl} alt={t.name} className="w-10 h-10 rounded-full object-cover shrink-0" />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold shrink-0">
-                        {t.name.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <div className="text-sm font-bold text-white truncate group-hover:underline">{t.name}</div>
-                      <div className="text-xs font-mono text-[var(--text-muted)] truncate">@{t.username}</div>
-                    </div>
-                  </a>
-                </div>
-              ))}
-            </div>
-            <div className="text-center mt-8">
-              <Link href="/testimonio" className="text-xs font-mono text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">
-                {t("testimonialsCta")}
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
+      {/* LO QUE DICEN LOS BUILDERS: cita grande que rota + dos filas en movimiento. */}
+      {testimonials.length > 0 && <TestimonialsWall testimonials={testimonials} />}
 
-      <section id="precios" className="pro-promo-section" style={{ padding: 'var(--section-y) var(--section-x)', background: 'linear-gradient(180deg, transparent 0%, rgba(200,255,0,0.03) 100%)', borderTop: '1px solid rgba(255,255,255,0.05)', scrollMarginTop: '80px' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div className="section-label" style={{ color: 'var(--accent)' }}>{t("proSectionLabel")}</div>
-          <h2 className="section-title">{t("proTitlePrefix")} <span style={{ color: 'var(--accent)' }}>{t("proTitleAccent")}</span></h2>
-          <p className="section-sub" style={{ marginBottom: '60px' }}>{t("proSub")}</p>
-
-          <div className="pro-bento">
-            {/* HERO tile — the reach flagship: you get surfaced first */}
-            <div className="pro-bento-hero">
-              <div>
-                <div className="pro-bento-icon"><Zap size={20} /></div>
-                <h3 className="pro-bento-hero-title">{t("proFeatureVisibilityTitle")}</h3>
-                <p className="pro-bento-hero-desc">{t("proFeatureVisibilityDesc")}</p>
-                <div className="pro-bento-surfaces">{t("proBentoHeroSurfaces")}</div>
-              </div>
-              {/* Ranking motif: your card rising to #1 */}
-              <div className="pro-rank" aria-hidden="true">
-                <div className="pro-rank-row"><span className="pro-rank-n">03</span><span className="pro-rank-bar" /></div>
-                <div className="pro-rank-row"><span className="pro-rank-n">02</span><span className="pro-rank-bar" /></div>
-                <div className="pro-rank-row is-you">
-                  <span className="pro-rank-n">01</span>
-                  <span className="pro-rank-you">@{t("proBentoYou")}</span>
-                  <ChevronUp size={16} />
-                </div>
-              </div>
-            </div>
-
-            {[
-              { icon: Globe, title: t("proFeatureDomainTitle"), desc: t("proFeatureDomainDesc") },
-              { icon: BarChart3, title: t("proFeatureInsightsTitle"), desc: t("proFeatureInsightsDesc") },
-              { icon: LayoutGrid, title: t("proFeatureSubsitesTitle"), desc: t("proFeatureSubsitesDesc") },
-              { icon: Layout, title: t("proFeatureGridTitle"), desc: t("proFeatureGridDesc") },
-              { icon: Rocket, title: t("proFeatureLaunchTitle"), desc: t("proFeatureLaunchDesc") }
-            ].map((f, i) => {
-              const Icon = f.icon;
-              return (
-                <div key={i} className="pro-bento-tile">
-                  <div className="pro-bento-icon"><Icon size={18} /></div>
-                  <h3 className="pro-bento-title">{f.title}</h3>
-                  <p className="pro-bento-desc">{f.desc}</p>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Pricing — bridges from the value above into the ask, same section. */}
-          {showPricing && (
-            <div className="mt-20">
-              <div className="section-label" style={{ color: 'var(--accent)' }}>{t("proPricingLabel")}</div>
-              <p className="section-sub" style={{ marginBottom: '40px' }}>{t("proPricingLead")}</p>
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto items-stretch"
-              >
-                <PricingTiers
-                  user={user ? { id: user.id, email: user.email } : null}
-                  loginNext="/"
-                  utm={utm}
-                  attribution={attribution}
-                  founderOffer={founderOffer}
-                />
-              </motion.div>
-            </div>
-          )}
-        </div>
-      </section>
+      <ProShowcase
+        pricing={showPricing ? (
+          <PricingTiers
+            user={user ? { id: user.id, email: user.email } : null}
+            loginNext="/"
+            utm={utm}
+            attribution={attribution}
+            founderOffer={founderOffer}
+          />
+        ) : null}
+      />
 
       {/* FAQ — objection handling at the decision point (admin-managed). Hidden when empty. */}
       {faqs.length > 0 && (

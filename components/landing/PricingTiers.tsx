@@ -67,7 +67,7 @@ export function PricingTiers({
   return (
     <>
       {/* FREE */}
-      <div className="flex flex-col bg-white/[0.02] border border-white/5 rounded-[2rem] p-8">
+      <div className="flex flex-col bg-white/[0.025] border border-white/8 rounded-[1.6rem] p-7 md:p-8">
         <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-[var(--text-muted)] mb-3 block">{t("freeLabel")}</span>
         <div className="flex items-baseline gap-1 mb-1">
           <span className="text-5xl font-black text-white">$0</span>
@@ -91,7 +91,7 @@ export function PricingTiers({
       </div>
 
       {/* PRO — highlighted */}
-      <div className="flex flex-col bg-white/[0.03] border border-[var(--accent)]/40 rounded-[2rem] p-8 relative overflow-hidden md:-mt-4 md:mb-0">
+      <div className="relative flex flex-col overflow-hidden rounded-[1.6rem] border border-[rgba(200,255,0,0.45)] bg-[rgba(200,255,0,0.04)] p-7 shadow-[0_0_60px_-20px_rgba(200,255,0,0.35)] md:p-8">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-[var(--accent)]/10 blur-[100px] rounded-full opacity-60 pointer-events-none" />
         <div className="relative z-10 flex flex-col h-full">
           <div className="flex items-center justify-between mb-3">
@@ -126,7 +126,7 @@ export function PricingTiers({
       </div>
 
       {/* FOUNDER — one-time / lifetime */}
-      <div className="flex flex-col bg-white/[0.02] border border-white/5 rounded-[2rem] p-8">
+      <div className="flex flex-col bg-white/[0.025] border border-white/8 rounded-[1.6rem] p-7 md:p-8">
         <div className="flex items-center justify-between mb-3">
           <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-[var(--text-muted)]">{t("founderLabel")}</span>
           <span className="text-[9px] border border-white/15 text-[var(--text-dim)] px-2 py-0.5 rounded font-black uppercase tracking-wider">{t("founderBadge")}</span>

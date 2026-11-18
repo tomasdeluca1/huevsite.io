@@ -3849,3 +3849,17 @@ footer {
   );
   animation: hv-launch-shine 1.3s ease-out 2 0.35s both;
 }
+
+/* Testimonios: filas que se mueven solas (TestimonialsWall). Pausa al pasar el mouse. */
+@keyframes hv-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.hv-marquee { animation: hv-marquee var(--hv-dur, 60s) linear infinite; will-change: transform; }
+.hv-marquee-reverse { animation-direction: reverse; }
+.hv-marquee-wrap:hover .hv-marquee { animation-play-state: paused; }
+.hv-marquee-row {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .hv-marquee { animation: none; }
+  .hv-marquee-row { overflow-x: auto; }
+}

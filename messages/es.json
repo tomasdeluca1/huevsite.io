@@ -1768,7 +1768,18 @@
     "cvScoreCta": "Empezar a sumar",
     "cvRankLabel": "Ranking por score",
     "cvRankAll": "Ver el leaderboard →",
-    "cvHuntLabel": "Builders Hunt"
+    "cvHuntLabel": "Builders Hunt",
+    "proLabelClean": "huevsite pro",
+    "proPricingLabelClean": "Elegí tu plan",
+    "proRankUp": "subiste al #1",
+    "proChipDomain": "tumarca.com",
+    "proChipInsights": "quién y de dónde",
+    "proChipSubsites": "ilimitados",
+    "proChipGrid": "5 → 22 bloques",
+    "proChipLaunch": "1/mes → ilimitados",
+    "testimonialsLabelClean": "Lo que dicen los builders",
+    "testimonialsCount": "{n} builders lo dijeron",
+    "testimonialsPick": "Elegí un testimonio"
   },
   "pricing": {
     "pageMetaTitle": "Precios — Portfolio para builders desde $0 | huevsite.io",

@@ -1336,7 +1336,18 @@
       "ecosystemHide": "Ocultar",
       "ecosystemEdit": "Editar {title}",
       "session": "Sesión",
-      "newsletterTitle": "Newsletter de Tomi"
+      "newsletterTitle": "Newsletter de Tomi",
+      "pulseViews": "{n, plural, one {<strong>#</strong> visita} other {<strong>#</strong> visitas}} esta semana · {today} hoy",
+      "pulseNoViews": "Esta semana todavía no hubo visitas. Compartí tu link",
+      "pulseWall": "Estás <strong>#{rank}</strong> de {total} en el muro de la home",
+      "pulseWallHint": "Editá algo esta semana y te acercás al centro",
+      "pulseNoWall": "Subí una foto de perfil para aparecer en el muro de la home",
+      "celebrateScoreTitle": "Sumaste puntos",
+      "celebrateScoreBody": "Tu score ahora es <strong>{score}</strong>",
+      "celebrateShowcaseLabel": "Pasaste los 300 pts",
+      "celebrateShowcaseTitle": "Ya aparecés en el showcase de la home",
+      "celebrateBadgeLabel": "Badge nuevo",
+      "celebrateShare": "Compartir"
     }
   },
   "recruiter": {
@@ -2032,7 +2043,8 @@
     "doneTweetText": "Armé mi huevsite: mi portfolio de builder 🚀",
     "usernameReserved": "Ese username está reservado por el sistema. Probá otro.",
     "countryLabel": "¿De dónde sos? (opcional)",
-    "countryPlaceholder": "Elegí tu país"
+    "countryPlaceholder": "Elegí tu país",
+    "doneBuilderNumber": "Sos el builder número {n} de huevsite."
   },
   "checkout": {
     "metaTitle": "¡Ya sos PRO! | huevsite.io",

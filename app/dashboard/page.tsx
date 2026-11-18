@@ -58,6 +58,8 @@ import { EcosystemStrip } from "@/components/dashboard/shell/EcosystemStrip";
 import { StatsTab } from "@/components/dashboard/shell/StatsTab";
 import { SettingsTab, type SettingsSection } from "@/components/dashboard/shell/SettingsTab";
 import { ShareProfileModal } from "@/components/share/ShareProfileModal";
+import { PulseStrip, useProfilePulse } from "@/components/dashboard/shell/PulseStrip";
+import { Celebrations } from "@/components/dashboard/shell/Celebrations";
 import { InsightsTab } from "@/components/dashboard/InsightsTab";
 import { CreateSubSiteModal } from "@/components/dashboard/CreateSubSiteModal";
 import { ProfileEditModal } from "@/components/dashboard/ProfileEditModal";
@@ -134,6 +136,7 @@ export default function DashboardPage() {
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedVersionRef = useRef<string>("");
   const justLoadedRef = useRef(true);
+  const pulse = useProfilePulse();
   // Solo en la primera carga alineamos el board editado con el publicado; en
   // refetches posteriores respetamos el board que el usuario está editando.
   const boardInitRef = useRef(false);
@@ -1727,6 +1730,8 @@ export default function DashboardPage() {
           {tab === "profile" && (
             <div className="flex gap-8">
               <div className="flex min-w-0 flex-1 flex-col gap-5">
+                {/* Lo que está pasando con tu perfil: visitas y tu lugar en el muro */}
+                <PulseStrip pulse={pulse} onOpenStats={() => goTab("stats")} />
                 {/* Qué estás editando + cómo lo ves + agregar */}
                 <div className="flex flex-wrap items-center gap-2.5">
                   <ScopeSelector
@@ -2185,6 +2190,8 @@ export default function DashboardPage() {
           isClaimingTrial={isClaimingTrial}
         />
       )}
+
+      <Celebrations profile={profile} onShare={() => { setShareCelebrate(false); setIsShareProfileOpen(true); }} />
 
       <ShareProfileModal
         isOpen={isShareProfileOpen}

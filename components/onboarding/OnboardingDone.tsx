@@ -23,6 +23,21 @@ export function OnboardingDone({ state, onContinue }: OnboardingDoneProps) {
   useEffect(() => {
     trackEvent("onboarding_published", { ab: getStoredHeroVariant() ?? "none" });
   }, []);
+
+  // La primera recompensa llega en el momento: confetti y qué número de
+  // builder sos (dato real, del orden de llegada).
+  const [builderNumber, setBuilderNumber] = useState<number | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    import("canvas-confetti")
+      .then(({ default: confetti }) => confetti({ particleCount: 140, spread: 90, origin: { y: 0.55 }, disableForReducedMotion: true }))
+      .catch(() => {});
+    fetch("/api/profile/pulse", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (!cancelled && typeof d?.builderNumber === "number") setBuilderNumber(d.builderNumber); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
   const displayName = state.linktreeData?.displayName || state.githubData?.name || state.username || "builder";
   const firstName = displayName.split(" ")[0] || "builder";
 
@@ -70,6 +85,16 @@ export function OnboardingDone({ state, onContinue }: OnboardingDoneProps) {
           <p className="ou-sub !text-base mt-2">
             {t("doneSubtitle")}
           </p>
+          {builderNumber !== null && (
+            <motion.p
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-4 inline-flex rounded-full border px-3.5 py-1.5 font-mono text-[12px] font-bold"
+              style={{ borderColor: `${accent}40`, color: accent }}
+            >
+              {t("doneBuilderNumber", { n: builderNumber })}
+            </motion.p>
+          )}
         </div>
 
         {/* URL Card */}

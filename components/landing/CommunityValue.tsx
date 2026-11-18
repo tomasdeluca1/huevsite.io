@@ -7,6 +7,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { ArrowBigUp, Check, Trophy } from "lucide-react";
 import type { NetworkPulse, WinnerHistoryItem } from "@/lib/showcase-service";
 import { COMMUNITY_IMAGE_EXCLUDED } from "@/lib/community-exclusions";
+import { proxiedAvatar } from "@/lib/landing-avatar";
 
 // Umbral del showcase (lib/score-service: builder_score >= 300).
 const SHOWCASE = 300;
@@ -20,13 +21,14 @@ const SCORE_STEPS = [
 const card = "rounded-[1.6rem] border border-white/8 bg-white/[0.025]";
 const linkRow = "text-[11px] font-mono uppercase tracking-[0.18em] text-white/35 transition-colors hover:text-[var(--accent)]";
 
-function avatarSrc(src: string | null, username: string, size: number): string | null {
-  if (!src || !/^https?:\/\//i.test(src) || COMMUNITY_IMAGE_EXCLUDED.has(username.toLowerCase())) return null;
-  return `https://images.weserv.nl/?url=${encodeURIComponent(src)}&w=${size * 2}&h=${size * 2}&fit=cover&output=webp`;
+function avatarSrc(src: string | null, username: string, size: number, showExcluded = false): string | null {
+  if (!src || !/^https?:\/\//i.test(src)) return null;
+  if (!showExcluded && COMMUNITY_IMAGE_EXCLUDED.has(username.toLowerCase())) return null;
+  return proxiedAvatar(src, username, size * 2);
 }
 
-function Avatar({ src, username, name, size, className = "" }: { src: string | null; username: string; name: string; size: number; className?: string }) {
-  const url = avatarSrc(src, username, size);
+function Avatar({ src, username, name, size, className = "", showExcluded = false }: { src: string | null; username: string; name: string; size: number; className?: string; showExcluded?: boolean }) {
+  const url = avatarSrc(src, username, size, showExcluded);
   return url ? (
     // eslint-disable-next-line @next/next/no-img-element
     <img src={url} alt="" width={size} height={size} loading="lazy" className={`shrink-0 rounded-full object-cover ${className}`} style={{ width: size, height: size }} />
@@ -167,7 +169,7 @@ function WinnerCard({ winners, fmt, onTrack }: { winners: WinnerHistoryItem[]; f
           className="group flex items-center gap-4"
         >
           <span className="relative">
-            <Avatar src={current.image} username={current.username} name={current.name} size={68} className="ring-2 ring-[var(--accent)] ring-offset-4 ring-offset-[#0b0b0c]" />
+            <Avatar src={current.image} username={current.username} name={current.name} size={68} showExcluded className="ring-2 ring-[var(--accent)] ring-offset-4 ring-offset-[#0b0b0c]" />
             <span className="absolute -right-1 -top-1 grid h-6 w-6 place-items-center rounded-full border-2 border-[#0b0b0c] bg-[var(--accent)] text-[#050505]">
               <Trophy size={11} strokeWidth={2.8} />
             </span>
@@ -198,7 +200,7 @@ function WinnerCard({ winners, fmt, onTrack }: { winners: WinnerHistoryItem[]; f
         </div>
 
         {past.length > 0 && (
-          <Link href="/builder-de-la-semana" onClick={() => onTrack("landing_cv_hall_click")} className="group flex items-center gap-2.5">
+          <Link href="/builders-de-la-semana" onClick={() => onTrack("landing_cv_hall_click")} className="group flex items-center gap-2.5">
             <span className="flex">
               {past.map((w, i) => (
                 <Avatar key={w.username + w.week} src={w.image} username={w.username} name={w.name} size={28} className={`border-2 border-[#0b0b0c] ${i > 0 ? "-ml-2" : ""}`} />

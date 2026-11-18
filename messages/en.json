@@ -537,7 +537,11 @@
         "fetchFromSite": "Fetch from site",
         "fetching": "Checking the site...",
         "noImageFound": "We couldn't find an image on that site. You can upload one by hand.",
-        "fetchError": "We couldn't open the site. Check the link and try again."
+        "fetchError": "We couldn't open the site. Check the link and try again.",
+        "displayLabel": "// display",
+        "displayCard": "Card",
+        "displayMedia": "Media",
+        "displayMediaHint": "Shows the image large, like the media block. Uses the site's OG image or the photo you upload below."
       },
       "metric": {
         "labelLabel": "// label",

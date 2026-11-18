@@ -299,6 +299,7 @@ export async function createProject(store: McpStore, userId: string, raw: unknow
   };
   if (parsed.data.faviconUrl !== undefined) data.faviconUrl = parsed.data.faviconUrl;
   if (parsed.data.imageMode !== undefined) data.imageMode = parsed.data.imageMode;
+  if (parsed.data.display !== undefined) data.display = parsed.data.display;
   if (parsed.data.showStatus !== undefined) data.showStatus = parsed.data.showStatus;
   if (parsed.data.boxStyle !== undefined) data.boxStyle = parsed.data.boxStyle;
 

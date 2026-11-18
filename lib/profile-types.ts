@@ -212,6 +212,7 @@ export interface ProjectBlockData extends BaseBlock {
   imageUrl?: string;
   faviconUrl?: string; // site favicon (scraped); selectable as the display image
   imageMode?: "og" | "favicon"; // which image to show — default "og"
+  display?: "card" | "media"; // "media": la imagen grande como el bloque de media (default "card")
   metrics?: string;
   link: string;
   stack: string[];

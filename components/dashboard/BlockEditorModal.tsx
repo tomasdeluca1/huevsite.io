@@ -299,6 +299,28 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, onRequestDele
               onChange={(value) => handleChange("boxStyle", value)}
             />
             {block.type === "project" && (
+              <div className="space-y-2">
+                <div className="section-label !text-[9px] px-1">{t("blockEditor.project.displayLabel")}</div>
+                <div className="flex gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface2)] p-1">
+                  {(["card", "media"] as const).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => handleChange("display", m)}
+                      className={`flex-1 rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-wide transition-colors ${
+                        (formData.display || "card") === m ? "bg-[var(--accent)] text-black" : "text-white/50 hover:text-white"
+                      }`}
+                    >
+                      {m === "card" ? t("blockEditor.project.displayCard") : t("blockEditor.project.displayMedia")}
+                    </button>
+                  ))}
+                </div>
+                {formData.display === "media" && (
+                  <p className="px-1 text-[11px] leading-relaxed text-white/40">{t("blockEditor.project.displayMediaHint")}</p>
+                )}
+              </div>
+            )}
+            {block.type === "project" && (
               <ImageUpload
                 label={t("blockEditor.project.previewLabel")}
                 value={formData.imageUrl}

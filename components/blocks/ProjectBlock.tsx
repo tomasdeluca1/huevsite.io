@@ -56,6 +56,56 @@ export function ProjectBlock({ data, accentColor }: Props) {
   const showStatus = data.showStatus !== false;
   const statusLabel = status === "launched" ? "LIVE" : status === "building" ? "WIP" : "IDEA";
 
+  // Formato "media": la imagen ocupa todo el bloque, como el bloque de media,
+  // con el nombre encima. Sin imagen (o si solo queda el favicon) vuelve a la tarjeta.
+  if (data.display === "media" && imageUrl && !useFavicon) {
+    const href = link !== "#" ? withHuevsiteUtm(link, "profile") : undefined;
+    const Wrapper = href ? "a" : "div";
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="huevsite-block block-media block-project-media relative h-auto md:h-full aspect-video md:aspect-auto !p-0 overflow-hidden group border"
+        style={{ borderColor: "var(--border)" }}
+      >
+        <Wrapper
+          {...(href ? { href, target: "_blank", rel: "noopener noreferrer" } : {})}
+          className="absolute inset-0 block"
+          aria-label={title}
+        >
+          <img
+            key={imageUrl}
+            src={imageUrl}
+            alt={title}
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+            ref={(el) => {
+              if (el && el.complete && el.naturalWidth === 0) markFailed(imageUrl);
+            }}
+            onError={() => markFailed(imageUrl)}
+          />
+          <div className="absolute inset-x-0 bottom-0 flex min-h-[60%] flex-col justify-end gap-1.5 bg-gradient-to-t from-black/95 via-black/60 to-transparent p-4 md:p-6">
+            {showStatus && <ProjectStatusPill status={status} launchDate={data.launchDate} accentColor={accentColor} />}
+            <h3 className="text-base md:text-xl font-black leading-tight text-white title-tracking">{title}</h3>
+            {data.description && (
+              <p className="line-clamp-2 text-xs font-medium leading-relaxed text-white/65 md:opacity-0 md:transition-opacity md:group-hover:opacity-100">
+                {data.description}
+              </p>
+            )}
+          </div>
+          {href && (
+            <span
+              className="absolute right-4 top-4 hidden h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white opacity-0 backdrop-blur-md transition-opacity group-hover:opacity-100 md:flex"
+              style={{ color: accentColor }}
+            >
+              <ExternalLink size={15} />
+            </span>
+          )}
+        </Wrapper>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}

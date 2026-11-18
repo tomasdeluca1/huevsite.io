@@ -46,6 +46,8 @@ export function DesignPanel({ profile, isPro, onColor, onRadius, onLayout, onGlo
 
   return (
     <div className="flex flex-col gap-4">
+      {/* El formato Links se sacó: solo lo ve quien ya lo tenía puesto, para poder volver a Portfolio. */}
+      {layout === "links" && (
       <Section label={t("designFormat")}>
         <div className="grid grid-cols-2 gap-1 rounded-xl border border-white/10 bg-white/[0.02] p-1">
           {(["portfolio", "links"] as const).map((mode) => {
@@ -66,6 +68,7 @@ export function DesignPanel({ profile, isPro, onColor, onRadius, onLayout, onGlo
         </div>
         <p className="text-[12px] leading-relaxed text-white/40">{t("designFormatHint")}</p>
       </Section>
+      )}
 
       <Section label={t("designColor")}>
         <ColorPicker value={profile.accentColor} onChange={onColor} subscriptionTier={isPro ? "pro" : profile.subscriptionTier} />

@@ -18,6 +18,10 @@ Allow: /.well-known/
 # Sin la barra final: "Disallow: /dashboard/" NO bloquea /dashboard (el match
 # de robots.txt es por prefijo literal), asi que la pagina principal de cada
 # seccion privada quedaba crawleable. El prefijo sin barra cubre ambas.
+# Allow: /api/og/ va ANTES del Disallow: /api/: algunos bots de preview
+# (crawlers de link unfurling) usan el primer match en vez del más específico,
+# así que si el Disallow general aparece primero bloquean las imágenes OG.
+Allow: /api/og/
 Disallow: /api/
 # La server card es metadata pública del MCP (SEP-2127). El resto de /api/
 # sigue cerrado. Allow más específico que Disallow, para que gane el match.

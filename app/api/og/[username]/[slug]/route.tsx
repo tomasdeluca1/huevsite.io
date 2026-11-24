@@ -22,11 +22,53 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 function fallback() {
-  return new ImageResponse(<BrandFallback label="Un proyecto, hecho en huevsite.io" />, { ...OG_SIZE });
+  return new ImageResponse(<BrandFallback label="Un proyecto, hecho en huevsite.io" />, {
+    ...OG_SIZE,
+  });
+}
+
+// weserv has returned both 404s (source avatar 403s upstream) and 15s+ hangs
+// for specific profiles. Never hand an unverified URL to Satori's <img>: probe
+// it first with a hard timeout and bail to the monogram placeholder.
+async function verifiedAvatarSrc(avatarUrl: string | null | undefined, size: number): Promise<string | null> {
+  const src = ogAvatarUrl(avatarUrl, size);
+  if (!src) return null;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 2500);
+  try {
+    const res = await fetch(src, { signal: ctrl.signal });
+    const type = res.headers.get('content-type') || '';
+    if (!res.ok || !type.startsWith('image/')) return null;
+    return src;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function loadFonts(req: Request) {
+  try {
+    // Hard 2.5s cap: a slow font fetch must not stall the crawler; on
+    // timeout we render with Satori's bundled font instead.
+    const signal = AbortSignal.timeout(2500);
+    const get = (f: string) =>
+      fetch(new URL(`/fonts/${f}`, req.url), { signal }).then((r) => {
+        if (!r.ok) throw new Error(`font ${r.status}`);
+        return r.arrayBuffer();
+      });
+    const [bold, regular] = await Promise.all([get('Bricolage-800.ttf'), get('Bricolage-400.ttf')]);
+    return [
+      { name: 'Bricolage', data: bold, weight: 900 as const, style: 'normal' as const },
+      { name: 'Bricolage', data: regular, weight: 400 as const, style: 'normal' as const },
+    ];
+  } catch {
+    return undefined;
+  }
 }
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: { username: string; slug: string } }
 ) {
   try {
@@ -39,13 +81,18 @@ export async function GET(
     const title = truncate(profile.displayName || slug, 40);
     const tagline = truncate(profile.tagline || 'Proyecto hecho en huevsite.io', 90);
     const creator = profile.parentProfile;
-    // Proxy + re-encode to JPEG; Satori can't decode the webp avatars huevsite stores.
-    const creatorAvatarSrc = ogAvatarUrl(creator?.avatarUrl, 32);
-    const projectAvatarSrc = ogAvatarUrl(profile.avatarUrl, 320);
+    // Proxy + re-encode to JPEG; Satori can't decode the webp avatars huevsite
+    // stores. Pre-flighted so a dead/slow source avatar falls back to the
+    // monogram instead of hanging or rendering a broken box.
+    const [creatorAvatarSrc, projectAvatarSrc, fonts] = await Promise.all([
+      verifiedAvatarSrc(creator?.avatarUrl, 32),
+      verifiedAvatarSrc(profile.avatarUrl, 320),
+      loadFonts(request),
+    ]);
 
     return new ImageResponse(
       (
-        <div style={rootStyle()}>
+        <div style={{ ...rootStyle(), fontFamily: fonts ? 'Bricolage' : undefined }}>
           <Texture />
           <InnerBorder />
 
@@ -187,7 +234,10 @@ export async function GET(
           </div>
         </div>
       ),
-      { ...OG_SIZE }
+      {
+        ...OG_SIZE,
+        ...(fonts ? { fonts } : {}),
+      }
     );
   } catch {
     return fallback();

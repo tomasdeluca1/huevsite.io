@@ -2,7 +2,7 @@
 
 import { X, Zap, Target, Users, TrendingUp, Sparkles, Star, MessageSquare, ArrowRight } from "lucide-react";
 import { createPortal } from "react-dom";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type RefObject } from "react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,11 +11,12 @@ import { createClient } from "@/lib/supabase/client";
 interface Props {
     isOpen: boolean;
     onClose: () => void;
+    returnFocusRef: RefObject<HTMLButtonElement>;
     accentColor?: string;
     profileId?: string;
 }
 
-export function ScoreInfoModal({ isOpen, onClose, accentColor = "#C8FF00", profileId }: Props) {
+export function ScoreInfoModal({ isOpen, onClose, returnFocusRef, accentColor = "#C8FF00", profileId }: Props) {
     const t = useTranslations('shared');
     const [mounted, setMounted] = useState(false);
     const [breakdown, setBreakdown] = useState<any>(null);
@@ -32,17 +33,17 @@ export function ScoreInfoModal({ isOpen, onClose, accentColor = "#C8FF00", profi
         const dialog = dialogRef.current;
         if (!isOpen || !dialog) return;
 
-        const opener = document.activeElement;
+        const opener = returnFocusRef.current;
         dialog.removeAttribute("inert");
         closeRef.current?.focus({ preventScroll: true });
 
         return () => {
             dialog.setAttribute("inert", "");
-            if (opener instanceof HTMLElement && opener.isConnected) {
+            if (opener?.isConnected) {
                 opener.focus({ preventScroll: true });
             }
         };
-    }, [isOpen, mounted]);
+    }, [isOpen, mounted, returnFocusRef]);
 
     useEffect(() => {
         if (!isOpen || !mounted) return;

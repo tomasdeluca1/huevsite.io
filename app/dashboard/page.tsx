@@ -104,6 +104,7 @@ export default function DashboardPage() {
   const [isDeletePending, setIsDeletePending] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isScoreInfoOpen, setIsScoreInfoOpen] = useState(false);
+  const scoreOpenerRef = useRef<HTMLButtonElement | null>(null);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [isCreateSubSiteOpen, setIsCreateSubSiteOpen] = useState(false);
   const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
@@ -2009,7 +2010,10 @@ export default function DashboardPage() {
               claiming={isClaimingTrial}
               onClaimTrial={!isPro && profile.freeTrial?.eligible ? handleClaimFreeTrial : undefined}
               onUpgrade={() => setIsUpgradeModalOpen(true)}
-              onScoreInfo={() => setIsScoreInfoOpen(true)}
+              onScoreInfo={(event) => {
+                scoreOpenerRef.current = event.currentTarget;
+                setIsScoreInfoOpen(true);
+              }}
               onAddBlock={(type) => { goTab("profile"); addBlock(type); }}
               onEditProfile={() => setIsProfileModalOpen(true)}
               onShare={() => { setShareCelebrate(false); setIsShareProfileOpen(true); }}
@@ -2149,7 +2153,7 @@ export default function DashboardPage() {
         setData={setTempProfileData}
         onSave={handleSaveProfile}
       />
-      <ScoreInfoModal isOpen={isScoreInfoOpen} onClose={() => setIsScoreInfoOpen(false)} accentColor={profile.accentColor} profileId={profile.id} />
+      <ScoreInfoModal isOpen={isScoreInfoOpen} onClose={() => setIsScoreInfoOpen(false)} returnFocusRef={scoreOpenerRef} accentColor={profile.accentColor} profileId={profile.id} />
       <CreateSubSiteModal
         isOpen={isCreateSubSiteOpen}
         onClose={() => setIsCreateSubSiteOpen(false)}

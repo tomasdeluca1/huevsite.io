@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
 import { scoreService } from '@/lib/score-service'
@@ -56,20 +57,25 @@ export async function PATCH(
       )
     }
 
-    // After auth, switch to service-role. All queries below are scoped to
-    // (id, user_id) so the user can only touch their own blocks.
+    const scope = z.string().uuid().nullable().safeParse(request.nextUrl.searchParams.get('sub_site_id'))
+    if (!scope.success) {
+      return NextResponse.json({ error: 'Sub-sitio inválido' }, { status: 400 })
+    }
+
     const supabase = createServiceRoleClient()
 
     const blockId = params.id
+    const subSiteId = scope.data
     const body = await request.json()
 
-    // Verificar que el bloque pertenece al usuario
-    const { data: existingBlock, error: fetchError } = await supabase
+    const lookup = supabase
       .from('blocks')
       .select('*')
       .eq('id', blockId)
       .eq('user_id', user.id)
-      .maybeSingle()
+    const { data: existingBlock, error: fetchError } = await (
+      subSiteId === null ? lookup.is('sub_site_id', null) : lookup.eq('sub_site_id', subSiteId)
+    ).maybeSingle()
 
     if (fetchError || !existingBlock) {
       return NextResponse.json(
@@ -160,13 +166,14 @@ export async function PATCH(
     }
 
     // Actualizar bloque
-    const { data: block, error: updateError } = await supabase
+    const update = supabase
       .from('blocks')
       .update(updateData)
       .eq('id', blockId)
       .eq('user_id', user.id)
-      .select()
-      .single()
+    const { data: block, error: updateError } = await (
+      subSiteId === null ? update.is('sub_site_id', null) : update.eq('sub_site_id', subSiteId)
+    ).select().single()
 
     if (updateError) {
       console.error('Error updating block:', updateError)

@@ -680,6 +680,10 @@ export default function DashboardPage() {
     achievement: t("page.blockTypeAchievement"), custom: t("page.blockTypeCustom"), collab: t("page.blockTypeCollab"), ecosystem: t("page.blockTypeEcosystem"),
   };
 
+  const scopedBlockUrl = (id: string) => selectedSubSiteId
+    ? `/api/blocks/${id}?sub_site_id=${encodeURIComponent(selectedSubSiteId)}`
+    : `/api/blocks/${id}`;
+
   const hideBlock = async (id: string) => {
     setProfile(prev => {
       if (!prev) return prev;
@@ -687,7 +691,7 @@ export default function DashboardPage() {
     });
     if (!id.startsWith("temp-")) {
       try {
-        await fetch(`/api/blocks/${id}`, {
+        await fetch(scopedBlockUrl(id), {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ visible: false }),
@@ -710,7 +714,7 @@ export default function DashboardPage() {
     }
     if (id.startsWith("temp-")) return;
     try {
-      const res = await fetch(`/api/blocks/${id}`, {
+      const res = await fetch(scopedBlockUrl(id), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ visible_on: view }),
@@ -733,7 +737,7 @@ export default function DashboardPage() {
     });
     if (!id.startsWith("temp-")) {
       try {
-        await fetch(`/api/blocks/${id}`, {
+        await fetch(scopedBlockUrl(id), {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ visible: true }),
@@ -775,7 +779,7 @@ export default function DashboardPage() {
     try {
       await Promise.all(
         hideIds.map(id =>
-          fetch(`/api/blocks/${id}`, {
+          fetch(scopedBlockUrl(id), {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ visible: false }),
@@ -1036,7 +1040,7 @@ export default function DashboardPage() {
         // bloque no debe tocarlo (y evita depender de la columna en cada edición).
         // Lo mismo vale para visibleOn: solo lo escribe handleViewChange (gate Pro).
         const { id, mobileOrder: _mo, visibleOn: _vo, ...updatePayload } = updatedBlock;
-        const res = await fetch(`/api/blocks/${updatedBlock.id}`, {
+        const res = await fetch(scopedBlockUrl(updatedBlock.id), {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(updatePayload),

@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { BackButton } from "@/components/BackButton";
 import { DiscoveryHeader } from "@/components/discovery/DiscoveryHeader";
 import { getAllWinners } from "@/lib/showcase-service";
-import { getBdlsSlugsByUsername } from "@/lib/blog-data";
+import { getBdlsSlugIndex } from "@/lib/blog-data";
 import { BuildersHistoryViews } from "@/components/discovery/BuildersHistoryViews";
 import { getLocale } from "@/lib/locale";
 import { canonical, keywordsFor } from "@/lib/seo";
@@ -34,7 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function BuildersDeLaSemanaPage() {
   const t = await getTranslations("winnerHistory");
   const supabase = await createClient();
-  const [winners, bdlsSlugs] = await Promise.all([getAllWinners(), getBdlsSlugsByUsername()]);
+  const [winners, bdlsSlugs] = await Promise.all([getAllWinners(), getBdlsSlugIndex()]);
 
   const {
     data: { user },

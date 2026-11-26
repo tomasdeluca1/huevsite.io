@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { LayoutList, GitCommitVertical } from "lucide-react";
 import { weekLabel } from "@/lib/launch-week";
+import { resolveBdlsSlug, type BdlsSlugIndex } from "@/lib/bdls-links";
 import type { WinnerHistoryItem } from "@/lib/showcase-service";
 
 type View = "timeline" | "list";
@@ -14,7 +15,7 @@ export function BuildersHistoryViews({
   noteSlugs,
 }: {
   winners: WinnerHistoryItem[];
-  noteSlugs: Record<string, string>;
+  noteSlugs: BdlsSlugIndex;
 }) {
   const t = useTranslations("winnerHistory");
   const locale = useLocale();
@@ -37,7 +38,7 @@ export function BuildersHistoryViews({
     );
 
   const ctas = (w: WinnerHistoryItem) => {
-    const noteSlug = noteSlugs[w.username.toLowerCase()];
+    const noteSlug = resolveBdlsSlug(noteSlugs, w.username, w.week);
     return (
       <div className="mt-auto flex items-center gap-2 pt-1">
         {noteSlug && (

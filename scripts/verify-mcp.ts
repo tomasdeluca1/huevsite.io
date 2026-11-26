@@ -554,6 +554,7 @@ async function run() {
   ok("el sitemap incluye /mcp", sitemap.includes("/mcp"));
   const home = fs.readFileSync(path.join(__dirname, "../app/page.tsx"), "utf8");
   ok("el home apunta a la guia del mcp", home.includes('rel="help"') && home.includes("/mcp"));
+  ok("el home no anida un <head> (rompe la hidratación)", !/<head[\s>]/.test(home));
 
   const migration = fs.readFileSync(path.join(__dirname, "../supabase/migrations/20261110183000_mcp_access_tokens.sql"), "utf8");
   ok("la migración prende RLS", /enable row level security/i.test(migration));

@@ -36,7 +36,7 @@ export default async function TermsPage() {
             <p className="text-gray-300 leading-relaxed">
               {t.rich('terms.section1Body', {
                 mail: (chunks) => (
-                  <a href="mailto:hi@huevsite.studio" className="text-white underline underline-offset-4">{chunks}</a>
+                  <a href="mailto:tomas@huevsite.studio" className="text-white underline underline-offset-4">{chunks}</a>
                 ),
               })}
             </p>
@@ -93,7 +93,7 @@ export default async function TermsPage() {
             <p className="text-gray-300 leading-relaxed">
               {t.rich('terms.section6Body', {
                 mail: (chunks) => (
-                  <a href="mailto:hi@huevsite.studio" className="text-white underline underline-offset-4">{chunks}</a>
+                  <a href="mailto:tomas@huevsite.studio" className="text-white underline underline-offset-4">{chunks}</a>
                 ),
               })}
             </p>
@@ -121,7 +121,7 @@ export default async function TermsPage() {
             <p className="text-gray-300 leading-relaxed">
               {t.rich('terms.section9Body', {
                 mail: (chunks) => (
-                  <a href="mailto:hi@huevsite.studio" className="text-white underline underline-offset-4">{chunks}</a>
+                  <a href="mailto:tomas@huevsite.studio" className="text-white underline underline-offset-4">{chunks}</a>
                 ),
               })}
             </p>

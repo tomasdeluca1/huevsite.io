@@ -1856,7 +1856,7 @@
       "lastUpdated": "Last updated: May 2026",
       "seePolicy": "View policy",
       "section1Title": "1. Introduction",
-      "section1Body": "At huevsite.io we take your privacy seriously. This policy explains what data we collect, how we use it, and how we protect it. If you have questions, write to us at <mail>hi@huevsite.studio</mail>.",
+      "section1Body": "At huevsite.io we take your privacy seriously. This policy explains what data we collect, how we use it, and how we protect it. If you have questions, write to us at <mail>tomas@huevsite.studio</mail>.",
       "section2Title": "2. Data we collect",
       "section2Intro": "We collect the following types of data:",
       "section2AccountTitle": "Account data",
@@ -1885,7 +1885,7 @@
       "section4Body2": "You can unsubscribe at any time from:",
       "section4Item1": "The \"unsubscribe\" link at the bottom of any newsletter email",
       "section4Item2": "The \"Newsletter\" toggle in your dashboard settings",
-      "section4Item3": "By writing to us at <mail>hi@huevsite.studio</mail>",
+      "section4Item3": "By writing to us at <mail>tomas@huevsite.studio</mail>",
       "section4Body3": "Users who registered before this clause took effect (May 2026) were not added automatically and can activate the subscription manually from the dashboard.",
       "section5Title": "5. Third-party services",
       "section5Intro": "To operate huevsite.io we use the following external services, each with its own privacy policy:",
@@ -1911,15 +1911,15 @@
       "section7Item3": "<b>Deletion:</b> request that we delete your account and personal data",
       "section7Item4": "<b>Portability:</b> receive your data in a standard format",
       "section7Item5": "<b>Objection:</b> object to the processing of your data in certain cases",
-      "section7Outro": "To exercise any of these rights, write to us at <mail>hi@huevsite.studio</mail>. We respond within a maximum of 30 days.",
+      "section7Outro": "To exercise any of these rights, write to us at <mail>tomas@huevsite.studio</mail>. We respond within a maximum of 30 days.",
       "section8Title": "8. Security",
-      "section8Body": "We implement technical and organizational measures to protect your data: HTTPS connections, secure authentication, restricted database access, and periodic review of permissions. However, no system is 100% secure. If you find a vulnerability, report it to <mail>hi@huevsite.studio</mail>.",
+      "section8Body": "We implement technical and organizational measures to protect your data: HTTPS connections, secure authentication, restricted database access, and periodic review of permissions. However, no system is 100% secure. If you find a vulnerability, report it to <mail>tomas@huevsite.studio</mail>.",
       "section9Title": "9. Data retention",
       "section9Body": "We keep your data while your account is active. When you delete your account, we erase your personal data within 30 days, unless we are required to retain it for legal obligations.",
       "section10Title": "10. Changes to this policy",
       "section10Body": "We may update this policy from time to time. We will notify you of significant changes by email or through a notice on the platform. The \"last updated\" date at the top of this page indicates when it was last revised.",
       "section11Title": "11. Contact",
-      "section11Body": "For any privacy inquiry or to exercise your rights, contact us at <mail>hi@huevsite.studio</mail>."
+      "section11Body": "For any privacy inquiry or to exercise your rights, contact us at <mail>tomas@huevsite.studio</mail>."
     },
     "terms": {
       "metaTitle": "Terms of Service | huevsite.io",
@@ -1927,7 +1927,7 @@
       "title": "Terms of Service",
       "lastUpdated": "Last updated: April 2025",
       "section1Title": "1. Acceptance of the terms",
-      "section1Body": "By accessing or using huevsite.io, you accept these Terms of Service in full. If you do not agree with any of these terms, do not use the platform. huevsite.io is operated by huevsite.studio, contactable at <mail>hi@huevsite.studio</mail>.",
+      "section1Body": "By accessing or using huevsite.io, you accept these Terms of Service in full. If you do not agree with any of these terms, do not use the platform. huevsite.io is operated by huevsite.studio, contactable at <mail>tomas@huevsite.studio</mail>.",
       "section2Title": "2. Description of the service",
       "section2Body1": "huevsite.io is a social portfolio platform for builders and creators. It lets you create public profiles, showcase projects and skills, connect GitHub accounts, interact with other builders, and access premium tools via a Pro subscription.",
       "section2Body2": "The free plan includes basic features. The Pro plan ($9 USD/month, processed through Lemon Squeezy) unlocks additional features such as more content blocks, custom domains, and advanced tools. We also offer the Founder plan (one-time payment) with lifetime access to every Pro feature: USD 79 while seats remain and USD 129 once that batch is full. Prices may be updated; changes do not apply retroactively to active subscriptions.",
@@ -1947,14 +1947,14 @@
       "section5Body1": "The Pro plan is billed monthly. Payments are processed by LemonSqueezy, an external payment provider. You can cancel your subscription at any time; Pro access remains until the end of the billed period.",
       "section5Body2": "We do not offer refunds unless required by applicable law. Prices may change with 30 days' notice to active subscribers.",
       "section6Title": "6. Account termination",
-      "section6Body": "You can delete your account at any time by sending an email to <mail>hi@huevsite.studio</mail>. We reserve the right to suspend or terminate accounts that violate these terms, engage in fraudulent activities, or pose a risk to the platform or its users.",
+      "section6Body": "You can delete your account at any time by sending an email to <mail>tomas@huevsite.studio</mail>. We reserve the right to suspend or terminate accounts that violate these terms, engage in fraudulent activities, or pose a risk to the platform or its users.",
       "section7Title": "7. Limitation of liability",
       "section7Body1": "huevsite.io is provided \"as is\". We do not guarantee uninterrupted availability, absence of errors, or that the service will meet all of your specific requirements.",
       "section7Body2": "In no event will we be liable for indirect, incidental, special, or consequential damages arising from the use of or inability to use the platform. Our maximum liability is limited to the amount paid for the service in the last 3 months.",
       "section8Title": "8. Changes to the terms",
       "section8Body": "We may update these terms from time to time. We will notify you of significant changes by email or a notice on the platform. Continued use of the service after the notification implies acceptance of the new terms.",
       "section9Title": "9. Contact",
-      "section9Body": "For any inquiry about these terms, write to us at <mail>hi@huevsite.studio</mail>."
+      "section9Body": "For any inquiry about these terms, write to us at <mail>tomas@huevsite.studio</mail>."
     }
   },
   "blogUi": {

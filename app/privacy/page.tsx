@@ -36,7 +36,7 @@ export default async function PrivacyPage() {
             <p className="text-gray-300 leading-relaxed">
               {t.rich('privacy.section1Body', {
                 mail: (chunks) => (
-                  <a href="mailto:hi@huevsite.studio" className="text-white underline underline-offset-4">{chunks}</a>
+                  <a href="mailto:tomas@huevsite.studio" className="text-white underline underline-offset-4">{chunks}</a>
                 ),
               })}
             </p>
@@ -102,7 +102,7 @@ export default async function PrivacyPage() {
               <li>
                 {t.rich('privacy.section4Item3', {
                   mail: (chunks) => (
-                    <a href="mailto:hi@huevsite.studio" className="text-white underline underline-offset-4">{chunks}</a>
+                    <a href="mailto:tomas@huevsite.studio" className="text-white underline underline-offset-4">{chunks}</a>
                   ),
                 })}
               </li>
@@ -174,7 +174,7 @@ export default async function PrivacyPage() {
             <p className="text-gray-300 leading-relaxed mt-3">
               {t.rich('privacy.section7Outro', {
                 mail: (chunks) => (
-                  <a href="mailto:hi@huevsite.studio" className="text-white underline underline-offset-4">{chunks}</a>
+                  <a href="mailto:tomas@huevsite.studio" className="text-white underline underline-offset-4">{chunks}</a>
                 ),
               })}
             </p>
@@ -185,7 +185,7 @@ export default async function PrivacyPage() {
             <p className="text-gray-300 leading-relaxed">
               {t.rich('privacy.section8Body', {
                 mail: (chunks) => (
-                  <a href="mailto:hi@huevsite.studio" className="text-white underline underline-offset-4">{chunks}</a>
+                  <a href="mailto:tomas@huevsite.studio" className="text-white underline underline-offset-4">{chunks}</a>
                 ),
               })}
             </p>
@@ -210,7 +210,7 @@ export default async function PrivacyPage() {
             <p className="text-gray-300 leading-relaxed">
               {t.rich('privacy.section11Body', {
                 mail: (chunks) => (
-                  <a href="mailto:hi@huevsite.studio" className="text-white underline underline-offset-4">{chunks}</a>
+                  <a href="mailto:tomas@huevsite.studio" className="text-white underline underline-offset-4">{chunks}</a>
                 ),
               })}
             </p>

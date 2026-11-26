@@ -33,9 +33,3 @@ export function tokenConfig(mcpUrl: string): string {
     },
   }, null, 2);
 }
-
-export const EXAMPLE_PROMPTS = [
-  "Agregá mi proyecto nuevo",
-  "Publicá un avance",
-  "Actualizá mi bio",
-] as const;

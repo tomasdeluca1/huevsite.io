@@ -47,6 +47,7 @@ import { OnboardingModal } from "@/components/dashboard/OnboardingModal";
 import Link from "next/link";
 import { DiscoveryHeader } from "@/components/discovery/DiscoveryHeader";
 import { createClient } from "@/lib/supabase/client";
+import { saveDashboard } from "@/lib/dashboard-save";
 import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
 import { TestimonialNudgeToast } from "@/components/dashboard/TestimonialNudgeToast";
 import { UpgradeModal } from "@/components/dashboard/UpgradeModal";
@@ -96,7 +97,8 @@ export default function DashboardPage() {
   const [profileLoading, setProfileLoading] = useState(true);
   const [blocksLoading, setBlocksLoading] = useState(true);
   const loading = profileLoading || blocksLoading;
-  const [isSaving, setIsSaving] = useState(false);
+  const [profileLoadFailed, setProfileLoadFailed] = useState(false);
+  const [autoSaveState, setAutoSaveState] = useState<SaveState>("idle");
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [editingBlock, setEditingBlock] = useState<BlockData | null>(null);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
@@ -138,6 +140,7 @@ export default function DashboardPage() {
   // Guarda siempre solo: el botón Guardar y su interruptor quedaron de antes.
   const autoSaveEnabled = true;
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveAttemptRef = useRef(0);
   const lastSavedVersionRef = useRef<string>("");
   const justLoadedRef = useRef(true);
   const pulse = useProfilePulse();
@@ -292,15 +295,6 @@ export default function DashboardPage() {
       }
 
       await fetchProfile();
-      setProfile((prev) =>
-        prev
-          ? {
-              ...prev,
-              aiCredits: data.aiCredits ?? prev.aiCredits,
-              builderScore: data.builderScore ?? prev.builderScore,
-            }
-          : prev
-      );
       setIsLinktreeRefactorOpen(false);
     } catch (error: any) {
       alert(error.message || t("page.errorRefactorBoard"));
@@ -341,6 +335,10 @@ export default function DashboardPage() {
       if (!response.ok) {
         if (response.status === 404) {
           window.location.href = '/onboarding';
+          return;
+        }
+        if (response.status === 401) {
+          window.location.href = '/login';
           return;
         }
         throw new Error(`Failed to fetch profile: ${response.status}`);
@@ -444,10 +442,13 @@ export default function DashboardPage() {
           setIsOnboardingOpen(true);
         }
       }
-      return transformedProfile.blocks;
+      setProfileLoadFailed(false);
+      // Hand back the blocks this response actually kept. A sub-site refresh
+      // keeps the site's own blocks, so callers must not sync the main profile's.
+      return subSiteId === null ? transformedProfile.blocks : undefined;
     } catch (error) {
       console.error('Error fetching profile:', error);
-      window.location.href = '/login';
+      setProfileLoadFailed(true);
     } finally {
       setProfileLoading(false);
     }
@@ -1206,49 +1207,22 @@ export default function DashboardPage() {
     setSelectedSubSiteId(id);
   };
 
-  const handleSave = async () => {
+  const handleSave = async (version: string) => {
     if (!profile) return;
-    setIsSaving(true);
+    const attempt = ++saveAttemptRef.current;
+    setAutoSaveState("saving");
     try {
-      const response = await fetch('/api/profile', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          accent_color: profile.accentColor,
-          username: profile.username,
-          name: profile.displayName,
-          tagline: profile.tagline,
-          custom_domain: profile.customDomain,
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.profile?.builder_score !== undefined) {
-          setProfile(prev => prev ? { ...prev, builderScore: data.profile.builder_score } : prev);
-        }
+      const builderScore = await saveDashboard(profile, flushMobileOrder);
+      if (attempt !== saveAttemptRef.current) return;
+      lastSavedVersionRef.current = version;
+      if (builderScore !== undefined) {
+        setProfile(prev => prev ? { ...prev, builderScore } : prev);
       }
-
-      const blockOrders = profile.blocks
-        .map((block, index) => ({ id: block.id, order: index }))
-        .filter(b => !b.id.startsWith('temp-'));
-
-      if (blockOrders.length > 0) {
-        await fetch('/api/blocks/reorder', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(blockOrders),
-        });
-      }
-
-      // Orden de celular: solo si cambió. El guardado de escritorio de arriba no
-      // lo toca. Si falla NO se marca como guardado (ni se recarga la vista previa).
-      const mobileSaved = await flushMobileOrder();
-      if (mobileSaved) setLastSaved(new Date());
+      setLastSaved(new Date());
+      setAutoSaveState("saved");
     } catch (error) {
       console.error("Error al guardar:", error);
-    } finally {
-      setIsSaving(false);
+      if (attempt === saveAttemptRef.current) setAutoSaveState("error");
     }
   };
 
@@ -1561,7 +1535,7 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    if (!profile || loading || !autoSaveEnabled) { justLoadedRef.current = true; return; }
+    if (!profile || loading || profileLoadFailed || !autoSaveEnabled) { justLoadedRef.current = true; return; }
     const { builderScore, ...content } = profile;
     const currentVersion = JSON.stringify(content);
     // Lo que llega del servidor ya está guardado: es el punto de partida, no un cambio.
@@ -1569,11 +1543,10 @@ export default function DashboardPage() {
     if (currentVersion === lastSavedVersionRef.current) return;
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
-      lastSavedVersionRef.current = currentVersion;
-      handleSave();
+      void handleSave(currentVersion);
     }, 2000);
     return () => { if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current); };
-  }, [profile, autoSaveEnabled, loading]);
+  }, [profile, autoSaveEnabled, loading, profileLoadFailed]);
 
   const markStudio = (ok: boolean) => {
     setStudioSave(ok ? "saved" : "error");
@@ -1692,29 +1665,45 @@ export default function DashboardPage() {
     }
   };
 
-  if (loading) {
+  if (loading || profileLoadFailed || !profile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] font-display">
         <div className="text-center">
-          <div className="w-16 h-16 rounded-full bg-[var(--surface2)] flex items-center justify-center mb-6 border border-[var(--border-bright)] animate-pulse mx-auto">
-            <Sparkles size={32} className="text-[var(--accent)] animate-spin" />
-          </div>
-          <p className="text-[var(--text-dim)] font-mono text-sm">{t("page.loading")}</p>
+          {!loading && profileLoadFailed ? (
+            <>
+              <p role="alert" className="text-[var(--text-dim)] font-mono text-sm">{t("page.errorLoadProfile")}</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileLoading(true);
+                  void fetchProfile();
+                }}
+                className="mt-4 rounded-lg border border-[var(--border-bright)] bg-[var(--surface2)] px-4 py-2 text-sm font-bold text-[var(--text)]"
+              >
+                {t("page.retryLoadProfile")}
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="w-16 h-16 rounded-full bg-[var(--surface2)] flex items-center justify-center mb-6 border border-[var(--border-bright)] animate-pulse mx-auto">
+                <Sparkles size={32} className="text-[var(--accent)] animate-spin" />
+              </div>
+              <p className="text-[var(--text-dim)] font-mono text-sm">{t("page.loading")}</p>
+            </>
+          )}
         </div>
       </div>
     );
   }
-
-  if (!profile) return null;
 
   const currentSubSite = selectedSubSiteId ? profile.subSites.find((s) => s.id === selectedSubSiteId) : null;
   const profilePath = currentSubSite ? `/${profile.username}/${currentSubSite.slug}` : `/${profile.username}`;
   const canSeeInsights = isPro || profile.freeTrial?.canUseLastInsightsView === true;
   const isLinksLayout = profile.profileLayout === "links";
   const saveState: SaveState =
-    isSaving || studioSave === "saving" ? "saving" :
-    studioSave === "error" ? "error" :
-    lastSaved || studioSave === "saved" ? "saved" : "idle";
+    autoSaveState === "saving" || studioSave === "saving" ? "saving" :
+    autoSaveState === "error" || studioSave === "error" ? "error" :
+    autoSaveState === "saved" || lastSaved || studioSave === "saved" ? "saved" : "idle";
   const openSubsite = (id: string) => {
     void changeScope(() => selectSubSite(id)).then((ok) => { if (ok) { setProfileView("grid"); setTab("profile"); } });
   };

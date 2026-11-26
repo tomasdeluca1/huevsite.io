@@ -94,6 +94,7 @@ export default function DashboardPage() {
   const t = useTranslations("dashboard");
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoadFailed, setProfileLoadFailed] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [editingBlock, setEditingBlock] = useState<BlockData | null>(null);
@@ -306,12 +307,17 @@ export default function DashboardPage() {
   };
 
   const fetchProfile = async () => {
+    setProfileLoadFailed(false);
     try {
       const response = await fetch('/api/profile');
 
       if (!response.ok) {
         if (response.status === 404) {
           window.location.href = '/onboarding';
+          return;
+        }
+        if (response.status === 401) {
+          window.location.href = '/login';
           return;
         }
         throw new Error(`Failed to fetch profile: ${response.status}`);
@@ -415,7 +421,7 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
-      window.location.href = '/login';
+      setProfileLoadFailed(true);
     } finally {
       setLoading(false);
     }
@@ -1661,20 +1667,33 @@ export default function DashboardPage() {
     }
   };
 
-  if (loading) {
+  if (loading || !profile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] font-display">
         <div className="text-center">
-          <div className="w-16 h-16 rounded-full bg-[var(--surface2)] flex items-center justify-center mb-6 border border-[var(--border-bright)] animate-pulse mx-auto">
-            <Sparkles size={32} className="text-[var(--accent)] animate-spin" />
-          </div>
-          <p className="text-[var(--text-dim)] font-mono text-sm">{t("page.loading")}</p>
+          {!loading && profileLoadFailed ? (
+            <>
+              <p role="alert" className="text-[var(--text-dim)] font-mono text-sm">{t("page.errorLoadProfile")}</p>
+              <button
+                type="button"
+                onClick={() => void fetchProfile()}
+                className="mt-4 rounded-lg border border-[var(--border-bright)] bg-[var(--surface2)] px-4 py-2 text-sm font-bold text-[var(--text)]"
+              >
+                {t("page.retryLoadProfile")}
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="w-16 h-16 rounded-full bg-[var(--surface2)] flex items-center justify-center mb-6 border border-[var(--border-bright)] animate-pulse mx-auto">
+                <Sparkles size={32} className="text-[var(--accent)] animate-spin" />
+              </div>
+              <p className="text-[var(--text-dim)] font-mono text-sm">{t("page.loading")}</p>
+            </>
+          )}
         </div>
       </div>
     );
   }
-
-  if (!profile) return null;
 
   const currentSubSite = selectedSubSiteId ? profile.subSites.find((s) => s.id === selectedSubSiteId) : null;
   const profilePath = currentSubSite ? `/${profile.username}/${currentSubSite.slug}` : `/${profile.username}`;

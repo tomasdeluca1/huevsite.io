@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 
 import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
 import { CONTINENTS, CONTINENT_LABELS, countriesByContinent, countryName, flagEmoji, type Continent } from "@/lib/countries";
+import { getInitialExploreSearch } from "@/lib/explore-search";
 
 const VALID_EXPLORE_SORTS = new Set([
   "score",
@@ -34,7 +35,7 @@ interface ExploreProfile {
   country?: string | null;
 }
 
-export function ExploreClient({ initialTotal }: { initialTotal: number }) {
+export function ExploreClient({ initialSearch, initialTotal }: { initialSearch?: string; initialTotal: number }) {
   const t = useTranslations("explore");
   const locale = useLocale();
   const [profiles, setProfiles] = useState<ExploreProfile[]>([]);
@@ -69,7 +70,9 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
   };
 
   const [search, setSearch] = useState(() =>
-    typeof window !== "undefined" ? localStorage.getItem("huevsite_explore_search") || "" : ""
+    getInitialExploreSearch(initialSearch, () =>
+      typeof window !== "undefined" ? localStorage.getItem("huevsite_explore_search") : null
+    )
   );
   const [sort, setSort] = useState(() => getInitialState("huevsite_explore_sort", "score"));
   const [category, setCategory] = useState(() => getInitialState("huevsite_explore_category", "score"));

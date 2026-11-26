@@ -133,6 +133,7 @@ export default function DashboardPage() {
   const [referralCopied, setReferralCopied] = useState(false);
   const [selectedSubSiteId, setSelectedSubSiteId] = useState<string | null>(null);
   const selectedSubSiteIdRef = useRef<string | null>(null);
+  const initialProfileRequestRef = useRef<Promise<BlockData[] | undefined> | null | undefined>(undefined);
   // Board preset que se está editando en el dashboard (0-2). Arranca en el publicado.
   const [selectedBoardIndex, setSelectedBoardIndex] = useState<number>(0);
   const [isPublishingBoard, setIsPublishingBoard] = useState(false);
@@ -302,6 +303,31 @@ export default function DashboardPage() {
     }
   };
 
+  // Refresh GitHub block stats in the background (skips if fresh < 12h).
+  // Keeps real stars/repos/followers/heatmap/commits up to date without
+  // blocking the editor or the public profile pages.
+  const syncGitHubStats = (blocks: BlockData[], isCurrentScope: () => boolean) => {
+    if (!blocks.some((block) => block.type === 'github')) return;
+
+    fetch('/api/github/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    })
+      .then(r => (r.ok ? r.json() : null))
+      .then(res => {
+        if (!isCurrentScope() || !res?.updated?.length) return;
+        setProfile(prev => prev ? {
+          ...prev,
+          blocks: prev.blocks.map(b => {
+            const u = res.updated.find((x: any) => x.id === b.id);
+            return u ? { ...b, stats: u.stats } : b;
+          }),
+        } : prev);
+      })
+      .catch(() => { /* non-blocking: keep existing stats on failure */ });
+  };
+
   const fetchProfile = async () => {
     try {
       const response = await fetch('/api/profile');
@@ -417,6 +443,9 @@ export default function DashboardPage() {
         }
       }
       setProfileLoadFailed(false);
+      // Hand back the blocks this response actually kept. A sub-site refresh
+      // keeps the site's own blocks, so callers must not sync the main profile's.
+      return subSiteId === null ? transformedProfile.blocks : undefined;
     } catch (error) {
       console.error('Error fetching profile:', error);
       setProfileLoadFailed(true);
@@ -445,11 +474,6 @@ export default function DashboardPage() {
     }
   };
 
-  // Fetch profile on mount
-  useEffect(() => {
-    fetchProfile();
-  }, []);
-
   // Las pestañas viejas (?tab=home|board|projects|insights|more|domain|subsites|transfer
   // y ?scrollTo=referrals) siguen llegando desde mails, avisos y /referrals: cada una
   // cae en su lugar nuevo.
@@ -471,12 +495,19 @@ export default function DashboardPage() {
     setTab(next);
   };
 
-  // Fetch blocks when switching sub-sites
+  // Load the profile initially, then fetch only blocks when the scope changes.
   useEffect(() => {
     const controller = new AbortController();
     const isCurrentScope = () => !controller.signal.aborted && selectedSubSiteIdRef.current === selectedSubSiteId;
+    const isInitialLoad = initialProfileRequestRef.current !== null;
     const fetchBlocks = async () => {
       try {
+        if (isInitialLoad) {
+          const blocks = await (initialProfileRequestRef.current ??= fetchProfile());
+          if (isCurrentScope() && blocks) syncGitHubStats(blocks, isCurrentScope);
+          return;
+        }
+
         const url = selectedSubSiteId
           ? `/api/sub-sites/${selectedSubSiteId}/blocks`
           : '/api/profile';
@@ -503,32 +534,14 @@ export default function DashboardPage() {
 
         setProfile(prev => prev ? { ...prev, blocks } : null);
 
-        // Refresh GitHub block stats in the background (skips if fresh < 12h).
-        // Keeps real stars/repos/followers/heatmap/commits up to date without
-        // blocking the editor or the public profile pages.
-        if (blocks.some((b: any) => b.type === 'github')) {
-          fetch('/api/github/sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({}),
-          })
-            .then(r => (r.ok ? r.json() : null))
-            .then(res => {
-              if (!isCurrentScope() || !res?.updated?.length) return;
-              setProfile(prev => prev ? {
-                ...prev,
-                blocks: prev.blocks.map(b => {
-                  const u = res.updated.find((x: any) => x.id === b.id);
-                  return u ? { ...b, stats: u.stats } : b;
-                }),
-              } : prev);
-            })
-            .catch(() => { /* non-blocking: keep existing stats on failure */ });
-        }
+        syncGitHubStats(blocks, isCurrentScope);
       } catch (e) {
         if (isCurrentScope()) console.error('Error fetching site blocks:', e);
       } finally {
-        if (isCurrentScope()) setBlocksLoading(false);
+        if (isCurrentScope()) {
+          if (isInitialLoad) initialProfileRequestRef.current = null;
+          setBlocksLoading(false);
+        }
       }
     };
 

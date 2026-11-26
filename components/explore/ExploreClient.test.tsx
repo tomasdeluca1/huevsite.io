@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test, type TestContext } from "node:test";
 import { JSDOM } from "jsdom";
 import { NextIntlClientProvider } from "next-intl";
+import { SearchParamsContext } from "next/dist/shared/lib/hooks-client-context.shared-runtime";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { createClient } from "@/lib/supabase/client";
@@ -64,7 +65,9 @@ async function renderExplore(t: TestContext, respond: (page: number, attempt: nu
   await act(async () => {
     root.render(
       <NextIntlClientProvider locale="en" timeZone="UTC" messages={{ explore: messages.explore, shared: messages.shared }}>
-        <ExploreClient initialTotal={2} />
+        <SearchParamsContext.Provider value={new URLSearchParams(window.location.search)}>
+          <ExploreClient initialTotal={2} />
+        </SearchParamsContext.Provider>
       </NextIntlClientProvider>
     );
   });

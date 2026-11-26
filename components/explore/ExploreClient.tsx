@@ -77,6 +77,7 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const querySignal = useRef<AbortSignal | null>(null);
   const [isScoreInfoOpen, setIsScoreInfoOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
@@ -141,11 +142,19 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
     localStorage.setItem("huevsite_explore_country", countryFilter);
     localStorage.setItem("huevsite_explore_last_activity", Date.now().toString());
 
-    const timer = setTimeout(() => {
-      setPage(0);
-      loadProfiles(0, true);
-    }, 300);
-    return () => clearTimeout(timer);
+    const controller = new AbortController();
+    querySignal.current = controller.signal;
+    setPage(0);
+    setProfiles([]);
+    setHasMore(false);
+    setIsLoading(true);
+    setIsFetchingMore(false);
+
+    const timer = setTimeout(() => loadProfiles(0, controller.signal), 300);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [search, sort, category, continentFilter, countryFilter]);
 
   // Store profile list for navigation context
@@ -156,20 +165,19 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
     }
   }, [profiles]);
 
-  const loadProfiles = async (pageToLoad: number, reset = false) => {
-    if (reset) {
-      setIsLoading(true);
-    } else {
-      setIsFetchingMore(true);
-    }
+  const loadProfiles = async (pageToLoad: number, signal: AbortSignal) => {
+    const reset = pageToLoad === 0;
+    if (!reset) setIsFetchingMore(true);
 
     try {
       const currentSort = category === 'created_at' ? 'created_at' : (category === 'score' ? 'score' : sort);
       const res = await fetch(
-        `/api/explore?page=${pageToLoad}&limit=24&sort=${currentSort}&filter=${category}&q=${encodeURIComponent(search)}&country=${countryFilter}&continent=${continentFilter}`
+        `/api/explore?page=${pageToLoad}&limit=24&sort=${currentSort}&filter=${category}&q=${encodeURIComponent(search)}&country=${countryFilter}&continent=${continentFilter}`,
+        { signal }
       );
       if (res.ok) {
         const data = await res.json();
+        if (signal.aborted) return;
         // The API sorts pro_since first, then created_at/updated_at.
         if (reset) {
           setProfiles(data.profiles || []);
@@ -179,17 +187,22 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
         setHasMore(data.hasMore);
       }
     } catch (e) {
-      console.error("Error fetching explore profiles:", e);
+      if (!signal.aborted) console.error("Error fetching explore profiles:", e);
     } finally {
-      setIsLoading(false);
-      setIsFetchingMore(false);
+      if (!signal.aborted) {
+        if (reset) setIsLoading(false);
+        else setIsFetchingMore(false);
+      }
     }
   };
 
   const handleLoadMore = () => {
+    const signal = querySignal.current;
+    if (!signal || signal.aborted || isLoading || isFetchingMore || !hasMore) return;
+
     const nextPage = page + 1;
     setPage(nextPage);
-    loadProfiles(nextPage);
+    loadProfiles(nextPage, signal);
   };
 
   return (

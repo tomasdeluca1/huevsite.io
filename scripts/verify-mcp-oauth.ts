@@ -1,6 +1,6 @@
 // OAuth del MCP y el prompt de arranque. No pega a la red, no manda mail, no imprime secretos.
 // Uso: npx tsx scripts/verify-mcp-oauth.ts
-import { CLIENT_GUIDES, MCP_INSTRUCTIONS, PUBLISH_PROMPT, STARTER_PROMPT } from "../lib/mcp/guide";
+import { MCP_INSTRUCTIONS, PUBLISH_PROMPT, STARTER_PROMPT } from "../lib/mcp/guide";
 import { cursorInstallLink, vscodeInstallLink } from "../lib/mcp/install-links";
 import { fetchClientMetadata, isPrivateAddress, parseClientMetadataDocument, parseRegistration } from "../lib/mcp/oauth/clients";
 import { pkceMatches, pkceS256 } from "../lib/mcp/oauth/pkce";
@@ -25,6 +25,8 @@ import {
 import { handleMcpHttp } from "../lib/mcp/http";
 import { dispatchMcp } from "../lib/mcp/server";
 import type { McpStore } from "../lib/mcp/types";
+import enMessages from "../messages/en.json";
+import esMessages from "../messages/es.json";
 
 let failed = 0;
 function ok(name: string, condition: boolean, detail?: string) {
@@ -158,9 +160,11 @@ ok("VS Code instala http sin token", vscodeInstallLink(RESOURCE).startsWith("vsc
 
 ok("el prompt de arranque pide el perfil y una confirmación", STARTER_PROMPT.includes("get_my_profile") && STARTER_PROMPT.includes("que sí") && STARTER_PROMPT.includes("post_update"));
 ok("las instrucciones del servidor dicen lo mismo", MCP_INSTRUCTIONS.includes("get_my_profile") && MCP_INSTRUCTIONS.includes("post_update") && MCP_INSTRUCTIONS.includes("armar_mi_perfil"));
-ok("hay tutorial de los cuatro clientes", ["cursor", "vscode", "claude", "chatgpt"].every((id) => (CLIENT_GUIDES.find((guide) => guide.id === id)?.steps.length || 0) >= 3));
-ok("Claude usa los nombres oficiales", CLIENT_GUIDES.find((guide) => guide.id === "claude")?.steps.join(" ").includes("Add custom connector") === true);
-ok("ChatGPT usa Add custom MCP server", CLIENT_GUIDES.find((guide) => guide.id === "chatgpt")?.steps.join(" ").includes("Add custom MCP server") === true);
+const docs = [esMessages.mcpDocs, enMessages.mcpDocs];
+ok("hay tutorial de los cuatro clientes en ambos idiomas", docs.every(({ cursorSteps, vscodeSteps, claudeSteps, chatgptSteps }) =>
+  [cursorSteps, vscodeSteps, claudeSteps, chatgptSteps].every((steps) => steps.length >= 3)));
+ok("Claude usa los nombres oficiales", docs.every(({ claudeSteps }) => claudeSteps.some((step) => step.includes("Add custom connector"))));
+ok("ChatGPT usa Add custom MCP server", docs.every(({ chatgptSteps }) => chatgptSteps.some((step) => step.includes("Add custom MCP server"))));
 
 async function run() {
   const store = memory();

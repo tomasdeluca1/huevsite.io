@@ -100,6 +100,25 @@ test("Share focuses Close on open and wraps Tab and Shift+Tab", async (t) => {
   assert.ok(document.activeElement === close);
 });
 
+test("Share moves focus between buttons and links without relying on the browser's Tab behavior", async (t) => {
+  const { document, close, qrToggle, keydown } = await openShare(t);
+  const dialog = close.closest('[role="dialog"]')!;
+  const copy = Array.from(dialog.querySelectorAll("button"))
+    .find((button) => button.textContent?.trim() === messages.shared.share.copy)!;
+  const links = Array.from(dialog.querySelectorAll("a[href]"));
+  assert.equal(links.length, 5);
+  await act(async () => qrToggle.click());
+  const download = dialog.querySelector("a[download]")!;
+  for (const control of [copy, ...links, qrToggle, download, close]) {
+    assert.equal(await keydown("Tab"), true);
+    assert.ok(document.activeElement === control, "Tab reached the next dialog control");
+  }
+  for (const control of [download, qrToggle, ...links.reverse(), copy, close]) {
+    assert.equal(await keydown("Tab", true), true);
+    assert.ok(document.activeElement === control, "Shift+Tab reached the previous dialog control");
+  }
+});
+
 test("Share includes the QR download in the focus loop only while the QR panel is open", async (t) => {
   const { document, close, qrToggle, keydown } = await openShare(t);
   await act(async () => qrToggle.click());

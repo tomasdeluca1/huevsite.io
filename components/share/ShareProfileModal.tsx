@@ -50,7 +50,6 @@ export function ShareProfileModal({
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
-  const qrToggleRef = useRef<HTMLButtonElement>(null);
   const qrDownloadRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => setMounted(true), []);
@@ -74,15 +73,21 @@ export function ShareProfileModal({
       if (event.key === "Escape") {
         event.preventDefault();
         onClose();
-      } else if (event.key === "Tab") {
-        const first = closeRef.current;
-        const last = (showQr ? qrDownloadRef.current : null) ?? qrToggleRef.current;
-        const boundary = event.shiftKey ? first : last;
-        const active = document.activeElement;
-        if (active === boundary || !dialogRef.current?.contains(active)) {
-          event.preventDefault();
-          (event.shiftKey ? last : first)?.focus();
-        }
+      } else if (event.key === "Tab" && !event.altKey && !event.ctrlKey && !event.metaKey) {
+        const dialog = dialogRef.current;
+        if (!dialog) return;
+
+        const controls = Array.from(dialog.querySelectorAll<HTMLElement>("button:not(:disabled), a[href]"))
+          .filter((control) => showQr || control !== qrDownloadRef.current);
+        if (controls.length === 0) return;
+
+        event.preventDefault();
+        const activeIndex = controls.findIndex((control) => control === document.activeElement);
+        const step = event.shiftKey ? -1 : 1;
+        const nextIndex = activeIndex < 0
+          ? (event.shiftKey ? controls.length - 1 : 0)
+          : (activeIndex + step + controls.length) % controls.length;
+        controls[nextIndex].focus();
       }
     };
 
@@ -319,7 +324,6 @@ export function ShareProfileModal({
 
             {/* QR toggle */}
             <button
-              ref={qrToggleRef}
               onClick={() => setShowQr((v) => !v)}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-xs font-black uppercase tracking-widest text-[var(--text-muted)] hover:text-white border border-dashed border-[var(--border-bright)] transition-all"
             >

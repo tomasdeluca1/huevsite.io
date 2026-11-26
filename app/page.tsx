@@ -297,11 +297,11 @@ export default async function LandingPage({
 
   return (
     <>
-      <head>
-        <link rel="help" href={`${SITE_URL}/mcp`} title="Documentación del MCP de huevsite" />
-        <link rel="describedby" href={`${SITE_URL}/llms.txt`} type="text/plain" title="llms.txt" />
-        <link rel="service" href={`${SITE_URL}/.well-known/ai-catalog.json`} type="application/ai-catalog+json" title="Catálogo de servidores MCP" />
-      </head>
+      {/* React hoists these into the layout's <head>; wrapping them in a
+          <head> nests a second one inside <body> and breaks hydration. */}
+      <link rel="help" href={`${SITE_URL}/mcp`} title="Documentación del MCP de huevsite" />
+      <link rel="describedby" href={`${SITE_URL}/llms.txt`} type="text/plain" title="llms.txt" />
+      <link rel="service" href={`${SITE_URL}/.well-known/ai-catalog.json`} type="application/ai-catalog+json" title="Catálogo de servidores MCP" />
       {/* Plain <script>, NOT next/script: with strategy="beforeInteractive"
           next/script only ships the tag inside the RSC flight payload and
           injects it client-side, so the JSON-LD was absent from the server

@@ -20,6 +20,7 @@ export function StepUsername({ state, onChange, onFinish, creating = false, erro
   const [available, setAvailable] = useState<boolean | null>(state.usernameAvailable ?? null);
   const [reserved, setReserved] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const checkRef = useRef<AbortController | null>(null);
   const accent = state.accentColor;
 
   const validate = (val: string) => /^[a-z0-9_]{3,20}$/.test(val);
@@ -37,12 +38,18 @@ export function StepUsername({ state, onChange, onFinish, creating = false, erro
     setChecking(false);
   }, [state.username, state.usernameAvailable]);
 
+  useEffect(() => () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    checkRef.current?.abort();
+  }, []);
+
   const handleChange = async (val: string) => {
     const clean = val.toLowerCase().replace(/[^a-z0-9_]/g, "");
     onChange(clean, null);
     setReserved(false);
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
+    checkRef.current?.abort();
 
     if (!clean || !validate(clean)) {
       setAvailable(null);
@@ -50,11 +57,16 @@ export function StepUsername({ state, onChange, onFinish, creating = false, erro
       return;
     }
 
+    // Only the latest check may update the step: an older reply would
+    // otherwise restore its handle and mark it available.
+    const controller = new AbortController();
+    checkRef.current = controller;
     setChecking(true);
     debounceRef.current = setTimeout(async () => {
       try {
-        const response = await fetch(`/api/username/check?u=${clean}`);
+        const response = await fetch(`/api/username/check?u=${clean}`, { signal: controller.signal });
         const data = await response.json();
+        if (controller.signal.aborted) return;
 
         setReserved(!!data.reserved);
         if (data.error && !data.reserved) {
@@ -64,10 +76,11 @@ export function StepUsername({ state, onChange, onFinish, creating = false, erro
           onChange(clean, data.available);
         }
       } catch (error) {
+        if (controller.signal.aborted) return;
         console.error('Error checking username:', error);
         setAvailable(null);
       } finally {
-        setChecking(false);
+        if (!controller.signal.aborted) setChecking(false);
       }
     }, 700);
   };

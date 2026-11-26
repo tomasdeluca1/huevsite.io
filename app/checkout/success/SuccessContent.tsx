@@ -144,7 +144,7 @@ export default function SuccessContent() {
                             </p>
                             <p className="text-zinc-500 text-sm">
                                 {t("delayedSupportBefore")}{" "}
-                                <a href="mailto:hi@huevsite.studio" className="text-white underline underline-offset-4">hi@huevsite.studio</a>{" "}
+                                <a href="mailto:tomas@huevsite.studio" className="text-white underline underline-offset-4">tomas@huevsite.studio</a>{" "}
                                 {t("delayedSupportAfter")}
                             </p>
                         </div>

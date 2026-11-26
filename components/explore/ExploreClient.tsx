@@ -84,6 +84,8 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const [loadError, setLoadError] = useState<"initial" | "more" | null>(null);
+  const requestRef = useRef<AbortController | null>(null);
   const [isScoreInfoOpen, setIsScoreInfoOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
@@ -154,6 +156,7 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
     localStorage.setItem("huevsite_explore_country", countryFilter);
     localStorage.setItem("huevsite_explore_last_activity", Date.now().toString());
 
+    setIsLoading(true);
     const timer = setTimeout(() => {
       if (lastSearch.current !== search) {
         lastSearch.current = search;
@@ -163,10 +166,12 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
           lastUrlSearch.current = search || null;
         }
       }
-      setPage(0);
-      loadProfiles(0, true);
+      loadProfiles(0);
     }, 300);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      requestRef.current?.abort();
+    };
   }, [search, sort, category, continentFilter, countryFilter]);
 
   // Store profile list for navigation context
@@ -177,7 +182,12 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
     }
   }, [profiles]);
 
-  const loadProfiles = async (pageToLoad: number, reset = false) => {
+  const loadProfiles = async (pageToLoad: number) => {
+    const reset = pageToLoad === 0;
+    const request = new AbortController();
+    requestRef.current?.abort();
+    requestRef.current = request;
+    setLoadError(null);
     if (reset) {
       setIsLoading(true);
     } else {
@@ -187,30 +197,35 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
     try {
       const currentSort = category === 'created_at' ? 'created_at' : (category === 'score' ? 'score' : sort);
       const res = await fetch(
-        `/api/explore?page=${pageToLoad}&limit=24&sort=${currentSort}&filter=${category}&q=${encodeURIComponent(search)}&country=${countryFilter}&continent=${continentFilter}`
+        `/api/explore?page=${pageToLoad}&limit=24&sort=${currentSort}&filter=${category}&q=${encodeURIComponent(search)}&country=${countryFilter}&continent=${continentFilter}`,
+        { signal: request.signal }
       );
-      if (res.ok) {
-        const data = await res.json();
-        // The API sorts pro_since first, then created_at/updated_at.
-        if (reset) {
-          setProfiles(data.profiles || []);
-        } else {
-          setProfiles((prev) => [...prev, ...(data.profiles || [])]);
-        }
-        setHasMore(data.hasMore);
+      if (!res.ok) throw new Error(`Explore API returned ${res.status}`);
+      const data = await res.json();
+      if (request.signal.aborted) return;
+      // The API sorts pro_since first, then created_at/updated_at.
+      if (reset) {
+        setProfiles(data.profiles || []);
+      } else {
+        setProfiles((prev) => [...prev, ...(data.profiles || [])]);
       }
+      setHasMore(data.hasMore);
+      setPage(pageToLoad);
     } catch (e) {
-      console.error("Error fetching explore profiles:", e);
+      if (!request.signal.aborted) {
+        console.error("Error fetching explore profiles:", e);
+        setLoadError(reset ? "initial" : "more");
+      }
     } finally {
-      setIsLoading(false);
-      setIsFetchingMore(false);
+      if (!request.signal.aborted) {
+        setIsLoading(false);
+        setIsFetchingMore(false);
+      }
     }
   };
 
   const handleLoadMore = () => {
-    const nextPage = page + 1;
-    setPage(nextPage);
-    loadProfiles(nextPage);
+    loadProfiles(page + 1);
   };
 
   return (
@@ -347,6 +362,17 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
         <div className="py-20 flex justify-center text-[var(--text-muted)]">
           <Loader2 size={32} className="animate-spin" />
         </div>
+      ) : loadError === "initial" ? (
+        <div className="flex flex-col items-center gap-4 text-center py-20 text-[var(--text-dim)] font-mono text-sm border-y border-dashed border-[var(--border-bright)]">
+          <p role="alert">{t("loadError")}</p>
+          <button
+            type="button"
+            onClick={() => loadProfiles(0)}
+            className="btn btn-outline border-dashed text-sm font-mono hover:text-white"
+          >
+            {t("retry")}
+          </button>
+        </div>
       ) : profiles.length === 0 ? (
         <div className="text-center py-20 text-[var(--text-dim)] font-mono text-sm border-y border-dashed border-[var(--border-bright)]">
           {t("emptySearch")}
@@ -365,8 +391,12 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
           </div>
 
           {hasMore && (
-            <div className="flex justify-center mt-8">
+            <div className="flex flex-col items-center gap-4 mt-8">
+              {loadError === "more" && (
+                <p role="alert" className="text-center text-[var(--text-dim)] font-mono text-sm">{t("loadMoreError")}</p>
+              )}
               <button
+                type="button"
                 onClick={handleLoadMore}
                 disabled={isFetchingMore}
                 className="btn btn-outline border-dashed text-sm font-mono hover:text-white disabled:opacity-50"
@@ -374,7 +404,7 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
                 {isFetchingMore ? (
                   <span className="flex items-center gap-2"><Loader2 size={16} className="animate-spin" /> {t("loading")}</span>
                 ) : (
-                  t("loadMore")
+                  t(loadError === "more" ? "retry" : "loadMore")
                 )}
               </button>
             </div>

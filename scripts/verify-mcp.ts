@@ -18,6 +18,8 @@ import { claudeConfig, cursorConfig, tokenConfig, vscodeConfig } from "../lib/mc
 import { generateMcpToken, hashMcpToken, parseBearer } from "../lib/mcp/tokens";
 import type { CreateLaunchResult } from "../lib/launch-service";
 import type { McpBlock, McpProfile, McpStore } from "../lib/mcp/types";
+import enMessages from "../messages/en.json";
+import esMessages from "../messages/es.json";
 
 let failed = 0;
 function ok(name: string, condition: boolean, detail?: string) {
@@ -509,7 +511,18 @@ async function run() {
   ok("las configs pegan la URL", [cursorConfig, vscodeConfig, claudeConfig, tokenConfig].every((build) => build("https://huevsite.io/api/mcp").includes("https://huevsite.io/api/mcp")));
 
   const docs = fs.readFileSync(path.join(__dirname, "../app/mcp/page.tsx"), "utf8");
-  ok("la doc muestra los prompts en bloques copiables", ["CopyBlock", "armar_mi_perfil", "publicar_avance", "STARTER_PROMPT", "PUBLISH_PROMPT", "cursorConfig", "vscodeConfig", "claudeConfig"].every((bit) => docs.includes(bit)));
+  ok("la doc muestra los prompts localizados en bloques copiables", ["CopyBlock", "armar_mi_perfil", "publicar_avance", 't("starterPrompt")', 't("publishPrompt")', "cursorConfig", "vscodeConfig", "claudeConfig"].every((bit) => docs.includes(bit)));
+  const esDocs = esMessages.mcpDocs;
+  const enDocs: Record<string, string | string[]> = enMessages.mcpDocs;
+  ok("la doc MCP tiene las mismas entradas en español e inglés", Object.keys(esDocs).length === Object.keys(enDocs).length &&
+    Object.entries(esDocs).every(([key, value]) => {
+      const translation = enDocs[key];
+      return Array.isArray(value)
+        ? Array.isArray(translation) && translation.length === value.length && translation.every((item) => item.trim().length > 0)
+        : typeof translation === "string" && translation.trim().length > 0;
+    }));
+  ok("los prompts en inglés preservan las herramientas y opciones del protocolo", ["get_my_profile", "grid.issues", "arrange_blocks", "tidy: true", "dry_run: true", "post_update"].every((name) => enMessages.mcpDocs.starterPrompt.includes(name)) &&
+    ["get_my_profile", "list_my_projects", "post_update", "announce_launch"].every((name) => enMessages.mcpDocs.publishPrompt.includes(name)));
   const robots = fs.readFileSync(path.join(__dirname, "../public/robots.txt"), "utf8");
   ok("robots deja ver mcp, llms y well-known", ["Allow: /mcp", "Allow: /llms.txt", "Allow: /.well-known/", "Allow: /api/mcp/server-card"].every((bit) => robots.includes(bit)));
   const llms = fs.readFileSync(path.join(__dirname, "../public/llms.txt"), "utf8");

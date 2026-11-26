@@ -4,10 +4,11 @@ import { JSDOM } from "jsdom";
 import { NextIntlClientProvider } from "next-intl";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
+import { useShareCelebration } from "@/components/dashboard/shell/useShareCelebration";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import messages from "@/messages/en.json";
 
-async function openShare(t: TestContext) {
+function setupDom(t: TestContext) {
   const { window } = new JSDOM("<main></main><button id='outside'>Outside</button>", {
     url: "http://localhost/builder",
   });
@@ -17,6 +18,7 @@ async function openShare(t: TestContext) {
     self: window,
     document,
     navigator: window.navigator,
+    localStorage: window.localStorage,
     IS_REACT_ACT_ENVIRONMENT: true,
   }).map(([name, value]) => {
     const previous = Object.getOwnPropertyDescriptor(globalThis, name);
@@ -32,6 +34,11 @@ async function openShare(t: TestContext) {
     window.close();
     restore.forEach((fn) => fn());
   });
+  return { window, document, root };
+}
+
+async function openShare(t: TestContext) {
+  const { window, document, root } = setupDom(t);
   await act(async () => {
     root.render(
       <NextIntlClientProvider locale="en" timeZone="UTC" messages={{ shared: messages.shared }}>
@@ -57,6 +64,25 @@ async function openShare(t: TestContext) {
   };
   return { document, opener, close, qrToggle, keydown };
 }
+
+test("the one-time Share celebration waits until the required dashboard dialog is dismissed", async (t) => {
+  const { root, window } = setupDom(t);
+  const onCelebrate = t.mock.fn();
+  function DashboardShare({ chooserOpen }: { chooserOpen: boolean }) {
+    useShareCelebration("builder", !chooserOpen, onCelebrate);
+    return null;
+  }
+  const render = (chooserOpen: boolean) => act(async () => root.render(<DashboardShare chooserOpen={chooserOpen} />));
+
+  await render(true);
+  assert.equal(onCelebrate.mock.callCount(), 0);
+  assert.equal(window.localStorage.getItem("huevsite_share_celebrated_builder"), null);
+  await render(false);
+  assert.equal(onCelebrate.mock.callCount(), 1);
+  await render(true);
+  await render(false);
+  assert.equal(onCelebrate.mock.callCount(), 1);
+});
 
 test("Escape closes Share and restores focus to the opener even if clicking did not focus it", async (t) => {
   const { document, opener, close, keydown } = await openShare(t);

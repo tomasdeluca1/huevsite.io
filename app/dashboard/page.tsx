@@ -59,6 +59,7 @@ import { EcosystemStrip } from "@/components/dashboard/shell/EcosystemStrip";
 import { StatsTab } from "@/components/dashboard/shell/StatsTab";
 import { SettingsTab, type SettingsSection } from "@/components/dashboard/shell/SettingsTab";
 import { ShareProfileModal } from "@/components/share/ShareProfileModal";
+import { useShareCelebration } from "@/components/dashboard/shell/useShareCelebration";
 import { PulseStrip, useProfilePulse } from "@/components/dashboard/shell/PulseStrip";
 import { Celebrations } from "@/components/dashboard/shell/Celebrations";
 import { InsightsTab } from "@/components/dashboard/InsightsTab";
@@ -780,24 +781,22 @@ export default function DashboardPage() {
   const mobileListBlocks = visibleBlocks.filter(b => !isDesktopOnlyType(b.type));
   const desktopOnlyTypeBlocks = visibleBlocks.filter(b => isDesktopOnlyType(b.type));
 
+  const publishedVisibleBlocks = (profile?.blocks ?? []).filter(
+    b => b.visible !== false && (b.board_index ?? 0) === (profile?.publishedBoard ?? 0)
+  );
+  const showBlockChooser = !isPro && !blockChooserResolved && profile?.freeTrial?.claimed && !profile.freeTrial.active &&
+    publishedVisibleBlocks.length > MAX_FREE_BLOCKS + (profile.extraBlocksFromShare || 0);
+
   // One-time celebration: when a brand-new profile becomes "shareable" (complete
   // enough), open the share modal with confetti exactly once. Persisted in
   // localStorage so it never nags again. No DB writes involved.
-  useEffect(() => {
-    if (loading || !profile?.username) return;
-    if (typeof window === "undefined") return;
-    const isShareable = Boolean(
-      profile.displayName && profile.avatarUrl && profile.tagline && visibleBlocks.length >= 3
-    );
-    if (!isShareable) return;
-    const key = `huevsite_share_celebrated_${profile.username}`;
-    if (localStorage.getItem(key)) return;
-    localStorage.setItem(key, "1");
+  const celebrateShare = useCallback(() => {
     shareOpenerRef.current = dashboardShareButtonRef.current;
     setShareCelebrate(true);
     setIsShareProfileOpen(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, profile?.username, profile?.displayName, profile?.avatarUrl, profile?.tagline, visibleBlocks.length]);
+  }, []);
+  const isShareable = Boolean(profile?.displayName && profile.avatarUrl && profile.tagline && visibleBlocks.length >= 3);
+  useShareCelebration(profile?.username, !loading && !showBlockChooser && !isUpgradeModalOpen && isShareable, celebrateShare);
 
   const openShare = (opener = dashboardShareButtonRef.current) => {
     shareOpenerRef.current = opener;
@@ -2256,10 +2255,9 @@ export default function DashboardPage() {
       {/* Trial expired: let user choose which blocks to keep.
           Counts only VISIBLE blocks — hidden ones already resolved a past chooser,
           otherwise the modal would reappear on every session forever. */}
-      {!isPro && !blockChooserResolved && profile.freeTrial?.claimed && !profile.freeTrial?.active &&
-        profile.blocks.filter(b => b.visible !== false && (b.board_index ?? 0) === (profile.publishedBoard ?? 0)).length > MAX_FREE_BLOCKS + (profile.extraBlocksFromShare || 0) && (
+      {showBlockChooser && (
         <TrialExpiredBlockChooser
-          blocks={profile.blocks.filter(b => b.visible !== false && (b.board_index ?? 0) === (profile.publishedBoard ?? 0))}
+          blocks={publishedVisibleBlocks}
           extraBlocksFromShare={profile.extraBlocksFromShare || 0}
           accentColor={profile.accentColor}
           onConfirm={handleBlockChooserConfirm}

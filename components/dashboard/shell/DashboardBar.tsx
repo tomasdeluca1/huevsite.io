@@ -1,5 +1,6 @@
 "use client";
 
+import type { RefObject } from "react";
 import { useTranslations } from "next-intl";
 import { BarChart3, ExternalLink, LayoutGrid, Lock, Settings2, Share2 } from "lucide-react";
 import { getContrastColor } from "@/lib/profile-types";
@@ -33,13 +34,14 @@ interface BarProps {
   saveState: SaveState;
   profilePath: string;
   accentColor: string;
-  onShare: () => void;
+  shareButtonRef: RefObject<HTMLButtonElement>;
+  onShare: (opener: HTMLButtonElement) => void;
 }
 
 // La barra fija del dashboard: las tres pestañas a la izquierda (en el celular
 // pasan a la barra de abajo) y a la derecha lo que se usa desde cualquier
 // pestaña: si se guardó, tu URL y Compartir.
-export function DashboardBar({ tab, onTab, statsLocked, saveState, profilePath, accentColor, onShare }: BarProps) {
+export function DashboardBar({ tab, onTab, statsLocked, saveState, profilePath, accentColor, shareButtonRef, onShare }: BarProps) {
   const t = useTranslations("dashboard.shell");
   return (
     <div className="sticky top-0 z-[150] border-b border-white/[0.06] bg-[#050505]/90 backdrop-blur-xl">
@@ -80,7 +82,8 @@ export function DashboardBar({ tab, onTab, statsLocked, saveState, profilePath, 
 
         <button
           type="button"
-          onClick={onShare}
+          ref={shareButtonRef}
+          onClick={(event) => onShare(event.currentTarget)}
           className="flex min-h-10 items-center gap-2 rounded-xl px-4 text-[13px] font-extrabold"
           style={{ background: accentColor, color: getContrastColor(accentColor) }}
         >

@@ -20,7 +20,7 @@ interface Props {
   onScoreInfo: MouseEventHandler<HTMLButtonElement>;
   onAddBlock: (type: BlockType) => void;
   onEditProfile: () => void;
-  onShare: () => void;
+  onShare: (opener: HTMLButtonElement) => void;
 }
 
 // Estadísticas: lo que mide. Las de visitas son Pro; sin Pro se ve la pantalla

@@ -115,6 +115,8 @@ export default function DashboardPage() {
   const [isLinktreeRefactorOpen, setIsLinktreeRefactorOpen] = useState(false);
   const [isShareProfileOpen, setIsShareProfileOpen] = useState(false);
   const [shareCelebrate, setShareCelebrate] = useState(false);
+  const dashboardShareButtonRef = useRef<HTMLButtonElement>(null);
+  const shareOpenerRef = useRef<HTMLButtonElement | null>(null);
   const [isClaimingTrial, setIsClaimingTrial] = useState(false);
   const [trialBannerDismissed, setTrialBannerDismissed] = useState(false);
   const [blockChooserResolved, setBlockChooserResolved] = useState(false);
@@ -791,10 +793,17 @@ export default function DashboardPage() {
     const key = `huevsite_share_celebrated_${profile.username}`;
     if (localStorage.getItem(key)) return;
     localStorage.setItem(key, "1");
+    shareOpenerRef.current = dashboardShareButtonRef.current;
     setShareCelebrate(true);
     setIsShareProfileOpen(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, profile?.username, profile?.displayName, profile?.avatarUrl, profile?.tagline, visibleBlocks.length]);
+
+  const openShare = (opener = dashboardShareButtonRef.current) => {
+    shareOpenerRef.current = opener;
+    setShareCelebrate(false);
+    setIsShareProfileOpen(true);
+  };
 
   const handleBlockChooserConfirm = async (keepBlockIds: string[]) => {
     if (!profile) return;
@@ -1740,7 +1749,8 @@ export default function DashboardPage() {
           saveState={saveState}
           profilePath={profilePath}
           accentColor={profile.accentColor}
-          onShare={() => { setShareCelebrate(false); setIsShareProfileOpen(true); }}
+          shareButtonRef={dashboardShareButtonRef}
+          onShare={openShare}
         />
         <ProLine
           profile={profile}
@@ -1896,7 +1906,7 @@ export default function DashboardPage() {
                       const hero = boardBlocks.find((b) => b.type === "hero" && b.visible !== false);
                       if (hero) setEditingBlock(hero); else setIsProfileModalOpen(true);
                     }}
-                    onShare={() => { setShareCelebrate(false); setIsShareProfileOpen(true); }}
+                    onShare={openShare}
                     onCopy={handleCopyUrl}
                     onOpenGrid={() => setProfileView("grid")}
                     onOpenStats={() => goTab("stats")}
@@ -2040,7 +2050,7 @@ export default function DashboardPage() {
               }}
               onAddBlock={(type) => { goTab("profile"); addBlock(type); }}
               onEditProfile={() => setIsProfileModalOpen(true)}
-              onShare={() => { setShareCelebrate(false); setIsShareProfileOpen(true); }}
+              onShare={openShare}
             />
           )}
 
@@ -2219,11 +2229,12 @@ export default function DashboardPage() {
         />
       )}
 
-      <Celebrations profile={profile} onShare={() => { setShareCelebrate(false); setIsShareProfileOpen(true); }} />
+      <Celebrations profile={profile} onShare={() => openShare()} />
 
       <ShareProfileModal
         isOpen={isShareProfileOpen}
         onClose={() => { setIsShareProfileOpen(false); setShareCelebrate(false); }}
+        returnFocusRef={shareOpenerRef}
         url={`${typeof window !== "undefined" ? window.location.origin : "https://huevsite.io"}/${profile.username}`}
         username={profile.username}
         displayName={profile.displayName}

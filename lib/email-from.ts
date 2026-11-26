@@ -2,8 +2,8 @@
 // EMAIL_FROM overrides it and may be either a bare address or "Name <addr>".
 // Reply-To stays Tomás's mailbox even when From is overridden.
 
-export const DEFAULT_EMAIL_FROM = "Tomás de huevsite <tomidelu@huevsite.com>";
-export const EMAIL_REPLY_TO = "tomidelu@huevsite.com";
+export const DEFAULT_EMAIL_FROM = "Tomás de huevsite <tomas@huevsite.studio>";
+export const EMAIL_REPLY_TO = "tomas@huevsite.studio";
 
 function oneLine(value: string): string {
   return value.replace(/[\r\n]+/g, " ").trim();

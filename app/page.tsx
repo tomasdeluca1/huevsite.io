@@ -104,7 +104,7 @@ const organizationSchema = {
   ],
   contactPoint: {
     "@type": "ContactPoint",
-    email: "hi@huevsite.studio",
+    email: "tomas@huevsite.studio",
     contactType: "customer support",
     availableLanguage: ["Spanish", "English"],
   },

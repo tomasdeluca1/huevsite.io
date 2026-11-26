@@ -188,7 +188,7 @@ Huevsite.io está construido con:
 - **Web**: https://huevsite.io
 - **Twitter/X**: https://x.com/huevsite_io
 - **Instagram**: https://www.instagram.com/huevsite.io
-- **Email**: hi@huevsite.studio
+- **Email**: tomas@huevsite.studio
 - **Blog**: https://huevsite.io/blog
 
 ---

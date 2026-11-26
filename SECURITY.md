@@ -4,7 +4,7 @@
 
 Please **do not** open a public issue for security vulnerabilities.
 
-Email **hi@huevsite.studio** with:
+Email **tomas@huevsite.studio** with:
 
 - A description of the issue and its impact.
 - Steps to reproduce (proof-of-concept if possible).

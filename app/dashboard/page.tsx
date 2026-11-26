@@ -412,7 +412,7 @@ export default function DashboardPage() {
       setDomain(transformedProfile.customDomain || "");
 
       justLoadedRef.current = true;
-      if (transformedProfile.blocks.length === 0 || transformedProfile.isOnboardingTestUser) {
+      if (subSiteId === null && (transformedProfile.blocks.length === 0 || transformedProfile.isOnboardingTestUser)) {
         const hasSeen = localStorage.getItem("huevsite_onboarding_seen");
         if (!hasSeen || transformedProfile.isOnboardingTestUser) {
           setIsOnboardingOpen(true);

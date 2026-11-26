@@ -289,15 +289,6 @@ export default function DashboardPage() {
       }
 
       await fetchProfile();
-      setProfile((prev) =>
-        prev
-          ? {
-              ...prev,
-              aiCredits: data.aiCredits ?? prev.aiCredits,
-              builderScore: data.builderScore ?? prev.builderScore,
-            }
-          : prev
-      );
       setIsLinktreeRefactorOpen(false);
     } catch (error: any) {
       alert(error.message || t("page.errorRefactorBoard"));
@@ -307,7 +298,6 @@ export default function DashboardPage() {
   };
 
   const fetchProfile = async () => {
-    setProfileLoadFailed(false);
     try {
       const response = await fetch('/api/profile');
 
@@ -419,6 +409,7 @@ export default function DashboardPage() {
           setIsOnboardingOpen(true);
         }
       }
+      setProfileLoadFailed(false);
     } catch (error) {
       console.error('Error fetching profile:', error);
       setProfileLoadFailed(true);
@@ -1536,7 +1527,7 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    if (!profile || loading || !autoSaveEnabled) { justLoadedRef.current = true; return; }
+    if (!profile || loading || profileLoadFailed || !autoSaveEnabled) { justLoadedRef.current = true; return; }
     const { builderScore, ...content } = profile;
     const currentVersion = JSON.stringify(content);
     // Lo que llega del servidor ya está guardado: es el punto de partida, no un cambio.
@@ -1548,7 +1539,7 @@ export default function DashboardPage() {
       handleSave();
     }, 2000);
     return () => { if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current); };
-  }, [profile, autoSaveEnabled, loading]);
+  }, [profile, autoSaveEnabled, loading, profileLoadFailed]);
 
   const markStudio = (ok: boolean) => {
     setStudioSave(ok ? "saved" : "error");
@@ -1667,7 +1658,7 @@ export default function DashboardPage() {
     }
   };
 
-  if (loading || !profile) {
+  if (loading || profileLoadFailed || !profile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] font-display">
         <div className="text-center">
@@ -1676,7 +1667,10 @@ export default function DashboardPage() {
               <p role="alert" className="text-[var(--text-dim)] font-mono text-sm">{t("page.errorLoadProfile")}</p>
               <button
                 type="button"
-                onClick={() => void fetchProfile()}
+                onClick={() => {
+                  setLoading(true);
+                  void fetchProfile();
+                }}
                 className="mt-4 rounded-lg border border-[var(--border-bright)] bg-[var(--surface2)] px-4 py-2 text-sm font-bold text-[var(--text)]"
               >
                 {t("page.retryLoadProfile")}

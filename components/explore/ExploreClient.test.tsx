@@ -23,6 +23,7 @@ async function renderExplore(t: TestContext, respond: (page: number, attempt: nu
     self: window,
     document: window.document,
     navigator: window.navigator,
+    HTMLElement: window.HTMLElement,
     localStorage: window.localStorage,
     sessionStorage: window.sessionStorage,
     IS_REACT_ACT_ENVIRONMENT: true,
@@ -117,4 +118,60 @@ test("Explore keeps its current results and retries the same page after Load mor
   assert.ok(container.querySelector('a[href="/second-builder"]'));
   assert.equal(alert(), undefined);
   assert.equal(findButton(messages.explore.loadMore), undefined);
+});
+
+async function openScoreInfo(t: TestContext) {
+  const { container } = await renderExplore(t, () => profilesResponse("first-builder", false));
+  const opener = Array.from(container.querySelectorAll("button")).find((button) =>
+    button.textContent?.startsWith(messages.explore.scoreSystem),
+  );
+  assert.ok(opener);
+  opener.focus();
+  await act(async () => opener.click());
+
+  const document = container.ownerDocument;
+  const title = Array.from(document.querySelectorAll("h2")).find((heading) =>
+    heading.textContent?.startsWith("Builder Score"),
+  );
+  assert.ok(title);
+  const closeButton = title.parentElement!.parentElement!.querySelector("button")!;
+  const gotItButton = Array.from(document.querySelectorAll("button")).find((button) =>
+    button.textContent === messages.shared.scoreInfo.gotIt,
+  );
+  assert.ok(gotItButton);
+  const pressKey = async (key: string, shiftKey = false) => {
+    const event = new document.defaultView!.KeyboardEvent("keydown", {
+      key, shiftKey, bubbles: true, cancelable: true,
+    });
+    await act(async () => document.activeElement!.dispatchEvent(event));
+    return event;
+  };
+
+  return { opener, document, title, closeButton, gotItButton, pressKey };
+}
+
+test("Builder Score closes on Escape and restores focus to its opener", async (t) => {
+  const { opener, document, title, closeButton, pressKey } = await openScoreInfo(t);
+  closeButton.focus();
+
+  const escape = await pressKey("Escape");
+
+  assert.ok(escape.defaultPrevented, "Expected the modal to handle Escape");
+  assert.equal(document.activeElement, opener);
+  assert.ok(!title.isConnected || title.closest("[inert]"));
+});
+
+test("Builder Score moves focus inside and wraps Tab and Shift+Tab within the modal", async (t) => {
+  const { document, closeButton, gotItButton, pressKey } = await openScoreInfo(t);
+  const initialFocus = document.activeElement;
+  gotItButton.focus();
+
+  const tab = await pressKey("Tab");
+  assert.ok(tab.defaultPrevented, "Expected the modal to wrap Tab at its last control");
+  assert.equal(document.activeElement, closeButton);
+
+  const shiftTab = await pressKey("Tab", true);
+  assert.ok(shiftTab.defaultPrevented, "Expected the modal to wrap Shift+Tab at its first control");
+  assert.equal(document.activeElement, gotItButton);
+  assert.equal(initialFocus, closeButton);
 });

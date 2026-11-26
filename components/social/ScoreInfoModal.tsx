@@ -2,7 +2,7 @@
 
 import { X, Zap, Target, Users, TrendingUp, Sparkles, Star, MessageSquare, ArrowRight } from "lucide-react";
 import { createPortal } from "react-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -20,9 +20,52 @@ export function ScoreInfoModal({ isOpen, onClose, accentColor = "#C8FF00", profi
     const [mounted, setMounted] = useState(false);
     const [breakdown, setBreakdown] = useState<any>(null);
     const [loading, setLoading] = useState(false);
+    const titleId = useId();
+    const dialogRef = useRef<HTMLDivElement>(null);
+    const closeRef = useRef<HTMLButtonElement>(null);
+    const gotItRef = useRef<HTMLButtonElement>(null);
     const supabase = createClient();
 
     useEffect(() => { setMounted(true); }, []);
+
+    useEffect(() => {
+        const dialog = dialogRef.current;
+        if (!isOpen || !dialog) return;
+
+        const opener = document.activeElement;
+        dialog.removeAttribute("inert");
+        closeRef.current?.focus({ preventScroll: true });
+
+        return () => {
+            dialog.setAttribute("inert", "");
+            if (opener instanceof HTMLElement && opener.isConnected) {
+                opener.focus({ preventScroll: true });
+            }
+        };
+    }, [isOpen, mounted]);
+
+    useEffect(() => {
+        if (!isOpen || !mounted) return;
+
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.defaultPrevented) return;
+
+            if (event.key === "Escape") {
+                event.preventDefault();
+                onClose();
+            } else if (event.key === "Tab") {
+                const active = document.activeElement;
+                const boundary = event.shiftKey ? closeRef.current : gotItRef.current;
+                if (active === boundary || !dialogRef.current?.contains(active)) {
+                    event.preventDefault();
+                    (event.shiftKey ? gotItRef.current : closeRef.current)?.focus();
+                }
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    }, [isOpen, mounted, onClose]);
 
     useEffect(() => {
         if (isOpen && profileId) {
@@ -140,6 +183,10 @@ export function ScoreInfoModal({ isOpen, onClose, accentColor = "#C8FF00", profi
                         onClick={onClose}
                     />
                     <motion.div
+                        ref={dialogRef}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby={titleId}
                         initial={{ opacity: 0, scale: 0.9, y: 30 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 30 }}
@@ -159,7 +206,7 @@ export function ScoreInfoModal({ isOpen, onClose, accentColor = "#C8FF00", profi
                             />
                             <div className="flex justify-between items-start mb-2 relative z-10">
                                 <div>
-                                    <h2 className="text-2xl md:text-3xl font-black tracking-tighter flex items-center gap-2">
+                                    <h2 id={titleId} className="text-2xl md:text-3xl font-black tracking-tighter flex items-center gap-2">
                                         Builder Score <span className="text-[var(--accent)]">🔥</span>
                                         {breakdown && (
                                             <span className="ml-2 text-white bg-white/10 px-3 py-1 rounded-2xl text-xl animate-in fade-in slide-in-from-left-4 duration-500">
@@ -172,6 +219,8 @@ export function ScoreInfoModal({ isOpen, onClose, accentColor = "#C8FF00", profi
                                     </p>
                                 </div>
                                 <button
+                                    ref={closeRef}
+                                    aria-label={t('scoreInfo.close')}
                                     onClick={onClose}
                                     className="p-2 rounded-full hover:bg-white/5 transition-all text-[var(--text-muted)] hover:text-white"
                                 >
@@ -266,6 +315,7 @@ export function ScoreInfoModal({ isOpen, onClose, accentColor = "#C8FF00", profi
 
                         <div className="p-6 bg-black/40 border-t border-white/5 flex justify-center shrink-0">
                             <button
+                                ref={gotItRef}
                                 onClick={onClose}
                                 className="btn btn-accent !w-full !rounded-2xl !py-4 font-black uppercase text-[10px] md:text-xs tracking-widest shadow-lg shadow-[var(--accent)]/10 transition-transform active:scale-95"
                             >

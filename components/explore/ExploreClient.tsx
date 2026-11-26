@@ -141,11 +141,6 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
     sessionStorage.removeItem("huevsite_from_explore");
 
     localStorage.setItem("huevsite_explore_search", search);
-    if (lastSearch.current !== search) {
-      lastSearch.current = search;
-      const searchUrl = getUpdatedExploreSearchUrl(window.location.href, search);
-      if (searchUrl) window.history.replaceState(null, "", searchUrl);
-    }
     localStorage.setItem("huevsite_explore_sort", sort);
     localStorage.setItem("huevsite_explore_category", category);
     localStorage.setItem("huevsite_explore_continent", continentFilter);
@@ -153,6 +148,11 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
     localStorage.setItem("huevsite_explore_last_activity", Date.now().toString());
 
     const timer = setTimeout(() => {
+      if (lastSearch.current !== search) {
+        lastSearch.current = search;
+        const searchUrl = getUpdatedExploreSearchUrl(window.location.href, search);
+        if (searchUrl) window.history.replaceState(null, "", searchUrl);
+      }
       setPage(0);
       loadProfiles(0, true);
     }, 300);

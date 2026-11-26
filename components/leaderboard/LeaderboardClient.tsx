@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -61,39 +61,48 @@ export function LeaderboardClient({ currentUserId }: { currentUserId?: string | 
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const sortSignal = useRef<AbortSignal | null>(null);
 
   const sort = effectiveSort(tab, commitsRange);
 
-  const load = useCallback(async (pageToLoad: number, reset: boolean) => {
+  const load = useCallback(async (pageToLoad: number, reset: boolean, signal: AbortSignal) => {
     reset ? setIsLoading(true) : setIsFetchingMore(true);
     try {
       // Pass a non-"score" (but valid) filter so the API does NOT pin winners/Pro
       // to the top — a ranking must be pure metric order or the rank numbers lie.
       const filterParam = sort === "score" || sort.startsWith("commits") ? "created_at" : sort;
-      const res = await fetch(`/api/explore?page=${pageToLoad}&limit=${PAGE_SIZE}&sort=${sort}&filter=${filterParam}&q=`);
+      const res = await fetch(`/api/explore?page=${pageToLoad}&limit=${PAGE_SIZE}&sort=${sort}&filter=${filterParam}&q=`, { signal });
       if (res.ok) {
         const data = await res.json();
+        if (signal.aborted) return;
         const incoming: LbProfile[] = data.profiles || [];
         setProfiles((prev) => (reset ? incoming : [...prev, ...incoming]));
         setHasMore(Boolean(data.hasMore));
       }
     } catch (e) {
-      console.error("Leaderboard fetch error", e);
+      if (!signal.aborted) console.error("Leaderboard fetch error", e);
     } finally {
-      setIsLoading(false);
-      setIsFetchingMore(false);
+      if (!signal.aborted) {
+        setIsLoading(false);
+        setIsFetchingMore(false);
+      }
     }
   }, [sort]);
 
   useEffect(() => {
+    const controller = new AbortController();
+    sortSignal.current = controller.signal;
     setPage(0);
-    load(0, true);
+    load(0, true, controller.signal);
+    return () => controller.abort();
   }, [load]);
 
   const handleLoadMore = () => {
+    const signal = sortSignal.current;
+    if (!signal || signal.aborted) return;
     const next = page + 1;
     setPage(next);
-    load(next, false);
+    load(next, false, signal);
   };
 
   const unit = t(`unit_${sort}`);

@@ -128,6 +128,7 @@ export default function DashboardPage() {
   const [copied, setCopied] = useState(false);
   const [referralCopied, setReferralCopied] = useState(false);
   const [selectedSubSiteId, setSelectedSubSiteId] = useState<string | null>(null);
+  const selectedSubSiteIdRef = useRef<string | null>(null);
   // Board preset que se está editando en el dashboard (0-2). Arranca en el publicado.
   const [selectedBoardIndex, setSelectedBoardIndex] = useState<number>(0);
   const [isPublishingBoard, setIsPublishingBoard] = useState(false);
@@ -389,7 +390,10 @@ export default function DashboardPage() {
         }),
       };
 
-      setProfile(transformedProfile);
+      const subSiteId = selectedSubSiteIdRef.current;
+      setProfile((prev) => subSiteId === null
+        ? transformedProfile
+        : { ...transformedProfile, blocks: prev?.blocks ?? [] });
       if (!boardInitRef.current) {
         boardInitRef.current = true;
         setSelectedBoardIndex(transformedProfile.publishedBoard ?? 0);
@@ -405,9 +409,8 @@ export default function DashboardPage() {
       });
       setDomain(transformedProfile.customDomain || "");
 
-      const { builderScore, ...content } = transformedProfile;
-      lastSavedVersionRef.current = JSON.stringify(content);
-      if (transformedProfile.blocks.length === 0 || transformedProfile.isOnboardingTestUser) {
+      justLoadedRef.current = true;
+      if (subSiteId === null && (transformedProfile.blocks.length === 0 || transformedProfile.isOnboardingTestUser)) {
         const hasSeen = localStorage.getItem("huevsite_onboarding_seen");
         if (!hasSeen || transformedProfile.isOnboardingTestUser) {
           setIsOnboardingOpen(true);
@@ -1179,6 +1182,11 @@ export default function DashboardPage() {
     return true;
   };
 
+  const selectSubSite = (id: string | null) => changeScope(() => {
+    selectedSubSiteIdRef.current = id;
+    setSelectedSubSiteId(id);
+  });
+
   const handleSave = async () => {
     if (!profile) return;
     setIsSaving(true);
@@ -1689,7 +1697,7 @@ export default function DashboardPage() {
     studioSave === "error" ? "error" :
     lastSaved || studioSave === "saved" ? "saved" : "idle";
   const openSubsite = (id: string) => {
-    void changeScope(() => setSelectedSubSiteId(id)).then((ok) => { if (ok) { setProfileView("grid"); setTab("profile"); } });
+    void selectSubSite(id).then((ok) => { if (ok) { setProfileView("grid"); setTab("profile"); } });
   };
   const designPanel = (
     <DesignPanel
@@ -1742,7 +1750,7 @@ export default function DashboardPage() {
                     profile={profile}
                     isPro={isPro}
                     selectedSubSiteId={selectedSubSiteId}
-                    onSelect={(id) => { void changeScope(() => setSelectedSubSiteId(id)); }}
+                    onSelect={(id) => { void selectSubSite(id); }}
                     onCreate={() => setIsCreateSubSiteOpen(true)}
                     onUpgrade={() => setIsUpgradeModalOpen(true)}
                   />
@@ -1880,7 +1888,7 @@ export default function DashboardPage() {
                     onOpenGrid={() => setProfileView("grid")}
                     onOpenStats={() => goTab("stats")}
                     statsLocked={!profile.hasProAccess}
-                    onBackToMain={() => { void changeScope(() => setSelectedSubSiteId(null)); }}
+                    onBackToMain={() => { void selectSubSite(null); }}
                     previewPath={profilePath}
                     previewKey={previewKey}
                   />
@@ -2039,7 +2047,7 @@ export default function DashboardPage() {
               }
               referrals={<ReferralDashboard profile={profile} />}
               onUpgrade={() => setIsUpgradeModalOpen(true)}
-              onEditAccount={() => { void changeScope(() => setSelectedSubSiteId(null)).then((ok) => { if (ok) setIsProfileModalOpen(true); }); }}
+              onEditAccount={() => { void selectSubSite(null).then((ok) => { if (ok) setIsProfileModalOpen(true); }); }}
               onLinktree={() => setIsLinktreeRefactorOpen(true)}
               onLogout={handleLogout}
               onCreateSubsite={() => setIsCreateSubSiteOpen(true)}

@@ -128,6 +128,7 @@ export default function DashboardPage() {
   const [copied, setCopied] = useState(false);
   const [referralCopied, setReferralCopied] = useState(false);
   const [selectedSubSiteId, setSelectedSubSiteId] = useState<string | null>(null);
+  const lastRequestedSubSiteIdRef = useRef<string | null | undefined>(undefined);
   // Board preset que se está editando en el dashboard (0-2). Arranca en el publicado.
   const [selectedBoardIndex, setSelectedBoardIndex] = useState<number>(0);
   const [isPublishingBoard, setIsPublishingBoard] = useState(false);
@@ -305,7 +306,32 @@ export default function DashboardPage() {
     }
   };
 
-  const fetchProfile = async () => {
+  // Refresh GitHub block stats in the background (skips if fresh < 12h).
+  // Keeps real stars/repos/followers/heatmap/commits up to date without
+  // blocking the editor or the public profile pages.
+  const syncGitHubStats = (blocks: BlockData[]) => {
+    if (!blocks.some((block) => block.type === 'github')) return;
+
+    fetch('/api/github/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    })
+      .then(r => (r.ok ? r.json() : null))
+      .then(res => {
+        if (!res?.updated?.length) return;
+        setProfile(prev => prev ? {
+          ...prev,
+          blocks: prev.blocks.map(b => {
+            const u = res.updated.find((x: any) => x.id === b.id);
+            return u ? { ...b, stats: u.stats } : b;
+          }),
+        } : prev);
+      })
+      .catch(() => { /* non-blocking: keep existing stats on failure */ });
+  };
+
+  const fetchProfile = async ({ refreshGitHub = false } = {}) => {
     try {
       const response = await fetch('/api/profile');
 
@@ -413,6 +439,7 @@ export default function DashboardPage() {
           setIsOnboardingOpen(true);
         }
       }
+      if (refreshGitHub) syncGitHubStats(transformedProfile.blocks);
     } catch (error) {
       console.error('Error fetching profile:', error);
       window.location.href = '/login';
@@ -441,11 +468,6 @@ export default function DashboardPage() {
     }
   };
 
-  // Fetch profile on mount
-  useEffect(() => {
-    fetchProfile();
-  }, []);
-
   // Las pestañas viejas (?tab=home|board|projects|insights|more|domain|subsites|transfer
   // y ?scrollTo=referrals) siguen llegando desde mails, avisos y /referrals: cada una
   // cae en su lugar nuevo.
@@ -467,8 +489,17 @@ export default function DashboardPage() {
     setTab(next);
   };
 
-  // Fetch blocks when switching sub-sites
+  // Load the profile initially, then fetch only blocks when the scope changes.
   useEffect(() => {
+    const lastRequestedSubSiteId = lastRequestedSubSiteIdRef.current;
+    if (lastRequestedSubSiteId === selectedSubSiteId) return;
+    lastRequestedSubSiteIdRef.current = selectedSubSiteId;
+
+    if (lastRequestedSubSiteId === undefined) {
+      void fetchProfile({ refreshGitHub: true });
+      return;
+    }
+
     const fetchBlocks = async () => {
       setLoading(true);
       try {
@@ -496,28 +527,7 @@ export default function DashboardPage() {
 
         setProfile(prev => prev ? { ...prev, blocks } : null);
 
-        // Refresh GitHub block stats in the background (skips if fresh < 12h).
-        // Keeps real stars/repos/followers/heatmap/commits up to date without
-        // blocking the editor or the public profile pages.
-        if (blocks.some((b: any) => b.type === 'github')) {
-          fetch('/api/github/sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({}),
-          })
-            .then(r => (r.ok ? r.json() : null))
-            .then(res => {
-              if (!res?.updated?.length) return;
-              setProfile(prev => prev ? {
-                ...prev,
-                blocks: prev.blocks.map(b => {
-                  const u = res.updated.find((x: any) => x.id === b.id);
-                  return u ? { ...b, stats: u.stats } : b;
-                }),
-              } : prev);
-            })
-            .catch(() => { /* non-blocking: keep existing stats on failure */ });
-        }
+        syncGitHubStats(blocks);
       } catch (e) {
         console.error('Error fetching site blocks:', e);
       } finally {

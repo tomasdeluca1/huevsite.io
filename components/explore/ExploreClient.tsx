@@ -3,11 +3,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { ArrowRight, Search, Loader2, Sparkles, X, Trophy, ChevronDown, Globe } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
 import { CONTINENTS, CONTINENT_LABELS, countriesByContinent, countryName, flagEmoji, type Continent } from "@/lib/countries";
+import { getInitialExploreSearch, getUpdatedExploreSearchUrl } from "@/lib/explore-search";
 
 const VALID_EXPLORE_SORTS = new Set([
   "score",
@@ -37,6 +39,7 @@ interface ExploreProfile {
 export function ExploreClient({ initialTotal }: { initialTotal: number }) {
   const t = useTranslations("explore");
   const locale = useLocale();
+  const urlSearch = useSearchParams().get("q");
   const [profiles, setProfiles] = useState<ExploreProfile[]>([]);
   const [page, setPage] = useState(0);
 
@@ -69,14 +72,22 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
   };
 
   const [search, setSearch] = useState(() =>
-    typeof window !== "undefined" ? localStorage.getItem("huevsite_explore_search") || "" : ""
+    getInitialExploreSearch(urlSearch ?? undefined, () =>
+      typeof window !== "undefined" ? localStorage.getItem("huevsite_explore_search") : null
+    )
   );
+  const lastSearch = useRef(search);
+  const lastUrlSearch = useRef(urlSearch);
   const [sort, setSort] = useState(() => getInitialState("huevsite_explore_sort", "score"));
   const [category, setCategory] = useState(() => getInitialState("huevsite_explore_category", "score"));
 
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const [loadError, setLoadError] = useState<"initial" | "more" | null>(null);
+  // One controller per query. Load more and the initial retry share its signal;
+  // a newer query aborts it so a late response cannot overwrite the new results.
+  const querySignal = useRef<AbortSignal | null>(null);
   const [isScoreInfoOpen, setIsScoreInfoOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
@@ -128,6 +139,12 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  useEffect(() => {
+    if (lastUrlSearch.current === urlSearch) return;
+    lastUrlSearch.current = urlSearch;
+    if (urlSearch !== null) setSearch(urlSearch);
+  }, [urlSearch]);
+
   // Update activity timestamp and save filters
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -141,11 +158,25 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
     localStorage.setItem("huevsite_explore_country", countryFilter);
     localStorage.setItem("huevsite_explore_last_activity", Date.now().toString());
 
+    const controller = new AbortController();
+    querySignal.current = controller.signal;
+    setIsLoading(true);
     const timer = setTimeout(() => {
-      setPage(0);
-      loadProfiles(0, true);
+      if (controller.signal.aborted) return;
+      if (lastSearch.current !== search) {
+        lastSearch.current = search;
+        const searchUrl = getUpdatedExploreSearchUrl(window.location.href, search);
+        if (searchUrl) {
+          window.history.replaceState(null, "", searchUrl);
+          lastUrlSearch.current = search || null;
+        }
+      }
+      loadProfiles(0, controller.signal);
     }, 300);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [search, sort, category, continentFilter, countryFilter]);
 
   // Store profile list for navigation context
@@ -156,7 +187,10 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
     }
   }, [profiles]);
 
-  const loadProfiles = async (pageToLoad: number, reset = false) => {
+  const loadProfiles = async (pageToLoad: number, signal: AbortSignal) => {
+    if (signal.aborted) return;
+    const reset = pageToLoad === 0;
+    setLoadError(null);
     if (reset) {
       setIsLoading(true);
     } else {
@@ -166,30 +200,43 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
     try {
       const currentSort = category === 'created_at' ? 'created_at' : (category === 'score' ? 'score' : sort);
       const res = await fetch(
-        `/api/explore?page=${pageToLoad}&limit=24&sort=${currentSort}&filter=${category}&q=${encodeURIComponent(search)}&country=${countryFilter}&continent=${continentFilter}`
+        `/api/explore?page=${pageToLoad}&limit=24&sort=${currentSort}&filter=${category}&q=${encodeURIComponent(search)}&country=${countryFilter}&continent=${continentFilter}`,
+        { signal }
       );
-      if (res.ok) {
-        const data = await res.json();
-        // The API sorts pro_since first, then created_at/updated_at.
-        if (reset) {
-          setProfiles(data.profiles || []);
-        } else {
-          setProfiles((prev) => [...prev, ...(data.profiles || [])]);
-        }
-        setHasMore(data.hasMore);
+      if (!res.ok) throw new Error(`Explore API returned ${res.status}`);
+      const data = await res.json();
+      if (signal.aborted) return;
+      // The API sorts pro_since first, then created_at/updated_at.
+      if (reset) {
+        setProfiles(data.profiles || []);
+      } else {
+        setProfiles((prev) => [...prev, ...(data.profiles || [])]);
       }
+      setHasMore(data.hasMore);
+      setPage(pageToLoad);
     } catch (e) {
-      console.error("Error fetching explore profiles:", e);
+      if (!signal.aborted) {
+        console.error("Error fetching explore profiles:", e);
+        setLoadError(reset ? "initial" : "more");
+      }
     } finally {
-      setIsLoading(false);
-      setIsFetchingMore(false);
+      if (!signal.aborted) {
+        setIsLoading(false);
+        setIsFetchingMore(false);
+      }
     }
   };
 
+  const retryInitialLoad = () => {
+    const signal = querySignal.current;
+    if (!signal || signal.aborted) return;
+    loadProfiles(0, signal);
+  };
+
   const handleLoadMore = () => {
-    const nextPage = page + 1;
-    setPage(nextPage);
-    loadProfiles(nextPage);
+    const signal = querySignal.current;
+    if (!signal || signal.aborted || isLoading || isFetchingMore || !hasMore) return;
+    loadProfiles(page + 1, signal);
   };
 
   return (
@@ -326,6 +373,17 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
         <div className="py-20 flex justify-center text-[var(--text-muted)]">
           <Loader2 size={32} className="animate-spin" />
         </div>
+      ) : loadError === "initial" ? (
+        <div className="flex flex-col items-center gap-4 text-center py-20 text-[var(--text-dim)] font-mono text-sm border-y border-dashed border-[var(--border-bright)]">
+          <p role="alert">{t("loadError")}</p>
+          <button
+            type="button"
+            onClick={retryInitialLoad}
+            className="btn btn-outline border-dashed text-sm font-mono hover:text-white"
+          >
+            {t("retry")}
+          </button>
+        </div>
       ) : profiles.length === 0 ? (
         <div className="text-center py-20 text-[var(--text-dim)] font-mono text-sm border-y border-dashed border-[var(--border-bright)]">
           {t("emptySearch")}
@@ -344,8 +402,12 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
           </div>
 
           {hasMore && (
-            <div className="flex justify-center mt-8">
+            <div className="flex flex-col items-center gap-4 mt-8">
+              {loadError === "more" && (
+                <p role="alert" className="text-center text-[var(--text-dim)] font-mono text-sm">{t("loadMoreError")}</p>
+              )}
               <button
+                type="button"
                 onClick={handleLoadMore}
                 disabled={isFetchingMore}
                 className="btn btn-outline border-dashed text-sm font-mono hover:text-white disabled:opacity-50"
@@ -353,7 +415,7 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
                 {isFetchingMore ? (
                   <span className="flex items-center gap-2"><Loader2 size={16} className="animate-spin" /> {t("loading")}</span>
                 ) : (
-                  t("loadMore")
+                  t(loadError === "more" ? "retry" : "loadMore")
                 )}
               </button>
             </div>

@@ -34,6 +34,7 @@ const MCP_URL = `${SITE_URL}/api/mcp`;
 
 export function McpAccessModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const t = useTranslations("dashboard");
+  const tDocs = useTranslations("mcpDocs");
   const locale = useLocale();
   const [tokens, setTokens] = useState<TokenRow[]>([]);
   const [audit, setAudit] = useState<AuditRow[]>([]);
@@ -217,7 +218,7 @@ export function McpAccessModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
             </section>
 
             <details className="rounded-2xl border border-white/10 p-4">
-              <summary className="cursor-pointer text-sm font-black text-white/70">Token a mano</summary>
+              <summary className="cursor-pointer text-sm font-black text-white/70">{tDocs("manualToken")}</summary>
               <div className="mt-4 space-y-5">
             <p className="font-mono text-[10px] uppercase tracking-widest text-white/30">
               {t("mcp.limit", limits)}

@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Check, Copy } from "lucide-react";
 
 export function CopyBlock({ label, code, compact = false }: { label: string; code: string; compact?: boolean }) {
+  const t = useTranslations("mcpDocs");
   const [copied, setCopied] = useState(false);
-  const status = copied ? "Copiado" : "Copiar";
+  const status = copied ? t("copied") : t("copy");
 
   const button = (
     <button
@@ -19,7 +21,7 @@ export function CopyBlock({ label, code, compact = false }: { label: string; cod
           setCopied(false);
         }
       }}
-      aria-label={copied ? `Copiado: ${label}` : `Copiar ${label}`}
+      aria-label={copied ? t("copiedLabel", { label }) : t("copyLabel", { label })}
       className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-white/5 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-[var(--accent)]"
     >
       {copied ? <Check size={12} /> : <Copy size={12} />}

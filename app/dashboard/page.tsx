@@ -47,6 +47,7 @@ import { OnboardingModal } from "@/components/dashboard/OnboardingModal";
 import Link from "next/link";
 import { DiscoveryHeader } from "@/components/discovery/DiscoveryHeader";
 import { createClient } from "@/lib/supabase/client";
+import { saveDashboard } from "@/lib/dashboard-save";
 import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
 import { TestimonialNudgeToast } from "@/components/dashboard/TestimonialNudgeToast";
 import { UpgradeModal } from "@/components/dashboard/UpgradeModal";
@@ -94,7 +95,7 @@ export default function DashboardPage() {
   const t = useTranslations("dashboard");
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const [autoSaveState, setAutoSaveState] = useState<SaveState>("idle");
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [editingBlock, setEditingBlock] = useState<BlockData | null>(null);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
@@ -134,6 +135,7 @@ export default function DashboardPage() {
   // Guarda siempre solo: el botón Guardar y su interruptor quedaron de antes.
   const autoSaveEnabled = true;
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveAttemptRef = useRef(0);
   const lastSavedVersionRef = useRef<string>("");
   const justLoadedRef = useRef(true);
   const pulse = useProfilePulse();
@@ -1175,49 +1177,22 @@ export default function DashboardPage() {
     return true;
   };
 
-  const handleSave = async () => {
+  const handleSave = async (version: string) => {
     if (!profile) return;
-    setIsSaving(true);
+    const attempt = ++saveAttemptRef.current;
+    setAutoSaveState("saving");
     try {
-      const response = await fetch('/api/profile', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          accent_color: profile.accentColor,
-          username: profile.username,
-          name: profile.displayName,
-          tagline: profile.tagline,
-          custom_domain: profile.customDomain,
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.profile?.builder_score !== undefined) {
-          setProfile(prev => prev ? { ...prev, builderScore: data.profile.builder_score } : prev);
-        }
+      const builderScore = await saveDashboard(profile, flushMobileOrder);
+      if (attempt !== saveAttemptRef.current) return;
+      lastSavedVersionRef.current = version;
+      if (builderScore !== undefined) {
+        setProfile(prev => prev ? { ...prev, builderScore } : prev);
       }
-
-      const blockOrders = profile.blocks
-        .map((block, index) => ({ id: block.id, order: index }))
-        .filter(b => !b.id.startsWith('temp-'));
-
-      if (blockOrders.length > 0) {
-        await fetch('/api/blocks/reorder', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(blockOrders),
-        });
-      }
-
-      // Orden de celular: solo si cambió. El guardado de escritorio de arriba no
-      // lo toca. Si falla NO se marca como guardado (ni se recarga la vista previa).
-      const mobileSaved = await flushMobileOrder();
-      if (mobileSaved) setLastSaved(new Date());
+      setLastSaved(new Date());
+      setAutoSaveState("saved");
     } catch (error) {
       console.error("Error al guardar:", error);
-    } finally {
-      setIsSaving(false);
+      if (attempt === saveAttemptRef.current) setAutoSaveState("error");
     }
   };
 
@@ -1538,8 +1513,7 @@ export default function DashboardPage() {
     if (currentVersion === lastSavedVersionRef.current) return;
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
-      lastSavedVersionRef.current = currentVersion;
-      handleSave();
+      void handleSave(currentVersion);
     }, 2000);
     return () => { if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current); };
   }, [profile, autoSaveEnabled, loading]);
@@ -1681,9 +1655,9 @@ export default function DashboardPage() {
   const canSeeInsights = isPro || profile.freeTrial?.canUseLastInsightsView === true;
   const isLinksLayout = profile.profileLayout === "links";
   const saveState: SaveState =
-    isSaving || studioSave === "saving" ? "saving" :
-    studioSave === "error" ? "error" :
-    lastSaved || studioSave === "saved" ? "saved" : "idle";
+    autoSaveState === "saving" || studioSave === "saving" ? "saving" :
+    autoSaveState === "error" || studioSave === "error" ? "error" :
+    autoSaveState === "saved" || lastSaved || studioSave === "saved" ? "saved" : "idle";
   const openSubsite = (id: string) => {
     void changeScope(() => setSelectedSubSiteId(id)).then((ok) => { if (ok) { setProfileView("grid"); setTab("profile"); } });
   };

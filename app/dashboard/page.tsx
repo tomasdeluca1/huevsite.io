@@ -94,7 +94,9 @@ const PRO_ONLY_TABS = ["insights", "subsites", "domain"] as const;
 export default function DashboardPage() {
   const t = useTranslations("dashboard");
   const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [blocksLoading, setBlocksLoading] = useState(true);
+  const loading = profileLoading || blocksLoading;
   const [autoSaveState, setAutoSaveState] = useState<SaveState>("idle");
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [editingBlock, setEditingBlock] = useState<BlockData | null>(null);
@@ -129,6 +131,7 @@ export default function DashboardPage() {
   const [copied, setCopied] = useState(false);
   const [referralCopied, setReferralCopied] = useState(false);
   const [selectedSubSiteId, setSelectedSubSiteId] = useState<string | null>(null);
+  const selectedSubSiteIdRef = useRef<string | null>(null);
   // Board preset que se está editando en el dashboard (0-2). Arranca en el publicado.
   const [selectedBoardIndex, setSelectedBoardIndex] = useState<number>(0);
   const [isPublishingBoard, setIsPublishingBoard] = useState(false);
@@ -391,7 +394,10 @@ export default function DashboardPage() {
         }),
       };
 
-      setProfile(transformedProfile);
+      const subSiteId = selectedSubSiteIdRef.current;
+      setProfile((prev) => subSiteId === null
+        ? transformedProfile
+        : { ...transformedProfile, blocks: prev?.blocks ?? [] });
       if (!boardInitRef.current) {
         boardInitRef.current = true;
         setSelectedBoardIndex(transformedProfile.publishedBoard ?? 0);
@@ -407,9 +413,8 @@ export default function DashboardPage() {
       });
       setDomain(transformedProfile.customDomain || "");
 
-      const { builderScore, ...content } = transformedProfile;
-      lastSavedVersionRef.current = JSON.stringify(content);
-      if (transformedProfile.blocks.length === 0 || transformedProfile.isOnboardingTestUser) {
+      justLoadedRef.current = true;
+      if (subSiteId === null && (transformedProfile.blocks.length === 0 || transformedProfile.isOnboardingTestUser)) {
         const hasSeen = localStorage.getItem("huevsite_onboarding_seen");
         if (!hasSeen || transformedProfile.isOnboardingTestUser) {
           setIsOnboardingOpen(true);
@@ -419,7 +424,7 @@ export default function DashboardPage() {
       console.error('Error fetching profile:', error);
       window.location.href = '/login';
     } finally {
-      setLoading(false);
+      setProfileLoading(false);
     }
   };
 
@@ -471,15 +476,18 @@ export default function DashboardPage() {
 
   // Fetch blocks when switching sub-sites
   useEffect(() => {
+    const controller = new AbortController();
+    const isCurrentScope = () => !controller.signal.aborted && selectedSubSiteIdRef.current === selectedSubSiteId;
     const fetchBlocks = async () => {
-      setLoading(true);
       try {
         const url = selectedSubSiteId
           ? `/api/sub-sites/${selectedSubSiteId}/blocks`
           : '/api/profile';
 
-        const response = await fetch(url);
+        const response = await fetch(url, { signal: controller.signal });
+        if (!response.ok) throw new Error(`Failed to fetch site blocks: ${response.status}`);
         const data = await response.json();
+        if (!isCurrentScope()) return;
 
         const blocks = (data.blocks || []).map((block: any) => {
           const { id, type, order, col_span, row_span, visible, ...cleanData } = block.data || {};
@@ -509,7 +517,7 @@ export default function DashboardPage() {
           })
             .then(r => (r.ok ? r.json() : null))
             .then(res => {
-              if (!res?.updated?.length) return;
+              if (!isCurrentScope() || !res?.updated?.length) return;
               setProfile(prev => prev ? {
                 ...prev,
                 blocks: prev.blocks.map(b => {
@@ -521,13 +529,14 @@ export default function DashboardPage() {
             .catch(() => { /* non-blocking: keep existing stats on failure */ });
         }
       } catch (e) {
-        console.error('Error fetching site blocks:', e);
+        if (isCurrentScope()) console.error('Error fetching site blocks:', e);
       } finally {
-        setLoading(false);
+        if (isCurrentScope()) setBlocksLoading(false);
       }
     };
 
     fetchBlocks();
+    return () => controller.abort();
   }, [selectedSubSiteId]);
 
 
@@ -641,7 +650,8 @@ export default function DashboardPage() {
   const removeBlock = async (id: string): Promise<boolean> => {
     if (!id.startsWith('temp-')) {
       try {
-        const response = await fetch(`/api/blocks/${id}`, { method: 'DELETE' });
+        const scope = selectedSubSiteId === null ? '' : `?sub_site_id=${encodeURIComponent(selectedSubSiteId)}`;
+        const response = await fetch(`/api/blocks/${id}${scope}`, { method: 'DELETE' });
         if (!response.ok) {
           const errorData = await response.json();
           alert(t("page.errorDeleteBlock", { error: errorData.error || t("page.errorUnknown") }));
@@ -1177,6 +1187,16 @@ export default function DashboardPage() {
     return true;
   };
 
+  const selectSubSite = (id: string | null) => {
+    if (selectedSubSiteIdRef.current === id) return;
+    selectedSubSiteIdRef.current = id;
+    setBlocksLoading(true);
+    setProfile(prev => prev ? { ...prev, blocks: [] } : prev);
+    setIsDeletingId(null);
+    setEditingBlock(null);
+    setSelectedSubSiteId(id);
+  };
+
   const handleSave = async (version: string) => {
     if (!profile) return;
     const attempt = ++saveAttemptRef.current;
@@ -1659,7 +1679,7 @@ export default function DashboardPage() {
     autoSaveState === "error" || studioSave === "error" ? "error" :
     autoSaveState === "saved" || lastSaved || studioSave === "saved" ? "saved" : "idle";
   const openSubsite = (id: string) => {
-    void changeScope(() => setSelectedSubSiteId(id)).then((ok) => { if (ok) { setProfileView("grid"); setTab("profile"); } });
+    void changeScope(() => selectSubSite(id)).then((ok) => { if (ok) { setProfileView("grid"); setTab("profile"); } });
   };
   const designPanel = (
     <DesignPanel
@@ -1712,7 +1732,7 @@ export default function DashboardPage() {
                     profile={profile}
                     isPro={isPro}
                     selectedSubSiteId={selectedSubSiteId}
-                    onSelect={(id) => { void changeScope(() => setSelectedSubSiteId(id)); }}
+                    onSelect={(id) => { void changeScope(() => selectSubSite(id)); }}
                     onCreate={() => setIsCreateSubSiteOpen(true)}
                     onUpgrade={() => setIsUpgradeModalOpen(true)}
                   />
@@ -1850,7 +1870,7 @@ export default function DashboardPage() {
                     onOpenGrid={() => setProfileView("grid")}
                     onOpenStats={() => goTab("stats")}
                     statsLocked={!profile.hasProAccess}
-                    onBackToMain={() => { void changeScope(() => setSelectedSubSiteId(null)); }}
+                    onBackToMain={() => { void changeScope(() => selectSubSite(null)); }}
                     previewPath={profilePath}
                     previewKey={previewKey}
                   />
@@ -2009,7 +2029,7 @@ export default function DashboardPage() {
               }
               referrals={<ReferralDashboard profile={profile} />}
               onUpgrade={() => setIsUpgradeModalOpen(true)}
-              onEditAccount={() => { void changeScope(() => setSelectedSubSiteId(null)).then((ok) => { if (ok) setIsProfileModalOpen(true); }); }}
+              onEditAccount={() => { void changeScope(() => selectSubSite(null)).then((ok) => { if (ok) setIsProfileModalOpen(true); }); }}
               onLinktree={() => setIsLinktreeRefactorOpen(true)}
               onLogout={handleLogout}
               onCreateSubsite={() => setIsCreateSubSiteOpen(true)}

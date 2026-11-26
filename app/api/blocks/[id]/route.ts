@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
 import { scoreService } from '@/lib/score-service'
@@ -236,18 +237,24 @@ export async function DELETE(
       )
     }
 
-    // After auth, service-role client scoped to (id, user_id).
-    const supabase = createServiceRoleClient()
+    const scope = z.string().uuid().nullable().safeParse(request.nextUrl.searchParams.get('sub_site_id'))
+    if (!scope.success) {
+      return NextResponse.json({ error: 'Sub-sitio inválido' }, { status: 400 })
+    }
 
+    const supabase = createServiceRoleClient()
     const blockId = params.id
+    const subSiteId = scope.data
 
     // Primero verificar que existe y pertenece al usuario
-    const { data: existingBlock, error: fetchError } = await supabase
+    const lookup = supabase
       .from('blocks')
       .select('id, user_id, sub_site_id')
       .eq('id', blockId)
       .eq('user_id', user.id)
-      .maybeSingle()
+    const { data: existingBlock, error: fetchError } = await (
+      subSiteId === null ? lookup.is('sub_site_id', null) : lookup.eq('sub_site_id', subSiteId)
+    ).maybeSingle()
 
     if (fetchError) {
       console.error('DELETE - Fetch error:', fetchError)
@@ -266,11 +273,14 @@ export async function DELETE(
     }
 
     // Eliminar bloque
-    const { error: deleteError } = await supabase
+    const deletion = supabase
       .from('blocks')
       .delete()
       .eq('id', blockId)
       .eq('user_id', user.id)
+    const { error: deleteError } = await (
+      subSiteId === null ? deletion.is('sub_site_id', null) : deletion.eq('sub_site_id', subSiteId)
+    )
 
     if (deleteError) {
       console.error('DELETE - Delete error:', deleteError)

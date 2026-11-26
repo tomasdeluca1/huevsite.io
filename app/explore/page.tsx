@@ -36,11 +36,10 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function ExplorePage({ searchParams }: { searchParams: Promise<{ from?: string; q?: string | string[] }> }) {
+export default async function ExplorePage({ searchParams }: { searchParams: Promise<{ from?: string }> }) {
   const supabase = await createClient();
   const params = await searchParams;
   const fromDashboard = params.from === "dashboard";
-  const initialSearch = Array.isArray(params.q) ? params.q[0] : params.q;
 
   // Fetch profiles that have a username set, order by created_at latest
   const { data: profiles, error } = await supabase
@@ -127,7 +126,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
 
       {/* GRID (full-width, no rail) */}
       <main className="flex-1 px-6 md:px-10 pb-32 max-w-[1440px] mx-auto w-full pt-4">
-        <ExploreClient key={initialSearch} initialTotal={totalRegistered} />
+        <ExploreClient initialTotal={totalRegistered} />
       </main>
 
       {/* FOOTER */}

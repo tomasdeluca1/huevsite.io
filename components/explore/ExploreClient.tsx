@@ -39,7 +39,7 @@ interface ExploreProfile {
 export function ExploreClient({ initialTotal }: { initialTotal: number }) {
   const t = useTranslations("explore");
   const locale = useLocale();
-  const searchParams = useSearchParams();
+  const urlSearch = useSearchParams().get("q");
   const [profiles, setProfiles] = useState<ExploreProfile[]>([]);
   const [page, setPage] = useState(0);
 
@@ -72,11 +72,12 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
   };
 
   const [search, setSearch] = useState(() =>
-    getInitialExploreSearch(searchParams.get("q") ?? undefined, () =>
+    getInitialExploreSearch(urlSearch ?? undefined, () =>
       typeof window !== "undefined" ? localStorage.getItem("huevsite_explore_search") : null
     )
   );
   const lastSearch = useRef(search);
+  const lastUrlSearch = useRef(urlSearch);
   const [sort, setSort] = useState(() => getInitialState("huevsite_explore_sort", "score"));
   const [category, setCategory] = useState(() => getInitialState("huevsite_explore_category", "score"));
 
@@ -134,6 +135,12 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  useEffect(() => {
+    if (lastUrlSearch.current === urlSearch) return;
+    lastUrlSearch.current = urlSearch;
+    if (urlSearch !== null) setSearch(urlSearch);
+  }, [urlSearch]);
+
   // Update activity timestamp and save filters
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -151,7 +158,10 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
       if (lastSearch.current !== search) {
         lastSearch.current = search;
         const searchUrl = getUpdatedExploreSearchUrl(window.location.href, search);
-        if (searchUrl) window.history.replaceState(null, "", searchUrl);
+        if (searchUrl) {
+          window.history.replaceState(null, "", searchUrl);
+          lastUrlSearch.current = search || null;
+        }
       }
       setPage(0);
       loadProfiles(0, true);

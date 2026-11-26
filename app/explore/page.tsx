@@ -127,7 +127,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
 
       {/* GRID (full-width, no rail) */}
       <main className="flex-1 px-6 md:px-10 pb-32 max-w-[1440px] mx-auto w-full pt-4">
-        <ExploreClient key={initialSearch} initialSearch={initialSearch} initialTotal={totalRegistered} />
+        <ExploreClient key={initialSearch} initialTotal={totalRegistered} />
       </main>
 
       {/* FOOTER */}

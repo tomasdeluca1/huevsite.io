@@ -3,12 +3,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { ArrowRight, Search, Loader2, Sparkles, X, Trophy, ChevronDown, Globe } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { ScoreInfoModal } from "@/components/social/ScoreInfoModal";
 import { CONTINENTS, CONTINENT_LABELS, countriesByContinent, countryName, flagEmoji, type Continent } from "@/lib/countries";
-import { getInitialExploreSearch } from "@/lib/explore-search";
+import { getInitialExploreSearch, getUpdatedExploreSearchUrl } from "@/lib/explore-search";
 
 const VALID_EXPLORE_SORTS = new Set([
   "score",
@@ -35,9 +36,10 @@ interface ExploreProfile {
   country?: string | null;
 }
 
-export function ExploreClient({ initialSearch, initialTotal }: { initialSearch?: string; initialTotal: number }) {
+export function ExploreClient({ initialTotal }: { initialTotal: number }) {
   const t = useTranslations("explore");
   const locale = useLocale();
+  const searchParams = useSearchParams();
   const [profiles, setProfiles] = useState<ExploreProfile[]>([]);
   const [page, setPage] = useState(0);
 
@@ -70,10 +72,11 @@ export function ExploreClient({ initialSearch, initialTotal }: { initialSearch?:
   };
 
   const [search, setSearch] = useState(() =>
-    getInitialExploreSearch(initialSearch, () =>
+    getInitialExploreSearch(searchParams.get("q") ?? undefined, () =>
       typeof window !== "undefined" ? localStorage.getItem("huevsite_explore_search") : null
     )
   );
+  const lastSearch = useRef(search);
   const [sort, setSort] = useState(() => getInitialState("huevsite_explore_sort", "score"));
   const [category, setCategory] = useState(() => getInitialState("huevsite_explore_category", "score"));
 
@@ -138,6 +141,11 @@ export function ExploreClient({ initialSearch, initialTotal }: { initialSearch?:
     sessionStorage.removeItem("huevsite_from_explore");
 
     localStorage.setItem("huevsite_explore_search", search);
+    if (lastSearch.current !== search) {
+      lastSearch.current = search;
+      const searchUrl = getUpdatedExploreSearchUrl(window.location.href, search);
+      if (searchUrl) window.history.replaceState(null, "", searchUrl);
+    }
     localStorage.setItem("huevsite_explore_sort", sort);
     localStorage.setItem("huevsite_explore_category", category);
     localStorage.setItem("huevsite_explore_continent", continentFilter);

@@ -5,13 +5,14 @@ import {
   X, Copy, Check, QrCode, Share2, Mail, MessageCircle,
   Send, Linkedin, Twitter, Download,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type RefObject } from "react";
 import { useTranslations } from "next-intl";
 import { createPortal } from "react-dom";
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  returnFocusRef: RefObject<HTMLButtonElement>;
   /** Full URL to share. If omitted, falls back to window.location.href. */
   url?: string;
   username: string;
@@ -34,6 +35,7 @@ type ShareTarget = {
 export function ShareProfileModal({
   isOpen,
   onClose,
+  returnFocusRef,
   url,
   username,
   displayName,
@@ -45,8 +47,53 @@ export function ShareProfileModal({
   const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showQr, setShowQr] = useState(false);
+  const titleId = useId();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const qrDownloadRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (!isOpen || !mounted) return;
+
+    const opener = returnFocusRef.current;
+    closeRef.current?.focus({ preventScroll: true });
+    return () => {
+      if (opener?.isConnected) opener.focus({ preventScroll: true });
+    };
+  }, [isOpen, mounted, returnFocusRef]);
+
+  useEffect(() => {
+    if (!isOpen || !mounted) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
+
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+      } else if (event.key === "Tab" && !event.altKey && !event.ctrlKey && !event.metaKey) {
+        const dialog = dialogRef.current;
+        if (!dialog) return;
+
+        const controls = Array.from(dialog.querySelectorAll<HTMLElement>("button:not(:disabled), a[href]"))
+          .filter((control) => showQr || control !== qrDownloadRef.current);
+        if (controls.length === 0) return;
+
+        event.preventDefault();
+        const activeIndex = controls.findIndex((control) => control === document.activeElement);
+        const step = event.shiftKey ? -1 : 1;
+        const nextIndex = activeIndex < 0
+          ? (event.shiftKey ? controls.length - 1 : 0)
+          : (activeIndex + step + controls.length) % controls.length;
+        controls[nextIndex].focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, mounted, onClose, showQr]);
 
   // Resolve the share URL on the client so custom domains work automatically.
   const shareUrl = useMemo(() => {
@@ -188,6 +235,10 @@ export function ShareProfileModal({
           onClick={onClose}
         />
         <motion.div
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
           initial={{ opacity: 0, scale: 0.95, y: 40 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 40 }}
@@ -200,6 +251,7 @@ export function ShareProfileModal({
 
           <div className="p-7 sm:p-8 relative">
             <button
+              ref={closeRef}
               onClick={onClose}
               className="absolute top-5 right-5 p-2 rounded-full hover:bg-[var(--surface2)] transition-all text-[var(--text-muted)] hover:text-white"
               aria-label={t('share.close')}
@@ -215,7 +267,7 @@ export function ShareProfileModal({
             </div>
 
             <div className="section-label mb-2">{t('share.sectionLabel')}</div>
-            <h3 className="text-2xl font-extrabold tracking-tight mb-1.5">
+            <h3 id={titleId} className="text-2xl font-extrabold tracking-tight mb-1.5">
               {celebrate ? t('share.titleCelebrate') : t('share.title')}
             </h3>
             <p className="text-[var(--text-dim)] text-sm leading-relaxed mb-6">
@@ -299,6 +351,7 @@ export function ShareProfileModal({
                       />
                     </div>
                     <a
+                      ref={qrDownloadRef}
                       href={qrSrc}
                       download={`huevsite-${username}-qr.png`}
                       target="_blank"

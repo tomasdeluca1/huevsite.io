@@ -15,7 +15,7 @@ interface QuestPanelProps {
   borderRadius?: string;
   onAddBlock: (type: BlockType) => void;
   onEditProfile: () => void;
-  onShare: () => void;
+  onShare: (opener: HTMLButtonElement) => void;
   onUpgrade: () => void;
 }
 
@@ -54,7 +54,7 @@ export function QuestPanel({
     };
   }, [profile, visibleBlockCount]);
 
-  const runAction = (action?: QuestAction) => {
+  const runAction = (opener: HTMLButtonElement, action?: QuestAction) => {
     if (!action) return;
     switch (action.kind) {
       case "addBlock":
@@ -64,7 +64,7 @@ export function QuestPanel({
         onEditProfile();
         break;
       case "share":
-        onShare();
+        onShare(opener);
         break;
       case "upgrade":
         onUpgrade();
@@ -148,7 +148,7 @@ function QuestRow({
 }: {
   quest: BadgeProgress;
   accentColor: string;
-  onAction: (action?: QuestAction) => void;
+  onAction: (opener: HTMLButtonElement, action?: QuestAction) => void;
 }) {
   const pct = Math.round(quest.ratio * 100);
   const showProgress = quest.target > 1;
@@ -196,7 +196,7 @@ function QuestRow({
                 </Link>
               ) : (
                 <button
-                  onClick={() => onAction(quest.action)}
+                  onClick={(event) => onAction(event.currentTarget, quest.action)}
                   className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-[var(--accent)] hover:gap-2 transition-all"
                 >
                   {quest.action.label} <ChevronRight size={11} />

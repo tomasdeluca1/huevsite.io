@@ -46,7 +46,7 @@ interface Props {
   onDeleteProject: (block: BlockData) => void;
   onEdit: (block: BlockData) => void;
   onEditProfile: () => void;
-  onShare: () => void;
+  onShare: (opener: HTMLButtonElement) => void;
   onCopy: () => void;
   onOpenGrid: () => void;
   onOpenStats: () => void;
@@ -216,7 +216,7 @@ export function ProfileStudio(props: Props) {
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
-          onClick={onShare}
+          onClick={(event) => onShare(event.currentTarget)}
           className="inline-flex min-h-11 items-center gap-2 rounded-2xl px-4 text-sm font-black"
           style={{ background: profile.accentColor, color: ink }}
         >

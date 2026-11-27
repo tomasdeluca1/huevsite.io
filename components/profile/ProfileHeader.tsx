@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { Globe, ArrowUpRight, Share2 } from "lucide-react";
 import { BlockData } from "@/lib/profile-types";
@@ -40,6 +40,7 @@ export function ProfileHeader({
   showEcosystem = true,
 }: Props) {
   const [isShareOpen, setIsShareOpen] = useState(false);
+  const shareButtonRef = useRef<HTMLButtonElement>(null);
 
   return (
     <header className={`relative z-[100] ${embed ? "mb-0" : "mb-6 md:mb-10"}`}>
@@ -60,6 +61,7 @@ export function ProfileHeader({
 
           <div className="flex items-center gap-2">
             <button
+              ref={shareButtonRef}
               onClick={() => setIsShareOpen(true)}
               className="flex items-center gap-2 !text-[10px] md:!text-xs !py-2 md:!py-3 !px-3 md:!px-4 rounded-xl md:!rounded-2xl border border-white/5 bg-white/5 hover:bg-[var(--accent)]/10 hover:border-[var(--accent)]/30 transition-all text-white/70 hover:text-white font-bold"
               aria-label="Compartir este huevsite"
@@ -156,6 +158,7 @@ export function ProfileHeader({
       <ShareProfileModal
         isOpen={isShareOpen}
         onClose={() => setIsShareOpen(false)}
+        returnFocusRef={shareButtonRef}
         username={username}
         accentColor={accentColor}
       />

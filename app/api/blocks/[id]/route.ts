@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
 import { scoreService } from '@/lib/score-service'
@@ -10,6 +11,10 @@ import { normalizeBlockData } from '@/lib/social-url'
 import { revalidatePublicProfile } from '@/lib/revalidate-public-profile'
 
 export const dynamic = 'force-dynamic'
+
+function parseBlockSiteScope(request: NextRequest) {
+  return z.string().uuid().nullable().safeParse(request.nextUrl.searchParams.get('sub_site_id'))
+}
 
 // Sync the hero block's header fields (avatar + name + tagline) down to the
 // owner's profiles row, so consumers that read the columns (recruiter, explore,
@@ -56,20 +61,25 @@ export async function PATCH(
       )
     }
 
-    // After auth, switch to service-role. All queries below are scoped to
-    // (id, user_id) so the user can only touch their own blocks.
+    const scope = parseBlockSiteScope(request)
+    if (!scope.success) {
+      return NextResponse.json({ error: 'Sub-sitio inválido' }, { status: 400 })
+    }
+
     const supabase = createServiceRoleClient()
 
     const blockId = params.id
+    const subSiteId = scope.data
     const body = await request.json()
 
-    // Verificar que el bloque pertenece al usuario
-    const { data: existingBlock, error: fetchError } = await supabase
+    const lookup = supabase
       .from('blocks')
       .select('*')
       .eq('id', blockId)
       .eq('user_id', user.id)
-      .maybeSingle()
+    const { data: existingBlock, error: fetchError } = await (
+      subSiteId === null ? lookup.is('sub_site_id', null) : lookup.eq('sub_site_id', subSiteId)
+    ).maybeSingle()
 
     if (fetchError || !existingBlock) {
       return NextResponse.json(
@@ -160,13 +170,14 @@ export async function PATCH(
     }
 
     // Actualizar bloque
-    const { data: block, error: updateError } = await supabase
+    const update = supabase
       .from('blocks')
       .update(updateData)
       .eq('id', blockId)
       .eq('user_id', user.id)
-      .select()
-      .single()
+    const { data: block, error: updateError } = await (
+      subSiteId === null ? update.is('sub_site_id', null) : update.eq('sub_site_id', subSiteId)
+    ).select().single()
 
     if (updateError) {
       console.error('Error updating block:', updateError)
@@ -236,18 +247,24 @@ export async function DELETE(
       )
     }
 
-    // After auth, service-role client scoped to (id, user_id).
-    const supabase = createServiceRoleClient()
+    const scope = parseBlockSiteScope(request)
+    if (!scope.success) {
+      return NextResponse.json({ error: 'Sub-sitio inválido' }, { status: 400 })
+    }
 
+    const supabase = createServiceRoleClient()
     const blockId = params.id
+    const subSiteId = scope.data
 
     // Primero verificar que existe y pertenece al usuario
-    const { data: existingBlock, error: fetchError } = await supabase
+    const lookup = supabase
       .from('blocks')
       .select('id, user_id, sub_site_id')
       .eq('id', blockId)
       .eq('user_id', user.id)
-      .maybeSingle()
+    const { data: existingBlock, error: fetchError } = await (
+      subSiteId === null ? lookup.is('sub_site_id', null) : lookup.eq('sub_site_id', subSiteId)
+    ).maybeSingle()
 
     if (fetchError) {
       console.error('DELETE - Fetch error:', fetchError)
@@ -266,11 +283,14 @@ export async function DELETE(
     }
 
     // Eliminar bloque
-    const { error: deleteError } = await supabase
+    const deletion = supabase
       .from('blocks')
       .delete()
       .eq('id', blockId)
       .eq('user_id', user.id)
+    const { error: deleteError } = await (
+      subSiteId === null ? deletion.is('sub_site_id', null) : deletion.eq('sub_site_id', subSiteId)
+    )
 
     if (deleteError) {
       console.error('DELETE - Delete error:', deleteError)

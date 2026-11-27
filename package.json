@@ -7,7 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "tsx --tsconfig components/explore/tsconfig.test.json --test lib/*.test.ts components/explore/ExploreClient.test.tsx",
+    "test": "tsx --tsconfig components/explore/tsconfig.test.json --test lib/*.test.ts components/explore/ExploreClient.test.tsx app/api/blocks/delete.test.ts app/api/blocks/patch.test.ts app/api/profile/route.test.ts",
     "verify": "node scripts/verify-i18n-keys.js && npx tsx scripts/verify-social-labels.js && npx tsx scripts/verify-mobile-order.js && npx tsx scripts/verify-og-meta.js && npx tsx scripts/verify-brand-tokens.js && npx tsx scripts/verify-brand-assets.js && npx tsx scripts/verify-avances-builders.ts && npx tsx scripts/verify-email-compliance.ts && npx tsx scripts/verify-mcp.ts && npx tsx scripts/verify-mcp-oauth.ts && npx tsx scripts/verify-link-layout.ts && npx tsx scripts/verify-safe-url.ts && npx tsx scripts/verify-project-delete.ts && npm test"
   },
   "dependencies": {

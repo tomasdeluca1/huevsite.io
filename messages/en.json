@@ -707,6 +707,8 @@
       "transferDisabled": "Feature temporarily disabled.",
       "errorCreateBlock": "Couldn't create the block. Try again.",
       "loading": "Loading...",
+      "errorLoadProfile": "Couldn't load your profile.",
+      "retryLoadProfile": "Try again",
       "trialEligibleBadge": "14 days free",
       "trialEligibleTitle": "Claim free trial of Huevsite Pro",
       "trialEligibleDescription": "Unlock all of Pro for 14 days. Start with Insights, then take advantage of more blocks and advanced analytics.",
@@ -2368,6 +2370,7 @@
       "submitComment": "Comment →"
     },
     "scoreInfo": {
+      "close": "Close",
       "subtitle": "// Gamification and community reputation",
       "calculating": "// Calculating breakdown...",
       "description": "The <strong>Builder Score</strong> is a system that measures your impact on the tech scene. It rewards not just how complete your portfolio is, but your activity and how you help other builders grow.",

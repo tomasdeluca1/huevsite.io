@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, type MouseEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { FollowButton } from "@/components/social/FollowButton";
 import { NominateButton } from "@/components/social/NominateButton";
@@ -52,6 +52,12 @@ export function ProfileSocialBar({
   const [localFollowersCount, setLocalFollowersCount] = useState(followersCount);
   const [localNominationsCount, setLocalNominationsCount] = useState(nominationsCount);
   const [isScoreOpen, setIsScoreOpen] = useState(false);
+  const scoreOpenerRef = useRef<HTMLButtonElement | null>(null);
+
+  const openScoreInfo = (event: MouseEvent<HTMLButtonElement>) => {
+    scoreOpenerRef.current = event.currentTarget;
+    setIsScoreOpen(true);
+  };
 
   // Sync props to state
   useEffect(() => {
@@ -104,7 +110,7 @@ export function ProfileSocialBar({
                 <span className="font-mono font-bold text-white/80">{fmt(localNominationsCount)}</span>
                 <span>{t("nominations")}</span>
               </span>
-              <button onClick={() => setIsScoreOpen(true)} className="flex min-h-10 items-center gap-1 transition-colors hover:text-white">
+              <button onClick={openScoreInfo} className="flex min-h-10 items-center gap-1 transition-colors hover:text-white">
                 <span className="font-mono font-bold text-[var(--accent)]">{fmt(builderScore)}</span>
                 <span>{t("score")}</span>
               </button>
@@ -155,7 +161,7 @@ export function ProfileSocialBar({
             )}
 
             <button
-              onClick={() => setIsScoreOpen(true)}
+              onClick={openScoreInfo}
               className="flex flex-col items-center px-1 py-2 sm:px-5 sm:py-2.5 rounded-2xl bg-[var(--accent)]/5 border border-[var(--accent)]/20 sm:bg-transparent sm:border-transparent group relative shrink-0 hover:border-[var(--accent)]/30 hover:bg-[var(--accent)]/5 transition-all"
             >
               <span className="font-mono text-[var(--accent)] text-lg sm:text-xl leading-tight group-hover:scale-110 transition-transform font-black">
@@ -205,7 +211,7 @@ export function ProfileSocialBar({
         />
       )}
 
-      <ScoreInfoModal isOpen={isScoreOpen} onClose={() => setIsScoreOpen(false)} accentColor={accentColor} profileId={profileId} />
+      <ScoreInfoModal isOpen={isScoreOpen} onClose={() => setIsScoreOpen(false)} returnFocusRef={scoreOpenerRef} accentColor={accentColor} profileId={profileId} />
     </div>
   );
 }

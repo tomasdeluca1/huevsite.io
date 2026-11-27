@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { MouseEventHandler, ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { Lock, Trophy } from "lucide-react";
 import { getContrastColor, type BlockType, type ProfileData } from "@/lib/profile-types";
@@ -17,7 +17,7 @@ interface Props {
   claiming: boolean;
   onClaimTrial?: () => void;
   onUpgrade: () => void;
-  onScoreInfo: () => void;
+  onScoreInfo: MouseEventHandler<HTMLButtonElement>;
   onAddBlock: (type: BlockType) => void;
   onEditProfile: () => void;
   onShare: () => void;

@@ -85,7 +85,9 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [loadError, setLoadError] = useState<"initial" | "more" | null>(null);
-  const requestRef = useRef<AbortController | null>(null);
+  // One controller per query. Load more and the initial retry share its signal;
+  // a newer query aborts it so a late response cannot overwrite the new results.
+  const querySignal = useRef<AbortSignal | null>(null);
   const [isScoreInfoOpen, setIsScoreInfoOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
@@ -156,8 +158,11 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
     localStorage.setItem("huevsite_explore_country", countryFilter);
     localStorage.setItem("huevsite_explore_last_activity", Date.now().toString());
 
+    const controller = new AbortController();
+    querySignal.current = controller.signal;
     setIsLoading(true);
     const timer = setTimeout(() => {
+      if (controller.signal.aborted) return;
       if (lastSearch.current !== search) {
         lastSearch.current = search;
         const searchUrl = getUpdatedExploreSearchUrl(window.location.href, search);
@@ -166,11 +171,11 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
           lastUrlSearch.current = search || null;
         }
       }
-      loadProfiles(0);
+      loadProfiles(0, controller.signal);
     }, 300);
     return () => {
       clearTimeout(timer);
-      requestRef.current?.abort();
+      controller.abort();
     };
   }, [search, sort, category, continentFilter, countryFilter]);
 
@@ -182,11 +187,9 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
     }
   }, [profiles]);
 
-  const loadProfiles = async (pageToLoad: number) => {
+  const loadProfiles = async (pageToLoad: number, signal: AbortSignal) => {
+    if (signal.aborted) return;
     const reset = pageToLoad === 0;
-    const request = new AbortController();
-    requestRef.current?.abort();
-    requestRef.current = request;
     setLoadError(null);
     if (reset) {
       setIsLoading(true);
@@ -198,11 +201,11 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
       const currentSort = category === 'created_at' ? 'created_at' : (category === 'score' ? 'score' : sort);
       const res = await fetch(
         `/api/explore?page=${pageToLoad}&limit=24&sort=${currentSort}&filter=${category}&q=${encodeURIComponent(search)}&country=${countryFilter}&continent=${continentFilter}`,
-        { signal: request.signal }
+        { signal }
       );
       if (!res.ok) throw new Error(`Explore API returned ${res.status}`);
       const data = await res.json();
-      if (request.signal.aborted) return;
+      if (signal.aborted) return;
       // The API sorts pro_since first, then created_at/updated_at.
       if (reset) {
         setProfiles(data.profiles || []);
@@ -212,20 +215,28 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
       setHasMore(data.hasMore);
       setPage(pageToLoad);
     } catch (e) {
-      if (!request.signal.aborted) {
+      if (!signal.aborted) {
         console.error("Error fetching explore profiles:", e);
         setLoadError(reset ? "initial" : "more");
       }
     } finally {
-      if (!request.signal.aborted) {
+      if (!signal.aborted) {
         setIsLoading(false);
         setIsFetchingMore(false);
       }
     }
   };
 
+  const retryInitialLoad = () => {
+    const signal = querySignal.current;
+    if (!signal || signal.aborted) return;
+    loadProfiles(0, signal);
+  };
+
   const handleLoadMore = () => {
-    loadProfiles(page + 1);
+    const signal = querySignal.current;
+    if (!signal || signal.aborted || isLoading || isFetchingMore || !hasMore) return;
+    loadProfiles(page + 1, signal);
   };
 
   return (
@@ -367,7 +378,7 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
           <p role="alert">{t("loadError")}</p>
           <button
             type="button"
-            onClick={() => loadProfiles(0)}
+            onClick={retryInitialLoad}
             className="btn btn-outline border-dashed text-sm font-mono hover:text-white"
           >
             {t("retry")}

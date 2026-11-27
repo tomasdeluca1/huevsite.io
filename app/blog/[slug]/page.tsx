@@ -17,11 +17,11 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github-dark.css";
-import Image from "next/image";
 import { SITE_URL } from "@/lib/site-url";
 import { safeJsonLd } from "@/lib/json-ld";
 import { breadcrumbLd, ORGANIZATION_ID } from "@/lib/structured-data";
 import { Logo } from "@/components/brand/Logo";
+import { BlogAuthorAvatar } from "@/components/blog/BlogAuthorAvatar";
 
 // DB-backed BDLS posts are published ad-hoc — avoid serving cached shells
 // from the previous build that don't know about them yet.
@@ -162,11 +162,7 @@ export default async function BlogPostPage({
           <div className="flex flex-col sm:flex-row gap-6 sm:items-center justify-between mb-10 pb-10 border-b border-[var(--border)]">
             <div className="flex items-center gap-4">
               <Link href={getBlogAuthorHref(post.author)} className="shrink-0 hover:opacity-80 transition-opacity">
-                {/* unoptimized: builder avatars come from arbitrary third-party hosts
-                    (Linktree/Twitter/custom CDNs imported into the profile) that aren't
-                    in next.config remotePatterns; the optimizer 400s on them. At 40px
-                    there's nothing to optimize, so load the source directly. */}
-                <Image src={post.author.avatarUrl} alt={post.author.name} width={40} height={40} className="rounded-full object-cover" unoptimized />
+                <BlogAuthorAvatar src={post.author.avatarUrl} name={post.author.name} />
               </Link>
               <div>
                 <Link href={getBlogAuthorHref(post.author)} className="text-sm font-bold text-white tracking-tight hover:underline">

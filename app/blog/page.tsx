@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { getLocale } from "@/lib/locale";
 import LocaleToggle from "@/components/LocaleToggle";
@@ -17,6 +16,7 @@ import { keywordsFor } from "@/lib/seo";
 import { safeJsonLd } from "@/lib/json-ld";
 import { breadcrumbLd, ORGANIZATION_ID, WEBSITE_ID } from "@/lib/structured-data";
 import { Logo } from "@/components/brand/Logo";
+import { BlogAuthorAvatar } from "@/components/blog/BlogAuthorAvatar";
 
 // Always render fresh: the listing combines static MDX + DB rows (new Builder
 // de la Semana posts get published frequently) and uses searchParams for tag
@@ -224,9 +224,7 @@ export default async function BlogIndexPage({
                         <div className="text-[10px] text-[var(--text-muted)] font-mono">@{post.author.username}</div>
                       )}
                     </div>
-                    {/* unoptimized: builder avatars come from arbitrary hosts (Linktree/Twitter/etc.)
-                        not in next.config remotePatterns; the optimizer 400s on them (see article page). */}
-                    <Image src={post.author.avatarUrl} alt={post.author.name} width={40} height={40} className="rounded-full object-cover" unoptimized />
+                    <BlogAuthorAvatar src={post.author.avatarUrl} name={post.author.name} />
                   </Link>
                 </div>
               </article>

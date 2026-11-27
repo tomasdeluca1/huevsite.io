@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import LocaleToggle from "@/components/LocaleToggle";
-import { BadgeCheck, Loader2, Activity as ActivityIcon, ArrowUpRight, Users, UserPlus, ChevronUp, ChevronLeft, ChevronRight, Rocket, Share2 } from "lucide-react";
+import { BadgeCheck, Loader2, Activity as ActivityIcon, ArrowUpRight, Users, UserPlus, ChevronUp, ChevronLeft, ChevronRight, AlertCircle, Rocket, Share2 } from "lucide-react";
 import { currentLaunchWeek, addWeeks, weekLabel, compareWeeks, daysUntilWeekClose } from "@/lib/launch-week";
 import { parseLaunchShareParams } from "@/lib/launch-share";
 import { trackEvent } from "@/lib/track";
@@ -191,7 +191,11 @@ function FeedContent() {
     searchParams.get("launch"),
     searchParams.get("week")
   );
-  const [launchWeek, setLaunchWeek] = useState<string>(sharedWeek || "");
+  const [requestedLaunchWeek, setRequestedLaunchWeek] = useState(sharedWeek);
+  const [loadedLaunchWeek, setLoadedLaunchWeek] = useState<string | null>(null);
+  const launchWeek = loadedLaunchWeek ?? requestedLaunchWeek ?? currentLaunchWeek();
+  const [launchLoadError, setLaunchLoadError] = useState(false);
+  const [launchRetry, setLaunchRetry] = useState(0);
   const [votedIds, setVotedIds] = useState<string[]>([]);
   const [stackFilter, setStackFilter] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -209,58 +213,73 @@ function FeedContent() {
   }, [tab, filterType, audienceFilter]);
 
   useEffect(() => {
+    const controller = new AbortController();
+    const { signal } = controller;
+
     async function loadData() {
-      if (page === 1) setLoading(true);
+      if (tab === "launches" || page === 1) setLoading(true);
       else setLoadingMore(true);
-
-      const { data: authData } = await supabase.auth.getUser();
-      setCurrentUserId(authData.user?.id || null);
-
       if (tab === "launches") {
-        const wk = launchWeek || "";
-        fetch(`/api/launches${wk ? `?week=${wk}` : ""}`)
-          .then(r => r.json())
-          .then(data => {
-            setLaunches(data.launches ?? []);
-            setVotedIds(data.votedIds ?? []);
-            if (!launchWeek && data.week) setLaunchWeek(data.week);
-            setTotalPages(1);
-          })
-          .catch(console.error)
-          .finally(() => {
-            setLoading(false);
-            setLoadingMore(false);
-          });
-      } else {
-        const typeParam = filterType !== "all" ? `&type=${filterType}` : "";
-        const activityTab = audienceFilter === "following" ? "following" : "global";
-        // Fetch more items to ensure we can group them into at least 5 users
-        fetch(`/api/social/feed?tab=${activityTab}&page=${page}&limit=25${typeParam}`)
-          .then(r => r.json())
-          .then(data => {
-            if (data.error) {
-              setError(data.error);
-              if (page === 1) setActivities([]);
-              return;
-            }
-            const newActivities = data.activities ?? [];
-            if (page === 1) setActivities(newActivities);
-            else setActivities(prev => [...prev, ...newActivities]);
-            setTotalPages(data.totalPages ?? 1);
-          })
-          .catch(console.error)
-          .finally(() => {
-            setLoading(false);
-            setLoadingMore(false);
-          });
+        setLaunchLoadError(false);
+        setLoadedLaunchWeek(null);
+      }
+
+      try {
+        const { data: authData } = await supabase.auth.getUser();
+        if (signal.aborted) return;
+        setCurrentUserId(authData.user?.id || null);
+
+        if (tab === "launches") {
+          const query = requestedLaunchWeek ? `?week=${requestedLaunchWeek}` : "";
+          const response = await fetch(`/api/launches${query}`, { signal });
+          if (!response.ok) throw new Error(`Launches request failed: ${response.status}`);
+          const data = await response.json();
+          if (signal.aborted) return;
+          if (!Array.isArray(data.launches)) throw new Error("Invalid launches response");
+          setLaunches(data.launches);
+          setVotedIds(data.votedIds ?? []);
+          setLoadedLaunchWeek(data.week ?? null);
+          setTotalPages(1);
+        } else {
+          const typeParam = filterType !== "all" ? `&type=${filterType}` : "";
+          const activityTab = audienceFilter === "following" ? "following" : "global";
+          // Fetch more items to ensure we can group them into at least 5 users
+          const response = await fetch(`/api/social/feed?tab=${activityTab}&page=${page}&limit=25${typeParam}`, { signal });
+          const data = await response.json();
+          if (signal.aborted) return;
+          if (data.error) {
+            setError(data.error);
+            if (page === 1) setActivities([]);
+            return;
+          }
+          const newActivities = data.activities ?? [];
+          if (page === 1) setActivities(newActivities);
+          else setActivities(prev => [...prev, ...newActivities]);
+          setTotalPages(data.totalPages ?? 1);
+        }
+      } catch (cause) {
+        if (signal.aborted) return;
+        if (tab === "launches") {
+          setLaunches([]);
+          setVotedIds([]);
+          setLaunchLoadError(true);
+        } else {
+          console.error(cause);
+        }
+      } finally {
+        if (!signal.aborted) {
+          setLoading(false);
+          setLoadingMore(false);
+        }
       }
     }
     loadData();
-  }, [tab, page, filterType, audienceFilter, supabase, launchWeek]);
+    return () => controller.abort();
+  }, [tab, page, filterType, audienceFilter, supabase, requestedLaunchWeek, launchRetry]);
 
   // Infinite scroll observer
   useEffect(() => {
-    if (loading || loadingMore || page >= totalPages) return;
+    if (tab !== "activity" || loading || loadingMore || page >= totalPages) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -275,7 +294,7 @@ function FeedContent() {
     if (target) observer.observe(target);
 
     return () => observer.disconnect();
-  }, [loading, loadingMore, page, totalPages]);
+  }, [tab, loading, loadingMore, page, totalPages]);
 
   const activityGroups = useMemo(() => {
     const groups: Activity[][] = [];
@@ -339,7 +358,7 @@ function FeedContent() {
   }, [sharedLaunchId, loading, tab, launches]);
 
   const shareLaunch = async (launch: any) => {
-    const url = `${window.location.origin}/feed?launch=${launch.id}&week=${launchWeek || currentLaunchWeek()}`;
+    const url = `${window.location.origin}/feed?launch=${launch.id}&week=${launchWeek}`;
     trackEvent("launch_share_click", { launchId: launch.id });
     if (typeof navigator.share === "function") {
       try {
@@ -358,7 +377,7 @@ function FeedContent() {
     }
   };
 
-  const isCurrentWeek = !launchWeek || compareWeeks(launchWeek, currentLaunchWeek()) >= 0;
+  const isCurrentWeek = compareWeeks(launchWeek, currentLaunchWeek()) >= 0;
   const closeDays = daysUntilWeekClose();
 
   const stackChips = useMemo(() => {
@@ -455,7 +474,7 @@ function FeedContent() {
             ))}
           </div>
         )
-      ) : error && audienceFilter === "following" && !currentUserId ? (
+      ) : tab === "activity" && error && audienceFilter === "following" && !currentUserId ? (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -477,17 +496,17 @@ function FeedContent() {
           {/* Week navigation */}
           <div className="flex items-center justify-between gap-2">
             <button
-              onClick={() => launchWeek && setLaunchWeek(addWeeks(launchWeek, -1))}
+              onClick={() => setRequestedLaunchWeek(addWeeks(launchWeek, -1))}
               className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] hover:text-white transition-colors"
             >
               <ChevronLeft size={14} /> {t("prevWeek")}
             </button>
             <div className="text-center">
               <div className="text-[9px] uppercase tracking-widest font-mono text-[var(--text-muted)]">{t("launchesOfWeek")}</div>
-              <div className="text-sm font-black text-white">{launchWeek ? weekLabel(launchWeek) : "…"}</div>
+              <div className="text-sm font-black text-white">{weekLabel(launchWeek)}</div>
             </div>
             <button
-              onClick={() => { if (!isCurrentWeek && launchWeek) setLaunchWeek(addWeeks(launchWeek, 1)); }}
+              onClick={() => setRequestedLaunchWeek(addWeeks(launchWeek, 1))}
               disabled={isCurrentWeek}
               className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] hover:text-white transition-colors disabled:opacity-30"
             >
@@ -515,7 +534,21 @@ function FeedContent() {
             </div>
           )}
 
-          {shownLaunches.length === 0 ? (
+          {launchLoadError ? (
+            <div className="text-center py-20 px-8 border border-dashed border-[var(--border)] rounded-[2.5rem] bg-black/10">
+              <div className="w-16 h-16 bg-[var(--surface2)] rounded-2xl flex items-center justify-center mx-auto mb-6 text-[var(--accent)]">
+                <AlertCircle size={28} aria-hidden />
+              </div>
+              <h3 role="alert" className="text-xl font-bold mb-6 text-white">{t("launchesLoadError")}</h3>
+              <button
+                type="button"
+                onClick={() => setLaunchRetry(attempt => attempt + 1)}
+                className="btn btn-accent inline-flex !rounded-2xl shadow-lg shadow-[var(--accent)]/20"
+              >
+                {t("retry")}
+              </button>
+            </div>
+          ) : shownLaunches.length === 0 ? (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -699,7 +732,7 @@ function FeedContent() {
       <DiscoveryRail
         currentUserId={currentUserId}
         weekLaunches={launches.map((l: any) => ({ id: l.id, userId: l.userId, title: l.title, upvoteCount: l.upvoteCount, featured: !!l.featured }))}
-        week={launchWeek || undefined}
+        week={launchWeek}
       />
       </div>
       {shareToast && (

@@ -12,17 +12,16 @@ export async function GET(req: NextRequest) {
   let week = searchParams.get("week") || currentLaunchWeek();
   if (compareWeeks(week, currentLaunchWeek()) > 0) week = currentLaunchWeek();
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     const { launches, votedIds } = await getWeekLaunches(week, user?.id || null);
     return NextResponse.json({ week, launches, votedIds });
   } catch (e) {
     console.error("[launches] feed error:", e);
-    return NextResponse.json({ week, launches: [], votedIds: [] });
+    return NextResponse.json({ error: "server_error" }, { status: 500 });
   }
 }
 

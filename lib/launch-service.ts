@@ -41,33 +41,33 @@ export async function getWeekLaunches(
     .select("id, block_id, user_id, upvote_count, featured, launched_at")
     .eq("launch_week", week);
 
-  if (error) {
-    if (isMissingTable(error)) return { launches: [], votedIds: [] };
-    throw error;
-  }
+  if (error) throw error;
   if (!rows || rows.length === 0) return { launches: [], votedIds: [] };
 
   const blockIds = rows.map((r) => r.block_id);
   const userIds = Array.from(new Set(rows.map((r) => r.user_id)));
 
-  const [{ data: blocks }, { data: profiles }] = await Promise.all([
+  const [{ data: blocks, error: blocksError }, { data: profiles, error: profilesError }] = await Promise.all([
     db.from("blocks").select("id, data").in("id", blockIds),
     db
       .from("profiles")
       .select("id, username, name, image, subscription_tier, pro_since, builder_score")
       .in("id", userIds),
   ]);
+  if (blocksError) throw blocksError;
+  if (profilesError) throw profilesError;
 
   const blockById = new Map((blocks || []).map((b: any) => [b.id, b]));
   const profById = new Map((profiles || []).map((p: any) => [p.id, p]));
 
   let votedIds: string[] = [];
   if (viewerId) {
-    const { data: votes } = await db
+    const { data: votes, error: votesError } = await db
       .from("project_upvotes")
       .select("project_launch_id")
       .eq("voter_id", viewerId)
       .in("project_launch_id", rows.map((r) => r.id));
+    if (votesError) throw votesError;
     votedIds = (votes || []).map((v: any) => v.project_launch_id);
   }
 

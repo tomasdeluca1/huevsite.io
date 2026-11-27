@@ -1522,6 +1522,8 @@
     "followingLoginTitle": "Log in to see who you follow",
     "followingLoginBody": "The following filter builds a more relevant feed with the activity and projects from your own network.",
     "login": "Log in",
+    "launchesLoadError": "We couldn't load the launches.",
+    "retry": "Retry",
     "launchesEmptyFollowingTitle": "The people you follow haven't published projects yet",
     "launchesEmptyTitle": "We haven't found any published projects yet",
     "launchesEmptyFollowingBody": "Follow more builders or go back to All to discover public projects from the rest of the community.",

@@ -1522,6 +1522,8 @@
     "followingLoginTitle": "Entrá para ver a quién seguís",
     "followingLoginBody": "El filtro de seguidos arma un feed más relevante con la actividad y los proyectos de tu propia red.",
     "login": "Iniciar sesión",
+    "launchesLoadError": "No pudimos cargar los lanzamientos.",
+    "retry": "Reintentar",
     "launchesEmptyFollowingTitle": "Tus seguidos todavía no publicaron proyectos",
     "launchesEmptyTitle": "Todavía no encontramos proyectos publicados",
     "launchesEmptyFollowingBody": "Seguí más builders o volvé a Todos para descubrir proyectos públicos del resto de la comunidad.",

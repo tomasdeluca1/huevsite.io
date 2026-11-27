@@ -1,5 +1,6 @@
 import { calculateReadingTime } from "./utils";
 import { BLOG_TRANSLATIONS } from "./blog-translations";
+import { buildBdlsSlugIndex, isBdlsPost, type BdlsSlugIndex } from "./bdls-links";
 
 export interface BlogPost {
   slug: string;
@@ -1574,6 +1575,11 @@ export async function getBdlsSlugsByUsername(): Promise<Record<string, string>> 
   return map;
 }
 
+export async function getBdlsSlugIndex(): Promise<BdlsSlugIndex> {
+  const posts = await getDBBlogPosts();
+  return buildBdlsSlugIndex(posts);
+}
+
 export const BLOG_POSTS_PER_PAGE = 9;
 
 // Canonical username we use to credit posts written by the platform itself
@@ -1590,10 +1596,7 @@ export function getBlogAuthorHref(author: BlogPost["author"]): string {
 // A post is "Builder de la Semana" when it was generated from a builder_interview.
 // The static posts don't have the tag, so we detect it by tags OR slug prefix.
 export function isBuilderOfTheWeekPost(post: BlogPost): boolean {
-  return (
-    post.slug.startsWith("builder-de-la-semana-") ||
-    post.tags.includes("builder-de-la-semana")
-  );
+  return isBdlsPost(post);
 }
 
 // --- Curated categories ---------------------------------------------------

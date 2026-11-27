@@ -235,15 +235,15 @@ export default async function BlogIndexPage({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <nav className="mt-12 flex items-center justify-between gap-4 border-t border-[var(--border)] pt-8">
-          <div className="text-[11px] font-mono text-[var(--text-muted)] uppercase tracking-widest">
+        <nav className="mt-12 flex flex-col items-center gap-4 border-t border-[var(--border)] pt-8 max-sm:px-0 sm:flex-row sm:justify-between">
+          <div className="shrink-0 text-[11px] font-mono text-[var(--text-muted)] uppercase tracking-widest">
             {t("pageOf", { page, totalPages })}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-1 sm:justify-end sm:gap-2">
             {page > 1 && (
               <Link
                 href={buildPageHref(page - 1, activeCategory)}
-                className="px-4 py-2 rounded-full text-sm font-bold bg-white/5 text-white hover:bg-white/10 border border-white/10 transition-colors"
+                className="px-2 py-2 rounded-full text-sm font-bold bg-white/5 text-white hover:bg-white/10 border border-white/10 transition-colors sm:px-4"
               >
                 {t("prev")}
               </Link>
@@ -252,7 +252,7 @@ export default async function BlogIndexPage({
               <Link
                 key={n}
                 href={buildPageHref(n, activeCategory)}
-                className={`w-9 h-9 flex items-center justify-center rounded-full text-sm font-bold transition-colors ${
+                className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full text-sm font-bold transition-colors ${
                   n === page
                     ? "bg-[var(--accent)] text-black"
                     : "bg-white/5 text-[var(--text-muted)] hover:bg-white/10 hover:text-white border border-white/10"
@@ -264,7 +264,7 @@ export default async function BlogIndexPage({
             {page < totalPages && (
               <Link
                 href={buildPageHref(page + 1, activeCategory)}
-                className="px-4 py-2 rounded-full text-sm font-bold bg-white/5 text-white hover:bg-white/10 border border-white/10 transition-colors"
+                className="px-2 py-2 rounded-full text-sm font-bold bg-white/5 text-white hover:bg-white/10 border border-white/10 transition-colors sm:px-4"
               >
                 {t("next")}
               </Link>

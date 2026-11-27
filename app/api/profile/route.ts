@@ -62,9 +62,11 @@ export async function GET(request: NextRequest) {
       .from('profiles')
       .select('*, ai_credits, is_onboarding_test_user')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
-    if (profileError || !profile) {
+    if (profileError) throw profileError
+
+    if (!profile) {
       return NextResponse.json(
         { error: 'Perfil no encontrado' },
         { status: 404 }

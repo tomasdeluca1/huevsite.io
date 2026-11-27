@@ -89,6 +89,7 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
   // a newer query aborts it so a late response cannot overwrite the new results.
   const querySignal = useRef<AbortSignal | null>(null);
   const [isScoreInfoOpen, setIsScoreInfoOpen] = useState(false);
+  const scoreOpenerRef = useRef<HTMLButtonElement>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const sortRef = useRef<HTMLDivElement>(null);
@@ -270,6 +271,7 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
           </div>
 
           <button
+            ref={scoreOpenerRef}
             onClick={() => setIsScoreInfoOpen(true)}
             className="flex items-center gap-2 px-3 py-3 rounded-xl bg-white/[0.03] border border-white/10 text-[var(--text-dim)] hover:border-[var(--accent)]/50 hover:text-white transition-all group shrink-0 relative"
           >
@@ -367,7 +369,7 @@ export function ExploreClient({ initialTotal }: { initialTotal: number }) {
         </div>
       </motion.div>
 
-      <ScoreInfoModal isOpen={isScoreInfoOpen} onClose={() => setIsScoreInfoOpen(false)} />
+      <ScoreInfoModal isOpen={isScoreInfoOpen} onClose={() => setIsScoreInfoOpen(false)} returnFocusRef={scoreOpenerRef} />
 
       {isLoading ? (
         <div className="py-20 flex justify-center text-[var(--text-muted)]">

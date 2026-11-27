@@ -141,6 +141,74 @@ test("Explore keeps its current results and retries the same page after Load mor
   assert.equal(findButton(messages.explore.loadMore), undefined);
 });
 
+async function openScoreInfo(t: TestContext, focusOpener = true) {
+  const { container } = await renderExplore(t, () => profilesResponse("first-builder", false));
+  const opener = Array.from(container.querySelectorAll("button")).find((button) =>
+    button.textContent?.startsWith(messages.explore.scoreSystem),
+  );
+  assert.ok(opener);
+  if (focusOpener) {
+    opener.focus();
+  } else {
+    assert.equal(container.ownerDocument.activeElement, container.ownerDocument.body);
+  }
+  await act(async () => opener.click());
+
+  const document = container.ownerDocument;
+  const title = Array.from(document.querySelectorAll("h2")).find((heading) =>
+    heading.textContent?.startsWith("Builder Score"),
+  );
+  assert.ok(title);
+  const closeButton = title.parentElement!.parentElement!.querySelector("button")!;
+  const gotItButton = Array.from(document.querySelectorAll("button")).find((button) =>
+    button.textContent === messages.shared.scoreInfo.gotIt,
+  );
+  assert.ok(gotItButton);
+  const pressKey = async (key: string, shiftKey = false) => {
+    const event = new document.defaultView!.KeyboardEvent("keydown", {
+      key, shiftKey, bubbles: true, cancelable: true,
+    });
+    await act(async () => document.activeElement!.dispatchEvent(event));
+    return event;
+  };
+
+  return { opener, document, title, closeButton, gotItButton, pressKey };
+}
+
+test("Builder Score closes on Escape and restores focus to its opener", async (t) => {
+  const { opener, document, title, closeButton, pressKey } = await openScoreInfo(t);
+  closeButton.focus();
+
+  const escape = await pressKey("Escape");
+
+  assert.ok(escape.defaultPrevented, "Expected the modal to handle Escape");
+  assert.equal(document.activeElement, opener);
+  assert.ok(!title.isConnected || title.closest("[inert]"));
+});
+
+test("Builder Score restores focus to an opener that was clicked without receiving focus", async (t) => {
+  const { opener, document, pressKey } = await openScoreInfo(t, false);
+
+  await pressKey("Escape");
+
+  assert.ok(document.activeElement === opener, "Expected focus to return to the clicked button");
+});
+
+test("Builder Score moves focus inside and wraps Tab and Shift+Tab within the modal", async (t) => {
+  const { document, closeButton, gotItButton, pressKey } = await openScoreInfo(t);
+  const initialFocus = document.activeElement;
+  gotItButton.focus();
+
+  const tab = await pressKey("Tab");
+  assert.ok(tab.defaultPrevented, "Expected the modal to wrap Tab at its last control");
+  assert.equal(document.activeElement, closeButton);
+
+  const shiftTab = await pressKey("Tab", true);
+  assert.ok(shiftTab.defaultPrevented, "Expected the modal to wrap Shift+Tab at its first control");
+  assert.equal(document.activeElement, gotItButton);
+  assert.equal(initialFocus, closeButton);
+});
+
 test("Explore ignores a stale search response after the newer search renders", { timeout: 5_000 }, async (t) => {
   const old = delayedResponse();
   const { search, results } = await renderExplore(t, (_page, _attempt, query) =>

@@ -2370,6 +2370,7 @@
       "submitComment": "Comentar →"
     },
     "scoreInfo": {
+      "close": "Cerrar",
       "subtitle": "// Gamificación y reputación de comunidad",
       "calculating": "// Calculando breakdown...",
       "description": "El <strong>Builder Score</strong> es un sistema que mide tu impacto en la escena tech. No solo premia qué tan completo está tu portfolio, sino tu actividad y cómo ayudás a que otros builders crezcan.",

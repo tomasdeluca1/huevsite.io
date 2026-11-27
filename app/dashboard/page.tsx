@@ -657,11 +657,15 @@ export default function DashboardPage() {
     }
   };
 
+  const scopedBlockUrl = (id: string) => {
+    const scope = selectedSubSiteId === null ? '' : `?sub_site_id=${encodeURIComponent(selectedSubSiteId)}`;
+    return `/api/blocks/${id}${scope}`;
+  };
+
   const removeBlock = async (id: string): Promise<boolean> => {
     if (!id.startsWith('temp-')) {
       try {
-        const scope = selectedSubSiteId === null ? '' : `?sub_site_id=${encodeURIComponent(selectedSubSiteId)}`;
-        const response = await fetch(`/api/blocks/${id}${scope}`, { method: 'DELETE' });
+        const response = await fetch(scopedBlockUrl(id), { method: 'DELETE' });
         if (!response.ok) {
           const errorData = await response.json();
           alert(t("page.errorDeleteBlock", { error: errorData.error || t("page.errorUnknown") }));
@@ -709,7 +713,7 @@ export default function DashboardPage() {
     });
     if (!id.startsWith("temp-")) {
       try {
-        await fetch(`/api/blocks/${id}`, {
+        await fetch(scopedBlockUrl(id), {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ visible: false }),
@@ -732,7 +736,7 @@ export default function DashboardPage() {
     }
     if (id.startsWith("temp-")) return;
     try {
-      const res = await fetch(`/api/blocks/${id}`, {
+      const res = await fetch(scopedBlockUrl(id), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ visible_on: view }),
@@ -755,7 +759,7 @@ export default function DashboardPage() {
     });
     if (!id.startsWith("temp-")) {
       try {
-        await fetch(`/api/blocks/${id}`, {
+        await fetch(scopedBlockUrl(id), {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ visible: true }),
@@ -797,7 +801,7 @@ export default function DashboardPage() {
     try {
       await Promise.all(
         hideIds.map(id =>
-          fetch(`/api/blocks/${id}`, {
+          fetch(scopedBlockUrl(id), {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ visible: false }),
@@ -1058,7 +1062,7 @@ export default function DashboardPage() {
         // bloque no debe tocarlo (y evita depender de la columna en cada edición).
         // Lo mismo vale para visibleOn: solo lo escribe handleViewChange (gate Pro).
         const { id, mobileOrder: _mo, visibleOn: _vo, ...updatePayload } = updatedBlock;
-        const res = await fetch(`/api/blocks/${updatedBlock.id}`, {
+        const res = await fetch(scopedBlockUrl(updatedBlock.id), {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(updatePayload),

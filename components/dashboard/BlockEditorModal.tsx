@@ -19,7 +19,7 @@ interface Props {
   block: BlockData;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (updatedBlock: BlockData) => void;
+  onSave: (updatedBlock: BlockData) => Promise<boolean>;
   onRequestDelete?: () => void;
   accentColor?: string;
 }
@@ -27,6 +27,8 @@ interface Props {
 export function BlockEditorModal({ block, isOpen, onClose, onSave, onRequestDelete, accentColor = "#C8FF00" }: Props) {
   const t = useTranslations("dashboard");
   const [formData, setFormData] = useState<any>(block);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [githubResults, setGithubResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -138,7 +140,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, onRequestDele
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const dataToSave = { ...formData };
 
     // Parsear strings a arrays para los stacks
@@ -176,8 +178,19 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, onRequestDele
       });
     }
 
-    onSave(dataToSave);
-    onClose();
+    setIsSaving(true);
+    setSaveFailed(false);
+    try {
+      if (await onSave(dataToSave)) {
+        onClose();
+      } else {
+        setSaveFailed(true);
+      }
+    } catch {
+      setSaveFailed(true);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const saveBlocked =
@@ -1210,7 +1223,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, onRequestDele
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={onClose}
+            onClick={isSaving ? undefined : onClose}
             className="absolute inset-0 bg-black/80 backdrop-blur-sm z-0"
           />
           <motion.div
@@ -1226,7 +1239,7 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, onRequestDele
                 <h3 className="text-xl font-bold">{t("blockEditor.modalTitle")}</h3>
                 <p className="text-sm text-[var(--text-dim)] font-mono mt-1 uppercase tracking-widest hidden md:block">{t("blockEditor.typeLabel")} {block.type}</p>
               </div>
-              <button onClick={onClose} className="p-2 hover:bg-[var(--surface2)] rounded-full transition-colors hidden md:block">
+              <button onClick={onClose} disabled={isSaving} className="p-2 hover:bg-[var(--surface2)] rounded-full transition-colors hidden md:block">
                 <X size={20} className="text-[var(--text-muted)]" />
               </button>
             </div>
@@ -1242,10 +1255,16 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, onRequestDele
                   {t("blockEditor.social.saveBlocked")}
                 </p>
               )}
+              {saveFailed && (
+                <p role="alert" className="text-[11px] leading-relaxed text-red-300">
+                  {t("shell.saveError")}
+                </p>
+              )}
               {block.type === "project" && onRequestDelete && (
                 <button
                   type="button"
                   onClick={onRequestDelete}
+                  disabled={isSaving}
                   className="flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-red-500/30 bg-red-500/10 text-sm font-bold text-red-400"
                 >
                   <Trash2 size={16} />
@@ -1255,18 +1274,19 @@ export function BlockEditorModal({ block, isOpen, onClose, onSave, onRequestDele
               <div className="flex gap-4">
               <button
                 onClick={onClose}
+                disabled={isSaving}
                 className="min-h-11 px-6 md:px-8 py-4 rounded-2xl font-bold text-sm md:text-base text-[var(--text-muted)] hover:text-white hover:bg-white/5 transition-all"
               >
                 {t("blockEditor.cancel")}
               </button>
               <button
                 onClick={handleSave}
-                disabled={saveBlocked}
+                disabled={saveBlocked || isSaving}
                 className="flex-1 py-4 px-6 rounded-2xl font-bold flex items-center justify-center gap-2 text-sm md:text-base whitespace-nowrap transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed"
                 style={{ backgroundColor: accentColor, color: getContrastColor(accentColor) }}
               >
                 <Save size={18} />
-                {t("blockEditor.save")}
+                {t(isSaving ? "shell.saving" : "blockEditor.save")}
               </button>
               </div>
             </div>

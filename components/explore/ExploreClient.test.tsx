@@ -5,6 +5,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { SearchParamsContext } from "next/dist/shared/lib/hooks-client-context.shared-runtime";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
+import { Simulate } from "react-dom/test-utils";
 import { createClient } from "@/lib/supabase/client";
 import messages from "@/messages/en.json";
 import { ExploreClient } from "./ExploreClient";
@@ -16,7 +17,16 @@ function profilesResponse(name: string, hasMore: boolean) {
   });
 }
 
-async function renderExplore(t: TestContext, respond: (page: number, attempt: number) => Response) {
+function delayedResponse() {
+  let release!: (response: Response) => void;
+  const response = new Promise<Response>((resolve) => { release = resolve; });
+  return { response, release };
+}
+
+async function renderExplore(
+  t: TestContext,
+  respond: (page: number, attempt: number, query: string) => Response | Promise<Response>
+) {
   const { window } = new JSDOM("<main></main>", { url: "http://localhost/explore" });
   const globals = {
     window,
@@ -53,13 +63,14 @@ async function renderExplore(t: TestContext, respond: (page: number, attempt: nu
   });
 
   const pages: number[] = [];
-  let initialRequest: () => void;
-  const requested = new Promise<void>((resolve) => { initialRequest = resolve; });
+  let onRequest: () => void;
+  const requested = new Promise<void>((resolve) => { onRequest = resolve; });
   t.mock.method(globalThis, "fetch", async (url: string) => {
-    const page = Number(new URL(url, window.location.href).searchParams.get("page"));
+    const params = new URL(url, window.location.href).searchParams;
+    const page = Number(params.get("page"));
     pages.push(page);
-    initialRequest();
-    return respond(page, pages.filter((loaded) => loaded === page).length);
+    onRequest();
+    return respond(page, pages.filter((loaded) => loaded === page).length, params.get("q") ?? "");
   });
 
   await act(async () => {
@@ -81,7 +92,18 @@ async function renderExplore(t: TestContext, respond: (page: number, attempt: nu
     await act(async () => button.click());
   };
   const alert = () => container.querySelector('[role="alert"]')?.textContent;
-  return { container, pages, findButton, click, alert };
+  const search = async (value: string) => {
+    const input = container.querySelector('input[type="text"]');
+    assert.ok(input instanceof window.HTMLInputElement);
+    const started = new Promise<void>((resolve) => { onRequest = resolve; });
+    await act(async () => {
+      input.value = value;
+      Simulate.change(input);
+    });
+    await act(async () => { await started; });
+  };
+  const results = () => Array.from(container.querySelectorAll("h2"), (heading) => heading.textContent);
+  return { container, pages, findButton, click, alert, search, results };
 }
 
 test("Explore distinguishes a failed initial request from an empty search and retries page 0", async (t) => {
@@ -117,4 +139,102 @@ test("Explore keeps its current results and retries the same page after Load mor
   assert.ok(container.querySelector('a[href="/second-builder"]'));
   assert.equal(alert(), undefined);
   assert.equal(findButton(messages.explore.loadMore), undefined);
+});
+
+async function openScoreInfo(t: TestContext, focusOpener = true) {
+  const { container } = await renderExplore(t, () => profilesResponse("first-builder", false));
+  const opener = Array.from(container.querySelectorAll("button")).find((button) =>
+    button.textContent?.startsWith(messages.explore.scoreSystem),
+  );
+  assert.ok(opener);
+  if (focusOpener) {
+    opener.focus();
+  } else {
+    assert.equal(container.ownerDocument.activeElement, container.ownerDocument.body);
+  }
+  await act(async () => opener.click());
+
+  const document = container.ownerDocument;
+  const title = Array.from(document.querySelectorAll("h2")).find((heading) =>
+    heading.textContent?.startsWith("Builder Score"),
+  );
+  assert.ok(title);
+  const closeButton = title.parentElement!.parentElement!.querySelector("button")!;
+  const gotItButton = Array.from(document.querySelectorAll("button")).find((button) =>
+    button.textContent === messages.shared.scoreInfo.gotIt,
+  );
+  assert.ok(gotItButton);
+  const pressKey = async (key: string, shiftKey = false) => {
+    const event = new document.defaultView!.KeyboardEvent("keydown", {
+      key, shiftKey, bubbles: true, cancelable: true,
+    });
+    await act(async () => document.activeElement!.dispatchEvent(event));
+    return event;
+  };
+
+  return { opener, document, title, closeButton, gotItButton, pressKey };
+}
+
+test("Builder Score closes on Escape and restores focus to its opener", async (t) => {
+  const { opener, document, title, closeButton, pressKey } = await openScoreInfo(t);
+  closeButton.focus();
+
+  const escape = await pressKey("Escape");
+
+  assert.ok(escape.defaultPrevented, "Expected the modal to handle Escape");
+  assert.equal(document.activeElement, opener);
+  assert.ok(!title.isConnected || title.closest("[inert]"));
+});
+
+test("Builder Score restores focus to an opener that was clicked without receiving focus", async (t) => {
+  const { opener, document, pressKey } = await openScoreInfo(t, false);
+
+  await pressKey("Escape");
+
+  assert.ok(document.activeElement === opener, "Expected focus to return to the clicked button");
+});
+
+test("Builder Score moves focus inside and wraps Tab and Shift+Tab within the modal", async (t) => {
+  const { document, closeButton, gotItButton, pressKey } = await openScoreInfo(t);
+  const initialFocus = document.activeElement;
+  gotItButton.focus();
+
+  const tab = await pressKey("Tab");
+  assert.ok(tab.defaultPrevented, "Expected the modal to wrap Tab at its last control");
+  assert.equal(document.activeElement, closeButton);
+
+  const shiftTab = await pressKey("Tab", true);
+  assert.ok(shiftTab.defaultPrevented, "Expected the modal to wrap Shift+Tab at its first control");
+  assert.equal(document.activeElement, gotItButton);
+  assert.equal(initialFocus, closeButton);
+});
+
+test("Explore ignores a stale search response after the newer search renders", { timeout: 5_000 }, async (t) => {
+  const old = delayedResponse();
+  const { search, results } = await renderExplore(t, (_page, _attempt, query) =>
+    query === "old" ? old.response : profilesResponse(query || "all", false)
+  );
+
+  await search("old");
+  await search("new");
+  assert.deepEqual(results(), ["new"]);
+
+  await act(async () => { old.release(profilesResponse("old", false)); });
+  assert.deepEqual(results(), ["new"]);
+});
+
+test("Explore ignores a stale page after the newer search renders", { timeout: 5_000 }, async (t) => {
+  const oldPage = delayedResponse();
+  const { click, search, results } = await renderExplore(t, (page, _attempt, query) =>
+    page === 2 ? oldPage.response : profilesResponse(`${query || "all"}-${page}`, !query)
+  );
+
+  await click(messages.explore.loadMore);
+  assert.deepEqual(results(), ["all-0", "all-1"]);
+  await click(messages.explore.loadMore);
+  await search("new");
+  assert.deepEqual(results(), ["new-0"]);
+
+  await act(async () => { oldPage.release(profilesResponse("all-2", false)); });
+  assert.deepEqual(results(), ["new-0"]);
 });

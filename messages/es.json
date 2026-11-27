@@ -707,6 +707,8 @@
       "transferDisabled": "Función inhabilitada temporalmente.",
       "errorCreateBlock": "No se pudo crear el bloque. Probá de nuevo.",
       "loading": "Cargando...",
+      "errorLoadProfile": "No pudimos cargar tu perfil.",
+      "retryLoadProfile": "Volver a intentar",
       "trialEligibleBadge": "14 días gratis",
       "trialEligibleTitle": "Claim free trial de Huevsite Pro",
       "trialEligibleDescription": "Desbloqueá todo Pro por 14 días. Empezá por Insights, después aprovechá más bloques y análisis avanzados.",
@@ -2368,6 +2370,7 @@
       "submitComment": "Comentar →"
     },
     "scoreInfo": {
+      "close": "Cerrar",
       "subtitle": "// Gamificación y reputación de comunidad",
       "calculating": "// Calculando breakdown...",
       "description": "El <strong>Builder Score</strong> es un sistema que mide tu impacto en la escena tech. No solo premia qué tan completo está tu portfolio, sino tu actividad y cómo ayudás a que otros builders crezcan.",
